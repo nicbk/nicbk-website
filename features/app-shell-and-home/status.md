@@ -14,7 +14,7 @@ Feature parent issue:
 | `design-system-foundation` | **Merged** (2026-07-05) | #8 | ✅ | ✅ |
 | `app-shell-and-header` | **Merged** (2026-07-06) | #9 | ✅ | ✅ |
 | `home-page` | **Merged** (2026-07-06) | #10 | ✅ | ✅ |
-| `containerization-and-deployment` | In progress (branch `app-shell-and-home/containerization-and-deployment`, closes #6) | — | — | — |
+| `containerization-and-deployment` | Implemented — PR open (#12, closes #6) | #12 | pending | — |
 
 ## Definition of Done (feature)
 

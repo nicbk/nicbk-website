@@ -4,7 +4,7 @@
 
 - Branch: `app-shell-and-home/containerization-and-deployment`
 - Sub-issue: [#6](https://github.com/nicbk/nicbk-website/issues/6), self-assigned
-- PR: pending (`Closes #6`)
+- PR: [#12](https://github.com/nicbk/nicbk-website/pull/12) (`Closes #6`)
 - CI: temporary GitHub-hosted runners — switch deferred to
   [#11](https://github.com/nicbk/nicbk-website/issues/11) (see deviations)
 - Human review: pending

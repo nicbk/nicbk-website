@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.output/
+.nitro/
+.tanstack/
+
+# Environment files — secrets are provisioned manually per host and never
+# committed (see research/devops-deployment/secrets-and-environment-config.md).
+# .env.example stays committed as the template.
+.env
+.env.local
+.env.*.local
+
+# Test artifacts
+coverage/
+
+# OS / editor noise
+.DS_Store
+*.log

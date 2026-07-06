@@ -42,7 +42,10 @@ review.
   the `containerization-and-deployment` task — a bootstrap gap. Until that
   task deploys the runner, CI runs on GitHub-hosted `ubuntu-latest` (free
   and unlimited for public repos). Tracked as `TODO(#6)` comments in
-  `.github/workflows/ci.yml`; user-approved 2026-07-05.
+  `.github/workflows/ci.yml`; user-approved 2026-07-05. Update 2026-07-06:
+  the runner was deferred out of the containerization task too
+  (user-approved) — now tracked as `TODO(#11)` comments and
+  [#11](https://github.com/nicbk/nicbk-website/issues/11).
 - PR-title-lint failure case verified 2026-07-05: with the PR deliberately
   titled "update stuff", the `PR title (Conventional Commits)` check failed
   as required; restored to a conforming title afterwards. The workflow's

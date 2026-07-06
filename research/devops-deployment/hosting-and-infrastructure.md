@@ -154,6 +154,19 @@ it does:
    tooling — avoiding an unproductive purity argument about macOS/OrbStack
    that wasn't what the principle was meant to protect.
 
+## Addendum (2026-07-06, containerization-and-deployment task)
+
+The "Local hot-reload" section's second fix is stale: it targets the
+vinxi-based TanStack Start, but the shipped app uses the current
+Vite-plugin-based Start (no vinxi, no `app.config.ts`). Verified
+empirically in the dev container (OrbStack, bind-mounted source): only two
+things were actually needed for working hot-reload —
+`CHOKIDAR_USEPOLLING=true` (fix 1, still required) and running the dev
+server with `--host 0.0.0.0` so Docker's port mapping can reach it. No
+`routers.client.vite.server.hmr` configuration (fix 2) was necessary; a
+source edit on the host was reflected by the containerized dev server
+within ~2s.
+
 ## Sources
 
 - [github.com/hercules-ci/arion](https://github.com/hercules-ci/arion),

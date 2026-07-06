@@ -1,0 +1,22 @@
+# Keep the build context to what the image build actually needs — anything
+# listed here can't invalidate a COPY layer, so doc-only commits reuse the
+# on-host Docker cache at deploy time.
+node_modules/
+dist/
+.output/
+.nitro/
+.tanstack/
+generated/
+coverage/
+test-results/
+playwright-report/
+.git/
+.github/
+.env*
+!.env.example
+features/
+research/
+high-level-guidance/
+*.md
+.DS_Store
+*.log

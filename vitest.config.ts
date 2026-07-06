@@ -18,13 +18,15 @@ export default defineConfig({
     // include pattern would otherwise pick those up too).
     include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
-      // Coverage is wired here as the ratchet baseline; the enforcing
-      // ratchet gate lands with the extended CI in the
-      // containerization-and-deployment task.
+      // Unit-test coverage only, gated ratchet-style in CI: a PR fails if
+      // its total line coverage drops below the last main-branch baseline
+      // (scripts/coverage-ratchet.mjs). See
+      // research/testing-qa/test-coverage-and-ci-gating.md.
       provider: 'v8',
       include: ['src/**'],
       exclude: ['src/routeTree.gen.ts'],
-      reporter: ['text', 'html'],
+      // json-summary feeds the ratchet comparison; html is the CI artifact.
+      reporter: ['text', 'json-summary', 'html'],
     },
   },
 })

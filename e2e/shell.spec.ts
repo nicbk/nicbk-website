@@ -11,7 +11,23 @@ test.describe('app shell', () => {
     await expect(skipLink).toBeInViewport()
 
     await page.keyboard.press('Enter')
-    await expect(page.locator('main#main-content')).toBeFocused()
+    // Focus may land on the <main> landmark itself (native fragment focus,
+    // pre-hydration) or on the page's main heading (the router handles the
+    // hash navigation once hydrated, triggering the focus handoff). Both
+    // put focus inside the main content, which is the decided skip-link
+    // behavior (research/accessibility/keyboard-and-focus-management.md).
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const main = document.getElementById('main-content')
+          return (
+            main !== null &&
+            (document.activeElement === main ||
+              main.contains(document.activeElement))
+          )
+        }),
+      )
+      .toBe(true)
   })
 
   test('client-side navigation hands focus to the destination heading', async ({

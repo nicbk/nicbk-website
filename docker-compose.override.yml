@@ -1,0 +1,19 @@
+# Local-dev override — auto-merged by a plain `docker compose up`, never
+# seen by production's explicit `docker compose -f docker-compose.yml up -d`.
+# Switches the app to the Dockerfile's `dev` stage with live source and HMR.
+services:
+  app:
+    build:
+      target: dev
+    volumes:
+      # Live source from the host…
+      - .:/app
+      # …but keep the image's own Linux node_modules (the bind mount above
+      # would otherwise shadow it with the host's macOS-built one).
+      - /app/node_modules
+    environment:
+      # Docker bind mounts don't propagate host file-change events into the
+      # container, so Vite's watcher needs polling to see edits
+      # (research/devops-deployment/hosting-and-infrastructure.md).
+      CHOKIDAR_USEPOLLING: "true"
+    restart: "no"

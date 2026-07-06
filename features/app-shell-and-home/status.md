@@ -13,8 +13,8 @@ Feature parent issue:
 | `scaffold-tooling-and-ci` | **Merged** (2026-07-05) | #7 | ✅ (GitHub-hosted, temporary) | ✅ |
 | `design-system-foundation` | **Merged** (2026-07-05) | #8 | ✅ | ✅ |
 | `app-shell-and-header` | **Merged** (2026-07-06) | #9 | ✅ | ✅ |
-| `home-page` | Implemented — PR open (#10, closes #5) | #10 | pending | — |
-| `containerization-and-deployment` | Not started | — | — | — |
+| `home-page` | **Merged** (2026-07-06) | #10 | ✅ | ✅ |
+| `containerization-and-deployment` | Implemented — PR open (#12, closes #6) | #12 | pending | — |
 
 ## Definition of Done (feature)
 

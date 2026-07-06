@@ -35,7 +35,7 @@ by the first feature that needs it rather than in an up-front infra phase.
 
 | # | Feature | Slug | Status | Depends on |
 |---|---|---|---|---|
-| 1 | App shell + home page | [`app-shell-and-home`](./app-shell-and-home/description.md) | Planned (fully spec'd) | — |
+| 1 | App shell + home page | [`app-shell-and-home`](./app-shell-and-home/description.md) | **Complete** (2026-07-06; all 5 tasks merged) | — |
 
 The first slice necessarily carries the stack bring-up it needs to exist:
 the TanStack Start app, routing/route-groups, the design system (tokens,

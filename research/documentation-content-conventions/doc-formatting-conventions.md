@@ -41,6 +41,14 @@ consistent by reference rather than by copying the nearest example.
   (tutorials/how-to/reference/explanation) would be the more relevant
   reference at that point, not this one.
 
+## Addendum (2026-07-06)
+
+The user-facing README anticipated above now exists:
+[README.md](../../README.md) (project overview + how-to setup steps, per
+the Diátaxis distinction — not a decision record, so it does not use this
+doc's ADR-style structure). It is linked from the documentation root
+[index.md](../../index.md) under "Overview and Setup".
+
 ## Reasoning
 
 - Formalizing precedent rather than introducing something new avoids

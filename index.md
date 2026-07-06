@@ -4,6 +4,19 @@ This file is the root of the project's documentation hierarchy. Start here,
 then follow links into subordinate documents only as needed for the task at
 hand — see [AGENTS.md](./AGENTS.md) for why this matters.
 
+## Overview and Setup
+
+- [README.md](./README.md) — What this project is, plus how-to steps:
+  local development, running in Docker, production deployment (NixOS),
+  and the CI gates. The user-facing entry point, as opposed to this
+  agent-facing index.
+
+## Features (Operational State)
+
+- [features/index.md](./features/index.md) — The live roadmap: what is
+  being built right now, in what order, and each feature's task-by-task
+  status.
+
 ## Research
 
 - [research/index.md](./research/index.md) — Research artifacts backing

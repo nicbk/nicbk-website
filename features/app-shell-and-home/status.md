@@ -2,14 +2,15 @@
 
 **Feature state:** In progress — first task implemented locally.
 
-Feature issue / task sub-issues not opened yet: no GitHub remote or `gh` CLI
-on this machine (see the first task's status.md).
+Feature parent issue:
+[#1](https://github.com/nicbk/nicbk-website/issues/1); task sub-issues
+#2–#6 (in roadmap order).
 
 ## Task states
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `scaffold-tooling-and-ci` | Implemented, awaiting PR gate | blocked on GitHub setup | workflow authored | — |
+| `scaffold-tooling-and-ci` | Implemented — PR open (#7, closes #2) | #7 | pending runner registration | — |
 | `design-system-foundation` | Not started | — | — | — |
 | `app-shell-and-header` | Not started | — | — | — |
 | `home-page` | Not started | — | — | — |

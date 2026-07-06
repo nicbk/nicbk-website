@@ -1,18 +1,16 @@
 # Status: Scaffold, Tooling, and CI
 
-**State:** Implemented locally — awaiting GitHub repo setup so the PR/CI/review
-gate can run.
+**State:** Implemented — PR open, awaiting CI (runner registration) + human
+review.
 
-- Branch: `app-shell-and-home/scaffold-tooling-and-ci` (created, implementation
-  committed)
-- Sub-issue: not opened — **blocked: no GitHub remote configured and no `gh`
-  CLI installed on this machine yet.** Once the repo exists on GitHub, open the
-  feature parent issue + task sub-issues, self-assign this one, and record the
-  numbers here.
-- PR: none yet (same blocker)
-- CI: workflow authored (`.github/workflows/ci.yml`); needs the self-hosted
-  Sysbox runner registered to the repo before it can run
-- Human review: pending PR
+- Branch: `app-shell-and-home/scaffold-tooling-and-ci`
+- Sub-issue: [#2](https://github.com/nicbk/nicbk-website/issues/2) (parent
+  feature issue [#1](https://github.com/nicbk/nicbk-website/issues/1)),
+  self-assigned
+- PR: #7 (`Closes #2`)
+- CI: workflow authored (`.github/workflows/ci.yml`); the self-hosted Sysbox
+  runner still needs to be registered to the repo before jobs can run
+- Human review: pending
 
 ## Verification done locally (2026-07-05)
 

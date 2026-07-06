@@ -1,6 +1,11 @@
 # Status: App Shell + Home Page
 
-**Feature state:** In progress — first task implemented locally.
+**Feature state:** Complete (2026-07-06) — all five tasks merged behind
+green CI + human review. Remaining host-side work is tracked outside this
+feature: runner deployment/CI switch in
+[#11](https://github.com/nicbk/nicbk-website/issues/11); public ingress
+(Caddy + ACME) is host-flake scope per
+research/devops-deployment/hosting-and-infrastructure.md.
 
 Feature parent issue:
 [#1](https://github.com/nicbk/nicbk-website/issues/1); task sub-issues
@@ -14,7 +19,7 @@ Feature parent issue:
 | `design-system-foundation` | **Merged** (2026-07-05) | #8 | ✅ | ✅ |
 | `app-shell-and-header` | **Merged** (2026-07-06) | #9 | ✅ | ✅ |
 | `home-page` | **Merged** (2026-07-06) | #10 | ✅ | ✅ |
-| `containerization-and-deployment` | Implemented — PR open (#12, closes #6) | #12 | pending | — |
+| `containerization-and-deployment` | **Merged** (2026-07-06) | #12 | ✅ | ✅ |
 
 ## Definition of Done (feature)
 

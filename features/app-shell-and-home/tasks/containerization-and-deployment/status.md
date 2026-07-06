@@ -1,6 +1,9 @@
 # Status: Containerization and Deployment
 
-**State:** Implemented — PR open, awaiting CI + human review.
+**State:** Merged (2026-07-06) — PR #12, squash-merged after green CI +
+human review; issue #6 auto-closed. Follow-up PR added a deploy.sh
+self-heal (build + start when the checkout is at origin/main but the stack
+isn't running — a fresh clone otherwise never started it).
 
 - Branch: `app-shell-and-home/containerization-and-deployment`
 - Sub-issue: [#6](https://github.com/nicbk/nicbk-website/issues/6), self-assigned

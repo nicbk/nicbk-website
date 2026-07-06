@@ -20,14 +20,21 @@ current_sha="$(git rev-parse HEAD)"
 remote_sha="$(git rev-parse origin/main)"
 
 if [ "$current_sha" = "$remote_sha" ]; then
-  echo "deploy: already at origin/main ($current_sha) — nothing to do"
-  exit 0
+  # Self-heal: a fresh clone (or a manually stopped stack) is already at
+  # origin/main, so the SHA comparison alone would never start the stack.
+  # If nothing is running, fall through and build/start anyway.
+  running_services="$(docker compose -f docker-compose.yml ps --services --status running)"
+  if [ -n "$running_services" ]; then
+    echo "deploy: already at origin/main ($current_sha), stack running — nothing to do"
+    exit 0
+  fi
+  echo "deploy: at origin/main ($current_sha) but the stack is not running — starting it"
+else
+  echo "deploy: updating $current_sha -> $remote_sha"
+  # --ff-only: the checkout must never diverge from main; if it somehow
+  # has, fail loudly instead of merging.
+  git merge --ff-only origin/main
 fi
-
-echo "deploy: updating $current_sha -> $remote_sha"
-# --ff-only: the checkout must never diverge from main; if it somehow has,
-# fail loudly instead of merging.
-git merge --ff-only origin/main
 
 # Explicit -f: never merge docker-compose.override.yml (dev/HMR) into a
 # production deploy.

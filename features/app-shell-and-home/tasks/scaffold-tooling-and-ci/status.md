@@ -8,8 +8,7 @@ review.
   feature issue [#1](https://github.com/nicbk/nicbk-website/issues/1)),
   self-assigned
 - PR: #7 (`Closes #2`)
-- CI: workflow authored (`.github/workflows/ci.yml`); the self-hosted Sysbox
-  runner still needs to be registered to the repo before jobs can run
+- CI: running on **GitHub-hosted runners temporarily** (see Deviations below)
 - Human review: pending
 
 ## Verification done locally (2026-07-05)
@@ -38,9 +37,17 @@ review.
   decided behavior (staged-only Biome autofix) is met with one fewer tool.
 - `routeTree.gen.ts` is committed (excluded from Biome) so CI's typecheck
   works without a generation step.
-- The PR-title-lint failure case ("a deliberately non-conforming PR title
-  must fail") still needs its one-time verification once the repo + runner
-  exist.
+- **Temporary GitHub-hosted runner:** the decided self-hosted Sysbox runner
+  is itself a service in the Docker Compose stack that doesn't exist until
+  the `containerization-and-deployment` task — a bootstrap gap. Until that
+  task deploys the runner, CI runs on GitHub-hosted `ubuntu-latest` (free
+  and unlimited for public repos). Tracked as `TODO(#6)` comments in
+  `.github/workflows/ci.yml`; user-approved 2026-07-05.
+- PR-title-lint failure case verified 2026-07-05: with the PR deliberately
+  titled "update stuff", the `PR title (Conventional Commits)` check failed
+  as required; restored to a conforming title afterwards. The workflow's
+  `pull_request` trigger types include `edited` so retitling re-runs the
+  check.
 
 ## Log
 

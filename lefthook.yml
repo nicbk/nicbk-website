@@ -1,0 +1,9 @@
+# Pre-commit: autofix ONLY the staged files with Biome, then re-stage the
+# fixes. This is fast local feedback — CI's project-wide `biome ci` is the
+# authoritative gate (hooks are bypassable via --no-verify). See
+# research/coding-conventions/formatting-and-linting.md.
+pre-commit:
+  jobs:
+    - name: biome
+      run: npx biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true

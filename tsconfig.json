@@ -31,7 +31,19 @@
     // research/coding-conventions/import-conventions.md.
     "paths": {
       "~/*": ["./src/*"]
-    }
+    },
+
+    // Overlays generated/src onto src so *.module.css imports resolve to
+    // the exact-key .d.ts files cmk generates (see cmkOptions below).
+    "rootDirs": ["src", "generated/src"]
   },
-  "include": ["src", "vite.config.ts", "vitest.config.ts", "vitest.setup.ts"]
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "vitest.setup.ts"],
+  // Generates exact-key .d.ts files for *.module.css (via `npx cmk`, wired
+  // into the typecheck script), so the decided dot-notation access to CSS
+  // Modules composes with noPropertyAccessFromIndexSignature — and class
+  // name typos fail the typecheck. Resolution recorded in
+  // research/coding-conventions/typescript-conventions.md.
+  "cmkOptions": {
+    "enabled": true
+  }
 }

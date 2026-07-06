@@ -10,7 +10,8 @@ Feature parent issue:
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `scaffold-tooling-and-ci` | Implemented — PR open (#7, closes #2) | #7 | pending runner registration | — |
+| `scaffold-tooling-and-ci` | **Merged** (2026-07-05) | #7 | ✅ (GitHub-hosted, temporary) | ✅ |
+| `design-system-foundation` | Implemented — PR open (#8, closes #3) | #8 | pending | — |
 | `design-system-foundation` | Not started | — | — | — |
 | `app-shell-and-header` | Not started | — | — | — |
 | `home-page` | Not started | — | — | — |

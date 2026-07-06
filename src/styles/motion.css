@@ -1,0 +1,18 @@
+/*
+ * Motion tokens, and the project's motion convention.
+ *
+ * Motion is OPT-IN: every transition/animation in any component's CSS
+ * Module must be wrapped in
+ *
+ *   @media (prefers-reduced-motion: no-preference) { ... }
+ *
+ * so a reduced-motion user (and the server-rendered first paint, which
+ * can't know the preference) defaults to motion-off. Never write motion
+ * unguarded and "undo" it with a reduce override — omission must fail
+ * safe. See research/accessibility/motion-and-reduced-motion.md.
+ */
+:root {
+  --motion-duration-fast: 150ms;
+  --motion-duration-base: 250ms;
+  --motion-ease: ease;
+}

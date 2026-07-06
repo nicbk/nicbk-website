@@ -5,6 +5,7 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { type ReactNode } from 'react'
+import { SkipLink } from '~/routes/-shared/components/skip-link/skip-link'
 import globalsCssUrl from '~/styles/globals.css?url'
 import { themeInitScript } from '~/theme'
 
@@ -21,6 +22,10 @@ export const Route = createRootRoute({
     scripts: [{ children: themeInitScript }],
   }),
   component: RootComponent,
+  // Minimal placeholders only — the designed 404/error pages are the
+  // separate error-and-not-found feature.
+  notFoundComponent: RootNotFound,
+  errorComponent: RootErrorFallback,
 })
 
 function RootComponent() {
@@ -28,6 +33,33 @@ function RootComponent() {
     <RootDocument>
       <Outlet />
     </RootDocument>
+  )
+}
+
+function RootNotFound() {
+  return (
+    <main id="main-content" tabIndex={-1}>
+      <h1>Page not found</h1>
+      <p>
+        <a href="/">Back to home</a>
+      </p>
+    </main>
+  )
+}
+
+interface RootErrorFallbackProps {
+  error: Error
+}
+
+export function RootErrorFallback({ error }: RootErrorFallbackProps) {
+  return (
+    <main id="main-content" tabIndex={-1}>
+      <h1>Something went wrong</h1>
+      <p>{error.message}</p>
+      <p>
+        <a href="/">Back to home</a>
+      </p>
+    </main>
   )
 }
 
@@ -42,6 +74,7 @@ function RootDocument({ children }: RootDocumentProps) {
         <HeadContent />
       </head>
       <body>
+        <SkipLink />
         {children}
         <Scripts />
       </body>

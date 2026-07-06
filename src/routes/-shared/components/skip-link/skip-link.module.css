@@ -1,0 +1,16 @@
+/* Visually hidden until focused — then a clearly visible block pinned to
+ * the top-left, above the sticky header. */
+.skipLink {
+  position: fixed;
+  top: var(--space-xs);
+  left: var(--space-xs);
+  z-index: 10;
+  padding: var(--space-xs) var(--space-md);
+  background-color: var(--color-bg);
+  color: var(--color-accent);
+  transform: translateY(-200%);
+}
+
+.skipLink:focus-visible {
+  transform: none;
+}

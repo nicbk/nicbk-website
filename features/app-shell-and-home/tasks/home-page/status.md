@@ -4,7 +4,7 @@
 
 - Branch: `app-shell-and-home/home-page`
 - Sub-issue: [#5](https://github.com/nicbk/nicbk-website/issues/5), self-assigned
-- PR: pending (`Closes #5`)
+- PR: [#10](https://github.com/nicbk/nicbk-website/pull/10) (`Closes #5`)
 - CI: temporary GitHub-hosted runners (see the scaffold task's status.md)
 - Human review: pending
 

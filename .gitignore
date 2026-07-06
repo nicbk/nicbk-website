@@ -19,6 +19,8 @@ generated/
 
 # Test artifacts
 coverage/
+test-results/
+playwright-report/
 
 # OS / editor noise
 .DS_Store

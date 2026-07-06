@@ -1,0 +1,42 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  background-color: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  /* Single row at every width — the font shrinks on very narrow screens
+     instead of wrapping or collapsing into a hamburger. */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
+}
+
+.siteName {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.navLink {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.siteName:hover,
+.navLink:hover {
+  text-decoration: underline;
+}
+
+/* Push the theme toggle to the row's far end. */
+.header > :last-child {
+  margin-left: auto;
+}

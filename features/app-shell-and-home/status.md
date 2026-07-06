@@ -11,7 +11,8 @@ Feature parent issue:
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `scaffold-tooling-and-ci` | **Merged** (2026-07-05) | #7 | ✅ (GitHub-hosted, temporary) | ✅ |
-| `design-system-foundation` | Implemented — PR open (#8, closes #3) | #8 | pending | — |
+| `design-system-foundation` | **Merged** (2026-07-05) | #8 | ✅ | ✅ |
+| `app-shell-and-header` | Implemented — PR open (#9, closes #4) | #9 | pending | — |
 | `design-system-foundation` | Not started | — | — | — |
 | `app-shell-and-header` | Not started | — | — | — |
 | `home-page` | Not started | — | — | — |

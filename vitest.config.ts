@@ -14,6 +14,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
+    // Unit tests only — Playwright owns e2e/*.spec.ts (its default
+    // include pattern would otherwise pick those up too).
+    include: ['src/**/*.test.{ts,tsx}'],
     coverage: {
       // Coverage is wired here as the ratchet baseline; the enforcing
       // ratchet gate lands with the extended CI in the

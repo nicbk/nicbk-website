@@ -1,0 +1,24 @@
+.page {
+  /* Matches the header's horizontal padding so the content lines align
+     with the site name, as in home-page.png. */
+  padding: var(--space-lg);
+}
+
+.line {
+  /* Consecutive lines separated only by line-height, per the design —
+     no paragraph gaps. */
+  margin: 0;
+}
+
+/* Standard visually-hidden pattern: kept in the accessibility tree (and
+   programmatically focusable), removed from the visual layout. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

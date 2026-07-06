@@ -58,11 +58,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         # Latest successful main-branch baseline run; a missing baseline is
         # tolerated (bootstrap / expired artifact) — the ratchet script
-        # passes with a notice in that case.
+        # passes with a notice in that case. `|| true`: the workflows API
+        # 404s until coverage-baseline.yml exists on main at all.
         run: |
           run_id=$(gh api \
             "repos/$GITHUB_REPOSITORY/actions/workflows/coverage-baseline.yml/runs?branch=main&status=success&per_page=1" \
-            -q '.workflow_runs[0].id // empty')
+            -q '.workflow_runs[0].id // empty' 2>/dev/null || true)
           if [ -n "$run_id" ]; then
             gh run download "$run_id" --name coverage-baseline --dir coverage-baseline \
               || echo "coverage-baseline artifact not found on run $run_id"

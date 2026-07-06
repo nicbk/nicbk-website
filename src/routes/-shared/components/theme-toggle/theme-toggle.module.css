@@ -1,0 +1,38 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xs);
+  border: none;
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.toggle:hover {
+  color: var(--color-accent);
+}
+
+/* Motion is opt-in per the project convention (see src/styles/motion.css). */
+@media (prefers-reduced-motion: no-preference) {
+  .toggle {
+    transition: color var(--motion-duration-fast) var(--motion-ease);
+  }
+}
+
+/* Show the icon of the theme the button switches TO. [data-theme] lives on
+ * <html>; attribute selectors aren't scoped by CSS Modules, so this
+ * composes with the hashed icon classes directly. */
+.sun,
+.moon {
+  width: var(--space-md);
+  height: var(--space-md);
+}
+
+[data-theme="dark"] .moon {
+  display: none;
+}
+
+[data-theme="light"] .sun {
+  display: none;
+}

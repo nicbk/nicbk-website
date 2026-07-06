@@ -1,0 +1,25 @@
+/*
+ * Typography tokens — theme-invariant.
+ *
+ * The site renders entirely in self-hosted JetBrains Mono (variable font,
+ * loaded via @fontsource-variable in globals.css — no external font CDN).
+ * Larger sizes use clamp() for fluid scaling per the responsive baseline
+ * documented in globals.css.
+ */
+:root {
+  --font-family-mono:
+    "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
+  --font-size-xl: clamp(1.25rem, 1.05rem + 1vw, 1.75rem);
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-base: 1.6;
+}

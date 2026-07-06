@@ -21,6 +21,20 @@ TanStack Start package (per
   from a key explicitly set to `undefined`, which causes real friction with
   patterns like object-spread updates and some library/ORM calls that don't
   make that distinction. Not worth the friction for this project's scale.
+- **Addendum (2026-07-05): `noPropertyAccessFromIndexSignature` vs. CSS
+  Modules.** Vite types `*.module.css` default exports as an index
+  signature, so the dot-notation access
+  ([styling-conventions.md](./styling-conventions.md) chose camelCase class
+  names specifically for it) trips TS4111 under this flag — a known
+  friction point of exactly this combination. Resolution (user-decided
+  2026-07-05, during `app-shell-and-home`/`design-system-foundation`):
+  keep both conventions and add `@css-modules-kit/codegen`, which generates
+  exact-key `.d.ts` files per CSS Module into `generated/` (gitignored;
+  `cmk` runs as part of `npm run typecheck`, wired via `cmkOptions` +
+  `rootDirs` in `tsconfig.json`). Side benefit: misspelled class names are
+  now compile errors instead of silently-`undefined` lookups. Bracket
+  notation and dropping the flag were both rejected as weakening a decided
+  convention.
 
 **`type` vs. `interface`:** `interface` for object shapes and component
 props (better extensibility via declaration merging, cleaner editor

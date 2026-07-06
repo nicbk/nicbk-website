@@ -1,13 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { HomePage } from './-components/home-page/home-page'
 
-/**
- * Placeholder home route exercising the shell — replaced with the real
- * home-page content by the `home-page` task.
- */
 export const Route = createFileRoute('/(personal-site)/')({
-  component: HomePlaceholder,
+  component: HomePage,
 })
-
-function HomePlaceholder() {
-  return <h1>home</h1>
-}

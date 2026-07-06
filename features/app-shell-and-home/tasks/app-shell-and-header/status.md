@@ -1,6 +1,7 @@
 # Status: App Shell and Header
 
-**State:** Implemented — PR open, awaiting CI + human review.
+**State:** Merged (2026-07-06) — PR #9, squash-merged after green CI +
+human review; issue #4 auto-closed.
 
 - Branch: `app-shell-and-home/app-shell-and-header`
 - Sub-issue: [#4](https://github.com/nicbk/nicbk-website/issues/4), self-assigned

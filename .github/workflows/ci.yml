@@ -10,8 +10,11 @@
 #   stay enabled so fork PR workflows don't start without manual approval.
 name: CI
 
+# `edited` is included so retitling a PR re-runs the PR-title lint —
+# without it a corrected title would leave the failed check stuck red.
 on:
   pull_request:
+    types: [opened, edited, reopened, synchronize]
 
 permissions:
   contents: read

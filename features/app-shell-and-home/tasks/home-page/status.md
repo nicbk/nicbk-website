@@ -1,6 +1,7 @@
 # Status: Home Page
 
-**State:** Implemented — PR open, awaiting CI + human review.
+**State:** Merged (2026-07-06) — PR #10, squash-merged after green CI +
+human review; issue #5 auto-closed.
 
 - Branch: `app-shell-and-home/home-page`
 - Sub-issue: [#5](https://github.com/nicbk/nicbk-website/issues/5), self-assigned

@@ -187,6 +187,30 @@ taking on.
   for a personal project whose own code is already fully reproducible
   through git.
 
+## Addendum (2026-07-06, containerization-and-deployment task)
+
+Two implementation-time findings, verified empirically and against the
+current TanStack Start hosting docs:
+
+- **The `.output/server/index.mjs` entry point requires the `nitro` Vite
+  plugin** — it is not produced by `@tanstack/react-start` alone. The
+  Vite-plugin-based Start (which replaced the vinxi/Nitro-built-in
+  toolchain this doc's research assumed) emits only a fetch-handler bundle
+  (`dist/server/server.js`, no listener) by default. Adding `nitro()` from
+  the `nitro` package (published as a v3 beta — the framework's documented
+  Node self-hosting path, user-approved 2026-07-06) restores the
+  self-contained `.output/` output this doc decided on, runnable with plain
+  `node` and honoring `PORT`. `.output/` bundles all dependencies, so the
+  `runner` stage copies nothing else — no production `node_modules` layer
+  is needed at all.
+- **`npm ci` inside the image build needs a git-aware `prepare` script.**
+  The repo's `prepare` script runs `lefthook install`, which hard-fails
+  outside a git checkout (and `LEFTHOOK=0` does not exempt `install`), so a
+  Docker build context (no `.git`) broke `npm ci`. Resolved by guarding
+  `prepare` with `git rev-parse --git-dir` rather than using
+  `npm ci --ignore-scripts`, which would also skip dependency lifecycle
+  scripts.
+
 ## Sources
 
 - [Docker docs — multi-stage builds](https://docs.docker.com/build/building/multi-stage/),

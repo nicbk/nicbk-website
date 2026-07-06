@@ -1,0 +1,30 @@
+# Production Compose file — run explicitly as
+# `docker compose -f docker-compose.yml up -d` (the deploy script does this)
+# so docker-compose.override.yml is NOT merged in. Running plain
+# `docker compose up` locally auto-merges the override for dev/HMR.
+# See research/devops-deployment/containerization-and-build.md.
+#
+# Only the app server exists yet. Later features add their services
+# (Postgres, Garage, zero-cache, GROBID) as siblings under `services:`,
+# attached to `app-internal`; the CI runner gets its own separate network
+# (research/devops-deployment/ci-pipeline.md).
+services:
+  app:
+    build:
+      context: .
+      target: runner
+    ports:
+      - "3000:3000"
+    # Host-side, git-ignored secrets/config (manual provisioning per
+    # research/devops-deployment/secrets-and-environment-config.md).
+    # Optional because no variable is required yet — src/env.ts still
+    # fail-fasts at startup if a later required variable is missing.
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+    networks:
+      - app-internal
+
+networks:
+  app-internal:

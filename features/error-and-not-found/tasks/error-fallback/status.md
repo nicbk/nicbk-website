@@ -6,7 +6,8 @@
 - Branch: `error-and-not-found/error-fallback`.
 - Sub-issue: [#22](https://github.com/nicbk/nicbk-website/issues/22)
   (parent [#20](https://github.com/nicbk/nicbk-website/issues/20)); self-assigned.
-- PR / CI / review: _pending_ (opening after review).
+- PR / CI / review: [#33](https://github.com/nicbk/nicbk-website/pull/33)
+  open; awaiting CI + human review.
 
 ## Notes carried into implementation
 

@@ -1,8 +1,9 @@
 # Status: Error and Not-Found Pages
 
-**Feature state:** In progress (2026-07-06). Task 1
-(`site-shell-and-not-found`) is merged; task 2 (`error-fallback`) is
-implemented and in review. Depends on
+**Feature state:** Complete (2026-07-07). Both tasks merged: task 1
+(`site-shell-and-not-found`, [#32](https://github.com/nicbk/nicbk-website/pull/32))
+and task 2 (`error-fallback`,
+[#33](https://github.com/nicbk/nicbk-website/pull/33)). Depends on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — extracts
 `SiteShell` from its `(personal-site)/route.tsx` and fills the
 `notFoundComponent`/`errorComponent` placeholders it left in `__root.tsx`.
@@ -19,7 +20,7 @@ linked as native sub-issues of #20.
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `site-shell-and-not-found` | Complete ([#21](https://github.com/nicbk/nicbk-website/issues/21)) | [#32](https://github.com/nicbk/nicbk-website/pull/32) (merged) | pass | approved |
-| `error-fallback` | Implemented, in review ([#22](https://github.com/nicbk/nicbk-website/issues/22)) | [#33](https://github.com/nicbk/nicbk-website/pull/33) | pending | pending |
+| `error-fallback` | Merged ([#22](https://github.com/nicbk/nicbk-website/issues/22)) | [#33](https://github.com/nicbk/nicbk-website/pull/33) (merged) | pass | approved |
 
 ## Definition of Done (feature)
 
@@ -49,3 +50,6 @@ disclosure and cannot itself throw.
 - 2026-07-06 — GitHub issues filed: parent #20, sub-issues #21/#22 linked
   under it. Both sub-issues unassigned; implementation left to another
   session.
+- 2026-07-07 — Both tasks merged: task 1 (`site-shell-and-not-found`) as #32,
+  task 2 (`error-fallback`) as #33 (both CI green, approved). **Feature
+  complete.**

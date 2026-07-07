@@ -1,13 +1,14 @@
 # Status: Error-Fallback Page
 
-**State:** Implemented, in review (2026-07-06). All local gates green
-(typecheck, Biome, 45 unit tests, 15 e2e against the production build).
+**State:** Merged (2026-07-07). All gates green (typecheck, Biome, 45 unit
+tests, 15 e2e against the production build); CI passed and the PR was approved
+and merged.
 
 - Branch: `error-and-not-found/error-fallback`.
 - Sub-issue: [#22](https://github.com/nicbk/nicbk-website/issues/22)
   (parent [#20](https://github.com/nicbk/nicbk-website/issues/20)); self-assigned.
 - PR / CI / review: [#33](https://github.com/nicbk/nicbk-website/pull/33)
-  open; awaiting CI + human review.
+  merged (CI passed, approved).
 
 ## Notes carried into implementation
 
@@ -43,3 +44,4 @@
   normal 404 and cannot be made to throw). E2e asserts the fallback renders
   inside the header, the disclosure is collapsed then expands, and axe passes
   (critical/serious) in both themes. Awaiting PR + CI + review.
+- 2026-07-07 — **Merged as #33** (CI green, approved). Task complete.

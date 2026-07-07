@@ -1,13 +1,14 @@
 # Status: Site Shell + Not-Found Page
 
-**State:** Implemented, in review (2026-07-06). All local gates green
-(typecheck, Biome, 42 unit tests, 12 e2e against the production build).
+**State:** Merged (2026-07-07). All gates green (typecheck, Biome, 42 unit
+tests, 12 e2e against the production build); CI passed and the PR was approved
+and merged.
 
 - Branch: `error-and-not-found/site-shell-and-not-found`.
 - Sub-issue: [#21](https://github.com/nicbk/nicbk-website/issues/21)
   (parent [#20](https://github.com/nicbk/nicbk-website/issues/20)); self-assigned.
 - PR / CI / review: [#32](https://github.com/nicbk/nicbk-website/pull/32)
-  open; awaiting CI + human review.
+  merged (CI passed, approved).
 
 ## Notes carried into implementation
 

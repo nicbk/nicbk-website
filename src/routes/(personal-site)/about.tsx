@@ -1,13 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { AboutPage } from './-components/about-page/about-page'
 
-/**
- * Stub so the header's typed <Link to="/about"> resolves — the real page
- * is the `about-page` feature.
- */
 export const Route = createFileRoute('/(personal-site)/about')({
-  component: AboutPlaceholder,
+  component: AboutPage,
 })
-
-function AboutPlaceholder() {
-  return <h1>about</h1>
-}

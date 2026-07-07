@@ -1,0 +1,42 @@
+---
+title: "Type-safe frontmatter with Zod"
+date: "2026-06-28"
+description: "One schema is both the runtime validator and the TypeScript type for every post's metadata, so a malformed post fails the build instead of rendering broken."
+tags:
+  - mdx
+  - typescript
+  - zod
+---
+
+Every post on this site declares frontmatter — a title, a date, a description,
+maybe some tags. The problem with frontmatter is that it is just untyped data
+sitting at the top of a file, easy to get subtly wrong.
+
+## One schema, two jobs
+
+A single [Zod](https://zod.dev) schema does double duty: it validates the
+frontmatter at build time, and it is the source of the TypeScript type via
+`z.infer`, so the runtime contract and the compile-time type can never drift
+apart.
+
+```ts
+import { z } from 'zod'
+
+export const frontmatterSchema = z.object({
+  title: z.string().min(1),
+  date: z.coerce.date(),
+  description: z.string().min(1),
+  tags: z.array(z.string()).default([]),
+  draft: z.boolean().default(false),
+})
+
+export type Frontmatter = z.infer<typeof frontmatterSchema>
+```
+
+<Callout type="tip">
+  Using `z.coerce.date()` means a quoted string and a YAML date both parse the
+  same way — and an unparseable value fails validation, which fails the build.
+</Callout>
+
+If a post is missing a required field or has a malformed date, the build stops
+and tells you which post. A broken post never makes it to production.

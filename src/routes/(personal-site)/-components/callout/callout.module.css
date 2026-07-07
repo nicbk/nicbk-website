@@ -1,0 +1,31 @@
+.callout {
+  margin: var(--space-lg) 0;
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-left-width: 4px;
+  background-color: var(--color-bg-surface);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+/* Reset the block margins of the callout's first/last children so the padding
+ * defines the box's inner spacing rather than stacking with paragraph margins. */
+.body > :first-child {
+  margin-top: 0;
+}
+
+.body > :last-child {
+  margin-bottom: 0;
+}

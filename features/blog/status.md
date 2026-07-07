@@ -1,7 +1,8 @@
 # Status: Blog
 
-**Feature state:** Spec'd, not yet started (2026-07-06). Folder written and
-tasks defined; no task implemented yet. Depends on
+**Feature state:** In progress (2026-07-07). Task 1
+(`mdx-pipeline-and-post-page`) is implemented and in review; tasks 2–3 not yet
+started. Depends on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — reuses its
 `(personal-site)` shell/header, design tokens, and theming, and fills the
 `/blog` placeholder route it left in place.
@@ -18,7 +19,7 @@ Feature parent issue:
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `mdx-pipeline-and-post-page` | Not started ([#24](https://github.com/nicbk/nicbk-website/issues/24)) | — | — | — |
+| `mdx-pipeline-and-post-page` | Implemented, in review ([#24](https://github.com/nicbk/nicbk-website/issues/24)) | pending | pending | pending |
 | `blog-list-page` | Not started ([#25](https://github.com/nicbk/nicbk-website/issues/25)) | — | — | — |
 | `blog-search-and-filter` | Not started ([#26](https://github.com/nicbk/nicbk-website/issues/26)) | — | — | — |
 
@@ -65,3 +66,12 @@ established here for the Lit Tracker to reuse.
   only (sitemap/RSS deferred); three tasks. Awaiting implementation start.
 - 2026-07-06 — GitHub issues filed: parent #23, sub-issues #24/#25/#26 linked
   under it. All sub-issues unassigned; implementation left to another session.
+- 2026-07-07 — Task 1 (`mdx-pipeline-and-post-page`) implemented on branch
+  `blog/mdx-pipeline-and-post-page` (#24 self-assigned): the MDX pipeline
+  (frontmatter/alt-text/Shiki), the `blog/` content root + Zod schema + lazy
+  `import.meta.glob` data layer, and the `/blog/$slug` post route (first
+  `loader` + `head()`) with three sample posts. Also added the root `LICENSE`
+  (Apache-2.0 + `blog/` CC BY 4.0 carve-out), closing a pre-existing gap.
+  Details, including the alt-text and syntax-color deviations, in the
+  [task status](./tasks/mdx-pipeline-and-post-page/status.md). Awaiting
+  PR + CI + review.

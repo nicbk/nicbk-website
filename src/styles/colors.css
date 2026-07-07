@@ -30,6 +30,22 @@
   --color-border: #767676;
   --color-accent: #0b57d0; /* links, interactive highlights */
   --color-focus-ring: #0b57d0;
+
+  /* Blog code surface + syntax colors. Shiki highlights at build time against
+   * a css-variables theme (blog/mdx-plugins.ts), so these `--shiki-*` tokens —
+   * not a third-party syntax theme — are what colors code, themed per mode and
+   * audited (against --color-bg-surface, the code block's background) in
+   * contrast.test.ts. */
+  --shiki-foreground: #1f1f1f;
+  --shiki-token-comment: #595959;
+  --shiki-token-keyword: #0b57d0;
+  --shiki-token-string: #0a6b2f;
+  --shiki-token-string-expression: #0a6b2f;
+  --shiki-token-function: #6a30b0;
+  --shiki-token-constant: #b3261e;
+  --shiki-token-parameter: #1f1f1f;
+  --shiki-token-punctuation: #595959;
+  --shiki-token-link: #0b57d0;
 }
 
 :root[data-theme="dark"] {
@@ -47,4 +63,16 @@
   --color-border: #8a8a8a;
   --color-accent: #8ab4f8;
   --color-focus-ring: #8ab4f8;
+
+  /* Blog code surface + syntax colors (see the light block above). */
+  --shiki-foreground: #ececec;
+  --shiki-token-comment: #b0b0b0;
+  --shiki-token-keyword: #8ab4f8;
+  --shiki-token-string: #7ee0a0;
+  --shiki-token-string-expression: #7ee0a0;
+  --shiki-token-function: #cba6f7;
+  --shiki-token-constant: #f5a3a0;
+  --shiki-token-parameter: #ececec;
+  --shiki-token-punctuation: #b0b0b0;
+  --shiki-token-link: #8ab4f8;
 }

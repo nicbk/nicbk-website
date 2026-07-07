@@ -13,8 +13,9 @@ import { Route as ErrorProbeRouteImport } from './routes/error-probe'
 import { Route as personalSiteRouteRouteImport } from './routes/(personal-site)/route'
 import { Route as personalSiteIndexRouteImport } from './routes/(personal-site)/index'
 import { Route as personalSiteProjectsRouteImport } from './routes/(personal-site)/projects'
-import { Route as personalSiteBlogRouteImport } from './routes/(personal-site)/blog'
 import { Route as personalSiteAboutRouteImport } from './routes/(personal-site)/about'
+import { Route as personalSiteBlogIndexRouteImport } from './routes/(personal-site)/blog.index'
+import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog.$slug'
 
 const ErrorProbeRoute = ErrorProbeRouteImport.update({
   id: '/error-probe',
@@ -35,53 +36,63 @@ const personalSiteProjectsRoute = personalSiteProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => personalSiteRouteRoute,
 } as any)
-const personalSiteBlogRoute = personalSiteBlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => personalSiteRouteRoute,
-} as any)
 const personalSiteAboutRoute = personalSiteAboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => personalSiteRouteRoute,
+} as any)
+const personalSiteBlogIndexRoute = personalSiteBlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => personalSiteRouteRoute,
+} as any)
+const personalSiteBlogSlugRoute = personalSiteBlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
   getParentRoute: () => personalSiteRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/error-probe': typeof ErrorProbeRoute
   '/about': typeof personalSiteAboutRoute
-  '/blog': typeof personalSiteBlogRoute
   '/projects': typeof personalSiteProjectsRoute
   '/': typeof personalSiteIndexRoute
+  '/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/blog/': typeof personalSiteBlogIndexRoute
 }
 export interface FileRoutesByTo {
   '/error-probe': typeof ErrorProbeRoute
   '/about': typeof personalSiteAboutRoute
-  '/blog': typeof personalSiteBlogRoute
   '/projects': typeof personalSiteProjectsRoute
   '/': typeof personalSiteIndexRoute
+  '/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/blog': typeof personalSiteBlogIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(personal-site)': typeof personalSiteRouteRouteWithChildren
   '/error-probe': typeof ErrorProbeRoute
   '/(personal-site)/about': typeof personalSiteAboutRoute
-  '/(personal-site)/blog': typeof personalSiteBlogRoute
   '/(personal-site)/projects': typeof personalSiteProjectsRoute
   '/(personal-site)/': typeof personalSiteIndexRoute
+  '/(personal-site)/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/(personal-site)/blog/': typeof personalSiteBlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/error-probe' | '/about' | '/blog' | '/projects' | '/'
+  fullPaths:
+    '/error-probe' | '/about' | '/projects' | '/' | '/blog/$slug' | '/blog/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/error-probe' | '/about' | '/blog' | '/projects' | '/'
+  to: '/error-probe' | '/about' | '/projects' | '/' | '/blog/$slug' | '/blog'
   id:
     | '__root__'
     | '/(personal-site)'
     | '/error-probe'
     | '/(personal-site)/about'
-    | '/(personal-site)/blog'
     | '/(personal-site)/projects'
     | '/(personal-site)/'
+    | '/(personal-site)/blog/$slug'
+    | '/(personal-site)/blog/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,13 +130,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof personalSiteProjectsRouteImport
       parentRoute: typeof personalSiteRouteRoute
     }
-    '/(personal-site)/blog': {
-      id: '/(personal-site)/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof personalSiteBlogRouteImport
-      parentRoute: typeof personalSiteRouteRoute
-    }
     '/(personal-site)/about': {
       id: '/(personal-site)/about'
       path: '/about'
@@ -133,21 +137,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof personalSiteAboutRouteImport
       parentRoute: typeof personalSiteRouteRoute
     }
+    '/(personal-site)/blog/': {
+      id: '/(personal-site)/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof personalSiteBlogIndexRouteImport
+      parentRoute: typeof personalSiteRouteRoute
+    }
+    '/(personal-site)/blog/$slug': {
+      id: '/(personal-site)/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof personalSiteBlogSlugRouteImport
+      parentRoute: typeof personalSiteRouteRoute
+    }
   }
 }
 
 interface personalSiteRouteRouteChildren {
   personalSiteAboutRoute: typeof personalSiteAboutRoute
-  personalSiteBlogRoute: typeof personalSiteBlogRoute
   personalSiteProjectsRoute: typeof personalSiteProjectsRoute
   personalSiteIndexRoute: typeof personalSiteIndexRoute
+  personalSiteBlogSlugRoute: typeof personalSiteBlogSlugRoute
+  personalSiteBlogIndexRoute: typeof personalSiteBlogIndexRoute
 }
 
 const personalSiteRouteRouteChildren: personalSiteRouteRouteChildren = {
   personalSiteAboutRoute: personalSiteAboutRoute,
-  personalSiteBlogRoute: personalSiteBlogRoute,
   personalSiteProjectsRoute: personalSiteProjectsRoute,
   personalSiteIndexRoute: personalSiteIndexRoute,
+  personalSiteBlogSlugRoute: personalSiteBlogSlugRoute,
+  personalSiteBlogIndexRoute: personalSiteBlogIndexRoute,
 }
 
 const personalSiteRouteRouteWithChildren =

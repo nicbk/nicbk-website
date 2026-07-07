@@ -7,7 +7,8 @@ coverage 55.93% ≥ the 52.38% main baseline).
 - Branch: `blog/blog-list-page`.
 - Sub-issue: [#25](https://github.com/nicbk/nicbk-website/issues/25)
   (parent [#23](https://github.com/nicbk/nicbk-website/issues/23)); self-assigned.
-- PR / CI / review: _pending._
+- PR / CI / review: [#39](https://github.com/nicbk/nicbk-website/pull/39)
+  open; awaiting CI + human review.
 
 ## What shipped
 

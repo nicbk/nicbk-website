@@ -20,7 +20,7 @@ Feature parent issue:
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `mdx-pipeline-and-post-page` | Merged ([#24](https://github.com/nicbk/nicbk-website/issues/24)) | [#37](https://github.com/nicbk/nicbk-website/pull/37) | green | merged |
-| `blog-list-page` | Implemented, in review ([#25](https://github.com/nicbk/nicbk-website/issues/25)) | pending | pending | pending |
+| `blog-list-page` | Implemented, in review ([#25](https://github.com/nicbk/nicbk-website/issues/25)) | [#39](https://github.com/nicbk/nicbk-website/pull/39) | pending | pending |
 | `blog-search-and-filter` | Not started ([#26](https://github.com/nicbk/nicbk-website/issues/26)) | — | — | — |
 
 ## Definition of Done (feature)

@@ -7,7 +7,8 @@ both-themes visual check against `about-page.png`.
 - Branch: `about-page/about-page-content`.
 - Sub-issue: [#19](https://github.com/nicbk/nicbk-website/issues/19)
   (parent [#17](https://github.com/nicbk/nicbk-website/issues/17)); self-assigned.
-- PR / CI / review: _pending push + PR._
+- PR / CI / review: [#35](https://github.com/nicbk/nicbk-website/pull/35)
+  open; awaiting CI + human review.
 
 ## Inputs confirmed
 

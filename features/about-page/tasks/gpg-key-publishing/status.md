@@ -1,15 +1,15 @@
 # Status: GPG Key Publishing
 
-**State:** Implemented, in review (2026-07-07). All local gates green
-(Biome, typecheck, 50 unit tests, 21 e2e against the production build), plus
-the generator determinism, drift-check, and end-to-end WKD-import checks
-below.
+**State:** Merged (2026-07-07). All gates green (Biome, typecheck, 50 unit
+tests, 21 e2e against the production build), plus the generator determinism,
+drift-check, and end-to-end WKD-import checks below; CI passed and the PR was
+approved and merged.
 
 - Branch: `about-page/gpg-key-publishing`.
 - Sub-issue: [#18](https://github.com/nicbk/nicbk-website/issues/18)
   (parent [#17](https://github.com/nicbk/nicbk-website/issues/17)); self-assigned.
 - PR / CI / review: [#34](https://github.com/nicbk/nicbk-website/pull/34)
-  open; awaiting CI + human review.
+  merged (CI passed, approved).
 
 ## Preconditions in place
 

@@ -1,8 +1,9 @@
 # Status: About Page
 
-**Feature state:** In progress (2026-07-07). Task 1 (`gpg-key-publishing`) is
-merged ([#34](https://github.com/nicbk/nicbk-website/pull/34)); task 2
-(`about-page-content`) is implemented and in review. Depends only on
+**Feature state:** Complete (2026-07-07). Both tasks merged: task 1
+(`gpg-key-publishing`, [#34](https://github.com/nicbk/nicbk-website/pull/34))
+and task 2 (`about-page-content`,
+[#35](https://github.com/nicbk/nicbk-website/pull/35)). Depends only on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete).
 
 Feature parent issue:
@@ -16,7 +17,7 @@ and [#19](https://github.com/nicbk/nicbk-website/issues/19)
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `gpg-key-publishing` | Merged ([#18](https://github.com/nicbk/nicbk-website/issues/18)) | [#34](https://github.com/nicbk/nicbk-website/pull/34) | passed | merged |
-| `about-page-content` | Implemented, in review ([#19](https://github.com/nicbk/nicbk-website/issues/19)) | [#35](https://github.com/nicbk/nicbk-website/pull/35) | pending | pending |
+| `about-page-content` | Merged ([#19](https://github.com/nicbk/nicbk-website/issues/19)) | [#35](https://github.com/nicbk/nicbk-website/pull/35) | passed | merged |
 
 ## Definition of Done (feature)
 
@@ -64,3 +65,5 @@ files serve identically under `npm run dev` and `docker compose up`.
   task). Unit + e2e (incl. axe both themes) added; visually verified against
   the mockup. Details in the
   [task status](./tasks/about-page-content/status.md). Awaiting PR + CI + review.
+- 2026-07-07 — Task 2 (`about-page-content`) **merged as #35** (CI green,
+  approved). Both tasks now merged — **feature complete**.

@@ -1,14 +1,14 @@
 # Status: About Page Content
 
-**State:** Implemented, in review (2026-07-07). All local gates green (Biome,
-typecheck, 56 unit tests, 21 e2e against the production build), plus a manual
-both-themes visual check against `about-page.png`.
+**State:** Merged (2026-07-07). All gates green (Biome, typecheck, 56 unit
+tests, 21 e2e against the production build), plus a manual both-themes visual
+check against `about-page.png`; CI passed and the PR was approved and merged.
 
 - Branch: `about-page/about-page-content`.
 - Sub-issue: [#19](https://github.com/nicbk/nicbk-website/issues/19)
   (parent [#17](https://github.com/nicbk/nicbk-website/issues/17)); self-assigned.
 - PR / CI / review: [#35](https://github.com/nicbk/nicbk-website/pull/35)
-  open; awaiting CI + human review.
+  merged (CI passed, approved).
 
 ## Inputs confirmed
 
@@ -57,3 +57,4 @@ both-themes visual check against `about-page.png`.
   component + CSS Module (styled purely from tokens), its unit test, and an
   `e2e/about.spec.ts` (smoke + served-asset + axe both themes); replaced the
   `/about` placeholder; committed the résumé PDF. Awaiting PR + CI + review.
+- 2026-07-07 — **Merged as #35** (CI green, approved). Task complete.

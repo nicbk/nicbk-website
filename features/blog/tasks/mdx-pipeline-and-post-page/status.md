@@ -8,7 +8,8 @@ check of a rendered post and a verified build-time alt-text failure.
 - Branch: `blog/mdx-pipeline-and-post-page`.
 - Sub-issue: [#24](https://github.com/nicbk/nicbk-website/issues/24)
   (parent [#23](https://github.com/nicbk/nicbk-website/issues/23)); self-assigned.
-- PR / CI / review: _pending push._
+- PR / CI / review: [#37](https://github.com/nicbk/nicbk-website/pull/37)
+  open; awaiting CI + human review.
 
 ## What shipped
 

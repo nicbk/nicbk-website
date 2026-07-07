@@ -19,7 +19,7 @@ Feature parent issue:
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `mdx-pipeline-and-post-page` | Implemented, in review ([#24](https://github.com/nicbk/nicbk-website/issues/24)) | pending | pending | pending |
+| `mdx-pipeline-and-post-page` | Implemented, in review ([#24](https://github.com/nicbk/nicbk-website/issues/24)) | [#37](https://github.com/nicbk/nicbk-website/pull/37) | pending | pending |
 | `blog-list-page` | Not started ([#25](https://github.com/nicbk/nicbk-website/issues/25)) | — | — | — |
 | `blog-search-and-filter` | Not started ([#26](https://github.com/nicbk/nicbk-website/issues/26)) | — | — | — |
 

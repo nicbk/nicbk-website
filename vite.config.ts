@@ -1,7 +1,69 @@
+import { createReadStream, statSync } from 'node:fs'
+import { join, normalize, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
+
+/**
+ * Serve `public/.well-known/**` in the dev server.
+ *
+ * Vite's dev static middleware (sirv) refuses dotfile paths, so requests for
+ * the WKD files under `/.well-known/openpgpkey/` 404 in `npm run dev` even
+ * though the production Nitro server serves them. This dev-only middleware
+ * closes that gap so dev matches production, as the about-page feature's WKD
+ * requirement demands (features/about-page/constraints-and-behavior.md). It
+ * never runs in the production build (`apply: 'serve'`), which serves these
+ * committed files natively.
+ */
+function serveWellKnownInDev(): Plugin {
+  const publicDir = fileURLToPath(new URL('./public', import.meta.url))
+  const wellKnownRoot = join(publicDir, '.well-known')
+  return {
+    name: 'serve-well-known-in-dev',
+    apply: 'serve',
+    // `order: 'pre'` registers this middleware ahead of the TanStack
+    // Start / Nitro dev handler, which would otherwise answer `/.well-known/*`
+    // with its SSR 404 before this ever runs.
+    configureServer: {
+      order: 'pre',
+      handler(server) {
+        server.middlewares.use((req, res, next) => {
+          const pathname = (req.url ?? '').split('?')[0] ?? ''
+          if (!pathname.startsWith('/.well-known/')) {
+            next()
+            return
+          }
+          // Resolve within public/ and confirm the result stays under
+          // .well-known/ (rejects `..` traversal out of the served subtree).
+          const filePath = normalize(join(publicDir, pathname))
+          if (
+            filePath !== wellKnownRoot &&
+            !filePath.startsWith(wellKnownRoot + sep)
+          ) {
+            next()
+            return
+          }
+          let isFile = false
+          try {
+            isFile = statSync(filePath).isFile()
+          } catch {
+            isFile = false
+          }
+          if (!isFile) {
+            next()
+            return
+          }
+          // Binary form for a WKD client; content-type is not significant to
+          // gpg, which reads the raw key bytes.
+          res.setHeader('Content-Type', 'application/octet-stream')
+          createReadStream(filePath).on('error', next).pipe(res)
+        })
+      },
+    },
+  }
+}
 
 export default defineConfig({
   server: {
@@ -26,5 +88,6 @@ export default defineConfig({
     }),
     nitro(),
     viteReact(),
+    serveWellKnownInDev(),
   ],
 })

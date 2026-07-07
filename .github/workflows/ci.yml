@@ -50,6 +50,18 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Enforces "derive, don't hand-type": regenerate the committed GPG
+      # artifacts from public/pgp/nicbk.asc and fail if anything differs from
+      # what is checked in. ubuntu-latest ships gpg, so no extra install is
+      # needed. See features/about-page/tasks/gpg-key-publishing/ and
+      # research/security-privacy/gpg-key-publishing.md.
+      - name: GPG artifact drift check
+        run: |
+          node scripts/gen-gpg-artifacts.mjs
+          git diff --exit-code -- \
+            public/.well-known/openpgpkey \
+            src/gpg/fingerprint.generated.ts
+
       - name: Unit tests with coverage
         run: npm run test:coverage
 

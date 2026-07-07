@@ -1,8 +1,8 @@
 # Status: About Page
 
-**Feature state:** Spec'd, not yet started (2026-07-06). Folder written and
-tasks defined; no task implemented yet. Depends only on
-[`app-shell-and-home`](../app-shell-and-home/status.md) (Complete).
+**Feature state:** In progress (2026-07-07). Task 1 (`gpg-key-publishing`) is
+implemented and in review; task 2 (`about-page-content`) not started. Depends
+only on [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete).
 
 Feature parent issue:
 [#17](https://github.com/nicbk/nicbk-website/issues/17); task sub-issues
@@ -14,7 +14,7 @@ and [#19](https://github.com/nicbk/nicbk-website/issues/19)
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `gpg-key-publishing` | Not started ([#18](https://github.com/nicbk/nicbk-website/issues/18)) | — | — | — |
+| `gpg-key-publishing` | Implemented, in review ([#18](https://github.com/nicbk/nicbk-website/issues/18)) | [#34](https://github.com/nicbk/nicbk-website/pull/34) | pending | pending |
 | `about-page-content` | Not started ([#19](https://github.com/nicbk/nicbk-website/issues/19)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -49,3 +49,9 @@ files serve identically under `npm run dev` and `docker compose up`.
 - 2026-07-06 — GitHub issues filed: parent #17, sub-issues #18/#19 linked
   under it. Both sub-issues unassigned; implementation left to another
   session.
+- 2026-07-07 — Task 1 (`gpg-key-publishing`) implemented on branch
+  `about-page/gpg-key-publishing` (#18 self-assigned). Introduced `public/`
+  static-asset serving (including a dev-only Vite middleware so `/.well-known/`
+  dotfiles serve under `npm run dev`, matching production), a committed-artifact
+  GPG generator with a CI drift check, and unit + e2e coverage. Details in the
+  [task status](./tasks/gpg-key-publishing/status.md). Awaiting PR + CI + review.

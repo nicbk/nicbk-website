@@ -15,8 +15,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     // Unit tests only — Playwright owns e2e/*.spec.ts (its default
-    // include pattern would otherwise pick those up too).
-    include: ['src/**/*.test.{ts,tsx}'],
+    // include pattern would otherwise pick those up too). The scripts glob
+    // covers pure helpers in build tooling (e.g. the gpg-artifact generator),
+    // which live outside src/ and so outside the coverage `include` below.
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.mjs'],
     coverage: {
       // Unit-test coverage only, gated ratchet-style in CI: a PR fails if
       // its total line coverage drops below the last main-branch baseline

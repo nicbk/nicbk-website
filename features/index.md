@@ -49,16 +49,16 @@ need them (see Phases 2–3).
 
 | # | Feature | Slug | Status | Depends on |
 |---|---|---|---|---|
-| 2 | About page (incl. GPG fingerprint + WKD/`.asc` publishing) | `about-page` | Not yet spec'd | #1 |
+| 2 | About page (incl. GPG fingerprint + WKD/`.asc` publishing) | [`about-page`](./about-page/description.md) | **Spec'd** (2026-07-06; 2 tasks, not started) | #1 |
 | 3 | Projects page (entry point to Lit Tracker) | `projects-page` | Not yet spec'd | #1 |
-| 4 | Blog (MDX pipeline + list + post) | `blog` | Not yet spec'd | #1 |
-| 5 | 404 + error-fallback pages | `error-and-not-found` | Not yet spec'd | #1 |
+| 4 | Blog (MDX pipeline + list + post) | [`blog`](./blog/description.md) | **Spec'd** (2026-07-06; 3 tasks, not started) | #1 |
+| 5 | 404 + error-fallback pages | [`error-and-not-found`](./error-and-not-found/description.md) | **Spec'd** (2026-07-06; 2 tasks, not started) | #1 |
 
 ### Phase 2 — Authentication (gates all of the Lit Tracker; introduces Postgres + Better Auth)
 
 | # | Feature | Slug | Status | Depends on |
 |---|---|---|---|---|
-| 6 | Authentication (Better Auth + Google OAuth, session hardening, sign-in page, user settings) | `authentication` | Not yet spec'd | #1 |
+| 6 | Authentication (Better Auth + Google OAuth, session hardening, sign-in page, user settings) | [`authentication`](./authentication/description.md) | **Spec'd** (2026-07-06; 3 tasks, not started) | #1 |
 
 ### Phase 3 — Lit Tracker (each needs auth; #7 is the ingest slice everything else builds on; introduces Garage/GROBID/Zero/pg-boss)
 
@@ -73,8 +73,10 @@ need them (see Phases 2–3).
 ## How this roadmap is spec'd out
 
 Following the decided one-at-a-time, gated process, features are fleshed out
-**just-in-time** rather than all at once — only `app-shell-and-home` is fully
-spec'd today. The rest carry a one-line intent here and get their full folder
+**just-in-time** rather than all at once — `app-shell-and-home` (complete),
+`about-page` (spec'd), `error-and-not-found` (spec'd), `blog` (spec'd), and
+`authentication` (spec'd) have full folders today. The rest carry a one-line
+intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
 up-front draft.

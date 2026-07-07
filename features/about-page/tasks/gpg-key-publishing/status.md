@@ -8,7 +8,8 @@ below.
 - Branch: `about-page/gpg-key-publishing`.
 - Sub-issue: [#18](https://github.com/nicbk/nicbk-website/issues/18)
   (parent [#17](https://github.com/nicbk/nicbk-website/issues/17)); self-assigned.
-- PR / CI / review: _PR pending push._
+- PR / CI / review: [#34](https://github.com/nicbk/nicbk-website/pull/34)
+  open; awaiting CI + human review.
 
 ## Preconditions in place
 

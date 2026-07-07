@@ -14,7 +14,7 @@ and [#19](https://github.com/nicbk/nicbk-website/issues/19)
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `gpg-key-publishing` | Implemented, in review ([#18](https://github.com/nicbk/nicbk-website/issues/18)) | _pending_ | pending | pending |
+| `gpg-key-publishing` | Implemented, in review ([#18](https://github.com/nicbk/nicbk-website/issues/18)) | [#34](https://github.com/nicbk/nicbk-website/pull/34) | pending | pending |
 | `about-page-content` | Not started ([#19](https://github.com/nicbk/nicbk-website/issues/19)) | — | — | — |
 
 ## Definition of Done (feature)

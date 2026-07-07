@@ -6,7 +6,8 @@
 - Branch: `error-and-not-found/site-shell-and-not-found`.
 - Sub-issue: [#21](https://github.com/nicbk/nicbk-website/issues/21)
   (parent [#20](https://github.com/nicbk/nicbk-website/issues/20)); self-assigned.
-- PR / CI / review: PR open; awaiting CI + human review.
+- PR / CI / review: [#32](https://github.com/nicbk/nicbk-website/pull/32)
+  open; awaiting CI + human review.
 
 ## Notes carried into implementation
 

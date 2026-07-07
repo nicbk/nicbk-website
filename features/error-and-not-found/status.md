@@ -17,7 +17,7 @@ linked as native sub-issues of #20.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `site-shell-and-not-found` | Implemented, in review ([#21](https://github.com/nicbk/nicbk-website/issues/21)) | open | pending | pending |
+| `site-shell-and-not-found` | Implemented, in review ([#21](https://github.com/nicbk/nicbk-website/issues/21)) | [#32](https://github.com/nicbk/nicbk-website/pull/32) | pending | pending |
 | `error-fallback` | Not started ([#22](https://github.com/nicbk/nicbk-website/issues/22)) | — | — | — |
 
 ## Definition of Done (feature)

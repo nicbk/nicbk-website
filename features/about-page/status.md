@@ -1,8 +1,9 @@
 # Status: About Page
 
 **Feature state:** In progress (2026-07-07). Task 1 (`gpg-key-publishing`) is
-implemented and in review; task 2 (`about-page-content`) not started. Depends
-only on [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete).
+merged ([#34](https://github.com/nicbk/nicbk-website/pull/34)); task 2
+(`about-page-content`) is implemented and in review. Depends only on
+[`app-shell-and-home`](../app-shell-and-home/status.md) (Complete).
 
 Feature parent issue:
 [#17](https://github.com/nicbk/nicbk-website/issues/17); task sub-issues
@@ -14,8 +15,8 @@ and [#19](https://github.com/nicbk/nicbk-website/issues/19)
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `gpg-key-publishing` | Implemented, in review ([#18](https://github.com/nicbk/nicbk-website/issues/18)) | [#34](https://github.com/nicbk/nicbk-website/pull/34) | pending | pending |
-| `about-page-content` | Not started ([#19](https://github.com/nicbk/nicbk-website/issues/19)) | — | — | — |
+| `gpg-key-publishing` | Merged ([#18](https://github.com/nicbk/nicbk-website/issues/18)) | [#34](https://github.com/nicbk/nicbk-website/pull/34) | passed | merged |
+| `about-page-content` | Implemented, in review ([#19](https://github.com/nicbk/nicbk-website/issues/19)) | pending | pending | pending |
 
 ## Definition of Done (feature)
 
@@ -54,4 +55,12 @@ files serve identically under `npm run dev` and `docker compose up`.
   static-asset serving (including a dev-only Vite middleware so `/.well-known/`
   dotfiles serve under `npm run dev`, matching production), a committed-artifact
   GPG generator with a CI drift check, and unit + e2e coverage. Details in the
-  [task status](./tasks/gpg-key-publishing/status.md). Awaiting PR + CI + review.
+  [task status](./tasks/gpg-key-publishing/status.md). **Merged as #34.**
+- 2026-07-07 — Task 2 (`about-page-content`) implemented on branch
+  `about-page/about-page-content` (#19 self-assigned): the real `/about` page
+  matching `about-page.png` in both themes, as a colocated component styled
+  from tokens, consuming task 1's derived `GPG_FINGERPRINT` and the served
+  `/pgp/nicbk.asc` + `/nicbk_cv.pdf` (the résumé PDF is committed by this
+  task). Unit + e2e (incl. axe both themes) added; visually verified against
+  the mockup. Details in the
+  [task status](./tasks/about-page-content/status.md). Awaiting PR + CI + review.

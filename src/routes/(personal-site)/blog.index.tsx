@@ -1,13 +1,28 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { BlogListPage } from './-components/blog-list-page/blog-list-page'
+import { loadPostListing } from './-lib/load-listing'
 
 /**
- * Stub so the header's typed <Link to="/blog"> resolves — the real page is
- * the `blog` feature.
+ * The `/blog` index route: the reverse-chronological post list.
+ *
+ * The loader reads every post's frontmatter (metadata only — no bodies bundled),
+ * excludes drafts in the production build, and orders newest-first; the returned
+ * data is serializable, so the list server-renders. `head()` sets the page's own
+ * document title and meta description (the root default title is reused, per the
+ * task's "sets its own <title>").
  */
 export const Route = createFileRoute('/(personal-site)/blog/')({
-  component: BlogPlaceholder,
+  loader: () => loadPostListing(),
+  head: () => ({
+    meta: [
+      { title: 'Nicolás Kennedy' },
+      { name: 'description', content: 'blog posts' },
+    ],
+  }),
+  component: BlogListRoute,
 })
 
-function BlogPlaceholder() {
-  return <h1>blog</h1>
+function BlogListRoute() {
+  const { posts } = Route.useLoaderData()
+  return <BlogListPage posts={posts} />
 }

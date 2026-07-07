@@ -83,6 +83,16 @@
   border-top: 1px solid var(--color-border);
 }
 
+/* Keep every image inside the prose column. The BlogImage override only
+ * reaches Markdown `![]()` images; a literal JSX `<img>` in MDX bypasses the
+ * provider mapping and would otherwise render at its intrinsic width, overflowing
+ * narrow viewports and forcing horizontal page scroll. Enforcing the invariant
+ * here — at the container — covers images however they are authored. */
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Inline code (not inside a highlighted block). */
 .prose :not(pre) > code {
   padding: 0.1em 0.35em;

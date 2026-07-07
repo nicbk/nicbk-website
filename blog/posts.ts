@@ -50,6 +50,29 @@ export function getPostSlugs(): string[] {
   return Object.keys(contentModules).map(slugForPath)
 }
 
+/** One entry in the blog listing: a post's slug plus its validated metadata. */
+export interface PostListItem {
+  slug: string
+  frontmatter: Frontmatter
+}
+
+/**
+ * Every post's validated frontmatter (with its slug), for the blog list page —
+ * unordered and unfiltered. Uses the frontmatter-only glob, so NO post body is
+ * evaluated or bundled here (the load-bearing lazy/frontmatter split above):
+ * the list surface carries metadata only. Sorting and draft-exclusion are the
+ * caller's concern (see `-utils/post-listing.ts` and `-lib/load-listing.ts`),
+ * kept out of here so this stays a pure "read all metadata" step.
+ */
+export async function getAllPostFrontmatter(): Promise<PostListItem[]> {
+  return Promise.all(
+    Object.entries(frontmatterModules).map(async ([path, load]) => {
+      const slug = slugForPath(path)
+      return { slug, frontmatter: parseFrontmatter(await load(), slug) }
+    }),
+  )
+}
+
 /**
  * Load and validate one post's frontmatter, without evaluating its body.
  * Returns `null` when no post has that slug — the route loader turns that into

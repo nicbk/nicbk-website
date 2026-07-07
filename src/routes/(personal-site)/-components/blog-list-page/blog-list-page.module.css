@@ -1,0 +1,92 @@
+.page {
+  /* Matches the header's horizontal padding so the heading and rows align with
+     the site name, consistent with the home, about, and not-found pages. */
+  padding: var(--space-lg);
+}
+
+.title {
+  /* The one visible page title: bold and larger than body text, per the mockup.
+     Still the document's single <h1> and the route-change focus-handoff target. */
+  margin: 0 0 var(--space-xl);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.empty {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+/*
+ * The list is a three-column grid (date / title / description+tags). Each row is
+ * itself a grid spanning all three columns and adopting the parent's tracks via
+ * `subgrid`, so the columns line up down the page (the mockup's aligned layout)
+ * while every row stays a real <li> for list semantics.
+ */
+.list {
+  display: grid;
+  grid-template-columns: max-content max-content 1fr;
+  gap: var(--space-xs) var(--space-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+}
+
+.date {
+  /* Muted, monospace, non-wrapping so every date occupies the same column width
+     and the titles start on a common left edge. */
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+.postTitle {
+  /* The primary, emphasized element of the row and the link target. */
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+}
+
+.postTitle:hover {
+  text-decoration: underline;
+}
+
+.summary {
+  /* Description then inline tags, on one line where space allows, wrapping as a
+     unit under the title column on narrow viewports. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
+  min-width: 0;
+}
+
+.description {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * Narrow viewports: the three-column alignment stops being legible, so each row
+ * collapses to a single stacked column (date, title, summary) — the reading
+ * order the DOM already provides.
+ */
+@media (max-width: 40rem) {
+  .list {
+    grid-template-columns: 1fr;
+  }
+
+  .row {
+    grid-template-columns: subgrid;
+    gap: var(--space-2xs);
+    margin-bottom: var(--space-md);
+  }
+}

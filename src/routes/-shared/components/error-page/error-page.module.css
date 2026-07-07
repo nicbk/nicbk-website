@@ -1,0 +1,48 @@
+.page {
+  /* Matches the 404/home padding so the fallback aligns with the header's
+     site name, keeping the minimalist layout consistent. */
+  padding: var(--space-lg);
+}
+
+.heading {
+  /* Rendered as plain text — no oversized/bold browser-default heading — so
+     it reads in the same minimalist plain-text style as the 404 page, while
+     still being a real <h1> for structure and focus handoff. */
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+}
+
+.line {
+  /* Small gap below the heading to set the "back to home" link apart. */
+  margin: var(--space-sm) 0 0;
+}
+
+.detail {
+  /* The optional technical-detail disclosure sits well below the primary
+     message/link and reads as secondary (muted, smaller). */
+  margin: var(--space-lg) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.summary {
+  /* A native <summary> is the disclosure control; make it clearly clickable.
+     Its focus outline comes from the global :focus-visible rule. */
+  cursor: pointer;
+}
+
+.message {
+  margin: var(--space-sm) 0 0;
+}
+
+.trace {
+  /* The stack can carry long lines; keep them inside their own horizontal
+     scroll so the page body never scrolls sideways. */
+  margin: var(--space-xs) 0 0;
+  padding: var(--space-sm);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  overflow-x: auto;
+  line-height: var(--line-height-base);
+}

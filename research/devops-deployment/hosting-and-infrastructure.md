@@ -167,6 +167,38 @@ server with `--host 0.0.0.0` so Docker's port mapping can reach it. No
 source edit on the host was reflected by the containerized dev server
 within ~2s.
 
+## Addendum (2026-07-06): public ingress as deployed
+
+The "TLS/reverse proxy" working assumption above (`services.caddy` at the
+host level) is now implemented; the site is live at <https://nicbk.com>.
+The as-built topology, recorded here because it refines two details this
+doc assumed:
+
+- **Caddy runs on non-standard ports** (`http_port 8080`,
+  `https_port 8443`) because the node's port 80 stays with the
+  pre-existing nginx serving WireGuard-mesh-internal services
+  (Nextcloud/Collabora) — the mesh and the public internet converge on
+  the same WireGuard IP, so ports (not addresses) are the separator. The
+  EC2 relay maps public `80 → 10.100.0.2:8080` and
+  `443 → 10.100.0.2:8443`. With a non-standard `https_port`, Caddy's
+  automatic HTTP→HTTPS redirect would advertise `:8443`, so explicit
+  `http://` redirect vhosts issue portless redirects instead.
+  `www.nicbk.com` redirects to the apex (with its own certificate);
+  `server.nicbk.com` (WireGuard/SSH infrastructure DNS on the same IP)
+  is deliberately unserved — no vhost, no certificate.
+- **The relay uses iptables, not nftables** — the DNAT/masquerade rules
+  live in the EC2 host's wg-quick `PostUp`/`PostDown` (Amazon Linux 2),
+  not an nftables ruleset as this doc originally described. Functionally
+  identical.
+- **Return-path masquerade, scoped**: forwarded public flows are
+  masqueraded onto the tunnel (scoped to the two DNAT'd ports only, so
+  mesh peers keep their real source IPs), otherwise the node would reply
+  via its home-ISP default route and break the connection asymmetrically.
+  Accepted consequence: the app/Caddy sees every public client as the
+  relay's tunnel IP (`10.100.0.1`) — no real client IPs in logs and no
+  IP-based rate limiting at the node, the known cost of keeping the relay
+  a dumb, application-logic-free forwarder.
+
 ## Sources
 
 - [github.com/hercules-ci/arion](https://github.com/hercules-ci/arion),

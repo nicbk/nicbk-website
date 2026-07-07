@@ -1,11 +1,14 @@
 # Status: App Shell + Home Page
 
 **Feature state:** Complete (2026-07-06) — all five tasks merged behind
-green CI + human review. Remaining host-side work is tracked outside this
-feature: runner deployment/CI switch in
-[#11](https://github.com/nicbk/nicbk-website/issues/11); public ingress
-(Caddy + ACME) is host-flake scope per
-research/devops-deployment/hosting-and-infrastructure.md.
+green CI + human review. Host-side follow-ups have since resolved: public
+ingress (Caddy + ACME, host-flake scope) is live and the site serves at
+https://nicbk.com (see the ingress addendum in
+research/devops-deployment/hosting-and-infrastructure.md); the runner
+switch ([#11](https://github.com/nicbk/nicbk-website/issues/11)) was
+closed as not planned — CI stays on GitHub-hosted runners per the
+2026-07-06 runner-revision addendum in
+research/devops-deployment/ci-pipeline.md.
 
 Feature parent issue:
 [#1](https://github.com/nicbk/nicbk-website/issues/1); task sub-issues

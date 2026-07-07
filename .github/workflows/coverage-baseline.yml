@@ -17,8 +17,8 @@ permissions:
 jobs:
   baseline:
     name: Record coverage baseline
-    # TODO(#11): temporarily GitHub-hosted until the self-hosted Sysbox
-    # runner is deployed — then switch to `runs-on: self-hosted` per
+    # GitHub-hosted is the decided end state — see the 2026-07-06
+    # runner-revision addendum in
     # research/devops-deployment/ci-pipeline.md.
     runs-on: ubuntu-latest
     steps:

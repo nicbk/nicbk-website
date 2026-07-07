@@ -41,18 +41,17 @@ Guiding principles for every topic in this category:
   genuine local/prod definition with working hot-reload. Caddy + ACME stay
   NixOS-native; this repo's `nixosModules.default` is consumed as a pinned
   flake input by the general system flake.
-- [ci-pipeline.md](./ci-pipeline.md) — Decided. GitHub Actions workflows
-  (repo is public) with a self-hosted, ephemeral, Sysbox-isolated runner
-  (`docker/github-actions-runner`) added as one more service in the same
-  unified `docker-compose.yml`, on its own dedicated network — no separate
-  compose file needed, since per-service custom networks already isolate
-  it from Postgres/Garage/the app server. Gated by GitHub's
-  outside-collaborator approval requirement and a `pull_request`-only
-  (never `pull_request_target`) trigger, given the public-repo/fork-PR
-  threat model. Runs Biome lint/format, typecheck, the test suite (tooling
-  deferred to `testing-qa/`), PR-title Conventional Commits linting via
-  `amannn/action-semantic-pull-request`, and a security-scanning step
-  (tool deferred to `security-privacy/`).
+- [ci-pipeline.md](./ci-pipeline.md) — Decided; runner revised 2026-07-06.
+  GitHub Actions workflows (repo is public) on **GitHub-hosted runners** —
+  the originally decided self-hosted Sysbox runner turned out to be
+  unavailable on the NixOS host (Sysbox is not packaged in nixpkgs; see
+  the doc's revision addendum for the alternatives compared). Gated by
+  GitHub's outside-collaborator approval requirement and a
+  `pull_request`-only (never `pull_request_target`) trigger, given the
+  public-repo/fork-PR threat model. Runs Biome lint/format, typecheck,
+  the test suite (tooling deferred to `testing-qa/`), PR-title
+  Conventional Commits linting via `amannn/action-semantic-pull-request`,
+  and a security-scanning step (tool deferred to `security-privacy/`).
 - [deployment-strategy.md](./deployment-strategy.md) — Decided. Pull-based
   continuous deployment: the existing NixOS systemd deploy unit becomes a
   timer (proposed every 2 min) that polls `origin/main`, and on a new

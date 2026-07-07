@@ -1,6 +1,6 @@
 # CI gate for every task PR — see research/devops-deployment/ci-pipeline.md.
 #
-# Security posture (public repo, self-hosted runner):
+# Security posture (public repo):
 # - Trigger is plain `pull_request`, NEVER `pull_request_target`: fork PRs
 #   run with a read-only token and no secrets access.
 # - All third-party actions are pinned by full commit SHA, not by tag.
@@ -22,9 +22,9 @@ permissions:
 jobs:
   checks:
     name: Biome, typecheck, unit tests
-    # TODO(#11): temporarily GitHub-hosted (free/unlimited for public repos)
-    # until the self-hosted Sysbox runner is deployed — then switch back to
-    # `runs-on: self-hosted` per research/devops-deployment/ci-pipeline.md.
+    # GitHub-hosted is the decided end state (free/unlimited for public
+    # repos) — see the 2026-07-06 runner-revision addendum in
+    # research/devops-deployment/ci-pipeline.md.
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -85,7 +85,7 @@ jobs:
 
   e2e:
     name: Playwright e2e + axe (production build)
-    # TODO(#11): same temporary GitHub-hosted arrangement as `checks` above.
+    # GitHub-hosted, same decided arrangement as `checks` above.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -121,7 +121,7 @@ jobs:
 
   pr-title:
     name: PR title (Conventional Commits)
-    # TODO(#11): same temporary GitHub-hosted arrangement as `checks` above.
+    # GitHub-hosted, same decided arrangement as `checks` above.
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read

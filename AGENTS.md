@@ -100,3 +100,25 @@ Whenever the user asks the agent to discuss research or planning, the agent
 should discuss the topic with the user and wait for the user to explicitly
 tell it to execute before acting on a plan. Do not jump ahead to
 implementation during a research/planning discussion.
+
+## Visually test features in the browser
+
+Every visual feature must always be verified by actually looking at the
+running site in Chrome — not inferred from the code, the unit/e2e tests, or a
+screenshot taken once at a single size. Automated tests and manual viewing are
+complementary: the tests guard against regressions, but only viewing the real
+page catches layout, spacing, overflow, and interaction problems.
+
+- Load the affected page(s) in Chrome and look at every relevant feature the
+  change touches, **scrolling through the whole page** so nothing below the
+  fold is missed (off-screen content is where overflow and layout breakage
+  tend to hide).
+- **Interact** with the feature the way a user would — click links and
+  controls, toggle state, follow navigation — rather than only observing the
+  initial render.
+- Check the feature across the range of conditions it must support: both light
+  and dark themes, and a spread of browser widths (narrow/mobile, mid, and
+  wide) for anything responsive. Layout bugs are frequently width-dependent
+  and invisible at the one size you happened to test.
+- When viewing surfaces a problem, fix it and re-view to confirm, and add or
+  extend an automated test that locks the fix in.

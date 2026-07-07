@@ -1,25 +1,24 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { SiteHeader } from './-components/site-header/site-header'
+import { SiteShell } from '~/routes/-shared/components/site-shell/site-shell'
 
 /**
  * Layout for the (personal-site) route group: every personal-site page
- * renders inside the sticky site header, with page content in the <main>
- * landmark the skip link (__root.tsx) and route-change focus handoff
- * (src/focus-handoff.ts) both target.
+ * renders inside the shared SiteShell — the sticky site header plus the
+ * <main> landmark the skip link (__root.tsx) and route-change focus handoff
+ * (src/focus-handoff.ts) both target. The shell is shared with the
+ * root-level fallback pages so this wrapper is defined exactly once.
  */
 export const Route = createFileRoute('/(personal-site)')({
   component: PersonalSiteLayout,
 })
 
-function PersonalSiteLayout() {
+// Exported for the output-neutral regression test (route.test.tsx), which
+// renders it directly to assert the header + focusable <main> survive the
+// SiteShell refactor.
+export function PersonalSiteLayout() {
   return (
-    <>
-      <SiteHeader />
-      {/* tabIndex={-1} makes the landmark programmatically focusable for
-          the skip link and as the focus-handoff fallback. */}
-      <main id="main-content" tabIndex={-1}>
-        <Outlet />
-      </main>
-    </>
+    <SiteShell>
+      <Outlet />
+    </SiteShell>
   )
 }

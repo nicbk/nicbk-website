@@ -1,13 +1,13 @@
 # Status: Site Shell + Not-Found Page
 
-**State:** Not started (2026-07-06).
+**State:** Implemented, in review (2026-07-06). All local gates green
+(typecheck, Biome, 42 unit tests, 12 e2e against the production build).
 
-- Branch: _not yet created_ (`error-and-not-found/site-shell-and-not-found`
-  when started).
+- Branch: `error-and-not-found/site-shell-and-not-found`.
 - Sub-issue: [#21](https://github.com/nicbk/nicbk-website/issues/21)
-  (parent [#20](https://github.com/nicbk/nicbk-website/issues/20)); unassigned
-  — claim by self-assign before starting.
-- PR / CI / review: _pending._
+  (parent [#20](https://github.com/nicbk/nicbk-website/issues/20)); self-assigned.
+- PR / CI / review: [#32](https://github.com/nicbk/nicbk-website/pull/32)
+  open; awaiting CI + human review.
 
 ## Notes carried into implementation
 
@@ -20,3 +20,12 @@
 ## Log
 
 - 2026-07-06 — Task defined during feature spec. Not yet started.
+- 2026-07-06 — Implemented. Moved `site-header` into
+  `src/routes/-shared/components/` (now site-wide), extracted `SiteShell`
+  (header + focusable `<main>`), refactored `(personal-site)/route.tsx` onto
+  it (output-neutral, regression-tested), and added the designed lowercase
+  "page not found" page wired to the root `notFoundComponent`. Verified
+  TanStack Start's root `notFoundComponent` returns a real **HTTP 404** on
+  the production build (e2e asserts the response status). Added
+  `routeFileIgnorePattern` to the Start plugin so colocated `*.test.tsx`
+  files aren't scanned as routes. Opened PR; awaiting CI + review.

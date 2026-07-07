@@ -47,6 +47,28 @@ test.describe('app shell', () => {
     await expect(page).toHaveURL('/projects')
   })
 
+  test('the focus handoff does not draw a focus ring on the destination heading', async ({
+    page,
+  }) => {
+    // When navigation is keyboard-driven, the :focus-visible modality carries
+    // into the programmatic focus handoff, so without the outline suppression
+    // the destination heading would show a full-width focus ring. The heading is
+    // a non-interactive, tabindex="-1" focus target, so it must not.
+    await page.goto('/', { waitUntil: 'networkidle' })
+    const heading = page.getByRole('heading', { name: 'projects' })
+    await expect(async () => {
+      // Focus the nav link, then activate it with a real key press so the
+      // interaction modality is keyboard (the condition that produced the ring).
+      await page.getByRole('link', { name: 'projects' }).focus()
+      await page.keyboard.press('Enter')
+      await expect(heading).toBeFocused({ timeout: 1_000 })
+    }).toPass()
+    const outlineStyle = await heading.evaluate(
+      (el) => getComputedStyle(el).outlineStyle,
+    )
+    expect(outlineStyle).toBe('none')
+  })
+
   test('header stays visible when scrolling and stays a single row at all widths', async ({
     page,
   }) => {

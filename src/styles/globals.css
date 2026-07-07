@@ -53,3 +53,15 @@ a {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
+
+/* The route-change focus handoff (src/focus-handoff.ts) programmatically moves
+ * focus to the page's main heading (or the <main id="main-content"> landmark)
+ * after client-side navigation, purely to reposition screen-reader reading
+ * order. Both targets are non-interactive and out of the tab order
+ * (tabindex="-1"), so the ring above would otherwise draw a confusing
+ * full-width box around the heading on keyboard-initiated navigations. Suppress
+ * it for these focus targets only; genuine interactive controls keep theirs. */
+main h1:focus,
+#main-content:focus {
+  outline: none;
+}

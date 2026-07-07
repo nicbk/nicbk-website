@@ -94,6 +94,16 @@ source as mildly annoying for dev/test use, but not prohibitive.
   general avoid-duplication/minimal-surface principle, not unique
   reasoning invented for this topic.
 
+## Addendum (2026-07-06): CI Runner Revised to GitHub-Hosted
+
+The self-hosted Sysbox runner this doc's Testcontainers reasoning leaned
+on was revised to GitHub-hosted runners — see the 2026-07-06 addendum in
+[../devops-deployment/ci-pipeline.md](../devops-deployment/ci-pipeline.md).
+The Testcontainers decision survives with a *simpler* justification:
+GitHub-hosted `ubuntu-latest` runners ship a native Docker daemon, which
+Testcontainers supports out of the box — no Docker-in-Docker layer (the
+scenario Sysbox existed to make safe) is involved at all.
+
 ## Sources
 
 - Testcontainers' official Node.js Postgres module docs and community

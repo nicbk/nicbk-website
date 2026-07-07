@@ -99,6 +99,16 @@ PDF-specific complications found.
   (`docker cp` the trace out of the ephemeral runner, then
   `npx playwright show-trace`).
 
+## Addendum (2026-07-06): CI Runner Revised to GitHub-Hosted
+
+The self-hosted Sysbox runner this doc's intro assumed was revised to
+GitHub-hosted runners — see the 2026-07-06 addendum in
+[../devops-deployment/ci-pipeline.md](../devops-deployment/ci-pipeline.md).
+Nothing decided here changes: Playwright e2e already runs green on
+GitHub-hosted `ubuntu-latest` in the live CI workflow (traces are
+retrieved via the `actions/upload-artifact` failure path rather than
+`docker cp`).
+
 ## Sources
 
 - Playwright vs. Cypress 2026 market-share/adoption and benchmark

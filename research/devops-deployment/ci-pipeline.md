@@ -166,6 +166,91 @@ upload/download cache-action cycle (e.g. `docker/build-push-action`'s
   `backup-and-disaster-recovery.md` — so this doc owns "a step exists and
   gates the PR," not the tool underneath it.
 
+## Addendum (2026-07-06): Runner Decision Revised — GitHub-Hosted
+
+The self-hosted runner decided above was never deployed, and this addendum
+reverses that part of the decision: CI stays on GitHub-hosted runners, and
+issue [#11](https://github.com/nicbk/nicbk-website/issues/11) (deploy the
+Sysbox runner, switch `runs-on`) is closed as not planned. Everything else
+in this document — the pipeline steps, the public-repo safety gates, the
+plain-`pull_request`-only rule — is unchanged and remains binding.
+
+### What Invalidated the Original Decision
+
+The chosen `docker/github-actions-runner` image requires the Sysbox
+container runtime, and Sysbox turned out to be effectively unavailable on
+the NixOS production host: the nixpkgs package request
+([NixOS/nixpkgs#271901](https://github.com/NixOS/nixpkgs/issues/271901))
+was closed as not planned after the requester's own packaging attempt
+failed on overlayfs mounts; the only packaging anywhere is a one-person,
+0-star flake pinned a release behind upstream; and Sysbox-EE was archived
+in August 2025. Running the decided image would mean trusting unmaintained
+packaging of a security-critical runtime.
+
+### Alternatives Compared (research pass, 2026-07-06)
+
+- **Containerized ephemeral runner without Sysbox** — the strongest
+  self-hosted candidate. This repo's CI jobs never invoke Docker, so the
+  Docker-in-Docker capability Sysbox existed to provide safely is not
+  actually needed; an unprivileged, no-socket-mount, ephemeral container
+  (e.g. the actively maintained `myoung34/docker-github-actions-runner`,
+  Ubuntu 24.04 userland, `EPHEMERAL=1` + a compose restart loop) would run
+  the existing workflows unchanged, with gVisor (`runsc`, packaged in
+  nixpkgs) available later as a syscall-isolation upgrade.
+- **NixOS-native `services.github-runners` (ephemeral)** — excellent
+  systemd sandboxing (per-job `DynamicUser`, wiped state), but jobs run on
+  a non-FHS userland: `actions/setup-node`'s prebuilt binaries need
+  `nix-ld`, and Playwright must come from nixpkgs'
+  `playwright-driver.browsers`, whose version must exactly match the npm
+  `playwright` version — NixOS 25.11 stable ships 1.56.1 against npm
+  1.61.x, so the repo's `package.json` would be permanently coupled to the
+  host's nixpkgs channel, plus the workflows would need
+  `runner.environment` conditionals.
+- **microvm.nix guest VM** — the best isolation, but no published
+  GitHub-runner-in-microvm.nix pattern exists, per-job VM recycling would
+  be custom glue, guest RAM is a standing reservation on the host, and a
+  NixOS guest re-inherits the FHS problems above.
+- **GitHub-hosted status quo** — free and unlimited for public repos
+  (4 vCPU / 16 GB `ubuntu-latest`), reaffirmed through the December 2025
+  pricing changes (hosted rates cut; a proposed self-hosted platform
+  charge withdrawn, with public repos exempt even in the withdrawn plan).
+  It is also the posture GitHub's security guidance assumes: current docs
+  still say self-hosted runners "should almost never be used for public
+  repositories".
+
+### Why GitHub-Hosted Won
+
+- **The open-source gain from self-hosting is narrower than the original
+  decision weighed it.** The Actions control plane (scheduling, workflow
+  parsing, token issuance) is GitHub's proprietary service regardless of
+  runner choice; the `actions/runner` execution agent is the same MIT
+  code on both; and the hosted VM images' build sources are public
+  (`actions/runner-images`). Self-hosting moves only the compute onto
+  open ground — while the project is on the GitHub platform for git
+  hosting, issues, and PRs anyway, that residual gain does not pay for
+  the maintenance and risk below.
+- **Blast radius.** The would-be runner host is now the production node
+  serving the live site, Nextcloud, and the WireGuard mesh. GitHub-hosted
+  runners put untrusted fork-PR code on GitHub's disposable VMs instead
+  of anywhere near it. The approval gate mitigates but does not eliminate
+  that exposure (one careless approval executes untrusted code
+  on-premises).
+- **Zero cost, zero maintenance** vs. a runner-version treadmill (GitHub
+  is moving to enforce minimum runner versions), image/token plumbing,
+  and host hardening.
+- **Revisit trigger, decided now:** a local runner becomes worth
+  reconsidering only if the project migrates off github.com entirely to a
+  self-hosted platform (e.g. Forgejo) for git, issues, and CI together —
+  such a platform brings its own runner story, so this document's
+  self-hosted-runner section should be re-researched from scratch at that
+  point rather than resurrected.
+
+The `TODO(#11)` markers in `.github/workflows/` are removed; the
+workflows' `runs-on: ubuntu-latest` is now the decided end state, not a
+temporary arrangement. The caching section's self-hosted rationale is
+moot: on hosted runners the current npm-cache-free, no-image-build CI is
+fast enough that no cache action is warranted yet.
+
 ## Sources
 
 - [docs.github.com — billing and usage](https://docs.github.com/en/actions/concepts/billing-and-usage),
@@ -226,3 +311,42 @@ upload/download cache-action cycle (e.g. `docker/build-push-action`'s
   [GitGuardian blog](https://blog.gitguardian.com/trivys-march-supply-chain-attack-shows-where-secret-exposure-hurts-most/) —
   the March 2026 Trivy Action tag-hijack supply-chain compromise, and the
   pin-by-SHA mitigation carried forward regardless of final tool choice.
+
+Sources for the 2026-07-06 runner-revision addendum:
+
+- [NixOS/nixpkgs issue #271901](https://github.com/NixOS/nixpkgs/issues/271901),
+  [github.com/polferov/sysbox-nix](https://github.com/polferov/sysbox-nix),
+  [docker-archive/nestybox.sysbox-ee releases](https://github.com/docker-archive/nestybox.sysbox-ee/releases) —
+  Sysbox not packaged in nixpkgs (request closed not-planned), the sole
+  third-party flake's state, and Sysbox-EE's August 2025 archival.
+- [github.com/myoung34/docker-github-actions-runner](https://github.com/myoung34/docker-github-actions-runner) —
+  the maintained no-Sysbox ephemeral runner image the containerized
+  alternative would have used.
+- [nixpkgs — gvisor package](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/gv/gvisor/package.nix),
+  [nixpkgs — gvisor NixOS test](https://github.com/NixOS/nixpkgs/blob/master/nixos/tests/gvisor.nix) —
+  gVisor packaged in nixpkgs and wired as a Docker runtime, the
+  hardening upgrade path the containerized alternative kept open.
+- [nixpkgs release-25.11 — github-runner options](https://github.com/NixOS/nixpkgs/blob/release-25.11/nixos/modules/services/continuous-integration/github-runner/options.nix),
+  [wiki.nixos.org — Playwright](https://wiki.nixos.org/wiki/Playwright),
+  [NixOS Discourse — playwright-driver version sync](https://discourse.nixos.org/t/synchronize-versions-of-playwright-driver-browsers-and-npm-package/66267) —
+  the NixOS-native runner module's capabilities and the FHS/Playwright
+  version-coupling friction that demoted it.
+- [github.com/microvm-nix/microvm.nix](https://github.com/microvm-nix/microvm.nix),
+  [github.com/bitcoin-dev-tools/nix-github-runner](https://github.com/bitcoin-dev-tools/nix-github-runner) —
+  microvm.nix's state, and the closest runner project explicitly noting
+  the runner-in-microVM pattern is unimplemented.
+- [docs.github.com — GitHub-hosted runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners),
+  [github.com — 2026 pricing changes for GitHub Actions](https://github.com/resources/insights/2026-pricing-changes-for-github-actions),
+  [github.blog — reduced hosted-runner pricing (2026-01-01)](https://github.blog/changelog/2026-01-01-reduced-pricing-for-github-hosted-runners-usage/) —
+  hosted runners free/unlimited for public repos (4 vCPU / 16 GB), and
+  the December 2025 pricing episode leaving public repos free.
+- [docs.github.com — secure use reference](https://docs.github.com/en/actions/reference/security/secure-use),
+  [docs.github.com — managing GitHub Actions settings](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository) —
+  current "almost never" wording on self-hosted runners for public
+  repos, and the fork-PR approval policies' explicit non-sufficiency.
+- [github.com/actions/runner](https://github.com/actions/runner),
+  [github.com/actions/runner-images](https://github.com/actions/runner-images) —
+  what is and isn't open in the hosted path (MIT agent, public image
+  sources, proprietary control plane and compute).
+- [github.blog — runner minimum-version enforcement paused](https://github.blog/changelog/2026-03-13-self-hosted-runner-minimum-version-enforcement-paused/) —
+  the self-hosted runner-version maintenance treadmill.

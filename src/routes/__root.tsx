@@ -5,6 +5,8 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { type ReactNode } from 'react'
+import { NotFoundPage } from '~/routes/-shared/components/not-found-page/not-found-page'
+import { SiteShell } from '~/routes/-shared/components/site-shell/site-shell'
 import { SkipLink } from '~/routes/-shared/components/skip-link/skip-link'
 import globalsCssUrl from '~/styles/globals.css?url'
 import { themeInitScript } from '~/theme'
@@ -22,8 +24,9 @@ export const Route = createRootRoute({
     scripts: [{ children: themeInitScript }],
   }),
   component: RootComponent,
-  // Minimal placeholders only — the designed 404/error pages are the
-  // separate error-and-not-found feature.
+  // The designed 404 renders inside the shared site shell. The error
+  // fallback below is still the minimal placeholder — its designed page is
+  // task 2 (error-fallback) of the error-and-not-found feature.
   notFoundComponent: RootNotFound,
   errorComponent: RootErrorFallback,
 })
@@ -38,12 +41,9 @@ function RootComponent() {
 
 function RootNotFound() {
   return (
-    <main id="main-content" tabIndex={-1}>
-      <h1>Page not found</h1>
-      <p>
-        <a href="/">Back to home</a>
-      </p>
-    </main>
+    <SiteShell>
+      <NotFoundPage />
+    </SiteShell>
   )
 }
 

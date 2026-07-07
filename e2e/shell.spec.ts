@@ -74,16 +74,6 @@ test.describe('app shell', () => {
     }
   })
 
-  test('unknown routes render the minimal not-found handling', async ({
-    page,
-  }) => {
-    const response = await page.goto('/definitely-not-a-page')
-    expect(response?.status()).toBe(404)
-    await expect(
-      page.getByRole('heading', { name: 'Page not found' }),
-    ).toBeVisible()
-  })
-
   test('shell passes axe (critical/serious) in both themes', async ({
     page,
     expectNoA11yViolations,

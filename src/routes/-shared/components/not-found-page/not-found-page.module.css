@@ -1,0 +1,19 @@
+.page {
+  /* Matches the home page's padding so the fallback content aligns with the
+     header's site name, keeping the minimalist layout consistent. */
+  padding: var(--space-lg);
+}
+
+.heading {
+  /* Rendered as plain text — no oversized/bold browser-default heading — so
+     the page reads in the same minimalist plain-text style as the home page,
+     while still being a real <h1> for structure and focus handoff. */
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+}
+
+.line {
+  /* Small gap below the heading to set the "back to home" link apart. */
+  margin: var(--space-sm) 0 0;
+}

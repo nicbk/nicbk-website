@@ -16,5 +16,15 @@ export default defineConfig({
   // documented Node self-hosting path; without it the build emits only a
   // fetch handler with no listener. See
   // research/devops-deployment/containerization-and-build.md.
-  plugins: [tanstackStart(), nitro(), viteReact()],
+  plugins: [
+    tanstackStart({
+      // Keep colocated unit tests (e.g. route.test.tsx sitting next to a
+      // route file) out of the generated route tree — without this, the
+      // scanner treats any *.test.tsx under routes/ that isn't in a
+      // "-"-prefixed dir as a route and warns it exports no Route.
+      router: { routeFileIgnorePattern: '.*\\.test\\.tsx?$' },
+    }),
+    nitro(),
+    viteReact(),
+  ],
 })

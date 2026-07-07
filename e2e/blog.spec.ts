@@ -82,6 +82,31 @@ test.describe('blog list page', () => {
     await page.getByRole('button', { name: 'Toggle theme' }).click()
     await expectNoA11yViolations()
   })
+
+  test('stays within the viewport and caps the description measure across widths', async ({
+    page,
+  }) => {
+    await page.goto('/blog')
+    // No horizontal page overflow at narrow, mid, or wide viewports (the mid
+    // band is where the fixed date/title columns used to starve the description
+    // into an overflowing sliver).
+    for (const width of [1600, 800, 400]) {
+      await page.setViewportSize({ width, height: 800 })
+      const overflows = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+      )
+      expect(overflows, `horizontal overflow at ${width}px`).toBe(false)
+    }
+    // On a wide viewport the description is capped to a readable measure (~60ch)
+    // rather than stretching the full width.
+    await page.setViewportSize({ width: 1600, height: 800 })
+    const descriptionWidth = await page
+      .getByText('One schema is both', { exact: false })
+      .evaluate((el) => el.clientWidth)
+    expect(descriptionWidth).toBeLessThan(700)
+  })
 })
 
 test.describe('blog post page', () => {
@@ -146,5 +171,29 @@ test.describe('blog post page', () => {
     await expectNoA11yViolations()
     await page.getByRole('button', { name: 'Toggle theme' }).click()
     await expectNoA11yViolations()
+  })
+
+  test('the post image stays within the column at a narrow viewport', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 400, height: 800 })
+    await page.goto(`/blog/${POST.slug}`)
+    // No horizontal page scroll: the co-located SVG (intrinsically wider than a
+    // phone viewport) must scale down, not overflow. Regression guard for the
+    // MDX `<img>` that bypassed the BlogImage max-width override.
+    const overflows = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
+    )
+    expect(overflows).toBe(false)
+    const imageFitsColumn = await page
+      .getByRole('img', { name: POST.imageAlt })
+      .evaluate((el) => {
+        const image = el as HTMLImageElement
+        const parent = image.parentElement
+        return parent !== null && image.clientWidth <= parent.clientWidth
+      })
+    expect(imageFitsColumn).toBe(true)
   })
 })

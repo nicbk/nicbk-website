@@ -26,7 +26,11 @@
  */
 .list {
   display: grid;
-  grid-template-columns: max-content max-content 1fr;
+  /* Date and title size to content; the description caps at a readable measure
+     (`minmax(0, 60ch)`) instead of `1fr`, so on wide viewports its lines don't
+     stretch the full width into an unwieldy 90+ character measure. The unused
+     space stays empty on the right and the list keeps its left edge. */
+  grid-template-columns: max-content max-content minmax(0, 60ch);
   gap: var(--space-xs) var(--space-lg);
   margin: 0;
   padding: 0;
@@ -75,11 +79,14 @@
 }
 
 /*
- * Narrow viewports: the three-column alignment stops being legible, so each row
- * collapses to a single stacked column (date, title, summary) — the reading
- * order the DOM already provides.
+ * Below the desktop measure, the fixed date + title columns leave too little
+ * room for the description — it collapses to an unreadable sliver that wraps
+ * into a tall vertical strip. So before that happens, each row stacks into a
+ * single column (date, title, summary), the reading order the DOM already
+ * provides. The breakpoint is generous (64rem) because titles can be long; the
+ * three-column grid only applies when there is genuinely room for all three.
  */
-@media (max-width: 40rem) {
+@media (max-width: 64rem) {
   .list {
     grid-template-columns: 1fr;
   }

@@ -74,7 +74,8 @@
         "vite.config.ts",
         "vitest.config.ts",
         "playwright.config.ts",
-        "src/server.ts"
+        "src/server.ts",
+        "blog/mdx.d.ts"
       ],
       "linter": {
         "rules": {
@@ -96,6 +97,16 @@
                 "requireAscii": false
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/routes/**/*$*"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
           }
         }
       }

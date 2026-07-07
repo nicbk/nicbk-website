@@ -22,4 +22,10 @@
 
   --line-height-tight: 1.25;
   --line-height-base: 1.6;
+
+  /* Readable measure for long-form prose (the blog post column). ~68 characters
+   * sits in the 60–75ch band that keeps lines comfortably scannable, rather
+   * than letting body text span the full page width. `ch` is relative to the
+   * (monospace) font, so the measure tracks the type size. */
+  --prose-max-width: 68ch;
 }

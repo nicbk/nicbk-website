@@ -1,0 +1,19 @@
+.tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Decorative hash: kept in CSS, not the DOM, so tag text stays clean for the
+ * later search/filter matching. */
+.tag::before {
+  content: "#";
+}

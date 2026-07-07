@@ -51,7 +51,7 @@ need them (see Phases 2–3).
 |---|---|---|---|---|
 | 2 | About page (incl. GPG fingerprint + WKD/`.asc` publishing) | [`about-page`](./about-page/description.md) | **Complete** (2026-07-07; both tasks merged, #34 + #35) | #1 |
 | 3 | Projects page (entry point to Lit Tracker) | `projects-page` | Not yet spec'd | #1 |
-| 4 | Blog (MDX pipeline + list + post) | [`blog`](./blog/description.md) | **Spec'd** (2026-07-06; 3 tasks, not started) | #1 |
+| 4 | Blog (MDX pipeline + list + post) | [`blog`](./blog/description.md) | **In progress** (2026-07-07; task 1 in review, tasks 2–3 pending) | #1 |
 | 5 | 404 + error-fallback pages | [`error-and-not-found`](./error-and-not-found/description.md) | **Complete** (2026-07-07; both tasks merged, #32 + #33) | #1 |
 
 ### Phase 2 — Authentication (gates all of the Lit Tracker; introduces Postgres + Better Auth)

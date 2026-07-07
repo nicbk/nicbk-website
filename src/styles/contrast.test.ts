@@ -72,6 +72,20 @@ const TEXT_TOKENS = [
   '--color-accent',
 ] as const
 const NON_TEXT_TOKENS = ['--color-border', '--color-focus-ring'] as const
+// Syntax colors are code text, so they must clear the 4.5:1 text bar — audited
+// against --color-bg-surface, the code block's background.
+const SYNTAX_TOKENS = [
+  '--shiki-foreground',
+  '--shiki-token-comment',
+  '--shiki-token-keyword',
+  '--shiki-token-string',
+  '--shiki-token-string-expression',
+  '--shiki-token-function',
+  '--shiki-token-constant',
+  '--shiki-token-parameter',
+  '--shiki-token-punctuation',
+  '--shiki-token-link',
+] as const
 
 describe.each(Object.entries(THEMES))('%s theme palette', (_theme, tokens) => {
   function token(name: string): string {
@@ -92,5 +106,13 @@ describe.each(Object.entries(THEMES))('%s theme palette', (_theme, tokens) => {
     NON_TEXT_TOKENS.flatMap((ui) => SURFACES.map((surface) => [ui, surface])),
   )('non-text %s on %s meets 3:1', (ui, surface) => {
     expect(contrast(token(ui), token(surface))).toBeGreaterThanOrEqual(3)
+  })
+
+  it.each(
+    SYNTAX_TOKENS.map((syntax) => [syntax]),
+  )('syntax %s on --color-bg-surface meets 4.5:1', (syntax) => {
+    expect(
+      contrast(token(syntax), token('--color-bg-surface')),
+    ).toBeGreaterThanOrEqual(4.5)
   })
 })

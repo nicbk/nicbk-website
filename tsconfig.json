@@ -30,14 +30,24 @@
     // for nearby/colocated code) — see
     // research/coding-conventions/import-conventions.md.
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      // The blog content root lives at the repo root (a self-contained unit:
+      // its posts, frontmatter schema, and data layer), so it gets its own
+      // alias rather than being reachable only by deep relative paths.
+      "~blog/*": ["./blog/*"]
     },
 
     // Overlays generated/src onto src so *.module.css imports resolve to
     // the exact-key .d.ts files cmk generates (see cmkOptions below).
     "rootDirs": ["src", "generated/src"]
   },
-  "include": ["src", "vite.config.ts", "vitest.config.ts", "vitest.setup.ts"],
+  "include": [
+    "src",
+    "blog",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ],
   // Generates exact-key .d.ts files for *.module.css (via `npx cmk`, wired
   // into the typecheck script), so the decided dot-notation access to CSS
   // Modules composes with noPropertyAccessFromIndexSignature — and class

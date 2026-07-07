@@ -1,0 +1,48 @@
+---
+title: "Building this site with TanStack Start and MDX"
+date: "2026-06-15"
+updated: "2026-06-20"
+description: "How this site renders Markdown-plus-JSX posts at build time, with type-safe frontmatter and no client-side syntax highlighter."
+tags:
+  - meta
+  - tanstack
+  - mdx
+---
+
+import pipeline from './pipeline.svg'
+
+This site is a small [TanStack Start](https://tanstack.com/start) app. Posts
+like this one are plain MDX files committed into the repository — Markdown for
+the prose, with the occasional React component mixed in when a plain paragraph
+will not do.
+
+## Everything happens at build time
+
+There is no content database and no client-side Markdown runtime. Each post is
+compiled to a component while the site is built, so what ships to your browser
+is ordinary HTML.
+
+<img src={pipeline} alt="An MDX file compiling at build time into static HTML" />
+
+Code blocks are highlighted the same way — by Shiki, at build time — so no
+syntax-highlighter JavaScript is sent to the browser at all. The colors come
+from this site's own theme tokens rather than a bundled editor theme:
+
+```ts
+export function greet(name: string): string {
+  // Highlighted while the site is built, not in your browser.
+  return `hello, ${name}`
+}
+```
+
+<Callout type="note">
+  Because highlighting is pre-rendered, code blocks look identical whether or
+  not JavaScript runs — and they switch with the light/dark theme, since the
+  token colors are CSS variables.
+</Callout>
+
+## Why MDX
+
+Prose is the common case, but every so often a post needs a real component — a
+callout, a diagram, an interactive widget. MDX lets a post reach for one
+without turning the whole page into hand-written markup.

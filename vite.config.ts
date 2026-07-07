@@ -5,6 +5,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import { defineConfig, type Plugin } from 'vite'
+import { mdxPlugin } from './blog/mdx-plugins'
 
 /**
  * Serve `public/.well-known/**` in the dev server.
@@ -87,7 +88,12 @@ export default defineConfig({
       router: { routeFileIgnorePattern: '.*\\.test\\.tsx?$' },
     }),
     nitro(),
-    viteReact(),
+    // MDX (enforce:'pre') must run immediately before the React plugin so it
+    // compiles .mdx → JSX before React's transform sees it; viteReact must
+    // then be told to include .mdx so Fast Refresh/JSX handling applies to the
+    // compiled output. See blog/mdx-plugins.ts.
+    mdxPlugin(),
+    viteReact({ include: /\.(jsx|js|mdx|md|tsx|ts)$/ }),
     serveWellKnownInDev(),
   ],
 })

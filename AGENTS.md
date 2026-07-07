@@ -41,6 +41,11 @@ agent must detect whether compaction has occurred for any knowledge relevant
 to the current task, and if so, refresh that knowledge rather than trust a
 summary of it. A summary may not be good enough to do the relevant job.
 
+- As soon as the agent detects that a compaction has occurred, it must
+  immediately re-read [AGENTS.md](./AGENTS.md) and [index.md](./index.md) from
+  file, and then re-read all associated and informative documentation relevant
+  to the current task (following the links from those roots into the specific
+  documents the task depends on).
 - If the knowledge came from a project document, re-read that document.
 - If the knowledge came from the web, search the web again.
 - Do this before relying on the knowledge to plan or execute — do not assume

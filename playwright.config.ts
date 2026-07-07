@@ -19,6 +19,11 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: isCi ? 'npm run build && npm run start' : 'npm run dev',
+    // Enables the test-only /error-probe throw (src/routes/error-probe.tsx)
+    // for the error-fallback e2e. Vite inlines this at build/dev start, so it
+    // is set only here — production builds never carry it and the probe stays
+    // inert (renders the normal 404 instead of throwing).
+    env: { VITE_E2E_ERROR_PROBE: '1' },
     port: 3000,
     reuseExistingServer: !isCi,
     // Generous in CI: the command above includes a full production build.

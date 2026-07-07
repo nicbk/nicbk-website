@@ -5,6 +5,7 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { type ReactNode } from 'react'
+import { ErrorPage } from '~/routes/-shared/components/error-page/error-page'
 import { NotFoundPage } from '~/routes/-shared/components/not-found-page/not-found-page'
 import { SiteShell } from '~/routes/-shared/components/site-shell/site-shell'
 import { SkipLink } from '~/routes/-shared/components/skip-link/skip-link'
@@ -24,9 +25,9 @@ export const Route = createRootRoute({
     scripts: [{ children: themeInitScript }],
   }),
   component: RootComponent,
-  // The designed 404 renders inside the shared site shell. The error
-  // fallback below is still the minimal placeholder — its designed page is
-  // task 2 (error-fallback) of the error-and-not-found feature.
+  // Both fallbacks render their designed page inside the shared site shell
+  // (header + focusable <main>): the 404 for unmatched routes, and the
+  // generic error page when a descendant render or loader throws.
   notFoundComponent: RootNotFound,
   errorComponent: RootErrorFallback,
 })
@@ -51,15 +52,18 @@ interface RootErrorFallbackProps {
   error: Error
 }
 
-export function RootErrorFallback({ error }: RootErrorFallbackProps) {
+function RootErrorFallback({ error }: RootErrorFallbackProps) {
+  // Unlike notFoundComponent — which renders into RootComponent's <Outlet/>,
+  // inheriting the surrounding document — the root errorComponent *replaces*
+  // RootComponent entirely, so it must render the RootDocument shell (html
+  // lang, <head>, skip link, Scripts) itself; otherwise the error page has no
+  // <title>/lang and ships no styles or theme script.
   return (
-    <main id="main-content" tabIndex={-1}>
-      <h1>Something went wrong</h1>
-      <p>{error.message}</p>
-      <p>
-        <a href="/">Back to home</a>
-      </p>
-    </main>
+    <RootDocument>
+      <SiteShell>
+        <ErrorPage error={error} />
+      </SiteShell>
+    </RootDocument>
   )
 }
 

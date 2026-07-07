@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ErrorProbeRouteImport } from './routes/error-probe'
 import { Route as personalSiteRouteRouteImport } from './routes/(personal-site)/route'
 import { Route as personalSiteIndexRouteImport } from './routes/(personal-site)/index'
 import { Route as personalSiteProjectsRouteImport } from './routes/(personal-site)/projects'
 import { Route as personalSiteBlogRouteImport } from './routes/(personal-site)/blog'
 import { Route as personalSiteAboutRouteImport } from './routes/(personal-site)/about'
 
+const ErrorProbeRoute = ErrorProbeRouteImport.update({
+  id: '/error-probe',
+  path: '/error-probe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const personalSiteRouteRoute = personalSiteRouteRouteImport.update({
   id: '/(personal-site)',
   getParentRoute: () => rootRouteImport,
@@ -41,12 +47,14 @@ const personalSiteAboutRoute = personalSiteAboutRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/error-probe': typeof ErrorProbeRoute
   '/about': typeof personalSiteAboutRoute
   '/blog': typeof personalSiteBlogRoute
   '/projects': typeof personalSiteProjectsRoute
   '/': typeof personalSiteIndexRoute
 }
 export interface FileRoutesByTo {
+  '/error-probe': typeof ErrorProbeRoute
   '/about': typeof personalSiteAboutRoute
   '/blog': typeof personalSiteBlogRoute
   '/projects': typeof personalSiteProjectsRoute
@@ -55,6 +63,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(personal-site)': typeof personalSiteRouteRouteWithChildren
+  '/error-probe': typeof ErrorProbeRoute
   '/(personal-site)/about': typeof personalSiteAboutRoute
   '/(personal-site)/blog': typeof personalSiteBlogRoute
   '/(personal-site)/projects': typeof personalSiteProjectsRoute
@@ -62,12 +71,13 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/about' | '/blog' | '/projects' | '/'
+  fullPaths: '/error-probe' | '/about' | '/blog' | '/projects' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/about' | '/blog' | '/projects' | '/'
+  to: '/error-probe' | '/about' | '/blog' | '/projects' | '/'
   id:
     | '__root__'
     | '/(personal-site)'
+    | '/error-probe'
     | '/(personal-site)/about'
     | '/(personal-site)/blog'
     | '/(personal-site)/projects'
@@ -76,10 +86,18 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   personalSiteRouteRoute: typeof personalSiteRouteRouteWithChildren
+  ErrorProbeRoute: typeof ErrorProbeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/error-probe': {
+      id: '/error-probe'
+      path: '/error-probe'
+      fullPath: '/error-probe'
+      preLoaderRoute: typeof ErrorProbeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(personal-site)': {
       id: '/(personal-site)'
       path: ''
@@ -137,6 +155,7 @@ const personalSiteRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   personalSiteRouteRoute: personalSiteRouteRouteWithChildren,
+  ErrorProbeRoute: ErrorProbeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

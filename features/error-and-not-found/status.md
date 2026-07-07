@@ -1,7 +1,8 @@
 # Status: Error and Not-Found Pages
 
-**Feature state:** Spec'd, not yet started (2026-07-06). Folder written and
-tasks defined; no task implemented yet. Depends on
+**Feature state:** In progress (2026-07-06). Task 1
+(`site-shell-and-not-found`) is merged; task 2 (`error-fallback`) is
+implemented and in review. Depends on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — extracts
 `SiteShell` from its `(personal-site)/route.tsx` and fills the
 `notFoundComponent`/`errorComponent` placeholders it left in `__root.tsx`.
@@ -17,8 +18,8 @@ linked as native sub-issues of #20.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `site-shell-and-not-found` | Implemented, in review ([#21](https://github.com/nicbk/nicbk-website/issues/21)) | [#32](https://github.com/nicbk/nicbk-website/pull/32) | pending | pending |
-| `error-fallback` | Not started ([#22](https://github.com/nicbk/nicbk-website/issues/22)) | — | — | — |
+| `site-shell-and-not-found` | Complete ([#21](https://github.com/nicbk/nicbk-website/issues/21)) | [#32](https://github.com/nicbk/nicbk-website/pull/32) (merged) | pass | approved |
+| `error-fallback` | Implemented, in review ([#22](https://github.com/nicbk/nicbk-website/issues/22)) | pending | pending | pending |
 
 ## Definition of Done (feature)
 

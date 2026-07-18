@@ -35,6 +35,13 @@
   gap: var(--space-lg);
 }
 
+.search {
+  /* Cap the shared search field at the list's readable measure instead of
+     stretching across very wide viewports, consistent with the description
+     column's max width. */
+  max-width: 40ch;
+}
+
 .listArea {
   /* Allow the list column to shrink below its content's intrinsic width so the
      description column's `minmax(0, ...)` can take effect instead of overflowing. */

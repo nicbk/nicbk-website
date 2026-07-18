@@ -21,6 +21,23 @@ would reasonably want to link to or navigate back through goes in the
 route's search params, validated via a Zod schema on `validateSearch` and
 read through the typed `useSearch()` hook — not local component state.
 
+- **Continuously-edited shareable state keeps a local mirror so it stays
+  reactive.** For state a user changes continuously — a live search field is
+  the canonical case — the URL stays the shareable source of truth, but the
+  control ALSO holds the value in local `useState` that drives the UI on every
+  keystroke, mirroring to the URL on a short debounce (`replace`, so keystrokes
+  don't stack history). The visible result (the filtered list) must render from
+  that local value, never wait for the debounced navigation to resolve —
+  putting a navigation on the typing hot path makes filtering feel laggy and
+  non-reactive. The local copy adopts external URL changes (shared link, back/
+  forward, reset) back in, and the mirror is skipped whenever the two already
+  agree so the two effects can't ping-pong. The blog implements this in
+  `use-blog-filters.ts`. A discrete toggle (a tag button, a tab) needs no local
+  mirror — navigating on click is already instant. Note also that a debounced
+  URL mirror is a same-page navigation: it must not trigger page-level side
+  effects such as the route-change focus handoff (see
+  [../accessibility/keyboard-and-focus-management.md](../accessibility/keyboard-and-focus-management.md)).
+
 **Transient, non-shareable UI state → local `useState`.** Anything with no
 reason to survive a refresh or be linkable (a dropdown's open/closed state,
 a hover tooltip, the editing/non-editing toggle already decided in

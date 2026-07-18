@@ -162,6 +162,37 @@ test.describe('blog search and tag filter', () => {
     await expect(page.getByRole('link', { name: BUILDING })).toHaveCount(0)
   })
 
+  test('keeps focus in the search box while filtering (no handoff on filter)', async ({
+    page,
+  }) => {
+    // Regression guard: the blog's filters live in the URL, and the route-change
+    // focus handoff (src/focus-handoff.ts) used to fire on that same-page URL
+    // update, yanking focus to the <h1> — so the reader had to click back into
+    // the field after every settle. Filtering must leave focus on the input.
+    await page.goto('/blog')
+    const search = page.getByRole('searchbox', { name: 'Search posts' })
+    await search.fill('zod')
+
+    // Wait for the (debounced) URL mirror to land — i.e. the navigation that
+    // used to steal focus has actually happened by now.
+    await expect(page).toHaveURL(/[?&]q=zod\b/)
+    await expect(postRows(page)).toHaveCount(1)
+    await expect(search).toBeFocused()
+  })
+
+  test('keeps focus on a tag toggle after selecting it (no handoff on filter)', async ({
+    page,
+  }) => {
+    // Same regression as above, for the tag toggles: clicking one navigates
+    // (same pathname), which must not hand focus off to the heading.
+    await page.goto('/blog')
+    const typescriptTag = page.getByRole('button', { name: 'typescript' })
+    await typescriptTag.click()
+
+    await expect(page).toHaveURL(/tags=.*typescript/)
+    await expect(typescriptTag).toBeFocused()
+  })
+
   test('combines search and tags with AND', async ({ page }) => {
     // "mdx" (a tag on both posts) matches both; adding the "meta" tag (only on
     // Building this site) narrows the AND-composed result to that one post.

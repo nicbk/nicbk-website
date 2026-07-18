@@ -73,14 +73,27 @@ assumptions, memory, or a prior summary of what the file contains.
 - Only after reading should the agent reason about or act on the file's
   contents.
 
-## Avoid duplication
+## Build on what already exists and is already decided
 
-Agents must prevent duplication wherever possible, in both code and
-documentation. Before adding new code or docs, check whether equivalent
-logic, components, or content already exist elsewhere in the project and
-reuse/extend them instead of writing something new. This applies across all
-sub-applications sharing this project's infrastructure, not just within a
-single sub-app.
+Before writing new code or docs, work out how the change fits what the
+project has already established — both the decisions recorded in the research
+hierarchy and the code already in the tree — and build on that foundation
+rather than beside it.
+
+- Reuse or extend existing logic, components, and content instead of writing
+  a parallel version. Duplication is not merely wasteful: a second
+  implementation of something is where the two copies drift out of sync. This
+  applies across all sub-applications sharing this project's infrastructure,
+  not just within a single sub-app.
+- Treat recorded decisions as binding constraints on implementation, not
+  background reading. When a foundation has been chosen (a library, a
+  pattern, a convention), build the feature on it; do not quietly hand-roll
+  an alternative beside it. Doing so fragments the codebase into
+  built-from-scratch and adopted-foundation halves that have to be reconciled
+  later, and it silently discards the reasoning the decision was made for.
+- When the established foundation genuinely does not fit the task, that is a
+  decision to raise and re-decide with the user (see "Discuss before
+  executing"), not to route around silently.
 
 ## Code readability and documentation
 
@@ -101,24 +114,45 @@ should discuss the topic with the user and wait for the user to explicitly
 tell it to execute before acting on a plan. Do not jump ahead to
 implementation during a research/planning discussion.
 
-## Visually test features in the browser
+## Verify features against their intent, in the browser
 
-Every visual feature must always be verified by actually looking at the
-running site in Chrome — not inferred from the code, the unit/e2e tests, or a
-screenshot taken once at a single size. Automated tests and manual viewing are
-complementary: the tests guard against regressions, but only viewing the real
-page catches layout, spacing, overflow, and interaction problems.
+Every visual/interactive feature must be verified against what it is actually
+for — the experience it is meant to deliver and the reference it is meant to
+match — by exercising it in Chrome the way a user would. "It renders without
+errors" is not verification; it is the absence of one failure mode. Decide up
+front what success looks like (the intended behavior, plus the mockup or spec
+if one exists) and check the running feature against *that*, rather than
+accepting any plausible-looking result. This cannot be inferred from the code,
+the unit/e2e tests, or a screenshot taken once at a single size; automated
+tests and manual viewing are complementary — the tests guard against
+regressions, but only exercising the real page catches layout, spacing,
+overflow, and interaction problems.
 
-- Load the affected page(s) in Chrome and look at every relevant feature the
-  change touches, **scrolling through the whole page** so nothing below the
-  fold is missed (off-screen content is where overflow and layout breakage
-  tend to hide).
-- **Interact** with the feature the way a user would — click links and
-  controls, toggle state, follow navigation — rather than only observing the
-  initial render.
+- **Compare against the reference.** When the feature has a mockup or written
+  spec, put the running feature next to it and confirm it matches — the style,
+  the layout, the affordances — instead of settling for something that merely
+  looks reasonable on its own.
+- **Exercise the actual intent, not just the render.** Interact the way the
+  feature's purpose demands: if it is meant to respond live, act continuously
+  and watch it respond mid-interaction; if it must keep focus or preserve
+  state, drive it hard enough to expose the regression. Click links and
+  controls, toggle state, follow navigation — don't stop at the initial paint.
+- Load the affected page(s) and look at everything the change touches,
+  **scrolling through the whole page** so nothing below the fold is missed
+  (off-screen content is where overflow and layout breakage tend to hide).
 - Check the feature across the range of conditions it must support: both light
   and dark themes, and a spread of browser widths (narrow/mobile, mid, and
   wide) for anything responsive. Layout bugs are frequently width-dependent
   and invisible at the one size you happened to test.
 - When viewing surfaces a problem, fix it and re-view to confirm, and add or
   extend an automated test that locks the fix in.
+
+## Fix recurring mistakes at the level of the principle
+
+When a mistake — especially a repeated one — reveals a gap in this guidance,
+close the gap with the general principle behind it, not a rule naming the
+specific instance. A guideline that enumerates "remember to do X for feature
+Y" ages badly and misses the next variation; the durable fix names the
+underlying reason the mistake was possible, so it also covers cases nobody has
+hit yet. The two sections above were strengthened, and this one added, out of
+exactly such a review.

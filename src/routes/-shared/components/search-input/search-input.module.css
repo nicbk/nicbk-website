@@ -1,0 +1,75 @@
+.field {
+  display: flex;
+  /* Fill the container by default; a consumer caps the measure via `className`
+     (the blog constrains it to its readable column width). */
+  width: 100%;
+}
+
+/* Standard visually-hidden pattern: the field keeps a discernible accessible
+   name for screen readers while the visible placeholder carries the cue for
+   sighted users. */
+.label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+ * The pill: icon + input on one line inside a rounded, filled surface, per the
+ * literature-tracker mockup. The border, fill, and focus ring live here (not on
+ * the inner <input>) so the whole control reads as a single field.
+ */
+.control {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+}
+
+/*
+ * Focus ring on the pill, mirroring the global :focus-visible indicator
+ * (globals.css) — the inner input's own outline is suppressed below. Scoped to
+ * `:focus-visible` (via :has) so it shows for keyboard focus, not mouse clicks,
+ * matching the rest of the site.
+ */
+.control:has(.input:focus-visible) {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--color-text-muted);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-md);
+}
+
+/* The visible focus indicator is the ring on `.control` above. */
+.input:focus {
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}

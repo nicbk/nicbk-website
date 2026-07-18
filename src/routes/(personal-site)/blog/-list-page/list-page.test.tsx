@@ -1,6 +1,6 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { type ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ListPage } from './list-page'
 import { type PostListItem } from '~blog/posts'
 
@@ -48,6 +48,10 @@ vi.mock('@tanstack/react-router', () => ({
 beforeEach(() => {
   mockState.search = { q: '', tags: [] }
   mockState.navigate.mockClear()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 function post(
@@ -142,6 +146,36 @@ describe('ListPage', () => {
     )
     const links = screen.getAllByRole('link')
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['/blog/a'])
+  })
+
+  it('filters the list instantly as the reader types, before the URL updates', () => {
+    vi.useFakeTimers()
+    render(
+      <ListPage
+        posts={[
+          post('a', { title: 'Understanding hooks' }),
+          post('b', { title: 'Type-safe schemas' }),
+        ]}
+      />,
+    )
+
+    fireEvent.change(screen.getByRole('searchbox'), {
+      target: { value: 'hooks' },
+    })
+
+    // The list narrows on the keystroke itself — no navigation has happened yet
+    // (the URL is only a debounced mirror; the visible list filters from local
+    // state), so filtering never waits on the router.
+    expect(
+      screen.getAllByRole('link').map((a) => a.getAttribute('href')),
+    ).toEqual(['/blog/a'])
+    expect(mockState.navigate).not.toHaveBeenCalled()
+
+    // The query is mirrored to the URL once typing settles.
+    act(() => {
+      vi.advanceTimersByTime(250)
+    })
+    expect(mockState.navigate).toHaveBeenCalledTimes(1)
   })
 
   it('narrows the list to posts carrying the selected tags', () => {

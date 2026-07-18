@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 import { SiteHeader } from '~/routes/-shared/components/site-header/site-header'
+import styles from './site-shell.module.css'
 
 interface SiteShellProps {
   children: ReactNode
@@ -21,7 +22,7 @@ export function SiteShell({ children }: SiteShellProps) {
   return (
     <>
       <SiteHeader />
-      <main id="main-content" tabIndex={-1}>
+      <main id="main-content" className={styles.main} tabIndex={-1}>
         {children}
       </main>
     </>

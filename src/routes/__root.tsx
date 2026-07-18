@@ -11,6 +11,7 @@ import { SiteShell } from '~/routes/-shared/components/site-shell/site-shell'
 import { SkipLink } from '~/routes/-shared/components/skip-link/skip-link'
 import globalsCssUrl from '~/styles/globals.css?url'
 import { themeInitScript } from '~/theme'
+import styles from './__root.module.css'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -73,11 +74,11 @@ interface RootDocumentProps {
 
 function RootDocument({ children }: RootDocumentProps) {
   return (
-    <html lang="en">
+    <html lang="en" className={styles.html}>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className={styles.body}>
         <SkipLink />
         {children}
         <Scripts />

@@ -1,6 +1,8 @@
 # Styling Conventions
 
-Researched: 2026-07-04. Decided: 2026-07-04.
+Researched: 2026-07-04. Decided: 2026-07-04. Revised: 2026-07-17
+(global CSS reserved for tokens + cross-cutting primitives; element styling
+colocates with the component that renders the element).
 
 How CSS Modules are used day-to-day, building on the CSS Modules decision
 in [../ui-ux/design-system.md](../ui-ux/design-system.md). File *placement*
@@ -24,6 +26,27 @@ Global CSS custom properties live in separate category files
 each theme-invariant unless noted below. One `globals.css` `@import`s each
 category file, and only `globals.css` itself is imported once, from
 `__root.tsx` — category files are never imported individually at the root.
+
+**Global CSS is reserved for token definitions and irreducibly
+cross-cutting primitives; any rule targeting a specific element the
+component tree renders belongs on the component that renders it.**
+`globals.css` (and the category files it combines) holds two things and no
+more: the token/font definitions, and the handful of primitives that
+genuinely apply to *everything* with no single owning component — the
+universal `box-sizing` reset, the base `a` link color, and the
+`:focus-visible` ring (the site-wide WCAG 2.4.11 accessibility baseline, kept
+global on purpose so no component can silently drop its focus indicator). A
+rule that targets one element the React tree renders is *not* global CSS: it
+moves onto that element's component as a colocated CSS Module, so the styling
+can be traced by following the component hierarchy. Concretely, the
+document-root base (`html`/`body` — margin, background, base font, colors)
+lives in `__root.module.css` beside `__root.tsx` and is applied by
+`RootDocument` via `className`; and the focus-handoff outline suppression for
+the `<main>` landmark and its `<h1>` lives in `site-shell.module.css` scoped
+to `SiteShell`'s own `<main>` (`.main:focus, .main h1:focus`), rather than as
+a detached descendant selector floating in `globals.css`. Descendant/nested
+selectors reaching from a global sheet into whatever a component happens to
+render are specifically what this rule eliminates.
 
 **Theme (light/dark) variants live in `colors.css`, scoped by
 `[data-theme]`.** Since color is what actually varies between themes,
@@ -52,6 +75,19 @@ convenience escape hatch.
 
 ## Reasoning
 
+- Keeping global CSS to tokens + cross-cutting primitives makes styling
+  *traceable through the component hierarchy*: a reader finds where an
+  element is styled by following the tree to the component that renders it
+  and reading its colocated module, instead of scanning a global sheet for a
+  descendant selector that silently reaches into that component's markup. The
+  three retained global primitives are the ones with no single owner —
+  `box-sizing` and `a` apply to every box/anchor anywhere, and the
+  `:focus-visible` ring is deliberately global so the accessibility baseline
+  fails safe (a component can't forget it and lose its focus indicator). The
+  `html`/`body` base and the `<main>`/`<h1>` focus suppression *do* have an
+  owning component (`RootDocument`, `SiteShell`), so they colocate there —
+  and doing so also deletes the one detached descendant selector
+  (`main h1:focus`) that previously lived in `globals.css`.
 - The 1:1-with-exceptions rule avoids two failure modes: scattering styling
   logic outside its component (if the rule were skipped freely) and
   cluttering the codebase with pointless empty files (if the rule had zero

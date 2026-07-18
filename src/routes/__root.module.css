@@ -1,0 +1,24 @@
+/*
+ * Document-root base styling, applied by RootDocument (__root.tsx) to the
+ * <html> and <body> it renders. This lives here — colocated with the
+ * component that owns those elements — rather than as detached element rules
+ * in globals.css, so the styling can be traced by following the component
+ * tree. globals.css keeps only token definitions and irreducibly
+ * cross-cutting primitives; see research/coding-conventions/styling-conventions.md.
+ *
+ * The colors/font pull from the global tokens (colors.css / typography.css),
+ * so the theme still drives from [data-theme] set before first paint.
+ */
+.html {
+  height: 100%;
+}
+
+.body {
+  margin: 0;
+  min-height: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-base);
+}

@@ -96,6 +96,22 @@ test.describe('app shell', () => {
     }
   })
 
+  test('header does not overflow horizontally at the narrowest width', async ({
+    page,
+  }) => {
+    // The header keeps every item on one row at all widths (no hamburger). Its
+    // horizontal gaps and inline padding are fluid (clamp) so the row shrinks to
+    // fit the narrowest supported viewport instead of forcing horizontal page
+    // scroll — which fixed-width --space-lg spacing previously did below ~374px.
+    await page.setViewportSize({ width: 320, height: 720 })
+    await page.goto('/')
+    const overflow = await page.evaluate(() => {
+      const el = document.documentElement
+      return el.scrollWidth - el.clientWidth
+    })
+    expect(overflow).toBeLessThanOrEqual(0)
+  })
+
   test('shell passes axe (critical/serious) in both themes', async ({
     page,
     expectNoA11yViolations,

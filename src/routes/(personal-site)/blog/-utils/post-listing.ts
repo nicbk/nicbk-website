@@ -25,3 +25,19 @@ export function sortByDateDesc(items: PostListItem[]): PostListItem[] {
 export function excludeDrafts(items: PostListItem[]): PostListItem[] {
   return items.filter((item) => !item.frontmatter.draft)
 }
+
+/**
+ * The distinct set of tags across a listing, alphabetically sorted — the
+ * options the tag-filter sidebar (`-list-page/tag-filter`) offers. Derived from
+ * the same (already draft-filtered) listing the page renders, so the sidebar
+ * never advertises a tag that no visible post carries. Returns a new array.
+ */
+export function collectTags(items: PostListItem[]): string[] {
+  const tags = new Set<string>()
+  for (const { frontmatter } of items) {
+    for (const tag of frontmatter.tags) {
+      tags.add(tag)
+    }
+  }
+  return [...tags].sort()
+}

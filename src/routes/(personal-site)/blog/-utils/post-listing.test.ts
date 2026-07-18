@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { excludeDrafts, sortByDateDesc } from './post-listing'
+import { collectTags, excludeDrafts, sortByDateDesc } from './post-listing'
 import { type PostListItem } from '~blog/posts'
 
 /** Build a listing item with just the fields these transforms read. */
-function item(slug: string, date: string, draft = false): PostListItem {
+function item(
+  slug: string,
+  date: string,
+  draft = false,
+  tags: string[] = [],
+): PostListItem {
   return {
     slug,
     frontmatter: {
       title: slug,
       date: new Date(date),
       description: `${slug} description`,
-      tags: [],
+      tags,
       draft,
     },
   }
@@ -45,5 +50,21 @@ describe('excludeDrafts', () => {
       item('wip', '2026-02-01', true),
     ]
     expect(excludeDrafts(items).map((p) => p.slug)).toEqual(['published'])
+  })
+})
+
+describe('collectTags', () => {
+  it('returns the distinct tags across posts, alphabetically sorted', () => {
+    const items = [
+      item('a', '2026-01-01', false, ['react', 'meta']),
+      item('b', '2026-02-01', false, ['zod', 'react']),
+      item('c', '2026-03-01', false, ['meta']),
+    ]
+    expect(collectTags(items)).toEqual(['meta', 'react', 'zod'])
+  })
+
+  it('returns an empty array when no post has tags', () => {
+    const items = [item('a', '2026-01-01'), item('b', '2026-02-01')]
+    expect(collectTags(items)).toEqual([])
   })
 })

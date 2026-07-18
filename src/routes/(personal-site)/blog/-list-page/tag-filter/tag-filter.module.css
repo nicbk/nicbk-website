@@ -1,6 +1,6 @@
-.sidebar {
-  /* A narrow column of tag toggles; on wide viewports it sits beside the list,
-     on narrow it wraps above it (the page grid in list-page.module.css). */
+.container {
+  /* The tag heading stacked over a wrapping row of toggles; sits above the post
+     list at every width (the page grid in list-page.module.css). */
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);

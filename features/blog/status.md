@@ -88,9 +88,9 @@ established here for the Lit Tracker to reuse.
 - 2026-07-17 — Task 2 merged (PR #39). Task 3 (`blog-search-and-filter`)
   implemented on branch `blog/blog-search-and-filter` (#26): URL-search-param
   filter state (Zod 4 `validateSearch`, no adapter), a debounced native search
-  bar, a native-button tag sidebar (AND-composed multi-select), a pure
-  `filterPosts` predicate, a responsive layout (sidebar right on wide, tags
-  wrapping above the list on narrow), and a distinct no-match state. Confirmed
+  bar, a native-button tag filter (AND-composed multi-select), a pure
+  `filterPosts` predicate, a layout stacking search → tags → list, and a
+  distinct no-match state. Confirmed
   with the user: AND tag semantics, tags-above-list on mobile (not a drawer),
   native elements over Base UI. Details, incl. the `.optional()`-not-`.default()`
   schema decision, in the [task status](./tasks/blog-search-and-filter/status.md).
@@ -100,5 +100,10 @@ established here for the Lit Tracker to reuse.
   merged; every acceptance criterion in
   [constraints-and-behavior.md](./constraints-and-behavior.md) is met (MDX
   pipeline + post page, reverse-chronological list, and URL-driven search + tag
-  filtering, WCAG 2.2 AA in both themes). The search + tag-sidebar style is
+  filtering, WCAG 2.2 AA in both themes). The search + tag-filter style is
   established here for the Lit Tracker collection view (Phase 3) to reuse.
+- 2026-07-17 — Post-merge follow-up fix to the list layout: the wide-viewport
+  right-hand tag column was crushing the post description into a per-word/
+  per-character wrapping sliver, so the tags now stack above the list at every
+  width (see the [task status](./tasks/blog-search-and-filter/status.md) log).
+  Own branch + PR off `main`; feature remains Complete.

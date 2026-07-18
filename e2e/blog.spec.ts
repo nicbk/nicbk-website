@@ -99,13 +99,27 @@ test.describe('blog list page', () => {
       )
       expect(overflows, `horizontal overflow at ${width}px`).toBe(false)
     }
-    // On a wide viewport the description is capped to a readable measure (~60ch)
-    // rather than stretching the full width.
-    await page.setViewportSize({ width: 1600, height: 800 })
-    const descriptionWidth = await page
-      .getByText('One schema is both', { exact: false })
-      .evaluate((el) => el.clientWidth)
-    expect(descriptionWidth).toBeLessThan(700)
+    // At every width where the three-column row applies (>64rem), the description
+    // must sit between a healthy floor and its ~60ch cap. The upper bound keeps it
+    // from stretching the full width into an unwieldy measure; the lower bound is
+    // the regression guard for the bug that prompted stacking the tags ABOVE the
+    // list rather than in a right-hand `max-content` column — that side column
+    // starved this one into a per-word-wrapping sliver on wide viewports WITHOUT
+    // ever overflowing, so the horizontal-overflow check above cannot catch it.
+    for (const width of [1600, 1200, 1100]) {
+      await page.setViewportSize({ width, height: 800 })
+      const descriptionWidth = await page
+        .getByText('One schema is both', { exact: false })
+        .evaluate((el) => el.clientWidth)
+      expect(
+        descriptionWidth,
+        `description crushed at ${width}px`,
+      ).toBeGreaterThan(350)
+      expect(
+        descriptionWidth,
+        `description uncapped at ${width}px`,
+      ).toBeLessThan(700)
+    }
   })
 })
 
@@ -218,14 +232,14 @@ test.describe('blog search and tag filter', () => {
     expect(lengthAfter).toBe(lengthBefore)
   })
 
-  test('the tag sidebar remains operable at a mobile viewport', async ({
+  test('the tag filter remains operable at a mobile viewport', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 400, height: 800 })
     await page.goto('/blog')
 
-    const sidebar = page.getByRole('navigation', { name: 'Filter by tag' })
-    await expect(sidebar).toBeVisible()
+    const tagFilter = page.getByRole('navigation', { name: 'Filter by tag' })
+    await expect(tagFilter).toBeVisible()
 
     // No horizontal page overflow with the search + filter UI present at narrow.
     const overflows = await page.evaluate(

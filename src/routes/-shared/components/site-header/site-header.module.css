@@ -4,12 +4,21 @@
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
-  padding: var(--space-md) var(--space-lg);
+  /* Horizontal rhythm (the row gap and inline padding) shrinks with the
+     viewport so the single row fits the narrowest phones (~320px) without
+     wrapping — mirroring the font-size clamp below. Without this, the fixed
+     --space-lg spacing pinned the header's intrinsic width at ~374px and forced
+     horizontal page scroll under that. The ceiling equals --space-lg, so
+     desktop spacing is unchanged; the floor keeps items from touching on the
+     smallest screens. .nav inherits this value (custom properties cascade), so
+     it is defined once here. */
+  --header-inline-space: clamp(0.5rem, 2.5vw, 1.5rem);
+  gap: var(--header-inline-space);
+  padding: var(--space-md) var(--header-inline-space);
   background-color: var(--color-bg-surface);
   border-bottom: 1px solid var(--color-border);
-  /* Single row at every width — the font shrinks on very narrow screens
-     instead of wrapping or collapsing into a hamburger. */
+  /* Single row at every width — the spacing above and the font below shrink on
+     very narrow screens instead of wrapping or collapsing into a hamburger. */
   flex-wrap: nowrap;
   white-space: nowrap;
   font-size: clamp(0.75rem, 2.5vw, 1rem);
@@ -23,7 +32,9 @@
 
 .nav {
   display: flex;
-  gap: var(--space-lg);
+  /* Inherits --header-inline-space from .header so the gaps between nav links
+     shrink in lockstep with the header's own spacing on narrow screens. */
+  gap: var(--header-inline-space);
 }
 
 .navLink {

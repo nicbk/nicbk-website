@@ -100,6 +100,12 @@ routes they belong to — avoiding a second tree that just mirrors `routes/`:
     │                            hand-edited)
     ├── routes/                  (TanStack Router file-based routes)
     │   ├── __root.tsx
+    │   ├── __root.module.css     (document-root base: html/body margin,
+    │   │                         background, base font/colors — applied by
+    │   │                         RootDocument via className, colocated with
+    │   │                         the component that renders <html>/<body>
+    │   │                         rather than floating in globals.css. See
+    │   │                         styling-conventions.md)
     │   ├── -shared/              (dash-prefixed: excluded from the route
     │   │   │                     tree; code promoted here once a 2nd
     │   │   │                     feature needs it — see Decision above)
@@ -171,8 +177,13 @@ routes they belong to — avoiding a second tree that just mirrors `routes/`:
         │                        styling-conventions.md)
         ├── typography.css       (font-size/weight/line-height tokens)
         ├── spacing.css          (spacing-scale tokens)
-        └── globals.css          (@imports the category files above;
-                                 imported once, from __root.tsx)
+        └── globals.css          (@imports the category files above, plus
+                                 only irreducibly cross-cutting primitives —
+                                 box-sizing reset, base `a` color, the
+                                 :focus-visible ring; element-specific base
+                                 styling colocates with its component, e.g.
+                                 __root.module.css — see styling-conventions.md.
+                                 Imported once, from __root.tsx)
 ```
 
 - **Two colocation granularities**, matching how widely code is used:

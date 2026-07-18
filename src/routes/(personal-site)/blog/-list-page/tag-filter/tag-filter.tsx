@@ -10,9 +10,9 @@ interface TagFilterProps {
 }
 
 /**
- * The tag-filter sidebar: one toggle button per tag present in the list.
- * Selecting tags narrows the list to posts carrying all of them (AND-composed;
- * the filtering itself is `filterPosts`).
+ * The tag filter: one toggle button per tag present in the list, stacked above
+ * the post list at every width. Selecting tags narrows the list to posts
+ * carrying all of them (AND-composed; the filtering itself is `filterPosts`).
  *
  * Each toggle is a native `<button aria-pressed>` — the platform control for a
  * two-state toggle — so it is keyboard operable and conveys its pressed state to
@@ -20,7 +20,7 @@ interface TagFilterProps {
  * The pressed state is also shown visually (not by color alone) in the
  * stylesheet. Renders nothing when there are no tags.
  *
- * This is the originating implementation of the search-bar + tag-sidebar style
+ * This is the originating implementation of the search-bar + tag-filter style
  * the Lit Tracker's collection view later reuses.
  */
 export function TagFilter({ tags, selected, onToggle }: TagFilterProps) {
@@ -28,7 +28,7 @@ export function TagFilter({ tags, selected, onToggle }: TagFilterProps) {
     return null
   }
   return (
-    <nav className={styles.sidebar} aria-label="Filter by tag">
+    <nav className={styles.container} aria-label="Filter by tag">
       <h2 className={styles.heading}>Tags</h2>
       <ul className={styles.list}>
         {tags.map((tag) => (

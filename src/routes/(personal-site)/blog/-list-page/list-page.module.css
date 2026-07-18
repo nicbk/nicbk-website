@@ -19,44 +19,23 @@
 }
 
 /*
- * Page layout: the search bar, the tag sidebar, and the list. Source order is
- * search → tags → list, giving the keyboard focus order search → sidebar → list.
+ * Page layout: the search bar, then the tag filter, then the list — stacked in a
+ * single column at every width, in that source order (which is also the keyboard
+ * focus order: search → tags → list).
  *
- * Narrow (default): a single column — search, then the tags wrapping as a
- * horizontal row, then the list. On wider viewports the search spans the top and
- * the sidebar moves beside the list on the right (a content-width column), so
- * `grid-template-areas` re-places the same DOM without reordering it.
+ * The tags deliberately sit ABOVE the list rather than in a right-hand column. A
+ * content-width (`max-content`) tag column starves the list of horizontal space
+ * on wide viewports: once the fixed date + title columns are placed, the
+ * description's `minmax(0, 60ch)` track collapses toward zero and its text wraps
+ * one word — even one character — per line. Full-width stacking keeps the list at
+ * the page's full measure so the description holds its readable 60ch column.
  */
 .layout {
   display: grid;
-  grid-template-columns: 1fr;
-  grid-template-areas:
-    "search"
-    "tags"
-    "list";
   gap: var(--space-lg);
 }
 
-@media (min-width: 48rem) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) max-content;
-    grid-template-areas:
-      "search search"
-      "list   tags";
-    column-gap: var(--space-2xl);
-  }
-}
-
-.searchArea {
-  grid-area: search;
-}
-
-.tagArea {
-  grid-area: tags;
-}
-
 .listArea {
-  grid-area: list;
   /* Allow the list column to shrink below its content's intrinsic width so the
      description column's `minmax(0, ...)` can take effect instead of overflowing. */
   min-width: 0;

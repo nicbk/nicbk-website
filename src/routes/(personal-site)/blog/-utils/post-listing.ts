@@ -28,9 +28,9 @@ export function excludeDrafts(items: PostListItem[]): PostListItem[] {
 
 /**
  * The distinct set of tags across a listing, alphabetically sorted — the
- * options the tag-filter sidebar (`-list-page/tag-filter`) offers. Derived from
- * the same (already draft-filtered) listing the page renders, so the sidebar
- * never advertises a tag that no visible post carries. Returns a new array.
+ * options the tag filter (`-list-page/tag-filter`) offers. Derived from the same
+ * (already draft-filtered) listing the page renders, so the tag filter never
+ * advertises a tag that no visible post carries. Returns a new array.
  */
 export function collectTags(items: PostListItem[]): string[] {
   const tags = new Set<string>()

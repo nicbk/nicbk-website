@@ -24,15 +24,15 @@ const REVEAL_STEP = 15
 
 /**
  * The `/blog` index: a flat, reverse-chronological list of posts, matching
- * high-level-guidance/design/blog-page.png, with a search bar and a tag-filter
- * sidebar over it. Each row is date / title / description with tags inline after
+ * high-level-guidance/design/blog-page.png, with a search bar and a tag filter
+ * stacked above it. Each row is date / title / description with tags inline after
  * the description, and the columns line up down the page via a CSS grid (see the
  * module stylesheet). Ordering and draft-exclusion happen upstream in the route
  * loader (`-lib/load-listing.ts`).
  *
  * Filter state (search text + selected tags) lives in the URL, read and updated
  * through `useBlogFilters`; `filterPosts` derives the visible set from the full
- * listing and that state, still newest-first. The search bar and tag sidebar
+ * listing and that state, still newest-first. The search bar and tag filter
  * stay rendered even when the filter matches nothing, so the reader can always
  * adjust or clear it.
  */
@@ -54,12 +54,8 @@ export function ListPage({ posts }: ListPageProps) {
         <p className={styles.empty}>No posts yet.</p>
       ) : (
         <div className={styles.layout}>
-          <div className={styles.searchArea}>
-            <SearchBar value={q} onQueryChange={setQuery} />
-          </div>
-          <div className={styles.tagArea}>
-            <TagFilter tags={allTags} selected={tags} onToggle={toggleTag} />
-          </div>
+          <SearchBar value={q} onQueryChange={setQuery} />
+          <TagFilter tags={allTags} selected={tags} onToggle={toggleTag} />
           <div className={styles.listArea}>
             <PostList posts={visiblePosts} />
           </div>

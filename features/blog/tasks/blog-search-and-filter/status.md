@@ -20,29 +20,32 @@
   with a visually-hidden label. Local input state + 250 ms debounce pushes the
   query with **replace** navigation (keystrokes don't flood history); a sync
   effect adopts external `q` changes (shared link, back/forward).
-- **Tag sidebar** (`-list-page/tag-filter/`): native `<button aria-pressed>`
+- **Tag filter** (`-list-page/tag-filter/`): native `<button aria-pressed>`
   toggles, one per tag (`collectTags`). Pressed state shown by color **and**
   weight (not color alone). Toggling **pushes** history, so back/forward steps
-  through tag states. Originates the reusable search + tag-sidebar style for the
+  through tag states. Originates the reusable search + tag-filter style for the
   Lit Tracker.
 - **Pure filtering** (`-utils/filter-posts.ts`): `filterPosts(posts, {q, tags})`
   — case-insensitive substring over title/description/tags, AND-composed with
   the selected tags, preserving newest-first order.
-- **Layout** (`-list-page/list-page.module.css`): DOM order search → sidebar →
-  list (a11y focus order); wide viewports place list left / sidebar right via
-  `grid-template-areas`, narrow (<48rem) stacks search → tags → list.
+- **Layout** (`-list-page/list-page.module.css`): a single column at every
+  width — search → tags → list, in DOM order (also the a11y focus order). The
+  tags sit **above** the list at all widths (see the 2026-07-17 follow-up log
+  entry for why a right-hand column was rejected).
 - **No-match state:** plain "No posts match your search." (distinct from the
-  "No posts yet." empty state), with the search/sidebar kept rendered.
+  "No posts yet." empty state), with the search/tag filter kept rendered.
 
 ## Decisions (confirmed with the user)
 
 - **Multiple tags = AND** (post must carry all selected tags) — matches the
   spec's "narrows" wording and the "AND-composed" acceptance criterion.
-- **Mobile: tags wrap above the list** (a horizontal row between search and
-  list), not a drawer and not below the list. A minor, deliberate deviation from
-  the spec's literal "reflows below the list content" — keeps the a11y focus
-  order (search → tags → list) and avoids a stateful drawer, per the minimalist
-  design philosophy. The spec's drawer alternative was the fallback.
+- **Tags above the list at every width** (a horizontal row between search and
+  list), not a drawer, not below the list, and not a right-hand column. A minor,
+  deliberate deviation from the spec's literal "reflows below the list content" —
+  keeps the a11y focus order (search → tags → list) and avoids a stateful drawer,
+  per the minimalist design philosophy. The spec's drawer alternative was the
+  fallback. (The initial implementation used a right-hand sidebar column on wide
+  viewports; the 2026-07-17 follow-up removed it — see the log.)
 - **Native elements, not Base UI**, for the input and toggles — the platform
   controls already give correct semantics/keyboard/pressed-state, matching the
   theme toggle's native-first reasoning.
@@ -70,9 +73,12 @@
   URL round-trip, pre-filtered link + reload, history hygiene (tag push vs.
   typing replace), mobile operability, and axe with a tag selected in both
   themes.
-- Chrome visual check at 1280px and 500px, both themes: sidebar-right/list-left
-  on wide, tags-above-list on narrow, tag + search filtering, pressed state, and
-  the `:focus-visible` ring on the search field and tag toggles.
+- Chrome visual check at 1280px and 500px, both themes: tags-above-list at both
+  widths, tag + search filtering, pressed state, and the `:focus-visible` ring on
+  the search field and tag toggles. (Post-follow-up: the description column holds
+  a readable measure at wide widths instead of a right-hand sidebar crushing it —
+  measured 576px at 1600/1200px and 478px at 1100px, guarded by an e2e lower
+  bound.)
 
 ## Log
 
@@ -80,4 +86,15 @@
   `blog-list-page`.
 - 2026-07-17 — Implemented on `blog/blog-search-and-filter`. Search-param state,
   search bar, tag sidebar, pure filter, responsive layout, no-match state; full
-  unit + e2e + Chrome verification green. Awaiting PR + CI + review.
+  unit + e2e + Chrome verification green. Merged as PR #46.
+- 2026-07-17 — **Follow-up fix (post-merge):** removed the wide-viewport
+  right-hand tag column. On wide screens the `max-content` sidebar starved the
+  three-column list row, collapsing the description into a per-word (even
+  per-character) wrapping sliver — the layout bug the initial Chrome check missed
+  by only sampling 1280px and 500px, not the mid/wide band where the
+  three-column row is active. The tags now stack above the list at **every**
+  width (the narrow layout, generalized), so the list keeps the page's full
+  measure and the description holds its ~60ch column. Verified in Chrome at wide
+  (1280px) and narrow, both themes, and locked in with an e2e lower-bound
+  assertion on the description width at 1600/1200/1100px. Own branch + PR off
+  `main`.

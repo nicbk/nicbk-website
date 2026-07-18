@@ -119,7 +119,7 @@ describe('ListPage', () => {
     expect(screen.queryByRole('searchbox')).toBeNull()
   })
 
-  it('renders the search field and tag sidebar when posts exist', () => {
+  it('renders the search field and tag filter when posts exist', () => {
     render(<ListPage posts={[post('a', { tags: ['react'] })]} />)
     expect(
       screen.getByRole('searchbox', { name: 'Search posts' }),

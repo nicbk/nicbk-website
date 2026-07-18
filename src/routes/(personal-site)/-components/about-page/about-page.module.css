@@ -41,9 +41,16 @@
   /* Label/value rows as a two-column grid: column 1 sizes to the widest term
      in THIS list, so each list aligns its own values (reproducing the
      mockup's two different value offsets). Indented under its section
-     heading, as in the mockup. */
+     heading, as in the mockup.
+
+     The value column is minmax(0, 1fr), not a bare 1fr: 1fr resolves to
+     minmax(auto, 1fr), whose auto minimum is the value's min-content width. A
+     value with no break opportunities (the 40-char GPG fingerprint) would pin
+     that minimum wider than a narrow viewport and force horizontal page
+     overflow. The 0 lower bound lets the column shrink; .desc's overflow-wrap
+     then wraps the long value instead of overflowing. */
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   column-gap: var(--space-lg);
   margin: 0;
   padding-left: var(--space-xl);
@@ -58,6 +65,12 @@
   /* The value cell; <dd> carries a default left margin the grid must not
      inherit. */
   margin: 0;
+  /* Break an otherwise-unbreakable value (the GPG fingerprint) so it wraps
+     inside the narrowed value column instead of overflowing the page. `anywhere`
+     (not `break-word`) also collapses the value's min-content contribution, so
+     the grid track can actually shrink; the value still stays on one line when
+     it fits. */
+  overflow-wrap: anywhere;
 }
 
 .note {

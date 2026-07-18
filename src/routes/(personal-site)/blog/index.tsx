@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { BlogListPage } from './-components/blog-list-page/blog-list-page'
 import { loadPostListing } from './-lib/load-listing'
+import { ListPage } from './-list-page/list-page'
 
 /**
  * The `/blog` index route: the reverse-chronological post list.
@@ -24,5 +24,5 @@ export const Route = createFileRoute('/(personal-site)/blog/')({
 
 function BlogListRoute() {
   const { posts } = Route.useLoaderData()
-  return <BlogListPage posts={posts} />
+  return <ListPage posts={posts} />
 }

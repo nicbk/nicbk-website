@@ -1,11 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { isoDate } from '../../-utils/format-date'
-import { useIncrementalReveal } from '../../-utils/use-incremental-reveal'
-import { PostTags } from '../post-tags/post-tags'
-import styles from './blog-list-page.module.css'
+import { PostTags } from '../-components/post-tags/post-tags'
+import { isoDate } from '../-utils/format-date'
+import { useIncrementalReveal } from '../-utils/use-incremental-reveal'
+import styles from './list-page.module.css'
 import { type PostListItem } from '~blog/posts'
 
-interface BlogListPageProps {
+interface ListPageProps {
   /** Posts to list, already filtered (drafts) and ordered (newest-first). */
   posts: PostListItem[]
 }
@@ -25,7 +25,7 @@ const REVEAL_STEP = 15
  * draft-exclusion happen upstream in the route loader (`-lib/load-listing.ts`);
  * this component only renders what it is given.
  */
-export function BlogListPage({ posts }: BlogListPageProps) {
+export function ListPage({ posts }: ListPageProps) {
   const { visibleCount, sentinelRef } = useIncrementalReveal(
     posts.length,
     REVEAL_STEP,

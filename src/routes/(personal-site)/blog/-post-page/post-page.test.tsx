@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { type ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { BlogPostPage } from './blog-post-page'
 import Fixture from './fixture.mdx'
+import { PostPage } from './post-page'
 import { type Frontmatter } from '~blog/frontmatter-schema'
 
 // The "back to blog list" link is a router <Link>; mock it to a plain anchor so
@@ -21,16 +21,16 @@ const frontmatter: Frontmatter = {
   draft: false,
 }
 
-describe('BlogPostPage', () => {
+describe('PostPage', () => {
   it('renders the title as the single main heading (focus-handoff target)', () => {
-    render(<BlogPostPage frontmatter={frontmatter} Content={Fixture} />)
+    render(<PostPage frontmatter={frontmatter} Content={Fixture} />)
     const h1s = screen.getAllByRole('heading', { level: 1 })
     expect(h1s).toHaveLength(1)
     expect(h1s[0]).toHaveTextContent('Fixture Post')
   })
 
   it('shows the formatted date and the tags', () => {
-    render(<BlogPostPage frontmatter={frontmatter} Content={Fixture} />)
+    render(<PostPage frontmatter={frontmatter} Content={Fixture} />)
     expect(screen.getByText('June 15, 2026')).toBeInTheDocument()
     expect(screen.getByText('alpha')).toBeInTheDocument()
     expect(screen.getByText('beta')).toBeInTheDocument()
@@ -38,11 +38,11 @@ describe('BlogPostPage', () => {
 
   it('shows an "updated" date only when present', () => {
     const { rerender } = render(
-      <BlogPostPage frontmatter={frontmatter} Content={Fixture} />,
+      <PostPage frontmatter={frontmatter} Content={Fixture} />,
     )
     expect(screen.queryByText(/updated/)).toBeNull()
     rerender(
-      <BlogPostPage
+      <PostPage
         frontmatter={{
           ...frontmatter,
           updated: new Date('2026-06-20T00:00:00Z'),
@@ -55,14 +55,14 @@ describe('BlogPostPage', () => {
   })
 
   it('links back to the blog list', () => {
-    render(<BlogPostPage frontmatter={frontmatter} Content={Fixture} />)
+    render(<PostPage frontmatter={frontmatter} Content={Fixture} />)
     expect(
       screen.getByRole('link', { name: /back to blog list/ }),
     ).toHaveAttribute('href', '/blog')
   })
 
   it('renders the compiled MDX body: code, a Callout, and an image with alt', () => {
-    render(<BlogPostPage frontmatter={frontmatter} Content={Fixture} />)
+    render(<PostPage frontmatter={frontmatter} Content={Fixture} />)
     // Build-time-highlighted code (the token text survives highlighting).
     expect(screen.getByText(/answer/)).toBeInTheDocument()
     // The global <Callout> resolved through the MDX provider.

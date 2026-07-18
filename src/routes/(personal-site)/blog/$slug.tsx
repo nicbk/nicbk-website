@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { lazy, useMemo } from 'react'
-import { BlogPostPage } from './-components/blog-post-page/blog-post-page'
 import { loadPostFrontmatter } from './-lib/load-post'
+import { PostPage } from './-post-page/post-page'
 import { postHeadMeta } from './-utils/post-head'
 import { getPostContentLoader } from '~blog/posts'
 
@@ -43,5 +43,5 @@ function BlogPostRoute() {
     return lazy(load)
   }, [slug])
 
-  return <BlogPostPage frontmatter={frontmatter} Content={Content} />
+  return <PostPage frontmatter={frontmatter} Content={Content} />
 }

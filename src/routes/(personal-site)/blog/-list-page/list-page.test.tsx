@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { type ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { BlogListPage } from './blog-list-page'
+import { ListPage } from './list-page'
 import { type PostListItem } from '~blog/posts'
 
 // Row titles are router <Link>s; mock to a plain anchor that substitutes the
@@ -48,9 +48,9 @@ function post(
   }
 }
 
-describe('BlogListPage', () => {
+describe('ListPage', () => {
   it('renders the single main heading (focus-handoff target)', () => {
-    render(<BlogListPage posts={[post('a')]} />)
+    render(<ListPage posts={[post('a')]} />)
     const h1s = screen.getAllByRole('heading', { level: 1 })
     expect(h1s).toHaveLength(1)
     expect(h1s[0]).toHaveTextContent('blog')
@@ -58,7 +58,7 @@ describe('BlogListPage', () => {
 
   it('renders one row per post: date, title link, description, inline tags', () => {
     render(
-      <BlogListPage
+      <ListPage
         posts={[
           post('first', {
             title: 'First Post',
@@ -83,7 +83,7 @@ describe('BlogListPage', () => {
   })
 
   it('renders rows in the order given (list does not re-sort)', () => {
-    render(<BlogListPage posts={[post('newer'), post('older')]} />)
+    render(<ListPage posts={[post('newer'), post('older')]} />)
     const links = screen.getAllByRole('link')
     expect(links.map((a) => a.getAttribute('href'))).toEqual([
       '/blog/newer',
@@ -92,7 +92,7 @@ describe('BlogListPage', () => {
   })
 
   it('shows the plain-text empty state when there are no posts', () => {
-    render(<BlogListPage posts={[]} />)
+    render(<ListPage posts={[]} />)
     expect(screen.getByText('No posts yet.')).toBeInTheDocument()
     expect(screen.queryByRole('list')).toBeNull()
     expect(screen.queryByRole('status')).toBeNull()

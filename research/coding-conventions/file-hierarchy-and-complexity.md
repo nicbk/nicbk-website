@@ -1,6 +1,9 @@
 # File Hierarchy and Complexity
 
-Researched: 2026-07-04. Decided: 2026-07-04.
+Researched: 2026-07-04. Decided: 2026-07-04. Revised: 2026-07-17
+(per-page colocation — a page's route file now sits in the same folder as
+the code that implements it; see the colocation bullets and Concrete Layout
+below).
 
 Concrete, code-specific rules for when to split a component/module into its
 own file or folder, and colocation conventions — operationalizing
@@ -36,6 +39,23 @@ general; this is its code-specific application).
   with `-` are excluded from route-tree generation but still live inside
   `routes/`), rather than split into a separate top-level tree that
   mirrors `routes/`'s structure. See Concrete Layout below.
+- **A page's route file and the code that implements it live in the same
+  folder.** A page owning a single route gets a folder named for its path
+  segment, holding the route file (`route.tsx`) beside its `-`-prefixed
+  implementation — e.g. `about/route.tsx` next to `about/-about-page/`. A
+  sub-feature spanning several routes gets one folder holding all of its
+  route files plus the `-components/`/`-lib/`/`-utils/` those routes share —
+  e.g. `blog/` with `index.tsx` + `$slug.tsx` alongside `-list-page/`,
+  `-post-page/`, and the shared `-components/`/`-lib/`/`-utils/`. This keeps
+  everything needed to read one page in one place, rather than separating
+  route files at a group's root from their implementations under a single
+  group-wide `-components/` folder. The one route that can't be a
+  path-named folder — the group's index (`/`) — is wrapped in a pathless
+  `(home)/` group (pathless groups add no URL segment) so it, too, gets its
+  own folder holding `index.tsx` beside `-home-page/`. This is the same
+  colocate-beside-the-one-route rule already stated below under "Two
+  colocation granularities"; the route file is simply one more colocated
+  sibling of the code it wires up.
 - **Promotion to the shared layer: on the 2nd consumer**, not the 3rd. As
   soon as a second feature area needs the same logic/component, move it to
   the shared layer — don't wait for a third consumer (the more conservative
@@ -87,11 +107,24 @@ routes they belong to — avoiding a second tree that just mirrors `routes/`:
     │   │   ├── lib/               (wrappers/facades)
     │   │   └── utils/             (small general-purpose pure functions)
     │   ├── (personal-site)/       (route group)
-    │   │   ├── -components/
-    │   │   ├── -lib/
-    │   │   ├── -utils/
-    │   │   ├── index.tsx
-    │   │   └── blog.$slug.tsx
+    │   │   ├── route.tsx           (group layout — the shared site shell)
+    │   │   ├── (home)/             (pathless group so the index route `/`
+    │   │   │   │                    gets its own folder like every page)
+    │   │   │   ├── index.tsx        (the `/` route)
+    │   │   │   └── -home-page/      (its implementation, colocated)
+    │   │   ├── about/
+    │   │   │   ├── route.tsx        (the `/about` route)
+    │   │   │   └── -about-page/     (its implementation, colocated)
+    │   │   ├── projects.tsx         (trivial stub — no siblings yet, so it
+    │   │   │                         stays a flat file per the split rule)
+    │   │   └── blog/                (a sub-feature spanning two routes)
+    │   │       ├── index.tsx        (the `/blog` route)
+    │   │       ├── $slug.tsx        (the `/blog/$slug` route)
+    │   │       ├── -list-page/      (implements `/blog`)
+    │   │       ├── -post-page/      (implements `/blog/$slug`)
+    │   │       ├── -components/     (shared by both blog routes)
+    │   │       ├── -lib/
+    │   │       └── -utils/
     │   └── lit-tracker/
     │       ├── -components/       (shared across multiple lit-tracker
     │       │                      routes, e.g. header, sidebar filters)
@@ -144,8 +177,10 @@ routes they belong to — avoiding a second tree that just mirrors `routes/`:
 
 - **Two colocation granularities**, matching how widely code is used:
   - Code used by **exactly one route** colocates directly beside that
-    route file (e.g. `articles.$id/-article-detail-card.tsx`) — no reason
-    to place it any further away than the one route that needs it.
+    route file (e.g. `articles.$id/-article-detail-card.tsx`, or a page's
+    whole `-about-page/` implementation folder beside its `about/route.tsx`)
+    — no reason to place it any further away than the one route that needs
+    it.
   - Code used by **multiple routes within one feature** (e.g. lit-tracker's
     header, used across several lit-tracker routes) can't belong to a
     single route file, but still nests inside that feature's route subtree
@@ -198,6 +233,20 @@ routes they belong to — avoiding a second tree that just mirrors `routes/`:
   lit-tracker are already meaningfully distinct areas
   (per [../ui-ux/pages/lit-tracker/index.md](../ui-ux/pages/lit-tracker/index.md)'s
   component count).
+- **Per-page folders (over one group-wide `-components/`)** were adopted on
+  revision because the original layout, though it followed the colocation
+  principle in spirit, still separated each route file (at the group root)
+  from its implementation (under a shared `-components/`): reading one page
+  meant jumping between two distant locations. Giving each page a folder
+  that holds its route file beside its implementation is the more direct
+  reading of the same colocate-beside-the-one-route rule, and it scales
+  cleanly — a multi-route sub-feature like the blog collects its two routes
+  and everything they share (`-components/`/`-lib/`/`-utils/`) into one
+  self-contained folder instead of scattering them across a group-wide tree.
+  The pathless `(home)/` wrapper is the one concession the router's naming
+  forces: an index route is a file, not a path segment, so wrapping it in a
+  pathless group (which adds no URL) is the only way to give it a folder of
+  its own without inventing a `/home` path.
 - The 2nd-consumer threshold (over the classic "rule of three") was chosen
   to avoid tolerating a round of duplication across two feature areas any
   longer than necessary — the risk of premature abstraction on a false

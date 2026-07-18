@@ -11,11 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ErrorProbeRouteImport } from './routes/error-probe'
 import { Route as personalSiteRouteRouteImport } from './routes/(personal-site)/route'
-import { Route as personalSiteIndexRouteImport } from './routes/(personal-site)/index'
 import { Route as personalSiteProjectsRouteImport } from './routes/(personal-site)/projects'
-import { Route as personalSiteAboutRouteImport } from './routes/(personal-site)/about'
-import { Route as personalSiteBlogIndexRouteImport } from './routes/(personal-site)/blog.index'
-import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog.$slug'
+import { Route as personalSiteAboutRouteRouteImport } from './routes/(personal-site)/about/route'
+import { Route as personalSiteBlogIndexRouteImport } from './routes/(personal-site)/blog/index'
+import { Route as personalSitehomeIndexRouteImport } from './routes/(personal-site)/(home)/index'
+import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog/$slug'
 
 const ErrorProbeRoute = ErrorProbeRouteImport.update({
   id: '/error-probe',
@@ -26,17 +26,12 @@ const personalSiteRouteRoute = personalSiteRouteRouteImport.update({
   id: '/(personal-site)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const personalSiteIndexRoute = personalSiteIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => personalSiteRouteRoute,
-} as any)
 const personalSiteProjectsRoute = personalSiteProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
   getParentRoute: () => personalSiteRouteRoute,
 } as any)
-const personalSiteAboutRoute = personalSiteAboutRouteImport.update({
+const personalSiteAboutRouteRoute = personalSiteAboutRouteRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => personalSiteRouteRoute,
@@ -44,6 +39,11 @@ const personalSiteAboutRoute = personalSiteAboutRouteImport.update({
 const personalSiteBlogIndexRoute = personalSiteBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
+  getParentRoute: () => personalSiteRouteRoute,
+} as any)
+const personalSitehomeIndexRoute = personalSitehomeIndexRouteImport.update({
+  id: '/(home)/',
+  path: '/',
   getParentRoute: () => personalSiteRouteRoute,
 } as any)
 const personalSiteBlogSlugRoute = personalSiteBlogSlugRouteImport.update({
@@ -54,44 +54,44 @@ const personalSiteBlogSlugRoute = personalSiteBlogSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/error-probe': typeof ErrorProbeRoute
-  '/about': typeof personalSiteAboutRoute
+  '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRoute
-  '/': typeof personalSiteIndexRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/': typeof personalSitehomeIndexRoute
   '/blog/': typeof personalSiteBlogIndexRoute
 }
 export interface FileRoutesByTo {
   '/error-probe': typeof ErrorProbeRoute
-  '/about': typeof personalSiteAboutRoute
+  '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRoute
-  '/': typeof personalSiteIndexRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/': typeof personalSitehomeIndexRoute
   '/blog': typeof personalSiteBlogIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(personal-site)': typeof personalSiteRouteRouteWithChildren
   '/error-probe': typeof ErrorProbeRoute
-  '/(personal-site)/about': typeof personalSiteAboutRoute
+  '/(personal-site)/about': typeof personalSiteAboutRouteRoute
   '/(personal-site)/projects': typeof personalSiteProjectsRoute
-  '/(personal-site)/': typeof personalSiteIndexRoute
   '/(personal-site)/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/(personal-site)/(home)/': typeof personalSitehomeIndexRoute
   '/(personal-site)/blog/': typeof personalSiteBlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/error-probe' | '/about' | '/projects' | '/' | '/blog/$slug' | '/blog/'
+    '/error-probe' | '/about' | '/projects' | '/blog/$slug' | '/' | '/blog/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/error-probe' | '/about' | '/projects' | '/' | '/blog/$slug' | '/blog'
+  to: '/error-probe' | '/about' | '/projects' | '/blog/$slug' | '/' | '/blog'
   id:
     | '__root__'
     | '/(personal-site)'
     | '/error-probe'
     | '/(personal-site)/about'
     | '/(personal-site)/projects'
-    | '/(personal-site)/'
     | '/(personal-site)/blog/$slug'
+    | '/(personal-site)/(home)/'
     | '/(personal-site)/blog/'
   fileRoutesById: FileRoutesById
 }
@@ -116,13 +116,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof personalSiteRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(personal-site)/': {
-      id: '/(personal-site)/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof personalSiteIndexRouteImport
-      parentRoute: typeof personalSiteRouteRoute
-    }
     '/(personal-site)/projects': {
       id: '/(personal-site)/projects'
       path: '/projects'
@@ -134,7 +127,7 @@ declare module '@tanstack/react-router' {
       id: '/(personal-site)/about'
       path: '/about'
       fullPath: '/about'
-      preLoaderRoute: typeof personalSiteAboutRouteImport
+      preLoaderRoute: typeof personalSiteAboutRouteRouteImport
       parentRoute: typeof personalSiteRouteRoute
     }
     '/(personal-site)/blog/': {
@@ -142,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog/'
       preLoaderRoute: typeof personalSiteBlogIndexRouteImport
+      parentRoute: typeof personalSiteRouteRoute
+    }
+    '/(personal-site)/(home)/': {
+      id: '/(personal-site)/(home)/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof personalSitehomeIndexRouteImport
       parentRoute: typeof personalSiteRouteRoute
     }
     '/(personal-site)/blog/$slug': {
@@ -155,18 +155,18 @@ declare module '@tanstack/react-router' {
 }
 
 interface personalSiteRouteRouteChildren {
-  personalSiteAboutRoute: typeof personalSiteAboutRoute
+  personalSiteAboutRouteRoute: typeof personalSiteAboutRouteRoute
   personalSiteProjectsRoute: typeof personalSiteProjectsRoute
-  personalSiteIndexRoute: typeof personalSiteIndexRoute
   personalSiteBlogSlugRoute: typeof personalSiteBlogSlugRoute
+  personalSitehomeIndexRoute: typeof personalSitehomeIndexRoute
   personalSiteBlogIndexRoute: typeof personalSiteBlogIndexRoute
 }
 
 const personalSiteRouteRouteChildren: personalSiteRouteRouteChildren = {
-  personalSiteAboutRoute: personalSiteAboutRoute,
+  personalSiteAboutRouteRoute: personalSiteAboutRouteRoute,
   personalSiteProjectsRoute: personalSiteProjectsRoute,
-  personalSiteIndexRoute: personalSiteIndexRoute,
   personalSiteBlogSlugRoute: personalSiteBlogSlugRoute,
+  personalSitehomeIndexRoute: personalSitehomeIndexRoute,
   personalSiteBlogIndexRoute: personalSiteBlogIndexRoute,
 }
 

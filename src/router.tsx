@@ -1,5 +1,5 @@
 import { createRouter } from '@tanstack/react-router'
-import { focusPageHeading } from './focus-handoff'
+import { focusPageHeading, isPageNavigation } from './focus-handoff'
 import { routeTree } from './routeTree.gen'
 
 /**
@@ -12,12 +12,14 @@ export function getRouter() {
     scrollRestoration: true,
   })
 
-  // Client only: after each real client-side navigation (not the initial
-  // hydration, which has no fromLocation), hand focus to the new page's
-  // heading — see src/focus-handoff.ts.
+  // Client only: after each real client-side navigation to a different page,
+  // hand focus to the new page's heading. `isPageNavigation` keys the decision
+  // on the pathname (not the full href) so same-page search-param updates — the
+  // blog's live search and tag filters — leave focus on the control the reader
+  // is using. See src/focus-handoff.ts.
   if (typeof document !== 'undefined') {
     router.subscribe('onResolved', ({ fromLocation, toLocation }) => {
-      if (fromLocation && fromLocation.href !== toLocation.href) {
+      if (isPageNavigation(fromLocation, toLocation)) {
         focusPageHeading()
       }
     })

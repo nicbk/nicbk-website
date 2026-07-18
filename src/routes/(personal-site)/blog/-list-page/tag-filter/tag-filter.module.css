@@ -45,12 +45,13 @@
 }
 
 /*
- * Pressed (selected) state. Conveyed by BOTH color and weight — never color
- * alone — so it survives WCAG 1.4.1 (use of color): a selected tag is the accent
- * color AND bold, distinguishing it from an unselected tag for readers who don't
- * perceive the hue difference.
+ * Pressed (selected) state, keyed off Base UI Toggle's `data-pressed` styling
+ * hook. Conveyed by BOTH color and weight — never color alone — so it survives
+ * WCAG 1.4.1 (use of color): a selected tag is the accent color AND bold,
+ * distinguishing it from an unselected tag for readers who don't perceive the
+ * hue difference.
  */
-.tag[aria-pressed="true"] {
+.tag[data-pressed] {
   color: var(--color-accent);
   font-weight: var(--font-weight-bold);
 }

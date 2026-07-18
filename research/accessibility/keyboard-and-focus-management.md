@@ -21,15 +21,24 @@ identified as left to the consuming app.
   root layout, targeting the page's `<main>` landmark. This is not provided
   by Base UI (it has no opinion on page-level layout) and has to be built
   once at the shared layout level.
-- **Explicit focus management on client-side route changes.** TanStack
+- **Explicit focus management on client-side page changes.** TanStack
   Router navigation (per the stack already decided in
   [../technologies/index.md](../technologies/index.md)) swaps content
   without a full page reload, so the browser does not automatically move
   focus anywhere — it can be left on a trigger element that no longer
   exists in the DOM, silently stranding keyboard/screen-reader users. On
-  every route change, focus is moved programmatically to the new page's
-  primary heading (or the `<main>` landmark itself, given a `tabindex="-1"`
-  for this purpose), and scroll position resets to the top.
+  every navigation **to a different page**, focus is moved programmatically
+  to the new page's primary heading (or the `<main>` landmark itself, given
+  a `tabindex="-1"` for this purpose), and scroll position resets to the top.
+  - This is scoped to a change of **pathname**, not any URL change. A
+    same-page update to the URL's search params — how shareable in-page state
+    such as the blog's live search text and tag filters is stored (see
+    [../coding-conventions/state-management-conventions.md](../coding-conventions/state-management-conventions.md)) —
+    is *not* a page change and must **leave focus where it is**. Handing focus
+    to the heading on every keystroke or tag toggle would itself strand the
+    person filtering, the exact failure the handoff exists to prevent. The
+    router keys the handoff on `pathname` (`isPageNavigation` in
+    `src/focus-handoff.ts`) precisely to draw this line.
 - **All interactive elements are operable via keyboard alone** — Tab order
   follows visual/reading order, Enter/Space activate buttons, Escape closes
   overlays, arrow keys navigate composite widgets (menus, tabs) per the

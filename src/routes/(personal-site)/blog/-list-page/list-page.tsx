@@ -1,10 +1,10 @@
 import { Link } from '@tanstack/react-router'
+import { SearchInput } from '~/routes/-shared/components/search-input/search-input'
 import { PostTags } from '../-components/post-tags/post-tags'
 import { filterPosts } from '../-utils/filter-posts'
 import { isoDate } from '../-utils/format-date'
 import { collectTags } from '../-utils/post-listing'
 import { useIncrementalReveal } from '../-utils/use-incremental-reveal'
-import { SearchBar } from './search-bar/search-bar'
 import { TagFilter } from './tag-filter/tag-filter'
 import { useBlogFilters } from './use-blog-filters'
 import styles from './list-page.module.css'
@@ -37,10 +37,10 @@ const REVEAL_STEP = 15
  * adjust or clear it.
  */
 export function ListPage({ posts }: ListPageProps) {
-  const { q, tags, setQuery, toggleTag } = useBlogFilters()
+  const { query, tags, setQuery, toggleTag } = useBlogFilters()
 
   const allTags = collectTags(posts)
-  const visiblePosts = filterPosts(posts, { q, tags })
+  const visiblePosts = filterPosts(posts, { q: query, tags })
 
   return (
     <div className={styles.page}>
@@ -54,7 +54,13 @@ export function ListPage({ posts }: ListPageProps) {
         <p className={styles.empty}>No posts yet.</p>
       ) : (
         <div className={styles.layout}>
-          <SearchBar value={q} onQueryChange={setQuery} />
+          <SearchInput
+            className={styles.search}
+            value={query}
+            onValueChange={setQuery}
+            label="Search posts"
+            placeholder="Search posts…"
+          />
           <TagFilter tags={allTags} selected={tags} onToggle={toggleTag} />
           <div className={styles.listArea}>
             <PostList posts={visiblePosts} />

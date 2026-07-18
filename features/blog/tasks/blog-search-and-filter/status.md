@@ -98,3 +98,25 @@
   (1280px) and narrow, both themes, and locked in with an e2e lower-bound
   assertion on the description width at 1600/1200/1100px. Own branch + PR off
   `main`.
+- 2026-07-17 — **Follow-up refactor (post-merge):** made search truly reactive
+  and consolidated the controls onto Base UI. Root cause of the reported "search
+  isn't reactive / loses focus" bug: the list filtered off the URL, so it only
+  updated after a debounced navigation, and that navigation tripped the
+  route-change focus handoff (which compared full `href`, so a search-param
+  update looked like a page change) and yanked focus to the `<h1>`. Fixes:
+  (a) `router.tsx` now keys the handoff on `pathname` (`isPageNavigation`), so
+  in-page filter updates keep focus — this also fixed focus jumping on tag
+  toggles; (b) search text now lives in local state that filters instantly, with
+  the URL a debounced mirror (`use-blog-filters.ts`); (c) the search field is now
+  the shared, Base-UI `SearchInput` (`-shared/components/search-input`) styled to
+  the lit-tracker mockup (rounded pill + magnifier icon), replacing the
+  hand-rolled `SearchBar`; (d) the tag toggles moved from native
+  `<button aria-pressed>` to Base UI `Toggle`. Verified in Chrome (both themes,
+  narrow→wide): live filtering mid-keystroke, focus retained in the search box
+  and on tag toggles, pressed styling, no overflow. Locked in with e2e
+  focus-retention guards for search and tags, plus a unit test for instant
+  filtering. Research updated: Base UI extension policy + shared-primitive note
+  (`design-system.md`), reactive continuously-edited-state pattern
+  (`state-management-conventions.md`), pathname-scoped focus handoff
+  (`keyboard-and-focus-management.md`), and a `search-input.md` component spec.
+  Own branch + PR off `main`.

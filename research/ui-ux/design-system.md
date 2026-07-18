@@ -59,6 +59,31 @@ bet for a project without a large team to work around stalled upstream
 issues. Ark UI (cross-framework, state-machine-based) was ruled out as
 unneeded complexity for a React-only stack.
 
+**Extend Base UI primitives; do not hand-roll equivalents beside them
+(clarified 2026-07-17).** When a control needs behavior a Base UI primitive
+provides — accessible labelling/validation (`Field` + `Input`), a two-state
+pressed button (`Toggle`/`ToggleGroup`), an overlay, a listbox, and so on —
+build on that primitive rather than assembling the same thing from native
+elements plus hand-written ARIA. Both approaches "work," but mixing them
+fragments the app into from-scratch and adopted-foundation halves that drift
+apart (the reason Base UI was adopted in the first place), and the hand-rolled
+half re-implements accessibility Base UI already gets right. Native HTML is the
+correct choice only where **no relevant primitive exists and the native element
+already provides the full semantics with no hand-rolled ARIA or state** — e.g.
+a plain fire-and-forget action `<button>` such as the theme toggle
+(`src/routes/-shared/components/theme-toggle`), which carries no pressed/selected
+state and needs nothing Base UI would add. A labelled text field or a
+selectable/toggle control does not meet that bar — `Field`/`Input` and `Toggle`
+exist for exactly those.
+
+**Shared, reusable primitives are colocated, not per-surface (2026-07-17).** A
+control used by more than one surface (e.g. the search field, shared by the blog
+index and the lit-tracker collection view) is built once under
+`src/routes/-shared/components/` and imported by each, so every surface presents
+the identical control instead of look-alike reimplementations. See the
+search-input entry under
+[pages/site-wide/components/index.md](./pages/site-wide/components/index.md).
+
 ### Monospace font selection — Decided 2026-07-02
 
 **JetBrains Mono**, self-hosted (SIL Open Font License).

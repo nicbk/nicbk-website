@@ -1,0 +1,11 @@
+/*
+ * Border-radius tokens — theme-invariant.
+ *
+ * A small scale so rounded surfaces (the search field, and the rounded cards
+ * the lit-tracker mockups establish) share one set of corner radii instead of
+ * each component inventing its own pixel value.
+ */
+:root {
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+}

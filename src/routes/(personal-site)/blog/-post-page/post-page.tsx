@@ -1,11 +1,11 @@
 import { MDXProvider } from '@mdx-js/react'
 import { Link } from '@tanstack/react-router'
 import { type ComponentType, Suspense } from 'react'
-import { formatPostDate, isoDate } from '../../-utils/format-date'
-import { BlogImage } from '../blog-image/blog-image'
-import { Callout } from '../callout/callout'
-import { PostTags } from '../post-tags/post-tags'
-import styles from './blog-post-page.module.css'
+import { BlogImage } from '../-components/blog-image/blog-image'
+import { Callout } from '../-components/callout/callout'
+import { PostTags } from '../-components/post-tags/post-tags'
+import { formatPostDate, isoDate } from '../-utils/format-date'
+import styles from './post-page.module.css'
 import { type Frontmatter } from '~blog/frontmatter-schema'
 
 /**
@@ -18,7 +18,7 @@ const mdxComponents = {
   img: BlogImage,
 }
 
-interface BlogPostPageProps {
+interface PostPageProps {
   frontmatter: Frontmatter
   /** The compiled MDX component (the post's default export). */
   Content: ComponentType
@@ -36,7 +36,7 @@ interface BlogPostPageProps {
  * hands in a lazily-loaded (code-split) component; with a synchronous component
  * (e.g. a test fixture) the boundary is simply inert.
  */
-export function BlogPostPage({ frontmatter, Content }: BlogPostPageProps) {
+export function PostPage({ frontmatter, Content }: PostPageProps) {
   return (
     <article className={styles.post}>
       <header className={styles.header}>

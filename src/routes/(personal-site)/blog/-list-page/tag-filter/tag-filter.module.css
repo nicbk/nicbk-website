@@ -1,0 +1,56 @@
+.sidebar {
+  /* A narrow column of tag toggles; on wide viewports it sits beside the list,
+     on narrow it wraps above it (the page grid in list-page.module.css). */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.heading {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  text-transform: lowercase;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs) var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  /* A text toggle, not a boxed pill — keeps the minimalist monospace look. */
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+/* Decorative hash, matching the inline post tags (PostTags); kept in CSS, out of
+   the DOM, so the visible label stays the plain tag text. */
+.tag::before {
+  content: "#";
+}
+
+.tag:hover {
+  color: var(--color-accent);
+}
+
+/*
+ * Pressed (selected) state. Conveyed by BOTH color and weight — never color
+ * alone — so it survives WCAG 1.4.1 (use of color): a selected tag is the accent
+ * color AND bold, distinguishing it from an unselected tag for readers who don't
+ * perceive the hue difference.
+ */
+.tag[aria-pressed="true"] {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-bold);
+}

@@ -1,11 +1,11 @@
 # Status: Blog
 
-**Feature state:** In progress (2026-07-07). Task 1
-(`mdx-pipeline-and-post-page`) is merged (#37); task 2 (`blog-list-page`) is
-implemented and in review; task 3 not yet started. Depends on
-[`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — reuses its
-`(personal-site)` shell/header, design tokens, and theming, and fills the
-`/blog` placeholder route it left in place.
+**Feature state:** In progress (2026-07-17). Task 1
+(`mdx-pipeline-and-post-page`) merged (#37) and task 2 (`blog-list-page`) merged
+(#39); task 3 (`blog-search-and-filter`) implemented, awaiting PR + CI + review.
+Depends on [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) —
+reuses its `(personal-site)` shell/header, design tokens, and theming, and fills
+the `/blog` placeholder route it left in place.
 
 Feature parent issue:
 [#23](https://github.com/nicbk/nicbk-website/issues/23); task sub-issues
@@ -20,8 +20,8 @@ Feature parent issue:
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `mdx-pipeline-and-post-page` | Merged ([#24](https://github.com/nicbk/nicbk-website/issues/24)) | [#37](https://github.com/nicbk/nicbk-website/pull/37) | green | merged |
-| `blog-list-page` | Implemented, in review ([#25](https://github.com/nicbk/nicbk-website/issues/25)) | [#39](https://github.com/nicbk/nicbk-website/pull/39) | pending | pending |
-| `blog-search-and-filter` | Not started ([#26](https://github.com/nicbk/nicbk-website/issues/26)) | — | — | — |
+| `blog-list-page` | Merged ([#25](https://github.com/nicbk/nicbk-website/issues/25)) | [#39](https://github.com/nicbk/nicbk-website/pull/39) | green | merged |
+| `blog-search-and-filter` | Implemented, in review ([#26](https://github.com/nicbk/nicbk-website/issues/26)) | — | pending | pending |
 
 ## Definition of Done (feature)
 
@@ -84,3 +84,14 @@ established here for the Lit Tracker to reuse.
   tags) with client-side infinite scroll and a plain-text empty state. Details
   in the [task status](./tasks/blog-list-page/status.md). Awaiting PR + CI +
   review.
+- 2026-07-17 — Task 2 merged (PR #39). Task 3 (`blog-search-and-filter`)
+  implemented on branch `blog/blog-search-and-filter` (#26): URL-search-param
+  filter state (Zod 4 `validateSearch`, no adapter), a debounced native search
+  bar, a native-button tag sidebar (AND-composed multi-select), a pure
+  `filterPosts` predicate, a responsive layout (sidebar right on wide, tags
+  wrapping above the list on narrow), and a distinct no-match state. Confirmed
+  with the user: AND tag semantics, tags-above-list on mobile (not a drawer),
+  native elements over Base UI. Details, incl. the `.optional()`-not-`.default()`
+  schema decision, in the [task status](./tasks/blog-search-and-filter/status.md).
+  Awaiting PR + CI + review — this completes the feature's tasks pending that
+  merge.

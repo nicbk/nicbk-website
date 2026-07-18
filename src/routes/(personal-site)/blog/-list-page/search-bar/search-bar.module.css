@@ -1,0 +1,35 @@
+.searchBar {
+  /* Full width of its grid area; the input itself caps the readable measure. */
+  display: flex;
+}
+
+/* Standard visually-hidden pattern: the field keeps a discernible accessible
+   name for screen readers while the visible placeholder carries the cue for
+   sighted users. (Mirrors the home page's heading treatment.) */
+.label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.input {
+  width: 100%;
+  /* Cap the field at the list's readable measure instead of stretching across
+     very wide viewports, consistent with the description column's max width. */
+  max-width: 40ch;
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-md);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}

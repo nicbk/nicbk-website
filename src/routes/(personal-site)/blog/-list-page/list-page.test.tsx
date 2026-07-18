@@ -1,13 +1,27 @@
 import { render, screen, within } from '@testing-library/react'
 import { type ReactNode } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ListPage } from './list-page'
 import { type PostListItem } from '~blog/posts'
 
-// Row titles are router <Link>s; mock to a plain anchor that substitutes the
-// `$slug` param into the `to` template, so we can assert the real post href
-// without a live router (the decided unit-test pattern).
+// The list reads its filter state from the route's search params and renders row
+// titles as router <Link>s. Mock both without a live router:
+//  - `getRouteApi().useSearch` returns a per-test-controllable search state
+//    (`mockState.search`), so tests can drive the query/tags the page filters by.
+//  - `Link` becomes a plain anchor that substitutes the `$slug` param into `to`,
+//    so we can assert the real post href.
+const { mockState } = vi.hoisted(() => ({
+  mockState: {
+    search: { q: '', tags: [] as string[] },
+    navigate: vi.fn(),
+  },
+}))
+
 vi.mock('@tanstack/react-router', () => ({
+  getRouteApi: () => ({
+    useSearch: () => mockState.search,
+    useNavigate: () => mockState.navigate,
+  }),
   Link: ({
     to,
     params,
@@ -30,6 +44,11 @@ vi.mock('@tanstack/react-router', () => ({
     )
   },
 }))
+
+beforeEach(() => {
+  mockState.search = { q: '', tags: [] }
+  mockState.navigate.mockClear()
+})
 
 function post(
   slug: string,
@@ -69,7 +88,8 @@ describe('ListPage', () => {
         ]}
       />,
     )
-    const [firstItem] = screen.getAllByRole('listitem')
+    const list = screen.getByRole('list', { name: 'Blog posts' })
+    const [firstItem] = within(list).getAllByRole('listitem')
     expect(firstItem).toBeDefined()
     const row = within(firstItem as HTMLElement)
     expect(row.getByText('2026-06-15')).toBeInTheDocument()
@@ -94,7 +114,59 @@ describe('ListPage', () => {
   it('shows the plain-text empty state when there are no posts', () => {
     render(<ListPage posts={[]} />)
     expect(screen.getByText('No posts yet.')).toBeInTheDocument()
-    expect(screen.queryByRole('list')).toBeNull()
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Blog posts' })).toBeNull()
+    // With no posts at all, the search/filter controls are not rendered.
+    expect(screen.queryByRole('searchbox')).toBeNull()
+  })
+
+  it('renders the search field and tag sidebar when posts exist', () => {
+    render(<ListPage posts={[post('a', { tags: ['react'] })]} />)
+    expect(
+      screen.getByRole('searchbox', { name: 'Search posts' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('navigation', { name: 'Filter by tag' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'react' })).toBeInTheDocument()
+  })
+
+  it('narrows the list to posts matching the active search query', () => {
+    mockState.search = { q: 'hooks', tags: [] }
+    render(
+      <ListPage
+        posts={[
+          post('a', { title: 'Understanding hooks' }),
+          post('b', { title: 'Type-safe schemas' }),
+        ]}
+      />,
+    )
+    const links = screen.getAllByRole('link')
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/blog/a'])
+  })
+
+  it('narrows the list to posts carrying the selected tags', () => {
+    mockState.search = { q: '', tags: ['react'] }
+    render(
+      <ListPage
+        posts={[
+          post('a', { tags: ['react', 'meta'] }),
+          post('b', { tags: ['zod'] }),
+        ]}
+      />,
+    )
+    const links = screen.getAllByRole('link')
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/blog/a'])
+  })
+
+  it('shows the no-match state (distinct wording) when the filter excludes every post', () => {
+    mockState.search = { q: 'kubernetes', tags: [] }
+    render(<ListPage posts={[post('a'), post('b')]} />)
+    expect(screen.getByText('No posts match your search.')).toBeInTheDocument()
+    expect(screen.queryByText('No posts yet.')).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Blog posts' })).toBeNull()
+    // The controls remain so the reader can adjust or clear the filter.
+    expect(
+      screen.getByRole('searchbox', { name: 'Search posts' }),
+    ).toBeInTheDocument()
   })
 })

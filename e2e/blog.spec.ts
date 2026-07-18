@@ -109,6 +109,152 @@ test.describe('blog list page', () => {
   })
 })
 
+test.describe('blog search and tag filter', () => {
+  const TYPESAFE = 'Type-safe frontmatter with Zod' // tags: mdx, typescript, zod
+  const BUILDING = 'Building this site with TanStack Start and MDX' // tags: meta, tanstack, mdx
+
+  const postRows = (page: import('@playwright/test').Page) =>
+    page.getByRole('list', { name: 'Blog posts' }).locator('> li')
+
+  test('typing in the search bar narrows the list and updates the URL', async ({
+    page,
+  }) => {
+    await page.goto('/blog')
+    await expect(postRows(page)).toHaveCount(2)
+
+    await page.getByRole('searchbox', { name: 'Search posts' }).fill('zod')
+
+    // Settled URL carries the query (debounced), and the list narrows to the
+    // single matching post.
+    await expect(page).toHaveURL(/[?&]q=zod\b/)
+    await expect(postRows(page)).toHaveCount(1)
+    await expect(page.getByRole('link', { name: TYPESAFE })).toBeVisible()
+    await expect(page.getByRole('link', { name: BUILDING })).toHaveCount(0)
+  })
+
+  test('toggling a tag narrows the list and updates the URL', async ({
+    page,
+  }) => {
+    await page.goto('/blog')
+
+    const typescriptTag = page.getByRole('button', { name: 'typescript' })
+    await expect(typescriptTag).toHaveAttribute('aria-pressed', 'false')
+    await typescriptTag.click()
+
+    await expect(page).toHaveURL(/tags=.*typescript/)
+    await expect(typescriptTag).toHaveAttribute('aria-pressed', 'true')
+    await expect(postRows(page)).toHaveCount(1)
+    await expect(page.getByRole('link', { name: TYPESAFE })).toBeVisible()
+    await expect(page.getByRole('link', { name: BUILDING })).toHaveCount(0)
+  })
+
+  test('combines search and tags with AND', async ({ page }) => {
+    // "mdx" (a tag on both posts) matches both; adding the "meta" tag (only on
+    // Building this site) narrows the AND-composed result to that one post.
+    await page.goto('/blog')
+    await page.getByRole('searchbox', { name: 'Search posts' }).fill('mdx')
+    await expect(postRows(page)).toHaveCount(2)
+
+    await page.getByRole('button', { name: 'meta' }).click()
+    await expect(postRows(page)).toHaveCount(1)
+    await expect(page.getByRole('link', { name: BUILDING })).toBeVisible()
+    await expect(page.getByRole('link', { name: TYPESAFE })).toHaveCount(0)
+  })
+
+  test('a pre-filtered URL reproduces the view and survives reload', async ({
+    page,
+  }) => {
+    await page.goto('/blog?q=zod')
+    await expect(
+      page.getByRole('searchbox', { name: 'Search posts' }),
+    ).toHaveValue('zod')
+    await expect(postRows(page)).toHaveCount(1)
+    await expect(page.getByRole('link', { name: TYPESAFE })).toBeVisible()
+
+    await page.reload()
+    await expect(
+      page.getByRole('searchbox', { name: 'Search posts' }),
+    ).toHaveValue('zod')
+    await expect(postRows(page)).toHaveCount(1)
+  })
+
+  test('shows the plain-text no-match state when nothing matches', async ({
+    page,
+  }) => {
+    await page.goto('/blog')
+    await page
+      .getByRole('searchbox', { name: 'Search posts' })
+      .fill('kubernetes')
+
+    await expect(page.getByText('No posts match your search.')).toBeVisible()
+    await expect(postRows(page)).toHaveCount(0)
+    // The controls stay so the reader can adjust or clear the filter.
+    await expect(
+      page.getByRole('searchbox', { name: 'Search posts' }),
+    ).toBeVisible()
+  })
+
+  test('tag toggles push history; live typing does not flood it', async ({
+    page,
+  }) => {
+    await page.goto('/blog')
+
+    // A tag toggle is its own history entry, so back returns to the unfiltered
+    // list.
+    await page.getByRole('button', { name: 'typescript' }).click()
+    await expect(page).toHaveURL(/typescript/)
+    await page.goBack()
+    await expect(page).not.toHaveURL(/typescript/)
+    await expect(postRows(page)).toHaveCount(2)
+
+    // Typing uses replace navigation, so per-keystroke changes don't grow the
+    // history stack (the final state is still reachable in the URL).
+    const lengthBefore = await page.evaluate(() => window.history.length)
+    await page
+      .getByRole('searchbox', { name: 'Search posts' })
+      .pressSequentially('zod', { delay: 40 })
+    await expect(page).toHaveURL(/[?&]q=zod\b/)
+    const lengthAfter = await page.evaluate(() => window.history.length)
+    expect(lengthAfter).toBe(lengthBefore)
+  })
+
+  test('the tag sidebar remains operable at a mobile viewport', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 400, height: 800 })
+    await page.goto('/blog')
+
+    const sidebar = page.getByRole('navigation', { name: 'Filter by tag' })
+    await expect(sidebar).toBeVisible()
+
+    // No horizontal page overflow with the search + filter UI present at narrow.
+    const overflows = await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
+    )
+    expect(overflows).toBe(false)
+
+    // The toggle still filters at this width.
+    await page.getByRole('button', { name: 'typescript' }).click()
+    await expect(page).toHaveURL(/tags=.*typescript/)
+    await expect(postRows(page)).toHaveCount(1)
+  })
+
+  test('passes axe (critical/serious) with a tag selected, in both themes', async ({
+    page,
+    expectNoA11yViolations,
+  }) => {
+    await page.goto('/blog')
+    await page.getByRole('button', { name: 'typescript' }).click()
+    await expect(page).toHaveURL(/typescript/)
+
+    await expectNoA11yViolations()
+    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await expectNoA11yViolations()
+  })
+})
+
 test.describe('blog post page', () => {
   test('renders the post inside the shell with its MDX content', async ({
     page,

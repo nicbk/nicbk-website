@@ -4,6 +4,15 @@
  * individually. Component styling lives in colocated CSS Modules that pull
  * from these tokens.
  *
+ * Beyond the token @imports, this file holds ONLY irreducibly cross-cutting
+ * primitives — ones that apply to everything with no single owning component:
+ * the box-sizing reset, the base <a> color, and the :focus-visible ring.
+ * Anything that targets a specific element the component tree renders lives on
+ * that element's component instead (e.g. the html/body base in
+ * __root.module.css, the <main>/<h1> focus-handoff suppression in
+ * site-shell.module.css), so styling can be traced through the React
+ * hierarchy. See research/coding-conventions/styling-conventions.md.
+ *
  * Responsive baseline (convention for all later components):
  * - Mobile-first: base styles target narrow screens; enhance upward with
  *   `@media (min-width: 768px)` and `@media (min-width: 1024px)`.
@@ -22,27 +31,15 @@
 @import "./spacing.css";
 @import "./motion.css";
 
-/* Minimal base layer — just enough for tokens to take effect site-wide. */
+/* Universal box-sizing reset — applies to every element, no single owner. */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-html {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  min-height: 100%;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-md);
-  line-height: var(--line-height-base);
-}
-
+/* Base link color — anchors appear anywhere (including MDX-authored prose, which
+ * emits raw <a> no wrapper component owns), so the base color stays global. */
 a {
   color: var(--color-accent);
 }
@@ -52,16 +49,4 @@ a {
 :focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
-}
-
-/* The route-change focus handoff (src/focus-handoff.ts) programmatically moves
- * focus to the page's main heading (or the <main id="main-content"> landmark)
- * after client-side navigation, purely to reposition screen-reader reading
- * order. Both targets are non-interactive and out of the tab order
- * (tabindex="-1"), so the ring above would otherwise draw a confusing
- * full-width box around the heading on keyboard-initiated navigations. Suppress
- * it for these focus targets only; genuine interactive controls keep theirs. */
-main h1:focus,
-#main-content:focus {
-  outline: none;
 }

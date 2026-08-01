@@ -52,7 +52,9 @@ closure is a side effect of its sub-issues closing, not its own merge.
   /repos/{owner}/{repo}/issues/{issue_number}/sub_issues`. That endpoint
   takes the sub-issue's internal numeric `id`, not its visible `#number` —
   look the `id` up first (e.g. `gh api repos/{owner}/{repo}/issues/{number}`)
-  before calling it.
+  before calling it. Pass it with `gh api -F sub_issue_id=<id>` (typed field),
+  not `-f`: `-f` sends every value as a string and the endpoint rejects a
+  quoted id with `is not of type integer`.
 - PR-to-issue linking needs no API call at all: a closing keyword in the
   PR body (which `gh pr create --body` already sets) is sufficient.
 

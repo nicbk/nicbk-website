@@ -147,4 +147,4 @@
   four still hover normally on a real pointer. Locked in with an e2e guard in a
   touch-emulated context, checked to fail when the gate is removed. Convention
   recorded in `research/coding-conventions/styling-conventions.md`. Own branch +
-  PR off `main`.
+  PR off `main`. Merged as PR #52.

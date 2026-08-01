@@ -1,7 +1,8 @@
 # Status: Authentication
 
-**Feature state:** Spec'd, not yet started (2026-07-06). Folder written and
-tasks defined; no task implemented yet. Depends on
+**Feature state:** In progress (2026-08-01). Task 1
+(`auth-backend-and-config`) implemented and awaiting PR + CI + review; tasks 2
+and 3 not started. Depends on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — extends its
 app server, `src/env.ts` + `parseEnv`, and `docker-compose*.yml`, and reuses its
 `(personal-site)` shell/header, design tokens, and theming. This is the
@@ -21,7 +22,7 @@ Feature parent issue:
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `auth-backend-and-config` | Not started ([#28](https://github.com/nicbk/nicbk-website/issues/28)) | — | — | — |
+| `auth-backend-and-config` | Implemented ([#28](https://github.com/nicbk/nicbk-website/issues/28)) | _pending_ | _pending_ | _pending_ |
 | `sign-in-and-route-guard` | Not started ([#29](https://github.com/nicbk/nicbk-website/issues/29)) | — | — | — |
 | `user-settings-modal` | Not started ([#30](https://github.com/nicbk/nicbk-website/issues/30)) | — | — | — |
 
@@ -76,3 +77,18 @@ login-flow test, injected sessions elsewhere).
 - 2026-07-06 — GitHub issues filed: parent #27, sub-issues #28/#29/#30 linked
   under it as native sub-issues. All sub-issues unassigned; implementation left
   to another session.
+- 2026-08-01 — Task 1 (`auth-backend-and-config`) implemented on
+  `authentication/auth-backend-and-config` (#28 self-assigned): Postgres +
+  Drizzle migrations, the generated Better Auth identity schema, Better Auth
+  mounted at `/api/auth/*` with explicit cookie/session hardening, the required
+  server-only environment, the session-read helper, and the new Testcontainers
+  integration tier. Two implementation-time decisions worth review — a one-shot
+  `migrate` service instead of Compose's `pre_start` (the installed Compose
+  rejects `pre_start`), and snapshot/restore instead of transaction rollback for
+  per-test isolation — are reasoned in the
+  [task status](./tasks/auth-backend-and-config/status.md). Awaiting PR + CI +
+  review.
+- 2026-08-01 — **Google OAuth credentials deferred to task 2** (user decision):
+  task 1 needs only well-formed values to boot, so local `.env` and the test
+  harness carry placeholders; the real Google Cloud OAuth client is created
+  before the sign-in page, which is the first thing that round-trips to Google.

@@ -2,6 +2,24 @@
 # seen by production's explicit `docker compose -f docker-compose.yml up -d`.
 # Switches the app to the Dockerfile's `dev` stage with live source and HMR.
 services:
+  db:
+    # Published locally so host-side tooling (psql, drizzle-kit studio, a
+    # server started with `npm run dev` outside Docker) can reach the same
+    # database the containerized app uses.
+    ports:
+      - "5432:5432"
+
+  migrate:
+    # Same one-shot migration step, from the dev image: the bundled migrator
+    # sits at the same absolute path in both stages, and the SQL comes from the
+    # bind-mounted checkout, so a migration added on the host applies on the
+    # next `docker compose up` without a rebuild.
+    build:
+      target: dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+
   app:
     build:
       target: dev

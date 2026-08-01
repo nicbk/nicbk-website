@@ -1,0 +1,74 @@
+.page {
+  /* Matches the header's horizontal padding so the heading and content align
+     with the site name, consistent with the home, about, and blog pages. */
+  padding: var(--space-lg);
+}
+
+.title {
+  /* The one visible page title, styled like the about and blog titles: bold
+     and larger than body text. Also the document's single <h1> and the
+     route-change focus-handoff target. */
+  margin: 0 0 var(--space-xl);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+/*
+ * Name and description in two aligned columns, the same row shape the blog
+ * list uses (and the same one blog-page.png shows for date / title /
+ * description): the columns line up down the page as entries are added, and
+ * the gap between them is what separates name from description — running them
+ * together in one inline flow reads as a single run-on phrase, since only
+ * color distinguishes them.
+ *
+ * The name column sizes to content; the description caps at a readable measure
+ * rather than 1fr, so on a wide screen its lines don't stretch into an
+ * unwieldy 90+ character measure. Unused space stays empty on the right.
+ */
+.list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 60ch);
+  gap: var(--space-xs) var(--space-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  /* Each entry is a real <li> for list semantics while its cells participate
+     in the shared column tracks above. */
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+}
+
+/*
+ * The name keeps the page's primary text color and weight; only the
+ * description is dimmed. That color difference is the entire distinction
+ * between them, per the decided page spec — so the description must still
+ * clear 4.5:1 against the page background in both themes, which is exactly
+ * what --color-text-muted is defined to do.
+ */
+.description {
+  color: var(--color-text-muted);
+}
+
+/*
+ * Below this width the name column leaves too little room for the description,
+ * which collapses into an unreadable vertical sliver — the same failure the
+ * blog list guards against. Before that happens each entry stacks into one
+ * column (name, then description), which is the DOM order already.
+ */
+@media (max-width: 40rem) {
+  .list {
+    grid-template-columns: 1fr;
+  }
+
+  .entry {
+    grid-template-columns: subgrid;
+    gap: var(--space-2xs);
+    margin-bottom: var(--space-sm);
+  }
+}

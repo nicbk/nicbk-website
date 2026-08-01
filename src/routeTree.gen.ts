@@ -15,6 +15,7 @@ import { Route as personalSiteProjectsRouteRouteImport } from './routes/(persona
 import { Route as personalSiteAboutRouteRouteImport } from './routes/(personal-site)/about/route'
 import { Route as personalSiteBlogIndexRouteImport } from './routes/(personal-site)/blog/index'
 import { Route as personalSitehomeIndexRouteImport } from './routes/(personal-site)/(home)/index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog/$slug'
 
 const ErrorProbeRoute = ErrorProbeRouteImport.update({
@@ -47,6 +48,11 @@ const personalSitehomeIndexRoute = personalSitehomeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => personalSiteRouteRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const personalSiteBlogSlugRoute = personalSiteBlogSlugRouteImport.update({
   id: '/blog/$slug',
   path: '/blog/$slug',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/': typeof personalSitehomeIndexRoute
   '/blog/': typeof personalSiteBlogIndexRoute
 }
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/': typeof personalSitehomeIndexRoute
   '/blog': typeof personalSiteBlogIndexRoute
 }
@@ -76,15 +84,29 @@ export interface FileRoutesById {
   '/(personal-site)/about': typeof personalSiteAboutRouteRoute
   '/(personal-site)/projects': typeof personalSiteProjectsRouteRoute
   '/(personal-site)/blog/$slug': typeof personalSiteBlogSlugRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/(personal-site)/(home)/': typeof personalSitehomeIndexRoute
   '/(personal-site)/blog/': typeof personalSiteBlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/error-probe' | '/about' | '/projects' | '/blog/$slug' | '/' | '/blog/'
+    | '/error-probe'
+    | '/about'
+    | '/projects'
+    | '/blog/$slug'
+    | '/api/auth/$'
+    | '/'
+    | '/blog/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/error-probe' | '/about' | '/projects' | '/blog/$slug' | '/' | '/blog'
+  to:
+    | '/error-probe'
+    | '/about'
+    | '/projects'
+    | '/blog/$slug'
+    | '/api/auth/$'
+    | '/'
+    | '/blog'
   id:
     | '__root__'
     | '/(personal-site)'
@@ -92,6 +114,7 @@ export interface FileRouteTypes {
     | '/(personal-site)/about'
     | '/(personal-site)/projects'
     | '/(personal-site)/blog/$slug'
+    | '/api/auth/$'
     | '/(personal-site)/(home)/'
     | '/(personal-site)/blog/'
   fileRoutesById: FileRoutesById
@@ -99,6 +122,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   personalSiteRouteRoute: typeof personalSiteRouteRouteWithChildren
   ErrorProbeRoute: typeof ErrorProbeRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,6 +169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof personalSitehomeIndexRouteImport
       parentRoute: typeof personalSiteRouteRoute
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(personal-site)/blog/$slug': {
       id: '/(personal-site)/blog/$slug'
       path: '/blog/$slug'
@@ -177,6 +208,7 @@ const personalSiteRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   personalSiteRouteRoute: personalSiteRouteRouteWithChildren,
   ErrorProbeRoute: ErrorProbeRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

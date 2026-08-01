@@ -4,27 +4,95 @@
 # `docker compose up` locally auto-merges the override for dev/HMR.
 # See research/devops-deployment/containerization-and-build.md.
 #
-# Only the app server exists yet. Later features add their services
-# (Postgres, Garage, zero-cache, GROBID) as siblings under `services:`,
-# attached to `app-internal`; the CI runner gets its own separate network
-# (research/devops-deployment/ci-pipeline.md).
+# Later features add their services (Garage, zero-cache, GROBID) as siblings
+# under `services:`, attached to `app-internal`; the CI runner gets its own
+# separate network (research/devops-deployment/ci-pipeline.md).
+# The app server and the migration step run the same image: the migrator is a
+# bundled script baked into it (see the Dockerfile), so there is one image to
+# build, push, and keep in step with the schema it migrates.
+x-app-image: &app-image
+  build:
+    context: .
+    target: runner
+
 services:
-  app:
-    build:
-      context: .
-      target: runner
-    ports:
-      - "3000:3000"
-    # Host-side, git-ignored secrets/config (manual provisioning per
-    # research/devops-deployment/secrets-and-environment-config.md).
-    # Optional because no variable is required yet — src/env.ts still
-    # fail-fasts at startup if a later required variable is missing.
-    env_file:
-      - path: .env
-        required: false
+  db:
+    # One shared Postgres for every sub-application: identity today, the lit
+    # tracker's data later (research/technologies/database.md). Pinned to a
+    # patch version so a rebuild can't silently move major versions.
+    image: postgres:18.4
+    # wal_level=logical is what lets Zero subscribe to changes later. Set now
+    # rather than at that point because changing it needs a restart, and the
+    # setting is harmless until something subscribes.
+    command: ["postgres", "-c", "wal_level=logical"]
+    environment:
+      # Compose interpolates these from the same git-ignored .env the app
+      # reads; `:?` fails the whole `up` with a named error rather than
+      # starting a database with surprise credentials.
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+    volumes:
+      # Mounted at /var/lib/postgresql, NOT the /var/lib/postgresql/data path
+      # older Postgres images used: from 18 on, the image puts the data
+      # directory in a versioned subdirectory of this mount (so `pg_upgrade
+      # --link` can work across versions) and refuses to start if it finds data
+      # at the old mount point instead.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      # The app waits on this, so "started" isn't enough — Postgres accepts
+      # connections only once initdb and recovery have finished.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     restart: unless-stopped
     networks:
       - app-internal
+
+  migrate:
+    # Migrations run to completion before the server starts, so the schema is
+    # never behind the code querying it, and a failed migration stops the
+    # deploy instead of leaving a half-migrated server serving traffic
+    # (research/devops-deployment/database-migrations.md). Re-running is a
+    # no-op — Drizzle records what it has applied — so every `up` can include
+    # it.
+    <<: *app-image
+    command: ["node", "/usr/local/lib/migrate.mjs"]
+    env_file:
+      - path: .env
+        required: true
+    depends_on:
+      db:
+        condition: service_healthy
+    # A one-shot job: it exits 0 and stays exited.
+    restart: "no"
+    networks:
+      - app-internal
+
+  app:
+    <<: *app-image
+    ports:
+      - "3000:3000"
+    # Host-side, git-ignored secrets/config (manual provisioning per
+    # research/devops-deployment/secrets-and-environment-config.md). Now
+    # required: src/env.ts fail-fasts at startup without DATABASE_URL, the
+    # Better Auth secret/URL, and the Google OAuth credentials.
+    env_file:
+      - path: .env
+        required: true
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - app-internal
+
+volumes:
+  db-data:
 
 networks:
   app-internal:

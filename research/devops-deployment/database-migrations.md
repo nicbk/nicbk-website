@@ -84,6 +84,21 @@ give no blanket guarantee for generic self-hosted setups, so this should be
 verified empirically at implementation time (check `zero-cache`'s logs on
 first connect for event-trigger creation), not assumed.
 
+**Revision (2026-08-01, at implementation time):** the mechanism is a
+**dedicated one-shot `migrate` service** the app depends on with
+`condition: service_completed_successfully`, not Compose's `pre_start` hook.
+The hook was rejected by the Compose actually installed (v5.0.2:
+`services.app additional properties 'pre_start' not allowed`) — it lands in a
+later version than either the dev machine or, presumably, the deploy host
+runs. The one-shot service is supported across every Compose 2.x–5.x, and
+delivers exactly the same guarantee this decision was made for: the migration
+command runs to completion, and a non-zero exit stops the app container from
+starting at all, as part of the same `docker compose up -d` the deploy script
+already runs. It costs one extra service definition rather than custom deploy
+scripting, so the "no bespoke logic outside the compose file" reasoning below
+still holds. Revisit if the deploy host moves to a Compose new enough for
+`pre_start` and the hook's ephemeral-container form is worth the change.
+
 ### Expand/contract discipline, mandatory given the rollback model
 
 Because [deployment-strategy.md](./deployment-strategy.md)'s rollback model

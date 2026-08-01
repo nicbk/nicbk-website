@@ -23,11 +23,21 @@ decision is recorded with reasoning and sources under
 
 ## Local Development
 
-Prerequisites: Node.js 22+ and npm. (Docker is only needed for the
-container workflows below.)
+Prerequisites: Node.js 22+ and npm, plus Docker — the app now needs a
+Postgres to talk to, and the integration tests start their own.
 
 ```bash
 npm ci
+cp .env.example .env   # then fill in the required values (see below)
+docker compose up      # database + migrations + app, all in containers
+```
+
+To run the server on the host instead of in a container, start just the
+database and point `DATABASE_URL` at the published port
+(`postgres://…@localhost:5432/…` rather than `@db:5432`):
+
+```bash
+docker compose up -d db
 npm run dev        # dev server at http://localhost:3000
 ```
 
@@ -38,13 +48,26 @@ npm run lint           # Biome (format + lint)
 npm run typecheck      # CSS Modules codegen + tsc
 npm test               # Vitest unit tests
 npm run test:coverage  # unit tests + coverage report (coverage/)
+npm run test:integration  # real Postgres via Testcontainers (needs Docker)
 npx playwright install chromium   # one-time, before first e2e run
 npm run test:e2e       # Playwright e2e + axe accessibility checks
 ```
 
+Database schema:
+
+```bash
+npm run db:generate-schema     # regenerate src/db/schema.ts from the auth config
+npm run db:generate-migration  # diff the schema into src/db/migrations/*.sql
+npm run db:migrate             # apply migrations (containers do this on `up`)
+```
+
 A pre-commit hook (lefthook, installed by `npm ci`) auto-formats staged
-files. Environment variables are validated at startup by `src/env.ts`;
-see [.env.example](./.env.example) — no variable is required yet.
+files. Environment variables are validated at startup by `src/env.ts`, which
+throws naming any that are missing or malformed. The database URL, Better Auth
+secret/URL, and Google OAuth credentials are all **required** — copy
+[.env.example](./.env.example) to `.env` and fill it in before starting the
+app. Everything there is server-only; nothing is `VITE_`-prefixed, so no value
+reaches the client bundle.
 
 ## Running in Docker
 
@@ -62,9 +85,15 @@ docker compose up
 docker compose -f docker-compose.yml up -d
 ```
 
-Both serve <http://localhost:3000>. Secrets/config come from a
-git-ignored `.env` next to the compose file (optional until a feature
-requires one).
+Both serve <http://localhost:3000>, and both bring up three services: the
+Postgres database, a one-shot `migrate` job that applies the committed
+migrations and exits, and the app, which starts only once that job has
+succeeded. Re-running `up` re-runs the migration job harmlessly — Drizzle
+records what it has already applied.
+
+Secrets/config come from a git-ignored `.env` next to the compose file. It is
+**required** now: the app refuses to start without it, and Compose fails with
+a named error if the Postgres credentials are missing.
 
 If the dev container ever loads a blank/"something went wrong" page in a
 browser that opened it before — typically a phone, reporting a module error
@@ -97,10 +126,15 @@ One-time host setup:
    sudo git clone https://github.com/nicbk/nicbk-website.git /var/lib/nicbk-website
    ```
 
-2. Provision the git-ignored `.env` beside `docker-compose.yml` when a
-   feature requires secrets (`chmod 600`; see
+2. Provision the git-ignored `.env` beside `docker-compose.yml`
+   (`chmod 600`; see
    [research/devops-deployment/secrets-and-environment-config.md](./research/devops-deployment/secrets-and-environment-config.md)).
-   Optional while nothing is required.
+   **Required** — the stack will not start without it. Use
+   [.env.example](./.env.example) as the template: Postgres credentials, a
+   `DATABASE_URL` matching them, a freshly generated `BETTER_AUTH_SECRET`,
+   `BETTER_AUTH_URL=https://nicbk.com`, and the Google OAuth client
+   credentials whose authorized redirect URI is
+   `https://nicbk.com/api/auth/callback/google`.
 
 3. Wire this repo's NixOS module ([flake.nix](./flake.nix)) into the
    host's system flake:
@@ -140,7 +174,9 @@ deploy timer.
 Every PR is gated by GitHub Actions
 ([.github/workflows/ci.yml](./.github/workflows/ci.yml)): Biome,
 typecheck, unit tests with a ratchet coverage gate (coverage must not
-drop below the last `main` baseline), Playwright e2e + axe against the
+drop below the last `main` baseline), drift checks on the generated GPG and
+auth-schema artifacts, integration tests against a real Postgres started by
+Testcontainers, Playwright e2e + axe against the
 production build, and Conventional-Commits PR-title lint. The workflows
 use zero repository secrets and pin all third-party actions by commit
 SHA; design and threat model in

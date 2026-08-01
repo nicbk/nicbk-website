@@ -73,7 +73,9 @@
       "includes": [
         "vite.config.ts",
         "vitest.config.ts",
+        "vitest.integration.config.ts",
         "playwright.config.ts",
+        "drizzle.config.ts",
         "src/server.ts",
         "blog/mdx.d.ts"
       ],

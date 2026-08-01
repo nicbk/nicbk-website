@@ -23,7 +23,21 @@ export default defineConfig({
     // for the error-fallback e2e. Vite inlines this at build/dev start, so it
     // is set only here — production builds never carry it and the probe stays
     // inert (renders the normal 404 instead of throwing).
-    env: { VITE_E2E_ERROR_PROBE: '1' },
+    env: {
+      VITE_E2E_ERROR_PROBE: '1',
+      // The server validates its whole environment at startup and now
+      // requires database and Google OAuth settings (src/env.ts). Nothing in
+      // this suite signs in or touches the database yet — the auth surface
+      // arrives with the sign-in page — so obvious placeholders are supplied
+      // here rather than requiring a real .env (or a database) to run the e2e
+      // suite. When a test does exercise sign-in, it brings its own real
+      // Postgres and stubbed Google instead of these.
+      DATABASE_URL: 'postgres://e2e:placeholder@localhost:5432/unused',
+      BETTER_AUTH_SECRET: 'e2e-placeholder-secret-at-least-32-characters',
+      BETTER_AUTH_URL: 'http://localhost:3000',
+      GOOGLE_CLIENT_ID: 'e2e-placeholder-client-id',
+      GOOGLE_CLIENT_SECRET: 'e2e-placeholder-client-secret',
+    },
     port: 3000,
     reuseExistingServer: !isCi,
     // Generous in CI: the command above includes a full production build.

@@ -9,16 +9,45 @@ import { z } from 'zod'
  * startup with a clear error instead of surfacing as a confusing failure at
  * first use. See research/coding-conventions/file-hierarchy-and-complexity.md.
  *
- * No variable is required yet — this walking-skeleton slice has no secrets
- * or external services. Later features (auth, lit-tracker) add their
- * variables to this schema as required fields.
+ * Everything the authentication feature needs is **required**: a missing
+ * database URL or OAuth credential is a misconfiguration that should stop the
+ * server immediately, not surface as a failed sign-in later. All of it is
+ * server-only — never `VITE_`-prefixed, so no value can reach the client
+ * bundle (research/devops-deployment/secrets-and-environment-config.md).
  */
-const envSchema = z.object({
+export const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
   /** Port the app server listens on. */
   PORT: z.coerce.number().int().positive().default(3000),
+
+  /**
+   * Postgres connection string for the shared database (identity today, every
+   * sub-app's data later). Points at the Compose `db` service in a container,
+   * or at a local/forwarded Postgres in development.
+   */
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+
+  /**
+   * Signing key for Better Auth's session tokens and state parameters.
+   * Rotating it invalidates every existing session. 32 characters minimum so
+   * a placeholder or truncated value fails loudly here rather than weakening
+   * signatures silently.
+   */
+  BETTER_AUTH_SECRET: z.string().min(32),
+
+  /**
+   * The app's own public base URL (e.g. https://nicbk.com). Better Auth builds
+   * OAuth callback URLs from it, so it must match the redirect URI registered
+   * with Google exactly — set explicitly rather than inferred from the request,
+   * which a proxy header could otherwise spoof.
+   */
+  BETTER_AUTH_URL: z.url(),
+
+  /** OAuth client credentials for the Google provider (the only sign-in method). */
+  GOOGLE_CLIENT_ID: z.string().min(1),
+  GOOGLE_CLIENT_SECRET: z.string().min(1),
 })
 
 export type Env = z.infer<typeof envSchema>

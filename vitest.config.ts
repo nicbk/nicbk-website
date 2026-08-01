@@ -31,6 +31,10 @@ export default defineConfig({
       'blog/**/*.test.{ts,tsx}',
       'scripts/**/*.test.mjs',
     ],
+    // The integration tier needs Docker and minutes of timeout; it has its own
+    // config and CI job (vitest.integration.config.ts) and must not be swept
+    // up by the pattern above.
+    exclude: ['**/node_modules/**', '**/*.integration.test.ts'],
     coverage: {
       // Unit-test coverage only, gated ratchet-style in CI: a PR fails if
       // its total line coverage drops below the last main-branch baseline
@@ -38,7 +42,10 @@ export default defineConfig({
       // research/testing-qa/test-coverage-and-ci-gating.md.
       provider: 'v8',
       include: ['src/**'],
-      exclude: ['src/routeTree.gen.ts'],
+      // The generated route tree isn't hand-written code, and the
+      // Testcontainers helpers are test scaffolding exercised only by the
+      // integration tier (which this ratchet doesn't measure).
+      exclude: ['src/routeTree.gen.ts', 'src/db/test-support/**'],
       // json-summary feeds the ratchet comparison; html is the CI artifact.
       reporter: ['text', 'json-summary', 'html'],
     },

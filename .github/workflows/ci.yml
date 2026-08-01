@@ -62,6 +62,16 @@ jobs:
             public/.well-known/openpgpkey \
             src/gpg/fingerprint.generated.ts
 
+      # Same "derive, don't hand-type" rule for the identity schema: which
+      # columns Better Auth needs is a property of the library version and the
+      # plugins enabled, so src/db/schema.ts is generated. A drift here means
+      # the committed schema (and the migrations generated from it) no longer
+      # match the auth configuration. See scripts/gen-auth-schema.mjs.
+      - name: Auth schema drift check
+        run: |
+          npm run db:generate-schema
+          git diff --exit-code -- src/db/schema.ts
+
       - name: Unit tests with coverage
         run: npm run test:coverage
 
@@ -94,6 +104,31 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 14
+
+  integration:
+    name: Integration tests (Testcontainers Postgres)
+    # ubuntu-latest ships a running Docker daemon, which is all Testcontainers
+    # needs — see the 2026-07-06 runner addendum in
+    # research/testing-qa/integration-testing-strategy.md.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Real Postgres, the real committed migrations, and Better Auth's real
+      # HTTP surface; only Google's endpoints are stubbed. Its own job because
+      # it needs Docker and runs on a different timescale from the unit tier.
+      - name: Integration tests
+        run: npm run test:integration
 
   e2e:
     name: Playwright e2e + axe (production build)

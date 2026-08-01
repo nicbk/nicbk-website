@@ -1,12 +1,17 @@
 /**
  * Apply committed SQL migrations to the database, then exit.
  *
- * This runs as the app service's Compose `pre_start` step: an ephemeral
- * container that must exit 0 before the server container starts, so the schema
- * is never behind the code that queries it
- * (research/devops-deployment/database-migrations.md). Deliberately not part of
- * server startup — a migration failure should stop the deploy, not leave a
- * half-migrated server accepting traffic.
+ * This runs as the Compose stack's one-shot `migrate` service: an ephemeral
+ * container the app service waits on with `service_completed_successfully`, so
+ * the schema is never behind the code that queries it
+ * (research/devops-deployment/database-migrations.md, and the 2026-08-01
+ * revision there recording why it isn't a `pre_start` hook). Deliberately not
+ * part of server startup — a migration failure should stop the deploy, not
+ * leave a half-migrated server accepting traffic.
+ *
+ * The sign-in e2e runs it too, against its throwaway Postgres
+ * (scripts/e2e-auth-server.mjs), so that tier tests the migrations that ship
+ * rather than a schema built for it.
  *
  * Drizzle's migrator records what it has applied in a `__drizzle_migrations`
  * table, so re-running is a no-op: every `docker compose up` executes this, and

@@ -71,6 +71,51 @@ Two mechanisms, for two different needs:
   automated against Google's real login UI, which actively detects and
   blocks headless/automation sign-in attempts.
 
+### Revision (2026-08-01, at implementation time): how Google's endpoints are stubbed
+
+The decision above — stub Google's `/authorize`, `/token`, and `/userinfo`
+via the WireMock/MockServer container, pointing the app at it by config —
+turned out not to be implementable as written for Better Auth's Google
+provider. Building the sign-in flow e2e
+(`features/authentication/tasks/sign-in-and-route-guard`) established:
+
+- **The token endpoint is not configurable.** `@better-auth/core`'s
+  `social-providers/google.ts` passes the literal
+  `https://oauth2.googleapis.com/token` into `validateAuthorizationCode`.
+  Only `authorizationEndpoint` is overridable through `ProviderOptions`.
+  Overriding the token endpoint is an open upstream feature request
+  ([better-auth#8811](https://github.com/better-auth/better-auth/issues/8811),
+  [#2047](https://github.com/better-auth/better-auth/issues/2047)) as of
+  better-auth 1.6.25, the current release.
+- **It cannot be redirected either.** That exchange goes through
+  `fetchRefusingRedirects`, which rejects any 3xx response as possible SSRF.
+  So a stub can't be reached by bouncing the request, and the call is
+  `https://`, so a hosts-file swap would additionally need a trusted CA.
+- **`/userinfo` is never called.** The provider reads the profile out of the
+  `id_token` with `decodeJwt` instead, so there is no third endpoint to stub.
+
+The substance of the decision is unchanged and still binding: Google's
+endpoints are stubbed, Google's real login UI is never automated, and most
+auth-requiring tests inject a session instead. What changed is the seam, and
+in each case it is the boundary the request actually crosses:
+
+- `/authorize` is a **browser navigation**, so Playwright's `page.route()`
+  intercepts it — the tool this file rules out for GROBID/Semantic Scholar
+  precisely because *those* calls never reach the browser. Here it is the
+  correct one for the same reason, applied the other way round.
+- `/token` is a **server-side `fetch` inside the app process**, so it is
+  stubbed there, by a module preloaded with Node's `--import` hook
+  (`e2e-auth/support/google-token-endpoint-stub.mjs`). The mock-server
+  container was chosen for calls originating in a *separate* container from
+  the test runner; the sign-in e2e's app server is a local process Playwright
+  starts, so that constraint does not apply. The stub validates the exchange
+  (`grant_type`, `code`, `code_verifier`, `redirect_uri`) and rejects a
+  malformed one the way Google would, so a broken PKCE flow still fails.
+
+If Better Auth later ships a `tokenEndpoint` override, the preload can be
+replaced by a config swap and the mechanism returns to what this file
+originally described.
+
 ### Fixtures: hand-curated, no record-once-replay tooling
 
 GROBID's TEI-XML output format is stable and documented, and GROBID's own

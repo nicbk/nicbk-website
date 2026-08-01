@@ -119,4 +119,17 @@
   (`design-system.md`), reactive continuously-edited-state pattern
   (`state-management-conventions.md`), pathname-scoped focus handoff
   (`keyboard-and-focus-management.md`), and a `search-input.md` component spec.
-  Own branch + PR off `main`.
+  Own branch + PR off `main`. Merged as PR #49.
+- 2026-08-01 — **Follow-up fix (post-merge):** a tag toggle kept its focus ring
+  after a pointer/touch tap. Because focus now stays on the toggle after
+  activation (the PR #49 handoff fix), on mobile the browser paints a
+  `:focus-visible` ring for that retained focus — and the ring is the accent
+  color, identical to a selected tag, so on a *deselected* tag it read as "still
+  selected." Fix: `tag-filter.tsx` drops focus after a pointer/touch activation
+  (`event.detail > 0`) but keeps it for keyboard (`detail === 0`), so keyboard
+  users still get focus + ring while a tap leaves no lingering ring at all
+  (removing focus removes any ring, independent of the browser's focus-visible
+  heuristic). Verified in Chrome (select→deselect leaves focus on neither the
+  tag nor the heading; deselected tag returns to the muted baseline). Locked in
+  with unit tests (pointer drops focus, keyboard keeps it) and e2e guards for
+  both modalities. Own branch + PR off `main`.

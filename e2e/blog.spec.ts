@@ -180,17 +180,45 @@ test.describe('blog search and tag filter', () => {
     await expect(search).toBeFocused()
   })
 
-  test('keeps focus on a tag toggle after selecting it (no handoff on filter)', async ({
+  test('keyboard activation of a tag keeps focus on it (no handoff on filter)', async ({
     page,
   }) => {
-    // Same regression as above, for the tag toggles: clicking one navigates
-    // (same pathname), which must not hand focus off to the heading.
+    // Same regression as above, for the tag toggles: activating one navigates
+    // (same pathname), which must not hand focus off to the heading. A keyboard
+    // user must keep focus on the toggle so they can move along the tag row.
     await page.goto('/blog')
     const typescriptTag = page.getByRole('button', { name: 'typescript' })
-    await typescriptTag.click()
+    await typescriptTag.focus()
+    await typescriptTag.press('Enter')
 
     await expect(page).toHaveURL(/tags=.*typescript/)
     await expect(typescriptTag).toBeFocused()
+  })
+
+  test('a pointer tap on a tag drops focus, leaving no lingering ring', async ({
+    page,
+  }) => {
+    // A tap (unlike keyboard) should NOT leave focus — and its accent-colored
+    // :focus-visible ring — sitting on the toggle, because that ring looks like
+    // the selected state and reads as "still selected" after deselecting (most
+    // visible on mobile). It also must not be stranded on the heading. So after
+    // a pointer tap, focus rests on neither the tag nor the <h1>.
+    await page.goto('/blog')
+    const typescriptTag = page.getByRole('button', { name: 'typescript' })
+
+    // Select, then deselect — the exact sequence that surfaced the lingering
+    // ring — filters correctly and leaves focus on the tag at no point.
+    await typescriptTag.click()
+    await expect(page).toHaveURL(/tags=.*typescript/)
+    await expect(typescriptTag).toHaveAttribute('aria-pressed', 'true')
+    await expect(typescriptTag).not.toBeFocused()
+
+    await typescriptTag.click()
+    await expect(typescriptTag).toHaveAttribute('aria-pressed', 'false')
+    await expect(typescriptTag).not.toBeFocused()
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'blog' }),
+    ).not.toBeFocused()
   })
 
   test('combines search and tags with AND', async ({ page }) => {

@@ -1,8 +1,9 @@
 # Status: Authentication
 
 **Feature state:** In progress (2026-08-01). Task 1
-(`auth-backend-and-config`) implemented and awaiting PR + CI + review; tasks 2
-and 3 not started. Depends on
+(`auth-backend-and-config`) merged as
+[#57](https://github.com/nicbk/nicbk-website/pull/57) and deployed; tasks 2 and
+3 not started. Depends on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — extends its
 app server, `src/env.ts` + `parseEnv`, and `docker-compose*.yml`, and reuses its
 `(personal-site)` shell/header, design tokens, and theming. This is the
@@ -22,7 +23,7 @@ Feature parent issue:
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `auth-backend-and-config` | Implemented ([#28](https://github.com/nicbk/nicbk-website/issues/28)) | _pending_ | _pending_ | _pending_ |
+| `auth-backend-and-config` | Merged ([#28](https://github.com/nicbk/nicbk-website/issues/28)) | [#57](https://github.com/nicbk/nicbk-website/pull/57) | passed | merged |
 | `sign-in-and-route-guard` | Not started ([#29](https://github.com/nicbk/nicbk-website/issues/29)) | — | — | — |
 | `user-settings-modal` | Not started ([#30](https://github.com/nicbk/nicbk-website/issues/30)) | — | — | — |
 
@@ -92,3 +93,8 @@ login-flow test, injected sessions elsewhere).
   task 1 needs only well-formed values to boot, so local `.env` and the test
   harness carry placeholders; the real Google Cloud OAuth client is created
   before the sign-in page, which is the first thing that round-trips to Google.
+- 2026-08-01 — Task 1 **merged as [#57](https://github.com/nicbk/nicbk-website/pull/57)**
+  (CI green, approved) and deployed to nicbk-tower, with the production `.env`
+  provisioned by hand beforehand (Postgres credentials, `DATABASE_URL`, a fresh
+  `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=https://nicbk.com`, and placeholder
+  Google credentials until task 2). Next: task 2, `sign-in-and-route-guard`.

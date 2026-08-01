@@ -132,4 +132,19 @@
   heuristic). Verified in Chrome (select→deselect leaves focus on neither the
   tag nor the heading; deselected tag returns to the muted baseline). Locked in
   with unit tests (pointer drops focus, keyboard keeps it) and e2e guards for
-  both modalities. Own branch + PR off `main`.
+  both modalities. Own branch + PR off `main`. Merged as PR #50.
+- 2026-08-01 — **Follow-up fix (post-merge):** a deselected tag still showed the
+  accent color on mobile (the selected color, only missing the bold). Cause was
+  **sticky `:hover`**, not focus: a touch device latches `:hover` onto the last
+  element tapped and never releases it, and `.tag:hover` used the same accent as
+  the selected state. (The earlier pass mistook this for a desktop-only hover
+  artifact — it reproduces on touch.) Fixed by gating hover-only affordances
+  behind `@media (hover: hover)`, applied to all four ungated `:hover` rules in
+  the codebase (tag filter, theme toggle, site header links, post titles), since
+  every one had the same latent defect. Reproduced and verified in WebKit iPhone
+  emulation — before: deselected tag `rgb(11,87,208)`; after: `rgb(89,89,89)`
+  muted baseline, with the selected state still accent + bold — and confirmed all
+  four still hover normally on a real pointer. Locked in with an e2e guard in a
+  touch-emulated context, checked to fail when the gate is removed. Convention
+  recorded in `research/coding-conventions/styling-conventions.md`. Own branch +
+  PR off `main`.

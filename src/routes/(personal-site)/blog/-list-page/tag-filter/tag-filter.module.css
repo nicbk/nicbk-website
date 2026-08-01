@@ -40,8 +40,17 @@
   content: "#";
 }
 
-.tag:hover {
-  color: var(--color-accent);
+/*
+ * Hover is gated on a device that can actually hover. A touch device latches
+ * :hover on the last-tapped element and never releases it, which here left a
+ * just-deselected tag sitting in the accent color — visually the selected state
+ * minus the bold — reading as "still selected". See the hover-affordance rule in
+ * research/coding-conventions/styling-conventions.md.
+ */
+@media (hover: hover) {
+  .tag:hover {
+    color: var(--color-accent);
+  }
 }
 
 /*

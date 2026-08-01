@@ -64,6 +64,19 @@ exception to the project's otherwise-universal kebab-case convention (see
 names enable dot-notation JS access (`styles.myClass`) instead of the
 awkward bracket notation (`styles['my-class']`) kebab-case would require.
 
+**Hover-only affordances go inside `@media (hover: hover)`.** Any rule whose
+whole job is to react to a pointer hovering — a color shift, an underline, a
+reveal — is wrapped in `@media (hover: hover)` rather than written as a bare
+`:hover`. A touch device has no way to un-hover: it latches `:hover` onto the
+last element tapped and holds it until something else is tapped, so a bare
+`:hover` becomes a persistent state on mobile rather than a transient one. That
+is actively misleading when the hover style resembles a meaningful state — the
+blog's tag filter shipped exactly that bug, where a just-deselected tag kept the
+accent color of a *selected* tag. This applies only to decorative hover
+feedback; it is not a general ban on `:hover`, and it never applies to
+`:focus-visible`/`:focus` (which must stay ungated so keyboard users keep their
+indicator).
+
 **Nesting depth and `:global()`:** no hard nesting-depth limit — rely on
 judgment and readability, consistent with the same approach already taken
 for folder nesting in

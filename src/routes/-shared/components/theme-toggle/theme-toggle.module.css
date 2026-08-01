@@ -9,8 +9,12 @@
   cursor: pointer;
 }
 
-.toggle:hover {
-  color: var(--color-accent);
+/* Hover-only affordance: a touch device would latch this on after a tap and
+   never release it (see styling-conventions.md). */
+@media (hover: hover) {
+  .toggle:hover {
+    color: var(--color-accent);
+  }
 }
 
 /* Motion is opt-in per the project convention (see src/styles/motion.css). */

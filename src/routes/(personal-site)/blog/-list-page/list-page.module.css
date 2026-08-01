@@ -89,8 +89,12 @@
   text-decoration: none;
 }
 
-.postTitle:hover {
-  text-decoration: underline;
+/* Hover-only affordance: a touch device would latch this on after a tap and
+   never release it (see styling-conventions.md). */
+@media (hover: hover) {
+  .postTitle:hover {
+    text-decoration: underline;
+  }
 }
 
 .summary {

@@ -1,12 +1,13 @@
 # Status: projects-page-content
 
-**State:** Implemented, awaiting PR + CI + review (2026-08-01). The only task
-of [`projects-page`](../../status.md); built on `main` at `2ae98da`.
+**State:** Merged (2026-08-01). The only task of
+[`projects-page`](../../status.md); built on `main` at `2ae98da`.
 
 - Branch: `projects-page/projects-page-content`.
 - Sub-issue: [#54](https://github.com/nicbk/nicbk-website/issues/54)
   (parent [#53](https://github.com/nicbk/nicbk-website/issues/53)).
-- PR / CI / review: _pending._
+- PR: [#55](https://github.com/nicbk/nicbk-website/pull/55) — CI green,
+  approved, merged.
 
 ## What was implemented
 
@@ -67,3 +68,5 @@ of [`projects-page`](../../status.md); built on `main` at `2ae98da`.
 - 2026-08-01 — Feature spec'd and this task implemented on
   `projects-page/projects-page-content` (#54 self-assigned). Full gate green;
   verified in Chrome across themes and widths. Awaiting PR + CI + review.
+- 2026-08-01 — **Merged as [#55](https://github.com/nicbk/nicbk-website/pull/55)**
+  (CI green, approved).

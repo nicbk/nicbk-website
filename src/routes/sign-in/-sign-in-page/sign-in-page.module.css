@@ -1,0 +1,76 @@
+.page {
+  /* Matches the header's horizontal padding so the heading aligns with the
+     site name, consistent with the home, about, blog, and projects pages. */
+  padding: var(--space-lg);
+}
+
+.title {
+  /* The one visible page title, styled like the other page titles: bold and
+     larger than body text. Also the document's single <h1> and the
+     route-change focus-handoff target. */
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.explanation {
+  /* Capped at the shared reading measure so the sentence doesn't stretch into
+     an unwieldy line on a wide screen. */
+  max-width: var(--prose-max-width);
+  margin: 0 0 var(--space-lg);
+  color: var(--color-text-muted);
+}
+
+/*
+ * The inline failure message, above the button that produced it. Not colored
+ * red: the palette has no error token, and red-on-background is a contrast
+ * audit this page would have to add for a message that is already unambiguous
+ * in words. Full-strength text plus the border is what sets it apart from the
+ * muted explanation above — and color is not the only signal either way, which
+ * is what WCAG 1.4.1 asks for.
+ */
+.error {
+  max-width: var(--prose-max-width);
+  margin: 0 0 var(--space-md);
+  padding: var(--space-xs) var(--space-sm);
+  border-left: 2px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Hover-only affordance: a touch device would latch this on after a tap and
+   never release it (see styling-conventions.md). */
+@media (hover: hover) {
+  .button:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/* While the browser is on its way to Google, the button is inert — say so
+   visually as well as through the disabled attribute. */
+.button:disabled {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+/* Motion is opt-in per the project convention (see src/styles/motion.css). */
+@media (prefers-reduced-motion: no-preference) {
+  .button {
+    transition:
+      color var(--motion-duration-fast) var(--motion-ease),
+      border-color var(--motion-duration-fast) var(--motion-ease);
+  }
+}

@@ -75,6 +75,7 @@
         "vitest.config.ts",
         "vitest.integration.config.ts",
         "playwright.config.ts",
+        "playwright.auth.config.ts",
         "drizzle.config.ts",
         "src/server.ts",
         "blog/mdx.d.ts"

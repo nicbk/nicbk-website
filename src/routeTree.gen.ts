@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ErrorProbeRouteImport } from './routes/error-probe'
+import { Route as SignInRouteRouteImport } from './routes/sign-in/route'
 import { Route as personalSiteRouteRouteImport } from './routes/(personal-site)/route'
 import { Route as personalSiteProjectsRouteRouteImport } from './routes/(personal-site)/projects/route'
 import { Route as personalSiteAboutRouteRouteImport } from './routes/(personal-site)/about/route'
@@ -21,6 +22,11 @@ import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-sit
 const ErrorProbeRoute = ErrorProbeRouteImport.update({
   id: '/error-probe',
   path: '/error-probe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRouteRoute = SignInRouteRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const personalSiteRouteRoute = personalSiteRouteRouteImport.update({
@@ -60,6 +66,7 @@ const personalSiteBlogSlugRoute = personalSiteBlogSlugRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
@@ -69,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/blog/': typeof personalSiteBlogIndexRoute
 }
 export interface FileRoutesByTo {
+  '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
@@ -80,6 +88,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(personal-site)': typeof personalSiteRouteRouteWithChildren
+  '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
   '/(personal-site)/about': typeof personalSiteAboutRouteRoute
   '/(personal-site)/projects': typeof personalSiteProjectsRouteRoute
@@ -91,6 +100,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/sign-in'
     | '/error-probe'
     | '/about'
     | '/projects'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/blog/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/sign-in'
     | '/error-probe'
     | '/about'
     | '/projects'
@@ -110,6 +121,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/(personal-site)'
+    | '/sign-in'
     | '/error-probe'
     | '/(personal-site)/about'
     | '/(personal-site)/projects'
@@ -121,6 +133,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   personalSiteRouteRoute: typeof personalSiteRouteRouteWithChildren
+  SignInRouteRoute: typeof SignInRouteRoute
   ErrorProbeRoute: typeof ErrorProbeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -132,6 +145,13 @@ declare module '@tanstack/react-router' {
       path: '/error-probe'
       fullPath: '/error-probe'
       preLoaderRoute: typeof ErrorProbeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(personal-site)': {
@@ -207,6 +227,7 @@ const personalSiteRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   personalSiteRouteRoute: personalSiteRouteRouteWithChildren,
+  SignInRouteRoute: SignInRouteRoute,
   ErrorProbeRoute: ErrorProbeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

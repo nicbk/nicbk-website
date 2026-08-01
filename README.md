@@ -51,7 +51,13 @@ npm run test:coverage  # unit tests + coverage report (coverage/)
 npm run test:integration  # real Postgres via Testcontainers (needs Docker)
 npx playwright install chromium   # one-time, before first e2e run
 npm run test:e2e       # Playwright e2e + axe accessibility checks
+npm run test:e2e:auth  # sign-in flow: stubbed Google + Testcontainers Postgres
 ```
+
+`test:e2e:auth` is its own tier because the Google sign-in round trip needs a
+real database and a patched app server; it starts both itself (on port 3100, so
+it can run alongside a dev server) and needs Docker. Everything else about
+`/sign-in` is covered by the ordinary `test:e2e` suite.
 
 Database schema:
 
@@ -177,7 +183,8 @@ typecheck, unit tests with a ratchet coverage gate (coverage must not
 drop below the last `main` baseline), drift checks on the generated GPG and
 auth-schema artifacts, integration tests against a real Postgres started by
 Testcontainers, Playwright e2e + axe against the
-production build, and Conventional-Commits PR-title lint. The workflows
+production build, the sign-in flow e2e against a stubbed Google, and
+Conventional-Commits PR-title lint. The workflows
 use zero repository secrets and pin all third-party actions by commit
 SHA; design and threat model in
 [research/devops-deployment/ci-pipeline.md](./research/devops-deployment/ci-pipeline.md).

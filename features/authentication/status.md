@@ -2,8 +2,9 @@
 
 **Feature state:** In progress (2026-08-01). Task 1
 (`auth-backend-and-config`) merged as
-[#57](https://github.com/nicbk/nicbk-website/pull/57) and deployed; tasks 2 and
-3 not started. Depends on
+[#57](https://github.com/nicbk/nicbk-website/pull/57) and deployed; task 2
+(`sign-in-and-route-guard`) implemented and awaiting PR + CI + review; task 3
+not started. Depends on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — extends its
 app server, `src/env.ts` + `parseEnv`, and `docker-compose*.yml`, and reuses its
 `(personal-site)` shell/header, design tokens, and theming. This is the
@@ -24,7 +25,7 @@ Feature parent issue:
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `auth-backend-and-config` | Merged ([#28](https://github.com/nicbk/nicbk-website/issues/28)) | [#57](https://github.com/nicbk/nicbk-website/pull/57) | passed | merged |
-| `sign-in-and-route-guard` | Not started ([#29](https://github.com/nicbk/nicbk-website/issues/29)) | — | — | — |
+| `sign-in-and-route-guard` | Implemented ([#29](https://github.com/nicbk/nicbk-website/issues/29)) | pending | pending | pending |
 | `user-settings-modal` | Not started ([#30](https://github.com/nicbk/nicbk-website/issues/30)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -98,3 +99,18 @@ login-flow test, injected sessions elsewhere).
   provisioned by hand beforehand (Postgres credentials, `DATABASE_URL`, a fresh
   `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=https://nicbk.com`, and placeholder
   Google credentials until task 2). Next: task 2, `sign-in-and-route-guard`.
+- 2026-08-01 — Real Google OAuth credentials created and installed on
+  nicbk-tower (Web application client; redirect URIs
+  `https://nicbk.com/api/auth/callback/google` and the localhost equivalent; no
+  authorized JavaScript origins, since the server-side authorization-code flow
+  never sends the client id from the browser).
+- 2026-08-01 — Task 2 (`sign-in-and-route-guard`) implemented on
+  `authentication/sign-in-and-route-guard` (#29 self-assigned): the `/sign-in`
+  page, the return-to sanitizer, the reusable guard, and the login-flow e2e
+  against a stubbed Google. One deviation worth review — Better Auth hardcodes
+  Google's token endpoint, so the decided mock-server-container mechanism was
+  replaced with a browser-side `page.route()` stub plus an in-process `fetch`
+  stub, recorded as a dated revision in
+  [mocking-external-services.md](../../research/testing-qa/mocking-external-services.md)
+  and reasoned in the [task status](./tasks/sign-in-and-route-guard/status.md).
+  Awaiting PR + CI + review.

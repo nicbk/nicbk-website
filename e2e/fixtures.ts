@@ -1,5 +1,27 @@
 import AxeBuilder from '@axe-core/playwright'
-import { test as base, expect } from '@playwright/test'
+import { test as base, expect, type Page } from '@playwright/test'
+
+/**
+ * Clicks the header's theme toggle and waits until the theme has actually
+ * changed.
+ *
+ * Clicks that land before React hydrates are silently dropped — the known
+ * TanStack Start + Playwright timing gap flagged in
+ * research/testing-qa/e2e-testing.md — so a bare `.click()` followed by an
+ * assertion is a race. Retrying click-then-assert is the documented way around
+ * it; this is that, named once so tests don't each have to remember.
+ */
+export async function toggleThemeTo(
+  page: Page,
+  theme: 'light' | 'dark',
+): Promise<void> {
+  await expect(async () => {
+    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme, {
+      timeout: 1_000,
+    })
+  }).toPass()
+}
 
 interface AxeFixture {
   /**

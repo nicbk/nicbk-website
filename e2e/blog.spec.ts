@@ -314,6 +314,40 @@ test.describe('blog search and tag filter', () => {
     await expect(postRows(page)).toHaveCount(1)
   })
 
+  test.describe('on a touch device', () => {
+    // A touch device reports `hover: none` and latches :hover onto the last
+    // element tapped, never releasing it.
+    test.use({ hasTouch: true, isMobile: true })
+
+    test('a deselected tag returns to the muted baseline, not the selected color', async ({
+      page,
+    }) => {
+      // Regression guard: the tag's hover color is the same accent as its
+      // selected color, so an ungated :hover left a just-deselected tag looking
+      // selected (accent, only missing the bold) until something else was
+      // tapped. The hover rule is now gated on `@media (hover: hover)`.
+      // Wait for the page to go quiet before tapping: under touch emulation the
+      // first tap otherwise lands before hydration attaches the toggle's
+      // handler, and is simply dropped.
+      await page.goto('/blog', { waitUntil: 'networkidle' })
+
+      const typescriptTag = page.getByRole('button', { name: 'typescript' })
+      const color = () =>
+        typescriptTag.evaluate((el) => getComputedStyle(el).color)
+
+      // An untouched tag establishes the muted baseline to return to.
+      const baseline = await color()
+
+      await typescriptTag.tap()
+      await expect(typescriptTag).toHaveAttribute('aria-pressed', 'true')
+      expect(await color()).not.toBe(baseline) // selected: accent + bold
+
+      await typescriptTag.tap()
+      await expect(typescriptTag).toHaveAttribute('aria-pressed', 'false')
+      expect(await color()).toBe(baseline)
+    })
+  })
+
   test('passes axe (critical/serious) with a tag selected, in both themes', async ({
     page,
     expectNoA11yViolations,

@@ -42,9 +42,13 @@
   text-decoration: none;
 }
 
-.siteName:hover,
-.navLink:hover {
-  text-decoration: underline;
+/* Hover-only affordance: a touch device would latch this on after a tap and
+   never release it (see styling-conventions.md). */
+@media (hover: hover) {
+  .siteName:hover,
+  .navLink:hover {
+    text-decoration: underline;
+  }
 }
 
 /* Push the theme toggle to the row's far end. */

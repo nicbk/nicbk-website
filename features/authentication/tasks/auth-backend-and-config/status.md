@@ -1,13 +1,13 @@
 # Status: Auth Backend and Config
 
-**State:** Implemented, awaiting PR + CI + review (2026-08-01). First of
-three; built on `main` at `6a32d58`.
+**State:** Merged (2026-08-01). First of three; built on `main` at `6a32d58`.
 
 - Branch: `authentication/auth-backend-and-config`.
 - Sub-issue: [#28](https://github.com/nicbk/nicbk-website/issues/28)
   (parent [#27](https://github.com/nicbk/nicbk-website/issues/27)),
   self-assigned.
-- PR / CI / review: _pending._
+- PR: [#57](https://github.com/nicbk/nicbk-website/pull/57) — CI green,
+  approved, merged, and deployed to nicbk-tower.
 
 ## Notes carried into implementation
 
@@ -129,3 +129,6 @@ No UI: the `/sign-in` page and route guard are task 2, the settings modal task
   generate` as the CLI, and the `server.handlers` route API already present in
   the installed TanStack Start). Full gate green plus the live Compose stack
   end to end. Awaiting PR + CI + review.
+- 2026-08-01 — **Merged as [#57](https://github.com/nicbk/nicbk-website/pull/57)**
+  and deployed. The production `.env` was provisioned on the host first, since
+  the stack now refuses to start without it.

@@ -51,4 +51,26 @@ describe('TagFilter', () => {
     )
     expect(container).toBeEmptyDOMElement()
   })
+
+  it('drops focus after a pointer tap so no focus ring lingers', async () => {
+    // A pointer/touch tap must not leave focus (and its accent ring, which looks
+    // like the selected state) on the toggle; keyboard activation, tested below,
+    // keeps focus.
+    const user = userEvent.setup()
+    render(<TagFilter tags={['react']} selected={[]} onToggle={() => {}} />)
+    const button = screen.getByRole('button', { name: 'react' })
+
+    await user.click(button)
+    expect(button).not.toHaveFocus()
+  })
+
+  it('keeps focus on a tag after keyboard activation', async () => {
+    const user = userEvent.setup()
+    render(<TagFilter tags={['react']} selected={[]} onToggle={() => {}} />)
+    const button = screen.getByRole('button', { name: 'react' })
+
+    button.focus()
+    await user.keyboard('{Enter}')
+    expect(button).toHaveFocus()
+  })
 })

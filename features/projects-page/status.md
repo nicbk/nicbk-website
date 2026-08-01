@@ -1,8 +1,11 @@
 # Status: Projects Page
 
-**Feature state:** Implemented, awaiting PR + CI + review (2026-08-01).
-Depends only on [`app-shell-and-home`](../app-shell-and-home/status.md)
-(Complete) for the shell, header, tokens, and focus handoff.
+**Feature state:** Complete (2026-08-01). Its one task
+(`projects-page-content`,
+[#55](https://github.com/nicbk/nicbk-website/pull/55)) is merged, which also
+completes **Phase 1**. Depends only on
+[`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) for the
+shell, header, tokens, and focus handoff.
 
 Feature parent issue:
 [#53](https://github.com/nicbk/nicbk-website/issues/53); task sub-issue
@@ -13,7 +16,7 @@ Feature parent issue:
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `projects-page-content` | Implemented ([#54](https://github.com/nicbk/nicbk-website/issues/54)) | _pending_ | _pending_ | _pending_ |
+| `projects-page-content` | Merged ([#54](https://github.com/nicbk/nicbk-website/issues/54)) | [#55](https://github.com/nicbk/nicbk-website/pull/55) | passed | merged |
 
 ## Definition of Done (feature)
 
@@ -34,3 +37,5 @@ link pointing at a Literature Tracker URL that does not exist yet.
   Phase 3 feature that creates it. Details in the
   [task status](./tasks/projects-page-content/status.md). Awaiting PR + CI +
   review.
+- 2026-08-01 — **Merged as [#55](https://github.com/nicbk/nicbk-website/pull/55)**
+  (CI green, approved) — feature complete, and with it Phase 1.

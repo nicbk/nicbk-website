@@ -66,6 +66,21 @@ Both serve <http://localhost:3000>. Secrets/config come from a
 git-ignored `.env` next to the compose file (optional until a feature
 requires one).
 
+If the dev container ever loads a blank/"something went wrong" page in a
+browser that opened it before — typically a phone, reporting a module error
+such as `Importing binding name 't' is not found.` — that browser is holding a
+stale copy of the dev server's pre-bundled dependencies. Clear that browser's
+cache for the site once (or open it in a private tab); the dev server no longer
+serves those files as permanently cacheable, so it does not recur (see
+`revalidateOptimizedDepsInDev` in [vite.config.ts](./vite.config.ts)). If the
+container itself looks out of date after a dependency change, reset its
+`node_modules` volume, which `docker compose up` otherwise carries over between
+runs:
+
+```bash
+docker compose down -v && docker compose up --build
+```
+
 ## Production Deployment (NixOS)
 
 Deployment is pull-based: a systemd timer on the host polls `origin/main`

@@ -66,6 +66,63 @@ function serveWellKnownInDev(): Plugin {
   }
 }
 
+/**
+ * Stop the browser from permanently caching the dev server's pre-bundled
+ * dependencies.
+ *
+ * Vite serves its optimizer output (`node_modules/.vite/deps/*`) with
+ * `Cache-Control: max-age=31536000,immutable`. The entry files are
+ * cache-busted by a `?v=<browserHash>` query, but the imports *between* those
+ * chunks are plain relative specifiers with no version:
+ *
+ *     import { t as require_react } from "./react.js"
+ *
+ * When the dependency graph changes, the optimizer re-bundles and reassigns
+ * those short cross-chunk binding names. A browser still holding a year-long
+ * "immutable" copy of a sibling chunk then links a fresh importer against a
+ * stale exporter, and module resolution fails outright — Safari reports it as
+ * `Importing binding name 't' is not found.`, and the page dies before it can
+ * render. It is invisible to whoever changed the dependency (their browser had
+ * no prior copy) and permanent for everyone who visited earlier, which is why
+ * it surfaces on a phone that loaded the site before the change.
+ *
+ * Serving the optimizer's output as `no-cache` removes the failure mode: the
+ * ETag still yields cheap 304s, so nothing meaningful is re-downloaded, but the
+ * browser can never serve a chunk that disagrees with the rest of the graph.
+ * Dev-only (`apply: 'serve'`) — production assets are content-hashed per file,
+ * so a changed chunk gets a new URL and the mismatch cannot arise there.
+ */
+function revalidateOptimizedDepsInDev(): Plugin {
+  return {
+    name: 'revalidate-optimized-deps-in-dev',
+    apply: 'serve',
+    configureServer: {
+      // Ahead of Vite's own static handler, so the header override below is
+      // installed before that handler sets its `immutable` value.
+      order: 'pre',
+      handler(server) {
+        server.middlewares.use((req, res, next) => {
+          const pathname = (req.url ?? '').split('?')[0] ?? ''
+          if (!pathname.includes('/.vite/deps/')) {
+            next()
+            return
+          }
+          // Vite sets Cache-Control when it serves the file, so overwrite the
+          // value as it is written rather than setting it here (which that
+          // later write would replace).
+          const setHeader = res.setHeader.bind(res)
+          res.setHeader = (name: string, value: number | string | string[]) =>
+            setHeader(
+              name,
+              name.toLowerCase() === 'cache-control' ? 'no-cache' : value,
+            )
+          next()
+        })
+      },
+    },
+  }
+}
+
 export default defineConfig({
   server: {
     port: 3000,
@@ -95,5 +152,6 @@ export default defineConfig({
     mdxPlugin(),
     viteReact({ include: /\.(jsx|js|mdx|md|tsx|ts)$/ }),
     serveWellKnownInDev(),
+    revalidateOptimizedDepsInDev(),
   ],
 })

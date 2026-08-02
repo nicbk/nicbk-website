@@ -29,7 +29,7 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `zero-sync-foundation` | **Merged** ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | passed | approved |
-| `lit-tracker-shell` | Implemented ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | — | — | — |
+| `lit-tracker-shell` | In review ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | awaiting |
 | `pdf-upload-and-storage` | Not started ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | — | — | — |
 | `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
 | `semantic-scholar-enrichment` | Not started ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | — | — | — |
@@ -153,5 +153,6 @@ against stubbed GROBID and Semantic Scholar.
   note, with the user's agreement: **zero-cache is served same-origin at
   `nicbk.com/zero`, not from a `zero.nicbk.com` subdomain**, so the Better Auth
   configuration is untouched and the production change is a single nginx
-  `location` block. Details and the rest in the
+  `location` block. Opened as [PR #74](https://github.com/nicbk/nicbk-website/pull/74),
+  CI green on all five jobs. Details and the rest in the
   [task status](./tasks/lit-tracker-shell/status.md).

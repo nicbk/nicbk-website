@@ -1,12 +1,13 @@
 # Status: Lit Tracker Shell
 
-**State:** Implemented — awaiting PR + CI + review. Second of five.
+**State:** In review — [PR #74](https://github.com/nicbk/nicbk-website/pull/74)
+open, CI green on all five jobs. Second of five.
 
 - Branch: `article-upload-and-extraction/lit-tracker-shell`.
 - Sub-issue: [#68](https://github.com/nicbk/nicbk-website/issues/68)
   (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)),
   self-assigned.
-- PR: —
+- PR: [#74](https://github.com/nicbk/nicbk-website/pull/74).
 
 ## Notes carried into implementation
 
@@ -153,4 +154,16 @@
   collection stuck on its loading placeholder and looks like a Zero fault. The
   general shape worth carrying: **a service that calls back into this app from
   inside a container is a different client than a browser, and the dev server
-  does not treat them alike.**
+  does not treat them alike.** Opened as
+  [PR #74](https://github.com/nicbk/nicbk-website/pull/74); **CI green on all
+  five jobs first time**, including the signed-in tier's new zero-cache
+  container on GitHub-hosted Linux — the one part of this that could not be
+  proven locally, since `host-gateway` behaves differently on macOS.
+
+## Before this merges
+
+`VITE_ZERO_CACHE_URL=https://nicbk.com/zero` must be in
+`/var/lib/nicbk-website/.env` on nicbk-tower, and the nginx `location /zero/`
+block (README step 5) in place. Compose interpolates the variable at **build**
+time with `:?`, so a missing value fails the build with a named error rather
+than shipping a client that silently syncs nothing.

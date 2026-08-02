@@ -53,6 +53,42 @@ configured to its `inlineType` style option.
   `useImportType` rule is enforcing is preserved either way, this is purely
   a formatting choice between the two supported styles.
 
+## Revision (2026-08-01): inline type imports are not purely cosmetic
+
+The reasoning above says the inline-vs-separated choice "is purely a
+formatting choice between the two supported styles". That turns out to be
+wrong in one specific and consequential case, found while building the
+user-settings modal.
+
+With `verbatimModuleSyntax` (which `tsconfig.json` sets), TypeScript compiles
+
+```ts
+import { type Auth } from './create-auth'
+```
+
+to `import {} from './create-auth'` — a **side-effect import**, kept in the
+emitted module. `import type { Auth } from './create-auth'` is erased outright.
+So for a module that is reachable from the client, the two styles differ in
+what ends up in the browser bundle, not just in how the source reads.
+
+The concrete failure: `src/auth/session.ts` names the server-only `Auth` type.
+Once a route imported the guard that leads to it (the guard's first live
+consumer, `/user-settings-probe`), the surviving side-effect import pulled
+Better Auth, Drizzle, and Postgres' driver into the client bundle. Hydration
+then died on `ReferenceError: Buffer is not defined` — and because that kills
+hydration for the whole app, *every* page silently stopped responding to
+clicks, with only a console error to show for it.
+
+**Current state:** the convention stands, with a documented `biome-ignore`
+exception at that one boundary (`src/auth/session.ts`). The narrow fix was
+chosen over flipping `useImportType` to `separatedType` project-wide because
+the latter changes a recorded decision across the whole codebase.
+
+**Open for decision:** whether to keep the exception-per-boundary approach or
+switch the rule to `separatedType`. The exceptions multiply as more
+client-reachable modules name server-only types, which #7 will do repeatedly —
+every protected route reaches the guard. Worth settling before that lands.
+
 ## Sources
 
 - [tanstack.com/start/latest/docs/framework/react/guide/path-aliases](https://tanstack.com/start/latest/docs/framework/react/guide/path-aliases) —

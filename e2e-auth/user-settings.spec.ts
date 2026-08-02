@@ -1,0 +1,225 @@
+import { type Page } from '@playwright/test'
+// The axe fixture and the hydration-safe theme toggle are the ordinary
+// suite's, reused rather than reimplemented — this tier differs in what it
+// needs *running*, not in how it asserts.
+import { expect, test, toggleThemeTo } from '../e2e/fixtures'
+import { GOOGLE_TEST_ACCOUNT } from './support/google-stub.mjs'
+import { sessionCookie, signInAndLandOn } from './support/sign-in'
+
+/**
+ * The user-settings modal against a real server: a real session from a real
+ * sign-in, a real log-out, and a real account deletion.
+ *
+ * It is mounted on `/user-settings-probe`, a test-only route
+ * (src/routes/user-settings-probe.tsx) that exists because nothing else opens
+ * this modal yet — its avatar trigger lives in the Lit-Tracker header and
+ * arrives with #7. The probe is also behind `requireAuth`, so getting here at
+ * all exercises the route guard.
+ *
+ * The behavior asserted here is deliberately the behavior jsdom can't judge:
+ * where focus goes and stays, what the two actions do to the session on the
+ * server, and how the modal looks in both themes at a phone width.
+ */
+
+const PROBE = '/user-settings-probe'
+const TRIGGER = { name: 'Account settings' }
+const DELETE_BUTTON = { name: 'delete account' }
+
+/** Opens the modal from the trigger, retrying until React has hydrated it. */
+async function openSettings(page: Page) {
+  const dialog = page.getByRole('dialog')
+  await expect(async () => {
+    await page.getByRole('button', TRIGGER).click()
+    await expect(dialog).toBeVisible({ timeout: 1_000 })
+  }).toPass()
+  // "Visible" is true from the first frame of the fade-in, while the popup is
+  // still part-transparent — and a contrast check run on a half-faded panel
+  // measures a colour that is never actually shown. Wait for it to settle.
+  await expect(dialog).toHaveCSS('opacity', '1')
+  return dialog
+}
+
+test.describe('user settings modal', () => {
+  test('sends a signed-out visitor to sign in first', async ({ page }) => {
+    await page.goto(PROBE)
+
+    // The guard, doing the job it was built for in task 2: not an error page,
+    // just the step that hasn't happened yet — carrying the destination.
+    await expect(page).toHaveURL(
+      `/sign-in?returnTo=${encodeURIComponent(PROBE)}`,
+    )
+  })
+
+  test('shows the signed-in Google account, display only', async ({ page }) => {
+    await signInAndLandOn(page, PROBE)
+    const dialog = await openSettings(page)
+
+    await expect(dialog).toContainText('signed in as')
+    await expect(dialog).toContainText(GOOGLE_TEST_ACCOUNT.email)
+    // Nothing about the account is editable — the only field this modal ever
+    // shows belongs to the delete confirmation, which hasn't been asked for.
+    await expect(dialog.getByRole('textbox')).toHaveCount(0)
+  })
+
+  test('traps focus while open and gives it back to the trigger on Escape', async ({
+    page,
+  }) => {
+    await signInAndLandOn(page, PROBE)
+    const dialog = await openSettings(page)
+
+    // A real browser is the only place this can be asserted honestly: it needs
+    // `inert` and real sequential focus navigation, neither of which jsdom
+    // implements.
+    for (let press = 0; press < 8; press += 1) {
+      await page.keyboard.press('Tab')
+      await expect(dialog.locator(':focus')).toHaveCount(1)
+    }
+
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+    await expect(page.getByRole('button', TRIGGER)).toBeFocused()
+  })
+
+  test('keeps delete inert until the account email is typed exactly', async ({
+    page,
+  }) => {
+    await signInAndLandOn(page, PROBE)
+    const dialog = await openSettings(page)
+
+    await dialog.getByRole('button', DELETE_BUTTON).click()
+    const confirm = dialog.getByRole('button', DELETE_BUTTON)
+    const field = dialog.getByRole('textbox')
+
+    await expect(confirm).toHaveAttribute('aria-disabled', 'true')
+
+    await field.fill(GOOGLE_TEST_ACCOUNT.email.toUpperCase())
+    await expect(confirm).toHaveAttribute('aria-disabled', 'true')
+
+    await field.fill(GOOGLE_TEST_ACCOUNT.email)
+    await expect(confirm).toHaveAttribute('aria-disabled', 'false')
+
+    // Focusable throughout, so a keyboard user can reach it and hear why it is
+    // unavailable rather than never finding it at all.
+    await confirm.focus()
+    await expect(confirm).toBeFocused()
+  })
+
+  test('reads correctly in both themes with no flash of the wrong one', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    await signInAndLandOn(page, PROBE)
+
+    const light = await openSettings(page)
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+    await expect(light).toHaveCSS(
+      'background-color',
+      'rgb(245, 245, 245)', // --color-bg-surface, light
+    )
+
+    // The theme toggle lives in the header, which a modal deliberately seals
+    // off — so close first. That the modal blocks it is the correct behavior,
+    // not an obstacle to work around with a forced click.
+    await page.keyboard.press('Escape')
+    await expect(light).toBeHidden()
+    await toggleThemeTo(page, 'dark')
+
+    const dark = await openSettings(page)
+    await expect(dark).toHaveCSS(
+      'background-color',
+      'rgb(31, 31, 31)', // --color-bg-surface, dark
+    )
+    // The destructive control keeps its own color in both themes rather than
+    // collapsing into an ordinary button — the whole reason --color-error
+    // exists. (It is a per-theme value, so this is checked in the theme test.)
+    await expect(dark.getByRole('button', DELETE_BUTTON)).toHaveCSS(
+      'color',
+      'rgb(245, 163, 160)', // --color-error, dark
+    )
+
+    await page.reload()
+    // After a reload the theme is applied by the blocking inline script before
+    // first paint, so there is no light-then-dark flash to catch.
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  })
+
+  test('fits a phone-width screen without sideways scrolling', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 360, height: 720 })
+    await signInAndLandOn(page, PROBE)
+    const dialog = await openSettings(page)
+
+    // The confirmation is the widest the modal ever gets: an email address
+    // that can't break at a space, plus two buttons side by side.
+    await dialog.getByRole('button', DELETE_BUTTON).click()
+    await dialog.getByRole('textbox').fill(GOOGLE_TEST_ACCOUNT.email)
+
+    const overflows = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    )
+    expect(overflows).toBe(false)
+  })
+
+  test('passes axe (critical/serious) on the open modal in both themes', async ({
+    page,
+    expectNoA11yViolations,
+  }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    await signInAndLandOn(page, PROBE)
+
+    const light = await openSettings(page)
+    await expectNoA11yViolations()
+
+    // Again with the destructive confirmation open, which is where the
+    // labelled field and the aria-disabled button live.
+    await light.getByRole('button', DELETE_BUTTON).click()
+    await expectNoA11yViolations()
+
+    // Dark theme needs the modal closed to reach the header toggle, then
+    // reopened — the same route a reader would take.
+    await page.keyboard.press('Escape')
+    await expect(light).toBeHidden()
+    await toggleThemeTo(page, 'dark')
+
+    const dark = await openSettings(page)
+    await expectNoA11yViolations()
+    await dark.getByRole('button', DELETE_BUTTON).click()
+    await expectNoA11yViolations()
+  })
+
+  test('logging out ends the session on the server', async ({ page }) => {
+    await signInAndLandOn(page, PROBE)
+    const dialog = await openSettings(page)
+
+    await dialog.getByRole('button', { name: 'log out' }).click()
+
+    // The probe leaves the guarded page once there is nothing signed in.
+    await expect(page).toHaveURL('/')
+    expect(await sessionCookie(page)).toBeUndefined()
+    const session = await page.request.get('/api/auth/get-session')
+    expect(await session.json()).toBeNull()
+  })
+
+  // Last: it removes the account every other test in this file signs in with.
+  test('deleting the account removes it, and the session with it', async ({
+    page,
+  }) => {
+    await signInAndLandOn(page, PROBE)
+    const dialog = await openSettings(page)
+
+    await dialog.getByRole('button', DELETE_BUTTON).click()
+    await dialog.getByRole('textbox').fill(GOOGLE_TEST_ACCOUNT.email)
+    await dialog.getByRole('button', DELETE_BUTTON).click()
+
+    await expect(page).toHaveURL('/')
+    const session = await page.request.get('/api/auth/get-session')
+    expect(await session.json()).toBeNull()
+
+    // And the guard now treats this browser as a stranger again.
+    await page.goto(PROBE)
+    await expect(page).toHaveURL(
+      `/sign-in?returnTo=${encodeURIComponent(PROBE)}`,
+    )
+  })
+})

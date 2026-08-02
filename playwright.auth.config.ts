@@ -22,6 +22,11 @@ const PORT = 3100
 export default defineConfig({
   testDir: './e2e-auth',
   fullyParallel: false,
+  // One worker, not just one test at a time per file: every spec here signs in
+  // as the same stubbed Google account against one shared database, and one of
+  // them deletes it. Files running concurrently would be pulling the account
+  // out from under each other.
+  workers: 1,
   retries: 1,
   use: {
     baseURL: `http://localhost:${PORT}`,

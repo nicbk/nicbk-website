@@ -31,6 +31,12 @@
   --color-accent: #0b57d0; /* links, interactive highlights */
   --color-focus-ring: #0b57d0;
 
+  /* Failure and destructive intent: inline error text, and controls whose
+   * action can't be undone (delete account). Colour is never the only signal —
+   * wording and borders carry the meaning too (WCAG 1.4.1) — but a destructive
+   * control that looks identical to an ordinary one is its own hazard. */
+  --color-error: #b3261e;
+
   /* Blog code surface + syntax colors. Shiki highlights at build time against
    * a css-variables theme (blog/mdx-plugins.ts), so these `--shiki-*` tokens —
    * not a third-party syntax theme — are what colors code, themed per mode and
@@ -63,6 +69,11 @@
   --color-border: #8a8a8a;
   --color-accent: #8ab4f8;
   --color-focus-ring: #8ab4f8;
+
+  /* Failure and destructive intent (see the light block above). Lightened
+   * rather than the same red: on a dark surface the light-theme value falls
+   * well below the 4.5:1 text bar. */
+  --color-error: #f5a3a0;
 
   /* Blog code surface + syntax colors (see the light block above). */
   --shiki-foreground: #ececec;

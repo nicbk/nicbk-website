@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UserSettingsProbeRouteImport } from './routes/user-settings-probe'
 import { Route as ErrorProbeRouteImport } from './routes/error-probe'
 import { Route as SignInRouteRouteImport } from './routes/sign-in/route'
 import { Route as personalSiteRouteRouteImport } from './routes/(personal-site)/route'
@@ -19,6 +20,11 @@ import { Route as personalSitehomeIndexRouteImport } from './routes/(personal-si
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog/$slug'
 
+const UserSettingsProbeRoute = UserSettingsProbeRouteImport.update({
+  id: '/user-settings-probe',
+  path: '/user-settings-probe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ErrorProbeRoute = ErrorProbeRouteImport.update({
   id: '/error-probe',
   path: '/error-probe',
@@ -68,6 +74,7 @@ const personalSiteBlogSlugRoute = personalSiteBlogSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
+  '/user-settings-probe': typeof UserSettingsProbeRoute
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
+  '/user-settings-probe': typeof UserSettingsProbeRoute
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   '/(personal-site)': typeof personalSiteRouteRouteWithChildren
   '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
+  '/user-settings-probe': typeof UserSettingsProbeRoute
   '/(personal-site)/about': typeof personalSiteAboutRouteRoute
   '/(personal-site)/projects': typeof personalSiteProjectsRouteRoute
   '/(personal-site)/blog/$slug': typeof personalSiteBlogSlugRoute
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/sign-in'
     | '/error-probe'
+    | '/user-settings-probe'
     | '/about'
     | '/projects'
     | '/blog/$slug'
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
   to:
     | '/sign-in'
     | '/error-probe'
+    | '/user-settings-probe'
     | '/about'
     | '/projects'
     | '/blog/$slug'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/(personal-site)'
     | '/sign-in'
     | '/error-probe'
+    | '/user-settings-probe'
     | '/(personal-site)/about'
     | '/(personal-site)/projects'
     | '/(personal-site)/blog/$slug'
@@ -135,11 +147,19 @@ export interface RootRouteChildren {
   personalSiteRouteRoute: typeof personalSiteRouteRouteWithChildren
   SignInRouteRoute: typeof SignInRouteRoute
   ErrorProbeRoute: typeof ErrorProbeRoute
+  UserSettingsProbeRoute: typeof UserSettingsProbeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/user-settings-probe': {
+      id: '/user-settings-probe'
+      path: '/user-settings-probe'
+      fullPath: '/user-settings-probe'
+      preLoaderRoute: typeof UserSettingsProbeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/error-probe': {
       id: '/error-probe'
       path: '/error-probe'
@@ -229,6 +249,7 @@ const rootRouteChildren: RootRouteChildren = {
   personalSiteRouteRoute: personalSiteRouteRouteWithChildren,
   SignInRouteRoute: SignInRouteRoute,
   ErrorProbeRoute: ErrorProbeRoute,
+  UserSettingsProbeRoute: UserSettingsProbeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

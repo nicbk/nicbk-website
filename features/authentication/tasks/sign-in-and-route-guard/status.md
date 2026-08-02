@@ -1,13 +1,15 @@
 # Status: Sign-in Page and Route Guard
 
-**State:** Implemented (2026-08-01); awaiting PR + CI + review. Unblocked by
+**State:** Merged (2026-08-01) as
+[#59](https://github.com/nicbk/nicbk-website/pull/59). Unblocked by
 `auth-backend-and-config`, which merged as
 [#57](https://github.com/nicbk/nicbk-website/pull/57).
 
 - Branch: `authentication/sign-in-and-route-guard`.
 - Sub-issue: [#29](https://github.com/nicbk/nicbk-website/issues/29)
   (parent [#27](https://github.com/nicbk/nicbk-website/issues/27)); self-assigned.
-- PR / CI / review: _pending._
+- PR: [#59](https://github.com/nicbk/nicbk-website/pull/59) — CI green (all
+  five jobs), approved, merged.
 
 ## What was built
 
@@ -96,3 +98,8 @@
   build the login-flow e2e now rather than defer it to #7.
 - 2026-08-01 — Implemented on `authentication/sign-in-and-route-guard` (#29
   self-assigned). Awaiting PR + CI + review.
+- 2026-08-01 — **Merged as [#59](https://github.com/nicbk/nicbk-website/pull/59)**
+  with all five CI jobs green. The guard shipped with no live consumer, as
+  planned; task 3's test-only probe page became its first one, which is where
+  a latent bundling bug in `fetch-session`'s dependency chain finally surfaced
+  (see that task's status).

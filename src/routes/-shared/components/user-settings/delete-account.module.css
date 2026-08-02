@@ -1,0 +1,94 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-items: flex-start;
+}
+
+.explanation {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * The one control here that can't be undone. It composes the modal's shared
+ * action style so it reads as the same kind of button, then swaps the border
+ * and text to the error color — a difference the eye catches before the label
+ * is read, while the label itself still carries the meaning for anyone who
+ * can't distinguish the color (WCAG 1.4.1).
+ *
+ * The overrides below are written as `.section .destructive`, not plain
+ * `.destructive`, and that is load-bearing. `composes` emits the composed class
+ * alongside this one rather than inlining its declarations, so `.action` and
+ * `.destructive` have identical specificity and the winner is whichever the
+ * bundler happens to emit last — which was `.action`, silently rendering this
+ * button in ordinary text color like every other one. Qualifying by the
+ * section it always lives in wins on specificity instead of on luck.
+ */
+.destructive {
+  composes: action from "./user-settings.module.css";
+}
+
+.section .destructive {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+@media (hover: hover) {
+  /* The shared style brightens to the accent on hover; a destructive control
+     must not, or hovering would make it look like an ordinary link-blue
+     action. It stays in its own color instead and fills faintly. */
+  .section .destructive:hover:not([data-disabled]) {
+    border-color: var(--color-error);
+    color: var(--color-error);
+    background-color: var(--color-bg-surface);
+  }
+}
+
+/* Inert (the typed confirmation doesn't match yet, or the delete is already in
+   flight): drop back to muted so it doesn't advertise itself as ready. */
+.section .destructive[data-disabled] {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  width: 100%;
+}
+
+.label {
+  font-size: var(--font-size-sm);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-md);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.cancel {
+  composes: action from "./user-settings.module.css";
+}
+
+.error {
+  composes: error from "./user-settings.module.css";
+}

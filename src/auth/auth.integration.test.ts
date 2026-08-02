@@ -173,6 +173,30 @@ async function signInWithGoogle(): Promise<Response> {
   )
 }
 
+/**
+ * Posts to an authenticated endpoint the way the browser client does: the
+ * session cookie from sign-in, plus an Origin header — Better Auth's origin
+ * check is this app's CSRF protection, so a request without one is not the
+ * request the app actually makes.
+ */
+async function postSignedIn(
+  path: string,
+  cookie: string,
+  body: unknown = {},
+): Promise<Response> {
+  return auth.handler(
+    new Request(`${BASE_URL}/api/auth/${path}`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: BASE_URL,
+        cookie,
+      },
+      body: JSON.stringify(body),
+    }),
+  )
+}
+
 describe('auth backend', () => {
   it('sends the reader to Google with this app as the client', async () => {
     const response = await auth.handler(
@@ -264,5 +288,74 @@ describe('auth backend', () => {
         }),
       ),
     ).toBeNull()
+  })
+})
+
+/**
+ * The two actions the user-settings modal fires. Both are irreversible from
+ * the browser's point of view, and both are meaningless unless the server
+ * really acted — which is exactly what a mocked client can't tell you, so they
+ * are asserted here against the real endpoints and the real rows.
+ */
+describe('account actions', () => {
+  /** Reads a session straight from the cookie, as the app does per request. */
+  async function sessionFor(cookie: string) {
+    return getSessionFrom(auth, new Request(BASE_URL, { headers: { cookie } }))
+  }
+
+  it('invalidates the session server-side on log out', async () => {
+    const cookie = toCookieHeader(await signInWithGoogle())
+    expect(await sessionFor(cookie)).not.toBeNull()
+
+    const response = await postSignedIn('sign-out', cookie)
+    expect(response.status).toBe(200)
+
+    // The cookie is cleared in the browser too, but that is not what makes it
+    // safe: the row behind it is gone, so replaying the same cookie — which an
+    // attacker who copied it still has — resolves to nobody.
+    expect(await sessionFor(cookie)).toBeNull()
+    expect(await database.db.select().from(schema.session)).toHaveLength(0)
+  })
+
+  it('deletes the identity rows and every session with them', async () => {
+    const cookie = toCookieHeader(await signInWithGoogle())
+
+    const response = await postSignedIn('delete-user', cookie)
+    expect(response.status).toBe(200)
+
+    // User, OAuth account, and session all go: nothing is left that could
+    // re-identify the reader. (No sub-app tables exist yet to cascade from —
+    // that ownership arrives with #7.)
+    expect(await database.db.select().from(schema.user)).toHaveLength(0)
+    expect(await database.db.select().from(schema.account)).toHaveLength(0)
+    expect(await database.db.select().from(schema.session)).toHaveLength(0)
+    expect(await sessionFor(cookie)).toBeNull()
+  })
+
+  it('refuses to delete with a session older than the freshness window', async () => {
+    const cookie = toCookieHeader(await signInWithGoogle())
+
+    // Two days back, past the one-day freshAge in create-auth.ts. Activity
+    // extends a session's expiry but never its createdAt, so this is what a
+    // long-lived session looks like — including a stolen one.
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    await database.db
+      .update(schema.session)
+      .set({ createdAt: twoDaysAgo })
+      .where(
+        eq(schema.session.userId, (await sessionFor(cookie))?.user.id ?? ''),
+      )
+
+    const response = await postSignedIn('delete-user', cookie)
+
+    expect(response.status).toBe(400)
+    // The exact code the modal keys its "sign in again" message off
+    // (account-action-error.ts) — asserted against the real endpoint so the
+    // two can't drift apart.
+    expect(await response.json()).toMatchObject({ code: 'SESSION_EXPIRED' })
+
+    // Still signed in, and still there to delete once they re-authenticate.
+    expect(await sessionFor(cookie)).not.toBeNull()
+    expect(await database.db.select().from(schema.user)).toHaveLength(1)
   })
 })

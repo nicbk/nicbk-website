@@ -176,9 +176,11 @@ jobs:
           retention-days: 14
 
   e2e-auth:
-    name: Sign-in flow e2e (stubbed Google + Testcontainers Postgres)
+    name: Signed-in e2e (stubbed Google + Postgres + zero-cache)
     # ubuntu-latest ships a running Docker daemon, which is what the throwaway
-    # Postgres needs — the same arrangement the integration job relies on.
+    # Postgres and zero-cache need — the same arrangement the integration job
+    # relies on. It also supports the `host-gateway` extra host the sync engine
+    # uses to call back into the app server running outside the container.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -196,12 +198,14 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      # Its own job, separate from `e2e` above, because the OAuth round trip
-      # needs a real database and a patched app server that the rest of the
-      # suite should not have to pay for. scripts/e2e-auth-server.mjs starts
-      # Postgres, applies the committed migrations, and serves the production
-      # build (CI=true) with Google's token endpoint stubbed.
-      - name: Playwright sign-in flow e2e
+      # Its own job, separate from `e2e` above, because everything here needs a
+      # real session against real services that the rest of the suite should not
+      # have to pay for: the OAuth round trip, the account modal it unlocks, and
+      # the Lit Tracker, whose whole point is data arriving by sync.
+      # scripts/e2e-auth-server.mjs starts Postgres and zero-cache, applies the
+      # committed migrations, and serves the production build (CI=true) with
+      # Google's token endpoint stubbed.
+      - name: Playwright signed-in e2e
         run: npm run test:e2e:auth
 
       - name: Upload Playwright traces/report

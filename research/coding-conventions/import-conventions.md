@@ -77,7 +77,8 @@ what ends up in the browser bundle, not just in how the source reads.
 
 The concrete failure: `src/auth/session.ts` names the server-only `Auth` type.
 Once a route imported the guard that leads to it (the guard's first live
-consumer, `/user-settings-probe`), the surviving side-effect import pulled
+consumer at the time, the test-only `/user-settings-probe` — since removed,
+its role taken over by `/lit-tracker`), the surviving side-effect import pulled
 Better Auth, Drizzle, and Postgres' driver into the client bundle. Hydration
 then died on `ReferenceError: Buffer is not defined` — and because that kills
 hydration for the whole app, *every* page silently stopped responding to

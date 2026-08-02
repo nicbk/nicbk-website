@@ -50,3 +50,8 @@ link pointing at a Literature Tracker URL that does not exist yet.
   owned by
   [`lit-tracker-shell`](../article-upload-and-extraction/tasks/lit-tracker-shell/description.md),
   now that #7's spec has settled the tracker's URL as `/lit-tracker`.
+- 2026-08-02 — Deferred follow-up **discharged**: `lit-tracker-shell`
+  (#7's second task) built `/lit-tracker` and turned the Literature Tracker
+  entry into a link to it, replacing the unit and e2e tests that asserted the
+  entry exposed no link role — which is exactly the tripwire those tests were
+  written to be. Nothing else about this feature changed.

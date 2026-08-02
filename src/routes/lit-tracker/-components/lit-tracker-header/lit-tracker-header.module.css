@@ -1,0 +1,73 @@
+/*
+ * The lit-tracker header's row contents. Where the row *sits* — pinned to the
+ * top of the viewport, outside the scrolling document — is LitTrackerShell's
+ * job, so nothing here positions itself.
+ *
+ * The horizontal rhythm mirrors the site header's: one custom property that
+ * shrinks with the viewport, so the single row survives a ~320px phone without
+ * wrapping or scrolling sideways.
+ */
+.header {
+  display: flex;
+  align-items: center;
+  --header-inline-space: clamp(0.5rem, 2.5vw, 1.5rem);
+  gap: var(--header-inline-space);
+  padding: var(--space-sm) var(--header-inline-space);
+  background-color: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
+}
+
+.appName {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  text-decoration: none;
+  /* The app name is what may be clipped rather than pushing the toggle off a
+     narrow screen — the breadcrumb tells you where you are, and the toggle is
+     the only control up here. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+ * Everything from here rightwards forms the row's right-hand group: the path,
+ * then the theme toggle. The app name is alone on the left, so the header
+ * splits the same way the site header does.
+ */
+.breadcrumb {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumbList {
+  display: flex;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * The path segments read as part of the breadcrumb rather than as prose links:
+ * they keep its muted colour, with the underline as the hover affordance. Same
+ * treatment as the site header's nav links, and for the same reason — the
+ * global accent colour would make the one dim thing in the row the loudest.
+ */
+.breadcrumbLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Hover-only affordance: a touch device would latch this on after a tap and
+   never release it (see styling-conventions.md). */
+@media (hover: hover) {
+  .appName:hover,
+  .breadcrumbLink:hover {
+    text-decoration: underline;
+  }
+}

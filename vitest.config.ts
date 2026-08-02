@@ -22,6 +22,13 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
+    // The one VITE_-prefixed variable this project has. Set here rather than in
+    // vitest.setup.ts because a `VITE_` value has to reach `import.meta.env`,
+    // which Vite populates from its own environment rather than from
+    // process.env assignments made at setup time. Nothing in the unit tier
+    // opens a WebSocket; this only keeps a module that reads the address from
+    // throwing when it is imported.
+    env: { VITE_ZERO_CACHE_URL: 'http://localhost:4848' },
     // Unit tests only — Playwright owns e2e/*.spec.ts (its default
     // include pattern would otherwise pick those up too). The scripts glob
     // covers pure helpers in build tooling (e.g. the gpg-artifact generator),

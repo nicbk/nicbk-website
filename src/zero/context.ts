@@ -17,7 +17,10 @@ export interface ZeroContext {
 /**
  * Registers `ZeroContext` as the context type for every `defineQuery` and
  * `defineMutator` in this app, so `ctx` is typed without threading generics
- * through each definition.
+ * through each definition. The sibling half — the schema — is registered by
+ * `schema.gen.ts`, which `drizzle-zero` emits with its own `declare module`
+ * block; between them, Zero's client and server APIs are typed at every call
+ * site with no generics written by hand.
  *
  * `undefined` is part of the type on purpose: an unauthenticated request must
  * be *representable*, so that every query is written to handle it and the

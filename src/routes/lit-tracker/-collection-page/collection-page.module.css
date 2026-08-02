@@ -1,0 +1,50 @@
+/*
+ * The collection surface. It sits inside LitTrackerShell's bounded panel, so
+ * nothing here sets a height, scrolls, or insets itself — the panel does all
+ * three, and a second scroll container would nest one inside the other.
+ *
+ * #8 replaces .list/.entry with the card grid and adds the sidebar and search
+ * around them; the title and the notice states stay.
+ */
+.title {
+  margin: 0 0 var(--space-lg);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+/* The empty state and the error message: plain inline text, no illustration,
+   per the design system's reactive-feedback default. */
+.notice {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  max-width: var(--prose-max-width);
+  /* Long titles wrap rather than widening the panel and putting a horizontal
+     scrollbar under a list that should only ever scroll vertically. A DOI-like
+     unbroken run is the realistic worst case. */
+  overflow-wrap: anywhere;
+}
+
+.entryTitle {
+  font-weight: var(--font-weight-medium);
+}
+
+.authors {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

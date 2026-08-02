@@ -21,23 +21,6 @@ test.describe('404 / not-found page', () => {
     await expect(page.getByText('404')).toHaveCount(0)
   })
 
-  test('the test-only user-settings probe is just another unknown URL here', async ({
-    page,
-  }) => {
-    // /user-settings-probe mounts the account-settings modal, but only when
-    // the build carries VITE_E2E_USER_SETTINGS_PROBE — which only the sign-in
-    // e2e's server sets. This suite doesn't, so the route must be
-    // indistinguishable from any other 404. That is what keeps it from being
-    // a page in production. (/error-probe is gated the same way and covered by
-    // error-fallback.spec.ts.)
-    const response = await page.goto('/user-settings-probe')
-
-    expect(response?.status()).toBe(404)
-    await expect(
-      page.getByRole('heading', { level: 1, name: 'page not found' }),
-    ).toBeVisible()
-  })
-
   test('the home link returns to /', async ({ page }) => {
     // networkidle + retry: clicking before hydration would fall back to a
     // full load — the known TanStack Start + Playwright timing gap

@@ -45,6 +45,25 @@
 }
 
 /*
+ * The project name is a link to its sub-application, but styled like the site
+ * header's nav links rather than a prose link: it keeps the page's text color,
+ * with the underline as the hover affordance. The global accent link color
+ * would be wrong here, since on this page every name is a link and colouring
+ * them all would signal nothing. Hover-only underline, per the styling
+ * conventions — a touch device would latch a hover state on after a tap.
+ */
+.projectLink {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .projectLink:hover {
+    text-decoration: underline;
+  }
+}
+
+/*
  * The name keeps the page's primary text color and weight; only the
  * description is dimmed. That color difference is the entire distinction
  * between them, per the decided page spec — so the description must still

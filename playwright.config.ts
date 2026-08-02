@@ -54,6 +54,12 @@ export default defineConfig({
       // schema's minimum length.
       ZERO_QUERY_API_KEY: 'e2e-placeholder-zero-query-api-key-32-chars',
       ZERO_MUTATE_API_KEY: 'e2e-placeholder-zero-mutate-api-key-32-chars',
+      // Inlined into the client bundle at build time, so it has to be set for
+      // the build this command runs — not just for the server it then starts.
+      // No zero-cache runs in this tier and nothing in it reaches /lit-tracker
+      // (that needs a session, which is the auth tier's job), so this only has
+      // to be a well-formed address.
+      VITE_ZERO_CACHE_URL: 'http://localhost:4848',
     },
     port: 3000,
     reuseExistingServer: !isCi,

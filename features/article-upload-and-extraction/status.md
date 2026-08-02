@@ -1,6 +1,6 @@
 # Status: Article Upload and Extraction
 
-**Feature state:** In progress (task 1 of 5 implemented). Five tasks, sequential,
+**Feature state:** In progress (tasks 1–2 of 5 implemented). Five tasks, sequential,
 each gated by its own PR + CI + human review. Depends on
 [`authentication`](../authentication/status.md) (Complete) — it consumes that
 feature's Postgres service, Drizzle migration pipeline, Better Auth session,
@@ -28,8 +28,8 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `zero-sync-foundation` | In review ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | passed | awaiting |
-| `lit-tracker-shell` | Not started ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | — | — | — |
+| `zero-sync-foundation` | **Merged** ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | passed | approved |
+| `lit-tracker-shell` | In review ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | awaiting |
 | `pdf-upload-and-storage` | Not started ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | — | — | — |
 | `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
 | `semantic-scholar-enrichment` | Not started ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | — | — | — |
@@ -65,6 +65,14 @@ against stubbed GROBID and Semantic Scholar.
   agreement — zero-cache namespaces its own data into `zero_0/cvr` and
   `zero_0/cdc` schemas, and separate databases could not be created by a
   migration or by the Postgres image's init scripts.
+- **zero-cache is served same-origin, at `nicbk.com/zero`.** Its router accepts
+  an optional leading base path segment, so the host's nginx proxies `/zero/`
+  through untouched and the browser sends the session cookie because nothing is
+  cross-origin. Settled in task 2, reversing task 1's note about a
+  `zero.nicbk.com` subdomain — which would have meant widening the session
+  cookie to every subdomain of the site, permanently, via
+  `crossSubDomainCookies`. **The Better Auth configuration is unchanged by this
+  feature.**
 - **The Zero publication is an explicit allowlist**, `zero_data`, naming only
   the synced tables. It excludes `pgboss` (whose internal tables are unstable
   across versions — `upload_jobs` is the app-owned projection clients read
@@ -130,5 +138,21 @@ against stubbed GROBID and Semantic Scholar.
   cookie auth needing zero-cache on a subdomain in production — all recorded in
   [research.md](./research.md), with the details and the decisions taken in the
   [task status](./tasks/zero-sync-foundation/status.md). Two carried forward:
-  **task 2 owns the `crossSubDomainCookies` and nginx change**, and Zero has no
-  SSR support, so its provider must be loaded client-only.
+  **task 2 owns the cookie and nginx change**, and Zero has no SSR support, so
+  its provider must be loaded client-only.
+- 2026-08-02 — **Task 1 merged as [PR #73](https://github.com/nicbk/nicbk-website/pull/73)**;
+  the three Zero secrets were provisioned on nicbk-tower beforehand.
+- 2026-08-02 — **Task 2 (`lit-tracker-shell`) implemented.** `/lit-tracker`
+  exists, behind `requireAuth`, with the tracker's own header and fixed
+  app-shell layout, the Zero client mounted client-only at the group root, and a
+  live `articles.mine` collection. The site is now demonstrably reactive: a row
+  inserted straight into Postgres appears on an open page, and a second
+  account's row does not. Two loops #6 left open are closed — the route guard
+  and the settings modal both have live consumers, and the test-only
+  `/user-settings-probe` was deleted with them. One decision reversed task 1's
+  note, with the user's agreement: **zero-cache is served same-origin at
+  `nicbk.com/zero`, not from a `zero.nicbk.com` subdomain**, so the Better Auth
+  configuration is untouched and the production change is a single nginx
+  `location` block. Opened as [PR #74](https://github.com/nicbk/nicbk-website/pull/74),
+  CI green on all five jobs. Details and the rest in the
+  [task status](./tasks/lit-tracker-shell/status.md).

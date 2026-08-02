@@ -28,7 +28,10 @@ Built on `auth-backend-and-config` (session helper, Better Auth endpoints) and
   `create-auth.ts` — `/delete-user` 404s without the first, and the second is
   now stated rather than inherited.
 - **`/user-settings-probe`** — a test-only page that mounts the modal, gated
-  behind a build-time flag exactly like `/error-probe`.
+  behind a build-time flag exactly like `/error-probe`. **Removed 2026-08-02**
+  by `lit-tracker-shell` (#7's second task), which gave the modal its real
+  trigger: the Lit-Tracker header's avatar. Its browser coverage moved onto
+  `/lit-tracker` rather than being deleted with it.
 
 ## Implementation-time decisions worth review
 
@@ -39,6 +42,13 @@ Built on `auth-backend-and-config` (session helper, Better Auth endpoints) and
   sets; production builds render the ordinary 404 there, and
   `e2e/not-found.spec.ts` asserts exactly that. It is also the route guard's
   first live consumer.
+
+  **Retired 2026-08-02.** It was scaffolding with a stated end date, and
+  `lit-tracker-shell` reached it: the modal now has a real trigger on a real
+  page, so the probe, its flag, and the 404 test guarding it were deleted and
+  `e2e-auth/user-settings.spec.ts` was pointed at `/lit-tracker`. The judgment
+  holds up — the coverage it bought existed three PRs earlier than it otherwise
+  would have, and cost one file to remove.
 - **Session freshness kept (24 h) instead of disabled.** Better Auth refuses
   `/delete-user` on a session older than `freshAge`. Setting `freshAge: 0`
   would have removed the refusal; instead the modal recognizes the refusal and

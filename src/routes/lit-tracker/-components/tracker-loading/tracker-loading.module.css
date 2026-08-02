@@ -1,0 +1,37 @@
+/*
+ * No padding of its own: this renders inside LitTrackerShell's content panel,
+ * which supplies the page inset for everything it holds — so the placeholder
+ * and the page it stands in for start at exactly the same spot and nothing
+ * shifts when one replaces the other.
+ */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: var(--prose-max-width);
+}
+
+/* Sized like the rows they stand in for, so the layout does not jump when the
+   real list arrives. Deliberately not animated: a pulsing placeholder would be
+   motion nobody asked for, and the motion convention makes animation opt-in. */
+.skeletonRow {
+  height: var(--space-lg);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-surface);
+}
+
+/*
+ * For assistive tech only: the skeleton already says "something is coming"
+ * visually, and a second line of text saying so would be noise on screen.
+ * Clipped rather than `display: none`, which screen readers skip entirely.
+ */
+.status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

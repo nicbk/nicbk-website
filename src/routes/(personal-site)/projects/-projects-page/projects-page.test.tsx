@@ -1,6 +1,24 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ProjectsPage } from './projects-page'
+
+// TanStack Router's <Link> needs a live router; the decided unit-test pattern
+// (research/testing-qa/test-runner-and-frameworks.md) mocks it to a plain
+// anchor so the page renders in isolation.
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    to,
+    children,
+    ...rest
+  }: {
+    to: string
+    children: React.ReactNode
+  }) => (
+    <a href={to} {...rest}>
+      {children}
+    </a>
+  ),
+}))
 
 describe('ProjectsPage', () => {
   it('exposes exactly one main heading for structure and focus handoff', () => {
@@ -26,13 +44,16 @@ describe('ProjectsPage', () => {
     expect(list).toContainElement(screen.getByRole('listitem'))
   })
 
-  it('renders no link, since there is nothing to link to yet', () => {
+  it('links the Literature Tracker to the tracker itself', () => {
     render(<ProjectsPage />)
-    // The Literature Tracker has no route and no decided URL (see
-    // features/projects-page/research.md), so an entry must not link anywhere.
-    // When the feature that builds the tracker makes these entries links, this
-    // test fails — which is the point: the change should be deliberate, made
-    // together with a destination that actually resolves.
-    expect(screen.queryAllByRole('link')).toHaveLength(0)
+    // This entry shipped unlinked because the tracker had no route and no
+    // decided URL (features/projects-page/research.md); the feature that built
+    // it supplied both. The name is the link — the description stays plain
+    // text, so the clickable target is the thing being named.
+    const link = screen.getByRole('link', {
+      name: 'Academic Literature Tracker',
+    })
+    expect(link).toHaveAttribute('href', '/lit-tracker')
+    expect(screen.getAllByRole('link')).toHaveLength(1)
   })
 })

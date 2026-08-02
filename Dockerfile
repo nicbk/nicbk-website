@@ -35,6 +35,13 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 FROM deps AS build
 COPY . .
 ENV NODE_ENV=production
+# Vite inlines VITE_-prefixed variables into the client bundle at build time,
+# so this one has to be present *here* — an env_file at run time is too late.
+# It is not a secret (the browser dials this address itself), which is why it
+# can travel as a build arg rather than a mounted secret. Compose supplies it
+# from the same .env everything else reads; see .env.example.
+ARG VITE_ZERO_CACHE_URL
+ENV VITE_ZERO_CACHE_URL=${VITE_ZERO_CACHE_URL}
 RUN npm run build
 RUN node scripts/bundle-migrator.mjs
 

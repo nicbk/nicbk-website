@@ -12,12 +12,22 @@ reactivity is visible in a browser.
   attachment**: #6 built and tested it in isolation because no protected route
   existed. A signed-out visitor is redirected straight to `/sign-in` carrying
   the requested URL, with no interstitial.
-- **Builds the lit-tracker header** — a separate component from the site
-  header, not a variant of it: the app name on the left linking to the tracker
-  root, a breadcrumb-style path indicator showing just the root segment (e.g.
-  `↳/nicbk_home`), and a user avatar on the far right that opens the **existing
-  shared user-settings modal** from #6. That is the modal's **first live
-  trigger**, closing the second loop #6 left open.
+- **Builds the lit-tracker header and its sidebar rail** — the header a
+  separate component from the site header, not a variant of it: the app name on
+  the left linking to the tracker root, and on the right a breadcrumb-style
+  path indicator showing just the root segment (`↳/nicbk_home`, a link to the
+  **personal site's** home) followed by the site's theme toggle — the same
+  left/right split the site header uses.
+
+  **Revision (2026-08-02), decided with the user:** the account avatar is at the
+  **foot of the sidebar**, not on the far right of the header — which is where
+  the sample mockup actually puts it, and which the original wording misread. It
+  shows the **Google account's own picture**, falling back to a letter when
+  there is none or the request fails. It opens the **existing shared
+  user-settings modal** from #6 either way — that is the modal's **first live
+  trigger**, closing the second loop #6 left open. The rail it sits in is the
+  same one #8 fills with the tag and reading-status filters; this task builds it
+  near-empty so the app shell has both of its panels.
 - **Implements the fixed app-shell layout** the header spec calls for: the
   header's height is reserved at the top of the viewport and is not part of the
   scrolling document; content below scrolls in independent bounded panels. This
@@ -30,11 +40,20 @@ reactivity is visible in a browser.
   token), and Zero **does not support SSR**, so the provider must be loaded
   client-only — `React.lazy` is TanStack Start's documented way.
 - **Makes cookie auth work in production.** For the browser to send its session
-  cookie to zero-cache, zero-cache has to be served from a subdomain
-  (`zero.nicbk.com`) and Better Auth has to issue cookies for the parent domain
-  via `crossSubDomainCookies`. Locally this needs nothing — browsers key cookies
-  by host, not port — which is why task 1 left it: nothing connected yet. This
-  is an auth-config change plus an nginx server block on nicbk-tower.
+  cookie to zero-cache, the two have to be same-site. Locally this needs nothing
+  — browsers key cookies by host, not port — which is why task 1 left it:
+  nothing connected yet.
+
+  **Revision (2026-08-02), agreed with the user:** this is done by serving
+  zero-cache **same-origin at `https://nicbk.com/zero`**, not from a
+  `zero.nicbk.com` subdomain as originally written. zero-cache's router accepts
+  an optional leading base path segment and Zero's client permits at most one,
+  so nginx proxies `/zero/` straight through. That leaves the auth
+  configuration untouched: the subdomain route would have needed
+  `crossSubDomainCookies`, which widens the session cookie to every subdomain of
+  the site permanently, plus a DNS record and a certificate — all to buy nothing
+  this task needs. So the production change is **one nginx `location` block**,
+  not a server block and an auth-config change.
 - **Renders a minimal collection surface**: one live `useQuery` over `articles`,
   showing the plain inline empty-state text when there are none, and a plain
   list of titles and authors when there are. No cards, no tags, no filtering, no

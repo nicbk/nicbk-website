@@ -1,0 +1,37 @@
+/*
+ * A rounded square holding either the Google profile picture or one letter, as
+ * in the sample mockup's bottom-left avatar.
+ *
+ * The border and background are what the letter sits on; a loaded picture
+ * covers them entirely, so the two states share one footprint and the sidebar
+ * does not reflow when an image arrives (or fails).
+ */
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (hover: hover) {
+  .avatar:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}

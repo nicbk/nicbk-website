@@ -4,7 +4,9 @@
 
 - Branch: `article-upload-and-extraction/pdf-upload-and-storage` (to be
   created).
-- Sub-issue: to be filed with the feature's parent issue.
+- Sub-issue: [#69](https://github.com/nicbk/nicbk-website/issues/69)
+  (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)),
+  unassigned — self-assign before starting.
 - PR: —
 
 ## Notes carried into implementation

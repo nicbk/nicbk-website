@@ -3,7 +3,9 @@
 **State:** Not started. Second of five; depends on `zero-sync-foundation`.
 
 - Branch: `article-upload-and-extraction/lit-tracker-shell` (to be created).
-- Sub-issue: to be filed with the feature's parent issue.
+- Sub-issue: [#68](https://github.com/nicbk/nicbk-website/issues/68)
+  (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)),
+  unassigned — self-assign before starting.
 - PR: —
 
 ## Notes carried into implementation

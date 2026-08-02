@@ -3,7 +3,9 @@
 **State:** Not started. First of five.
 
 - Branch: `article-upload-and-extraction/zero-sync-foundation` (to be created).
-- Sub-issue: to be filed with the feature's parent issue.
+- Sub-issue: [#67](https://github.com/nicbk/nicbk-website/issues/67)
+  (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)),
+  unassigned — self-assign before starting.
 - PR: —
 
 ## Notes carried into implementation

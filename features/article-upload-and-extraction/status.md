@@ -66,7 +66,7 @@ against stubbed GROBID and Semantic Scholar.
   `zero_0/cdc` schemas, and separate databases could not be created by a
   migration or by the Postgres image's init scripts.
 - **zero-cache is served same-origin, at `nicbk.com/zero`.** Its router accepts
-  an optional leading base path segment, so the host's nginx proxies `/zero/`
+  an optional leading base path segment, so the host's Caddy proxies `/zero/*`
   through untouched and the browser sends the session cookie because nothing is
   cross-origin. Settled in task 2, reversing task 1's note about a
   `zero.nicbk.com` subdomain — which would have meant widening the session
@@ -138,7 +138,7 @@ against stubbed GROBID and Semantic Scholar.
   cookie auth needing zero-cache on a subdomain in production — all recorded in
   [research.md](./research.md), with the details and the decisions taken in the
   [task status](./tasks/zero-sync-foundation/status.md). Two carried forward:
-  **task 2 owns the cookie and nginx change**, and Zero has no SSR support, so
+  **task 2 owns the cookie and reverse-proxy change**, and Zero has no SSR support, so
   its provider must be loaded client-only.
 - 2026-08-02 — **Task 1 merged as [PR #73](https://github.com/nicbk/nicbk-website/pull/73)**;
   the three Zero secrets were provisioned on nicbk-tower beforehand.
@@ -152,7 +152,7 @@ against stubbed GROBID and Semantic Scholar.
   `/user-settings-probe` was deleted with them. One decision reversed task 1's
   note, with the user's agreement: **zero-cache is served same-origin at
   `nicbk.com/zero`, not from a `zero.nicbk.com` subdomain**, so the Better Auth
-  configuration is untouched and the production change is a single nginx
-  `location` block. Opened as [PR #74](https://github.com/nicbk/nicbk-website/pull/74),
+  configuration is untouched and the production change is a single Caddy
+  `handle` block. Opened as [PR #74](https://github.com/nicbk/nicbk-website/pull/74),
   CI green on all five jobs. Details and the rest in the
   [task status](./tasks/lit-tracker-shell/status.md).

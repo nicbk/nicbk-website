@@ -48,12 +48,12 @@ reactivity is visible in a browser.
   zero-cache **same-origin at `https://nicbk.com/zero`**, not from a
   `zero.nicbk.com` subdomain as originally written. zero-cache's router accepts
   an optional leading base path segment and Zero's client permits at most one,
-  so nginx proxies `/zero/` straight through. That leaves the auth
+  so Caddy proxies `/zero/*` straight through. That leaves the auth
   configuration untouched: the subdomain route would have needed
   `crossSubDomainCookies`, which widens the session cookie to every subdomain of
   the site permanently, plus a DNS record and a certificate — all to buy nothing
-  this task needs. So the production change is **one nginx `location` block**,
-  not a server block and an auth-config change.
+  this task needs. So the production change is **one Caddy `handle` block**,
+  not a whole vhost and an auth-config change.
 - **Renders a minimal collection surface**: one live `useQuery` over `articles`,
   showing the plain inline empty-state text when there are none, and a plain
   list of titles and authors when there are. No cards, no tags, no filtering, no

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { postHeadMeta } from './post-head'
-import { type Frontmatter } from '~blog/frontmatter-schema'
+import type { Frontmatter } from '~blog/frontmatter-schema'
 
 const base: Frontmatter = {
   title: 'A Post',

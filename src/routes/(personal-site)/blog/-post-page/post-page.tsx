@@ -1,12 +1,13 @@
 import { MDXProvider } from '@mdx-js/react'
 import { Link } from '@tanstack/react-router'
-import { type ComponentType, Suspense } from 'react'
+import type { ComponentType } from 'react'
+import { Suspense } from 'react'
 import { BlogImage } from '../-components/blog-image/blog-image'
 import { Callout } from '../-components/callout/callout'
 import { PostTags } from '../-components/post-tags/post-tags'
 import { formatPostDate, isoDate } from '../-utils/format-date'
 import styles from './post-page.module.css'
-import { type Frontmatter } from '~blog/frontmatter-schema'
+import type { Frontmatter } from '~blog/frontmatter-schema'
 
 /**
  * The global MDX components: `<Callout>` usable with no import, and every image

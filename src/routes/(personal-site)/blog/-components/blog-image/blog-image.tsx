@@ -1,4 +1,4 @@
-import { type ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithoutRef } from 'react'
 import styles from './blog-image.module.css'
 
 type BlogImageProps = ComponentPropsWithoutRef<'img'>

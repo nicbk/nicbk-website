@@ -4,8 +4,8 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter'
 import { createCssVariablesTheme } from 'shiki'
 import { visit } from 'unist-util-visit'
-import { type VFile } from 'vfile'
-import { type Plugin } from 'vite'
+import type { VFile } from 'vfile'
+import type { Plugin } from 'vite'
 
 /**
  * The MDX build pipeline, factored into one module so `vite.config.ts` (the

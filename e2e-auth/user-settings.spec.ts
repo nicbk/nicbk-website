@@ -1,4 +1,4 @@
-import { type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 // The axe fixture and the hydration-safe theme toggle are the ordinary
 // suite's, reused rather than reimplemented — this tier differs in what it
 // needs *running*, not in how it asserts.

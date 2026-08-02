@@ -1,5 +1,6 @@
-import { type ComponentType } from 'react'
-import { type Frontmatter, parseFrontmatter } from './frontmatter-schema'
+import type { ComponentType } from 'react'
+import type { Frontmatter } from './frontmatter-schema'
+import { parseFrontmatter } from './frontmatter-schema'
 
 /**
  * The blog's post-discovery data layer.

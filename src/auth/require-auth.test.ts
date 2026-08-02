@@ -1,10 +1,7 @@
 import { isRedirect } from '@tanstack/react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  requireAuth,
-  requireSession,
-  type SignedInSession,
-} from './require-auth'
+import type { SignedInSession } from './require-auth'
+import { requireAuth, requireSession } from './require-auth'
 
 // The guard's only dependency on the server is the session lookup, so that is
 // the boundary the test replaces — the alternative would drag the database

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { collectTags, excludeDrafts, sortByDateDesc } from './post-listing'
-import { type PostListItem } from '~blog/posts'
+import type { PostListItem } from '~blog/posts'
 
 /** Build a listing item with just the fields these transforms read. */
 function item(

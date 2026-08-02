@@ -1,4 +1,4 @@
-import { type PostListItem } from '~blog/posts'
+import type { PostListItem } from '~blog/posts'
 
 /**
  * Pure listing transforms for the blog index, kept separate from the data layer

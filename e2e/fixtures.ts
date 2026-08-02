@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
-import { test as base, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 
 /**
  * Clicks the header's theme toggle and waits until the theme has actually

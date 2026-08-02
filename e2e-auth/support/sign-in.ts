@@ -1,4 +1,5 @@
-import { type Cookie, expect, type Page } from '@playwright/test'
+import type { Cookie, Page } from '@playwright/test'
+import { expect } from '@playwright/test'
 
 /**
  * Driving the sign-in flow, shared by every spec in this tier.

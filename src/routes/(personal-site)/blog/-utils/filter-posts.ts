@@ -1,4 +1,4 @@
-import { type PostListItem } from '~blog/posts'
+import type { PostListItem } from '~blog/posts'
 
 /**
  * The active blog filters, mirroring the `/blog` route's search params

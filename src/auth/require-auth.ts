@@ -1,7 +1,7 @@
 import { redirect } from '@tanstack/react-router'
 import { fetchSession } from './fetch-session'
 import { DEFAULT_RETURN_TO, sanitizeReturnTo } from './return-to'
-import { type AuthSession } from './session'
+import type { AuthSession } from './session'
 
 /** A session that is definitely present — what a protected route is handed. */
 export type SignedInSession = NonNullable<AuthSession>

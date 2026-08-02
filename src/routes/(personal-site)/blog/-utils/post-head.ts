@@ -1,4 +1,4 @@
-import { type Frontmatter } from '~blog/frontmatter-schema'
+import type { Frontmatter } from '~blog/frontmatter-schema'
 
 /** A single `head()` meta entry (title, or a named/propertied meta tag). */
 type MetaEntry =

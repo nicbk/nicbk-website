@@ -9,13 +9,13 @@ import {
   it,
   vi,
 } from 'vitest'
-import { createDatabase, type DatabaseHandle } from '~/db/create-database'
+import type { DatabaseHandle } from '~/db/create-database'
+import { createDatabase } from '~/db/create-database'
 import * as schema from '~/db/schema'
-import {
-  startTestDatabase,
-  type TestDatabase,
-} from '~/db/test-support/test-database'
-import { type Auth, createAuth } from './create-auth'
+import type { TestDatabase } from '~/db/test-support/test-database'
+import { startTestDatabase } from '~/db/test-support/test-database'
+import type { Auth } from './create-auth'
+import { createAuth } from './create-auth'
 import { getSessionFrom } from './session'
 
 /**

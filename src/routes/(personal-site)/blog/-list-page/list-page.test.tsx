@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ListPage } from './list-page'
-import { type PostListItem } from '~blog/posts'
+import type { PostListItem } from '~blog/posts'
 
 // The list reads its filter state from the route's search params and renders row
 // titles as router <Link>s. Mock both without a live router:

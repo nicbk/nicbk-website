@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures'
+import { expect, test, toggleThemeTo } from './fixtures'
 
 test.describe('about page', () => {
   test('renders inside the shell with both section labels', async ({
@@ -66,7 +66,7 @@ test.describe('about page', () => {
   }) => {
     await page.goto('/about')
     await expectNoA11yViolations()
-    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await toggleThemeTo(page, 'dark')
     await expectNoA11yViolations()
   })
 })

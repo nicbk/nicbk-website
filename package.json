@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
+    "test:e2e:prod": "CI=true playwright test",
     "test:e2e:auth": "playwright test --config playwright.auth.config.ts",
     "db:generate-schema": "node scripts/gen-auth-schema.mjs",
     "db:generate-migration": "drizzle-kit generate",

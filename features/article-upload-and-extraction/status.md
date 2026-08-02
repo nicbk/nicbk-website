@@ -8,19 +8,31 @@ feature's Postgres service, Drizzle migration pipeline, Better Auth session,
 **first live consumers**. This is the **second phase transition**: #6 made the
 site an application with a database; this makes it a natively reactive one.
 
-Feature parent issue and task sub-issues: to be filed once this spec is merged,
-per
+Feature parent issue:
+[#66](https://github.com/nicbk/nicbk-website/issues/66); task sub-issues
+[#67](https://github.com/nicbk/nicbk-website/issues/67)
+(`zero-sync-foundation`),
+[#68](https://github.com/nicbk/nicbk-website/issues/68)
+(`lit-tracker-shell`),
+[#69](https://github.com/nicbk/nicbk-website/issues/69)
+(`pdf-upload-and-storage`),
+[#70](https://github.com/nicbk/nicbk-website/issues/70)
+(`grobid-extraction-pipeline`), and
+[#71](https://github.com/nicbk/nicbk-website/issues/71)
+(`semantic-scholar-enrichment`), all linked as native sub-issues of #66.
+**#66 must be closed by hand** when the feature completes — GitHub does not
+close a parent when its sub-issues close, per the 2026-08-01 revision in
 [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md).
 
 ## Task states
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `zero-sync-foundation` | Not started | — | — | — |
-| `lit-tracker-shell` | Not started | — | — | — |
-| `pdf-upload-and-storage` | Not started | — | — | — |
-| `grobid-extraction-pipeline` | Not started | — | — | — |
-| `semantic-scholar-enrichment` | Not started | — | — | — |
+| `zero-sync-foundation` | Not started ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | — | — | — |
+| `lit-tracker-shell` | Not started ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | — | — | — |
+| `pdf-upload-and-storage` | Not started ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | — | — | — |
+| `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
+| `semantic-scholar-enrichment` | Not started ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -94,3 +106,11 @@ against stubbed GROBID and Semantic Scholar.
   zero-cache's three Postgres connections, Zero's move to synced queries +
   custom mutators as the default path, and Semantic Scholar needing no API key.
   Awaiting spec review, then GitHub issues and implementation.
+- 2026-08-01 — Spec **merged as [#65](https://github.com/nicbk/nicbk-website/pull/65)**
+  (CI green, approved). GitHub issues filed: parent #66 with sub-issues
+  #67–#71 linked under it. All unassigned. Filing them surfaced a stale
+  `projects-page` parent (#53, open with its only sub-issue closed) and, behind
+  it, an incorrect claim in
+  [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md)
+  that GitHub closes a parent automatically — corrected there as a dated
+  revision, and #53 closed. Next: task 1, `zero-sync-foundation`.

@@ -35,9 +35,11 @@ agent is assigned parallel work today.
 
 **PR linking:** each task's PR closes its sub-issue via a closing keyword
 in the PR body (`Closes #<task-issue>`). Merging the PR auto-closes the
-sub-issue; GitHub automatically rolls that up into the parent feature
-issue's progress and closes the feature issue once every task sub-issue is
-closed — no manual status bookkeeping required.
+sub-issue, and GitHub rolls that up into the parent feature issue's
+progress indicator. ~~It also closes the feature issue once every task
+sub-issue is closed — no manual status bookkeeping required.~~
+**Corrected 2026-08-01 — see the revision below: the parent does not close
+itself. Closing it is a manual step.**
 
 **No feature-level PR.** Only tasks get PRs, per the per-task gate already
 decided in `feature-definition-and-scoping.md` — the feature issue's
@@ -57,6 +59,36 @@ closure is a side effect of its sub-issues closing, not its own merge.
   quoted id with `is not of type integer`.
 - PR-to-issue linking needs no API call at all: a closing keyword in the
   PR body (which `gh pr create --body` already sets) is sufficient.
+
+## Revision (2026-08-01): a parent issue does not close itself
+
+The decision above claimed GitHub "closes the feature issue once every task
+sub-issue is closed — no manual status bookkeeping required." **The rollup half
+is real; the closing half is not.** GitHub shows sub-issue progress on the
+parent and lets you filter/group by it, but closing the last sub-issue leaves
+the parent open. GitHub's own sub-issues documentation describes the progress
+rollup and says nothing about parent closure, and the community workarounds that
+exist are all Actions workflows people wrote *because* the behavior is absent.
+
+This was not caught by reading — it was caught by the repository: `projects-page`
+finished on 2026-08-01 with its only sub-issue (#54) closed and PR #55 merged,
+and its parent **#53 sat open for the rest of the day**. `authentication`'s
+parent (#27) looked like it had auto-closed, but the status log shows it was
+closed by hand as part of wrapping the feature up — so the first feature to
+complete gave a false confirmation and the second exposed the truth.
+
+**The corrected rule:** closing a feature's parent issue is an explicit step in
+finishing that feature, taken at the same moment its `status.md` is marked
+Complete. Per-task closure is still automatic via `Closes #<task-issue>`; only
+the parent needs the manual step.
+
+The general lesson, and the reason this is worth a revision rather than a quiet
+fix: **a convention that delegates bookkeeping to automation has to be verified
+against the automation actually doing it.** This doc's own reasoning argued for
+closing keywords precisely because "state that must be manually kept in sync
+eventually drifts" — and then assumed a second, unverified automation on top of
+the one that was checked. The verified part worked; the assumed part drifted
+exactly as predicted.
 
 ## Reasoning
 
@@ -80,7 +112,9 @@ closure is a side effect of its sub-issues closing, not its own merge.
   (assign, merge) rather than an extra manual bookkeeping step — the same
   principle that ruled out commented-out code and duplicate documentation
   elsewhere in this project's conventions: state that must be manually
-  kept in sync eventually drifts.
+  kept in sync eventually drifts. (Half of this held — see the 2026-08-01
+  revision: sub-issue closure is automatic, parent closure is not, and the
+  parent drifted exactly as this bullet warns.)
 - No feature-level PR reuses the per-task PR gate already decided in
   `feature-definition-and-scoping.md`; a second, feature-level merge gate
   would be redundant against the already-established per-task one.
@@ -102,6 +136,11 @@ closure is a side effect of its sub-issues closing, not its own merge.
   behavior.
 - [docs.github.com — linking a pull request to an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) —
   closing keywords (`Closes #N`) and merge-triggered auto-close.
+- Re-checked 2026-08-01 for the revision above: GitHub's sub-issues
+  documentation describes parent **progress** rollup and filtering/grouping by
+  parent, with no statement that a parent closes when its sub-issues do; the
+  available "close the parent automatically" solutions are third-party Actions
+  workflows, which is itself evidence the native behavior does not exist.
 - [cli.github.com/manual/gh_issue_create](https://cli.github.com/manual/gh_issue_create),
   [cli.github.com/manual/gh_issue_edit](https://cli.github.com/manual/gh_issue_edit) —
   `gh issue create/edit --add-assignee`, `@me`/`@copilot` assignee shorthand.

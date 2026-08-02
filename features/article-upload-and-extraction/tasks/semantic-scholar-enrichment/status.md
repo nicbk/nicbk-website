@@ -5,7 +5,9 @@ Completes the feature.
 
 - Branch: `article-upload-and-extraction/semantic-scholar-enrichment` (to be
   created).
-- Sub-issue: to be filed with the feature's parent issue.
+- Sub-issue: [#71](https://github.com/nicbk/nicbk-website/issues/71)
+  (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)),
+  unassigned — self-assign before starting.
 - PR: —
 
 ## Notes carried into implementation

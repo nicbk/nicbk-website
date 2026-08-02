@@ -64,13 +64,22 @@ jobs:
 
       # Same "derive, don't hand-type" rule for the identity schema: which
       # columns Better Auth needs is a property of the library version and the
-      # plugins enabled, so src/db/schema.ts is generated. A drift here means
-      # the committed schema (and the migrations generated from it) no longer
-      # match the auth configuration. See scripts/gen-auth-schema.mjs.
+      # plugins enabled, so src/db/schema/identity.ts is generated. A drift here
+      # means the committed schema (and the migrations generated from it) no
+      # longer match the auth configuration. See scripts/gen-auth-schema.mjs.
       - name: Auth schema drift check
         run: |
           npm run db:generate-schema
-          git diff --exit-code -- src/db/schema.ts
+          git diff --exit-code -- src/db/schema/identity.ts
+
+      # And again for the Zero projection: src/zero/schema.gen.ts is derived
+      # from the Drizzle schema by drizzle-zero, so a table or column added to
+      # Drizzle without regenerating it would leave the sync engine describing a
+      # database that no longer exists. See scripts/gen-zero-schema.mjs.
+      - name: Zero schema drift check
+        run: |
+          npm run db:generate-zero-schema
+          git diff --exit-code -- src/zero/schema.gen.ts
 
       - name: Unit tests with coverage
         run: npm run test:coverage

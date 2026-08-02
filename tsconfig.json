@@ -46,7 +46,14 @@
     "blog",
     "vite.config.ts",
     "vitest.config.ts",
-    "vitest.setup.ts"
+    "vitest.setup.ts",
+    // drizzle-zero resolves the Drizzle schema's types through its config
+    // file, and fails with "Failed to find type definitions" unless that file
+    // is inside the project tsc knows about. (drizzle.config.ts is deliberately
+    // not included: Drizzle Kit reads it directly, and typechecking it under
+    // noPropertyAccessFromIndexSignature would demand a process.env access
+    // Biome's useLiteralKeys then rejects.)
+    "drizzle-zero.config.ts"
   ],
   // Generates exact-key .d.ts files for *.module.css (via `npx cmk`, wired
   // into the typecheck script), so the decided dot-notation access to CSS

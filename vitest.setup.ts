@@ -10,6 +10,8 @@ const placeholderEnv: Record<string, string> = {
   BETTER_AUTH_URL: 'http://localhost:3000',
   GOOGLE_CLIENT_ID: 'unit-test-placeholder-client-id',
   GOOGLE_CLIENT_SECRET: 'unit-test-placeholder-client-secret',
+  ZERO_QUERY_API_KEY: 'unit-test-placeholder-zero-query-api-key',
+  ZERO_MUTATE_API_KEY: 'unit-test-placeholder-zero-mutate-api-key',
 }
 for (const [name, value] of Object.entries(placeholderEnv)) {
   process.env[name] ??= value

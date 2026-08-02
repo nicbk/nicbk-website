@@ -77,6 +77,7 @@
         "playwright.config.ts",
         "playwright.auth.config.ts",
         "drizzle.config.ts",
+        "drizzle-zero.config.ts",
         "src/server.ts",
         "blog/mdx.d.ts"
       ],

@@ -1,7 +1,11 @@
 /**
- * Regenerate src/db/schema.ts — the Drizzle definition of Better Auth's core
- * identity tables (user / session / account / verification) — from the auth
- * configuration in src/auth/auth.ts.
+ * Regenerate src/db/schema/identity.ts — the Drizzle definition of Better
+ * Auth's core identity tables (user / session / account / verification) — from
+ * the auth configuration in src/auth/auth.ts.
+ *
+ * It is the only generated file under src/db/schema/; its hand-written
+ * siblings (and the index.ts that re-exports both) are never touched here,
+ * which is why the generated tables live in their own file at all.
  *
  * Better Auth decides what those tables must contain; which columns exist is a
  * property of the library version and the plugins enabled, not a design choice
@@ -59,11 +63,11 @@ run('npx', [
   '--config',
   'src/auth/auth.ts',
   '--output',
-  'src/db/schema.ts',
+  'src/db/schema/identity.ts',
   '--yes',
 ])
 
 // The CLI emits its own formatting (double quotes, semicolons); normalize to
 // the project's Biome style so the committed file is consistent with every
 // other source file — and so the drift check compares like with like.
-run('npx', ['biome', 'check', '--write', 'src/db/schema.ts'])
+run('npx', ['biome', 'check', '--write', 'src/db/schema/identity.ts'])

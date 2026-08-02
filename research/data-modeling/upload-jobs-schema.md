@@ -23,7 +23,8 @@ convention.
 upload_jobs (
   id             uuid primary key default uuidv7(),  -- server-generated (Postgres 18 native);
                                                         -- doubles as the pre-allocated article ID, see below
-  user_id        uuid not null references "user"(id) on delete cascade,
+  user_id        text not null references "user"(id) on delete cascade,
+                   -- `uuid` as first written; corrected 2026-08-02, below
 
   filename       text not null,           -- original uploaded filename, for job-list row display
 
@@ -40,6 +41,14 @@ upload_jobs (
   updated_at     timestamptz not null default now()
 )
 ```
+
+### Revision (2026-08-02): the ownership column is `text`, not `uuid`
+
+Better Auth generates `user.id` as `text`, so a `uuid` foreign key cannot
+reference it. `upload_jobs.user_id` is `text`; `id` and `article_id` are
+unchanged `uuid` columns, since those are this project's own keys. Full
+reasoning, and the general lesson, in the matching revision in
+[article-core-schema.md](./article-core-schema.md).
 
 ### `status` — two values, not a per-pipeline-stage enum
 

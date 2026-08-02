@@ -24,8 +24,17 @@ reactivity is visible in a browser.
   is materially different from the site header's `position: sticky` on a
   normally-scrolling page, and is the layout every later Lit Tracker page
   inherits.
-- **Wires the Zero client** — the provider, the connection to `zero-cache`, and
-  the auth token the app server's `/query` endpoint validates.
+- **Wires the Zero client** — the provider and the connection to `zero-cache`.
+  Two things task 1 established that this one inherits: the credential is the
+  **Better Auth session cookie**, which zero-cache forwards to `/query` (not a
+  token), and Zero **does not support SSR**, so the provider must be loaded
+  client-only — `React.lazy` is TanStack Start's documented way.
+- **Makes cookie auth work in production.** For the browser to send its session
+  cookie to zero-cache, zero-cache has to be served from a subdomain
+  (`zero.nicbk.com`) and Better Auth has to issue cookies for the parent domain
+  via `crossSubDomainCookies`. Locally this needs nothing — browsers key cookies
+  by host, not port — which is why task 1 left it: nothing connected yet. This
+  is an auth-config change plus an nginx server block on nicbk-tower.
 - **Renders a minimal collection surface**: one live `useQuery` over `articles`,
   showing the plain inline empty-state text when there are none, and a plain
   list of titles and authors when there are. No cards, no tags, no filtering, no

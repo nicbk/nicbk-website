@@ -88,6 +88,32 @@ identifiers otherwise follow Zero's naming constraints
 (`/^[A-Za-z_]+[A-Za-z0-9_-]*$/`), and `_0_version` is a reserved column
 name to avoid.
 
+### Revisions from the first implementation (2026-08-02)
+
+Three details this document settled in the abstract came out differently once
+the first two tables were actually built, in
+[../../features/article-upload-and-extraction/tasks/zero-sync-foundation/](../../features/article-upload-and-extraction/tasks/zero-sync-foundation/description.md):
+
+- **Ownership FK columns are `text`, not `uuid`.** Better Auth's `user.id` is
+  `text`, and Postgres will not point a `uuid` FK at it. Table's-own primary
+  keys are unaffected. See the revision in
+  [article-core-schema.md](./article-core-schema.md).
+- **The snake_case bridge is explicit column names, not `casing`.** This doc
+  proposed setting Drizzle's `casing: "snake_case"` in both configs. The
+  identity schema, which the Better Auth CLI generates, names every column
+  explicitly instead — so the hand-written tables do the same, and
+  `drizzle-zero` derives the camelCase Zero field plus its `serverName` from
+  that. The outcome this doc wanted (snake_case in Postgres, camelCase in Zero,
+  no hand-maintained mapping) holds either way; matching the file next door beat
+  introducing a second mechanism for it.
+- **What Zero replicates is an allowlist in two places.** Left alone, zero-cache
+  publishes every table in the `public` schema, which would put Better Auth's
+  session and OAuth tokens in its replica. Instead the migration creates a
+  `zero_data` publication naming the synced tables, and
+  `drizzle-zero.config.ts` names them again for the generated schema. **A new
+  synced table has to be added to both**, in the migration that creates it —
+  changing the publication set later forces zero-cache to resync its replica.
+
 ### Foreign keys — `ON DELETE CASCADE` for ownership, `SET NULL` for soft references
 
 Every FK falls into one of two categories, decided consistently across all

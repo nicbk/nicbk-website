@@ -48,6 +48,25 @@ export const envSchema = z.object({
   /** OAuth client credentials for the Google provider (the only sign-in method). */
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
+
+  /**
+   * Shared secrets proving that a call to `/api/zero/query` or
+   * `/api/zero/mutate` came from zero-cache. It sends them in an `X-Api-Key`
+   * header (`ZERO_QUERY_API_KEY` / `ZERO_MUTATE_API_KEY` on its side).
+   *
+   * These do not decide *which* user's data a request may read — the session
+   * cookie does that, and it is checked independently. They keep the sync
+   * engine's callbacks, which are reachable on the public app server, from
+   * being an open endpoint for anyone to probe. Separate keys per endpoint so
+   * read and write access can be rotated apart.
+   *
+   * zero-cache's own connection settings (`ZERO_UPSTREAM_DB`, `ZERO_CVR_DB`,
+   * `ZERO_CHANGE_DB`, `ZERO_REPLICA_FILE`, `ZERO_ADMIN_PASSWORD`) are read by
+   * that container, not by this app, so they live in `.env.example` and Compose
+   * only — the same arrangement as the `POSTGRES_*` variables.
+   */
+  ZERO_QUERY_API_KEY: z.string().min(32),
+  ZERO_MUTATE_API_KEY: z.string().min(32),
 })
 
 export type Env = z.infer<typeof envSchema>

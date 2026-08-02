@@ -64,7 +64,7 @@ need them (see Phases 2–3).
 
 | # | Feature | Slug | Status | Depends on |
 |---|---|---|---|---|
-| 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **Spec'd** (2026-08-01; 5 tasks, none started) | #6 |
+| 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **In progress** (5 tasks; task 1 implemented 2026-08-02) | #6 |
 | 8 | Collection view (list, tags, reading status, filter/sort, live sync) | `collection-view` | Not yet spec'd | #7 |
 | 9 | Article detail + PDF reader + annotations | `article-detail-and-reader` | Not yet spec'd | #7 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
@@ -76,7 +76,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 **just-in-time** rather than all at once — `app-shell-and-home` (complete),
 `about-page` (complete), `error-and-not-found` (complete), `blog` (complete),
 `projects-page` (complete), `authentication` (complete), and
-`article-upload-and-extraction` (spec'd) have
+`article-upload-and-extraction` (in progress) have
 full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

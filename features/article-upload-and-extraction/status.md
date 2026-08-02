@@ -1,6 +1,6 @@
 # Status: Article Upload and Extraction
 
-**Feature state:** Spec'd (2026-08-01), not started. Five tasks, sequential,
+**Feature state:** In progress (task 1 of 5 implemented). Five tasks, sequential,
 each gated by its own PR + CI + human review. Depends on
 [`authentication`](../authentication/status.md) (Complete) — it consumes that
 feature's Postgres service, Drizzle migration pipeline, Better Auth session,
@@ -28,7 +28,7 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `zero-sync-foundation` | Not started ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | — | — | — |
+| `zero-sync-foundation` | Implemented ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | — | — | — |
 | `lit-tracker-shell` | Not started ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | — | — | — |
 | `pdf-upload-and-storage` | Not started ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | — | — | — |
 | `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
@@ -60,12 +60,17 @@ against stubbed GROBID and Semantic Scholar.
   `drizzle-zero`'s `--enable-legacy-*` flags. See
   [research.md](./research.md).
 - **zero-cache needs three Postgres connections** (`ZERO_UPSTREAM_DB` direct,
-  `ZERO_CVR_DB`, `ZERO_CHANGE_DB`) plus a persisted `ZERO_REPLICA_FILE` volume
-  — separate databases inside the **existing** shared Postgres, not a second
-  service.
-- **`pgboss` is excluded from the Zero publication.** Its internal tables are
-  unstable across versions; `upload_jobs` is the app-owned projection Zero
-  replicates.
+  `ZERO_CVR_DB`, `ZERO_CHANGE_DB`) plus a persisted `ZERO_REPLICA_FILE` volume.
+  Task 1 pointed all three at the **existing** database, with the user's
+  agreement — zero-cache namespaces its own data into `zero_0/cvr` and
+  `zero_0/cdc` schemas, and separate databases could not be created by a
+  migration or by the Postgres image's init scripts.
+- **The Zero publication is an explicit allowlist**, `zero_data`, naming only
+  the synced tables. It excludes `pgboss` (whose internal tables are unstable
+  across versions — `upload_jobs` is the app-owned projection clients read
+  instead) and, more importantly, Better Auth's `session` and `account` tables.
+  **Every feature that adds a synced table must extend both this publication and
+  `drizzle-zero.config.ts`, in the migration that creates the table.**
 - **`zero/schema.ts` is generated, not hand-written**, with a CI drift check —
   the same derive-don't-hand-type rule the Better Auth schema and GPG artifacts
   follow.
@@ -108,9 +113,21 @@ against stubbed GROBID and Semantic Scholar.
   Awaiting spec review, then GitHub issues and implementation.
 - 2026-08-01 — Spec **merged as [#65](https://github.com/nicbk/nicbk-website/pull/65)**
   (CI green, approved). GitHub issues filed: parent #66 with sub-issues
-  #67–#71 linked under it. All unassigned. Filing them surfaced a stale
+  #67–#71 linked under it. All unassigned at the time. Filing them surfaced a stale
   `projects-page` parent (#53, open with its only sub-issue closed) and, behind
   it, an incorrect claim in
   [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md)
   that GitHub closes a parent automatically — corrected there as a dated
   revision, and #53 closed. Next: task 1, `zero-sync-foundation`.
+- 2026-08-02 — **Task 1 (`zero-sync-foundation`) implemented**, awaiting PR.
+  zero-cache is in the Compose stack and replicating, `articles` and
+  `upload_jobs` are migrated, `src/zero/schema.gen.ts` is generated under a CI
+  drift check, and `/query` + `/mutate` are live with cross-user isolation
+  proven non-vacuously against a real Postgres. Re-verifying Zero 1.8 before
+  writing code corrected several assumptions the spec was written on — the
+  current API names, `ZERO_ENABLE_CRUD_MUTATIONS` defaulting to **on**, and
+  cookie auth needing zero-cache on a subdomain in production — all recorded in
+  [research.md](./research.md), with the details and the decisions taken in the
+  [task status](./tasks/zero-sync-foundation/status.md). Two carried forward:
+  **task 2 owns the `crossSubDomainCookies` and nginx change**, and Zero has no
+  SSR support, so its provider must be loaded client-only.

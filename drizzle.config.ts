@@ -13,7 +13,9 @@ import { defineConfig } from 'drizzle-kit'
  * therefore only for ad-hoc local commands like `drizzle-kit studio`.
  */
 export default defineConfig({
-  schema: './src/db/schema.ts',
+  // The barrel re-exporting every table, not a glob: schema tooling resolves
+  // types through this one entry point.
+  schema: './src/db/schema/index.ts',
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {

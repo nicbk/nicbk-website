@@ -30,20 +30,19 @@ describe('the /api/zero/query mount', () => {
   })
 
   it('passes the request through with the configured key and session reader', async () => {
-    const handlers = Route.options.server?.handlers as unknown as Record<
-      string,
-      (opts: { request: Request }) => Promise<Response>
-    >
+    const handlers = Route.options.server?.handlers as unknown as {
+      POST: (opts: { request: Request }) => Promise<Response>
+    }
     const request = new Request('https://nicbk.com/api/zero/query', {
       method: 'POST',
     })
 
-    const response = await handlers['POST']?.({ request })
+    const response = await handlers.POST({ request })
 
     expect(respondToZeroQuery).toHaveBeenCalledWith(request, {
       apiKey: expect.any(String),
       getSession,
     })
-    expect(await response?.text()).toBe('ok')
+    expect(await response.text()).toBe('ok')
   })
 })

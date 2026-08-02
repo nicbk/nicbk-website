@@ -32,21 +32,20 @@ describe('the /api/zero/mutate mount', () => {
   })
 
   it('passes the request through with the configured key, session reader, and database', async () => {
-    const handlers = Route.options.server?.handlers as unknown as Record<
-      string,
-      (opts: { request: Request }) => Promise<Response>
-    >
+    const handlers = Route.options.server?.handlers as unknown as {
+      POST: (opts: { request: Request }) => Promise<Response>
+    }
     const request = new Request('https://nicbk.com/api/zero/mutate', {
       method: 'POST',
     })
 
-    const response = await handlers['POST']?.({ request })
+    const response = await handlers.POST({ request })
 
     expect(respondToZeroMutate).toHaveBeenCalledWith(request, {
       apiKey: expect.any(String),
       getSession,
       dbProvider,
     })
-    expect(await response?.text()).toBe('ok')
+    expect(await response.text()).toBe('ok')
   })
 })

@@ -60,11 +60,11 @@ need them (see Phases 2–3).
 |---|---|---|---|---|
 | 6 | Authentication (Better Auth + Google OAuth, session hardening, sign-in page, user settings) | [`authentication`](./authentication/description.md) | **Complete** (2026-08-01; all 3 tasks merged, #57 + #59 + #60) | #1 |
 
-### Phase 3 — Lit Tracker (each needs auth; #7 is the ingest slice everything else builds on; introduces Garage/GROBID/Zero/pg-boss)
+### Phase 3 — Lit Tracker (started 2026-08-01; each needs auth; #7 is the ingest slice everything else builds on; introduces Garage/GROBID/Zero/pg-boss)
 
 | # | Feature | Slug | Status | Depends on |
 |---|---|---|---|---|
-| 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | `article-upload-and-extraction` | Not yet spec'd | #6 |
+| 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **Spec'd** (2026-08-01; 5 tasks, none started) | #6 |
 | 8 | Collection view (list, tags, reading status, filter/sort, live sync) | `collection-view` | Not yet spec'd | #7 |
 | 9 | Article detail + PDF reader + annotations | `article-detail-and-reader` | Not yet spec'd | #7 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
@@ -75,9 +75,15 @@ need them (see Phases 2–3).
 Following the decided one-at-a-time, gated process, features are fleshed out
 **just-in-time** rather than all at once — `app-shell-and-home` (complete),
 `about-page` (complete), `error-and-not-found` (complete), `blog` (complete),
-`projects-page` (complete), and `authentication` (complete) have
+`projects-page` (complete), `authentication` (complete), and
+`article-upload-and-extraction` (spec'd) have
 full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
 up-front draft.
+
+#8–#11 stay one-liners for now on purpose: each is shaped by what #7 actually
+leaves behind. #8 upgrades the minimal collection surface #7 builds rather than
+starting from nothing, and #11 inherits the failure path #7 deliberately leaves
+unresolvable — details worth spec'ing against merged code, not a forecast of it.

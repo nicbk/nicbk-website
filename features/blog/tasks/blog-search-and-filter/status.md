@@ -1,12 +1,14 @@
 # Status: Blog Search + Tag Filter
 
-**State:** Implemented, awaiting PR + CI + review (2026-07-17). Built on
+**State:** Merged (2026-07-18) — the last task of the blog feature. Built on
 `blog-list-page` (merged #39) and `mdx-pipeline-and-post-page` (merged #37).
 
 - Branch: `blog/blog-search-and-filter` (off `main` at `88b4e96`).
 - Sub-issue: [#26](https://github.com/nicbk/nicbk-website/issues/26)
   (parent [#23](https://github.com/nicbk/nicbk-website/issues/23)).
-- PR / CI / review: _pending._
+- PR: [#46](https://github.com/nicbk/nicbk-website/pull/46) — CI green,
+  approved, merged. Four post-merge follow-up fixes landed on top (#48, #49,
+  #50, #52); each is reasoned in the log below.
 
 ## What was implemented
 
@@ -97,7 +99,7 @@
   measure and the description holds its ~60ch column. Verified in Chrome at wide
   (1280px) and narrow, both themes, and locked in with an e2e lower-bound
   assertion on the description width at 1600/1200/1100px. Own branch + PR off
-  `main`.
+  `main`. Merged as PR #48.
 - 2026-07-17 — **Follow-up refactor (post-merge):** made search truly reactive
   and consolidated the controls onto Base UI. Root cause of the reported "search
   isn't reactive / loses focus" bug: the list filtered off the URL, so it only

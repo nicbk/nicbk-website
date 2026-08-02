@@ -12,12 +12,21 @@ reactivity is visible in a browser.
   attachment**: #6 built and tested it in isolation because no protected route
   existed. A signed-out visitor is redirected straight to `/sign-in` carrying
   the requested URL, with no interstitial.
-- **Builds the lit-tracker header** — a separate component from the site
-  header, not a variant of it: the app name on the left linking to the tracker
-  root, a breadcrumb-style path indicator showing just the root segment (e.g.
-  `↳/nicbk_home`), and a user avatar on the far right that opens the **existing
-  shared user-settings modal** from #6. That is the modal's **first live
-  trigger**, closing the second loop #6 left open.
+- **Builds the lit-tracker header and its sidebar rail** — the header a
+  separate component from the site header, not a variant of it: the app name on
+  the left linking to the tracker root, a breadcrumb-style path indicator
+  showing just the root segment (e.g. `↳/nicbk_home`), and the site's theme
+  toggle at the far end, mirroring the site header's arrangement.
+
+  **Revision (2026-08-02), decided with the user:** the account avatar is at the
+  **foot of the sidebar**, not on the far right of the header — which is where
+  the sample mockup actually puts it, and which the original wording misread. It
+  shows the **Google account's own picture**, falling back to a letter when
+  there is none or the request fails. It opens the **existing shared
+  user-settings modal** from #6 either way — that is the modal's **first live
+  trigger**, closing the second loop #6 left open. The rail it sits in is the
+  same one #8 fills with the tag and reading-status filters; this task builds it
+  near-empty so the app shell has both of its panels.
 - **Implements the fixed app-shell layout** the header spec calls for: the
   header's height is reserved at the top of the viewport and is not part of the
   scrolling document; content below scrolls in independent bounded panels. This

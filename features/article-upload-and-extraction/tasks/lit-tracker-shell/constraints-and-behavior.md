@@ -15,8 +15,11 @@ task satisfies.
   access-denied interstitial**.
 - The **lit-tracker header** is a separate component from the site header: app
   name on the left linking to the tracker root, a breadcrumb path indicator
-  showing the root segment, and an avatar on the far right opening the
-  **existing shared user-settings modal**.
+  showing the root segment, and — per the 2026-08-02 revision agreed with the
+  user — the site's theme toggle at the far end. The account avatar opening the
+  **existing shared user-settings modal** sits at the foot of the sidebar rail
+  instead, where the sample mockup puts it, and shows the Google account's own
+  picture with a lettered fallback.
 - The header uses the **fixed app-shell layout** — reserved height at the top
   of the viewport, not part of the scrolling document, with content below
   scrolling in independent bounded panels.

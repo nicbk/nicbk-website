@@ -1,9 +1,10 @@
 /*
  * The fixed app-shell layout: exactly one viewport tall, header row sized to
- * its content, everything below it a single bounded row that scrolls itself.
+ * its content, everything below it a single bounded row split into panels that
+ * scroll themselves.
  *
  * `100dvh` rather than `100vh` so a mobile browser's collapsing address bar
- * doesn't leave the panel's last rows permanently under the chrome. Nothing in
+ * doesn't leave the panels' last rows permanently under the chrome. Nothing in
  * the document outside this element has height (the skip link is `position:
  * fixed`), so the page itself never gains a scrollbar — which is the whole
  * behavioural difference from the personal site's sticky header.
@@ -12,9 +13,20 @@
   display: grid;
   /* minmax(0, 1fr), not 1fr: a grid row's default minimum is its content's
      size, so a long list would stretch the row past the viewport and put the
-     scrollbar back on the document instead of inside the panel. */
+     scrollbar back on the document instead of inside a panel. */
   grid-template-rows: auto minmax(0, 1fr);
   height: 100dvh;
+}
+
+/*
+ * The rail sizes to its contents and the content panel takes the rest. Same
+ * minmax(0, …) reason as the rows above: without it a long unbroken title in
+ * the content would widen the column rather than wrap inside it.
+ */
+.panels {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 0;
 }
 
 .main {
@@ -26,9 +38,7 @@
   /* The page inset for everything the panel holds, defined once here so a page
      and the placeholder standing in for it start at the same spot and nothing
      shifts when one replaces the other. The inline value shrinks with the
-     viewport, matching the header's rhythm. #8 introduces panels that want
-     their own edges (the filter sidebar and its divider) and moves this onto
-     the panels then. */
+     viewport, matching the header's rhythm. */
   padding: var(--space-lg) clamp(0.5rem, 2.5vw, 1.5rem);
 }
 

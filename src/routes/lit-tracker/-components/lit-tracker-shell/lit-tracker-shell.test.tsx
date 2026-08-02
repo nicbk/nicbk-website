@@ -17,15 +17,23 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }))
 
-const ACCOUNT = { name: 'Nicolás Kennedy', email: 'nicbk@example.com' }
+const ACCOUNT = {
+  name: 'Nicolás Kennedy',
+  email: 'nicbk@example.com',
+  image: null,
+}
+
+function renderShell() {
+  return render(
+    <LitTrackerShell account={ACCOUNT}>
+      <p>content</p>
+    </LitTrackerShell>,
+  )
+}
 
 describe('LitTrackerShell', () => {
   it('renders the tracker header, not the site header', () => {
-    render(
-      <LitTrackerShell account={ACCOUNT}>
-        <p>content</p>
-      </LitTrackerShell>,
-    )
+    renderShell()
 
     expect(
       screen.getByRole('link', { name: 'Literature Tracker' }),
@@ -35,12 +43,16 @@ describe('LitTrackerShell', () => {
     expect(screen.queryByRole('navigation', { name: 'Site' })).toBeNull()
   })
 
+  it('puts the account control in the sidebar, outside the header and the content', () => {
+    renderShell()
+
+    const account = screen.getByRole('button', { name: 'Account settings' })
+    expect(screen.getByRole('banner')).not.toContainElement(account)
+    expect(screen.getByRole('main')).not.toContainElement(account)
+  })
+
   it('wraps content in the landmark the skip link and focus handoff target', () => {
-    render(
-      <LitTrackerShell account={ACCOUNT}>
-        <p>content</p>
-      </LitTrackerShell>,
-    )
+    renderShell()
 
     const main = screen.getByRole('main')
     // Both are load-bearing: __root.tsx's skip link points at the id, and

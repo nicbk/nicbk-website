@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
-import type { HeaderAccount } from '../lit-tracker-header/identity'
+import type { AvatarAccount } from '../account-avatar/account-avatar'
 import { LitTrackerHeader } from '../lit-tracker-header/lit-tracker-header'
+import { LitTrackerSidebar } from '../lit-tracker-sidebar/lit-tracker-sidebar'
 import styles from './lit-tracker-shell.module.css'
 
 interface LitTrackerShellProps {
-  /** The signed-in account, for the header's breadcrumb and avatar. */
-  account: HeaderAccount
+  /** The signed-in account, for the breadcrumb and the sidebar's avatar. */
+  account: AvatarAccount
   /** Called once the session ends, so the guarded page can leave. */
   onSignedOut?: (() => void) | undefined
   /** Called once the account is deleted. */
@@ -15,17 +16,17 @@ interface LitTrackerShellProps {
 
 /**
  * The Lit Tracker's app-shell chrome: the header pinned to the top edge of the
- * viewport, and a bounded panel below it that scrolls on its own.
+ * viewport, and below it two independently scrolling panels — the sidebar rail
+ * and the content.
  *
  * This is the layout model the header spec calls for and the thing that most
  * distinguishes the tracker from the personal site
  * (research/ui-ux/pages/lit-tracker/components/header.md). SiteShell puts a
  * `position: sticky` header on a page that scrolls as one unit; here the
  * document does not scroll at all — the shell is exactly one viewport tall and
- * the content panel inside it is what moves. Every later tracker page inherits
- * this: the collection's article grid scrolls independently of its filter
- * sidebar (#8), and article detail's reader scrolls independently of its
- * sidebar (#9). Both are extra panels beside this one, not a different shell.
+ * the panels inside it are what move. Every later tracker page inherits this:
+ * #8's article grid scrolls independently of the filter list in the rail, and
+ * #9's reader scrolls independently of its own sidebar.
  *
  * The `<main id="main-content" tabIndex={-1}>` is the same landmark SiteShell
  * renders, and for the same two reasons: the skip link (__root.tsx) targets it,
@@ -42,14 +43,17 @@ export function LitTrackerShell({
 }: LitTrackerShellProps) {
   return (
     <div className={styles.shell}>
-      <LitTrackerHeader
-        account={account}
-        onSignedOut={onSignedOut}
-        onDeleted={onDeleted}
-      />
-      <main id="main-content" className={styles.main} tabIndex={-1}>
-        {children}
-      </main>
+      <LitTrackerHeader account={account} />
+      <div className={styles.panels}>
+        <LitTrackerSidebar
+          account={account}
+          onSignedOut={onSignedOut}
+          onDeleted={onDeleted}
+        />
+        <main id="main-content" className={styles.main} tabIndex={-1}>
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

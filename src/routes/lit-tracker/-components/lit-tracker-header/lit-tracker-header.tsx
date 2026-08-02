@@ -1,21 +1,17 @@
 import { Link } from '@tanstack/react-router'
-import { UserSettings } from '~/routes/-shared/components/user-settings/user-settings'
-import type { HeaderAccount } from './identity'
-import { avatarInitial, rootBreadcrumbSegment } from './identity'
+import { ThemeToggle } from '~/routes/-shared/components/theme-toggle/theme-toggle'
+import type { BreadcrumbAccount } from './breadcrumb'
+import { rootBreadcrumbSegment } from './breadcrumb'
 import styles from './lit-tracker-header.module.css'
 
 interface LitTrackerHeaderProps {
-  /** The signed-in account, from the route guard's session. */
-  account: HeaderAccount
-  /** Called once the session ends, so the guarded page can leave. */
-  onSignedOut?: (() => void) | undefined
-  /** Called once the account is deleted. */
-  onDeleted?: (() => void) | undefined
+  /** The signed-in account, for the breadcrumb's root segment. */
+  account: BreadcrumbAccount
 }
 
 /**
  * The Lit Tracker's own header: app name on the left, the breadcrumb path
- * indicator beside it, and the account avatar at the far right
+ * beside it, and the theme toggle at the far end
  * (research/ui-ux/pages/lit-tracker/components/header.md).
  *
  * A separate component from the site header rather than a variant of it, as
@@ -25,19 +21,21 @@ interface LitTrackerHeaderProps {
  * shell and never scrolls at all. That difference lives in LitTrackerShell,
  * which owns the layout; this component owns the row's contents.
  *
- * The avatar is the first live trigger for the shared user-settings modal,
- * which #6 built and shipped with nothing to open it. It is that modal, not a
- * lit-tracker-specific copy — account settings are a site concept.
+ * The *arrangement*, though, deliberately mirrors the site header's — name,
+ * then links, then the theme toggle pushed to the far end — so the two headers
+ * read as the same site rather than as two products. The theme toggle is the
+ * same component, not a copy: without it here the tracker would be the one
+ * place on the site with no way to change theme, since it does not use the
+ * site-wide header.
  *
- * Only the root segment of the breadcrumb is rendered here. Article detail
- * (#9) grows it one segment per citation-graph hop, at which point the segments
+ * The account control is **not** here. It lives at the foot of the sidebar
+ * (LitTrackerSidebar), where the sample mockup puts it.
+ *
+ * Only the root segment of the breadcrumb is rendered. Article detail (#9)
+ * grows it one segment per citation-graph hop, at which point the segments
  * become a prop; there is nothing yet that could supply a second one.
  */
-export function LitTrackerHeader({
-  account,
-  onSignedOut,
-  onDeleted,
-}: LitTrackerHeaderProps) {
+export function LitTrackerHeader({ account }: LitTrackerHeaderProps) {
   return (
     <header className={styles.header}>
       {/* The app name is the tracker's home link, matching the site header's
@@ -48,28 +46,22 @@ export function LitTrackerHeader({
 
       {/* A single-item path today, but a path all the same: marking it up as a
           navigation landmark with a list is what lets #9 add hops without
-          re-deciding the semantics. `↳` and `/` are decoration around the one
-          real word, so they are hidden from assistive tech. */}
+          re-deciding the semantics. Each segment is a link back to that point
+          in the path — which on the collection view means back to here. `↳`
+          and `/` are decoration around the one real word, so they are hidden
+          from assistive tech. */}
       <nav aria-label="Collection path" className={styles.breadcrumb}>
         <ol className={styles.breadcrumbList}>
           <li>
             <span aria-hidden="true">↳/</span>
-            {rootBreadcrumbSegment(account)}
+            <Link to="/lit-tracker" className={styles.breadcrumbLink}>
+              {rootBreadcrumbSegment(account)}
+            </Link>
           </li>
         </ol>
       </nav>
 
-      <UserSettings
-        email={account.email}
-        triggerLabel="Account settings"
-        triggerClassName={styles.avatar}
-        onSignedOut={onSignedOut}
-        onDeleted={onDeleted}
-      >
-        {/* The letter is decoration: the trigger is already named by
-            triggerLabel, and announcing "N" after it would say nothing. */}
-        <span aria-hidden="true">{avatarInitial(account)}</span>
-      </UserSettings>
+      <ThemeToggle />
     </header>
   )
 }

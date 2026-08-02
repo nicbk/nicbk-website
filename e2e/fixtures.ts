@@ -41,31 +41,6 @@ export async function toggleThemeTo(
 }
 
 /**
- * Switches the theme the way a reader with no stored preference would: by
- * changing the operating system's, then reloading so the pre-paint script
- * resolves it again.
- *
- * `toggleThemeTo` above is unavailable on Lit-Tracker pages — the theme toggle
- * lives on the site-wide header, and the tracker has its own header
- * (research/ui-ux/pages/lit-tracker/components/header.md). The stored choice a
- * reader makes on the personal site still applies across the whole site, so
- * this drives the other input to `resolveTheme` (src/theme.ts) rather than
- * inventing a toggle the design doesn't have.
- *
- * The reload is what makes this also a no-flash assertion: the theme is applied
- * by a blocking inline script before first paint, so the requested attribute is
- * already correct on the first frame rather than after hydration.
- */
-export async function setOsThemeTo(
-  page: Page,
-  theme: 'light' | 'dark',
-): Promise<void> {
-  await page.emulateMedia({ colorScheme: theme })
-  await page.reload()
-  await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
-}
-
-/**
  * Toggles a tag in the blog's tag filter and waits until it actually reports
  * the requested pressed state.
  *

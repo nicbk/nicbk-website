@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test'
 // The axe fixture and the theme helper are the ordinary suite's, reused rather
 // than reimplemented — this tier differs in what it needs *running*, not in how
 // it asserts.
-import { expect, setOsThemeTo, test } from '../e2e/fixtures'
+import { expect, test, toggleThemeTo } from '../e2e/fixtures'
 import { GOOGLE_TEST_ACCOUNT } from './support/google-stub.mjs'
 import { sessionCookie, signInAndLandOn } from './support/sign-in'
 
@@ -10,11 +10,11 @@ import { sessionCookie, signInAndLandOn } from './support/sign-in'
  * The user-settings modal against a real server: a real session from a real
  * sign-in, a real log-out, and a real account deletion.
  *
- * It is opened from the Lit-Tracker header's avatar, which is the modal's only
- * trigger anywhere on the site. Until that header existed the modal was mounted
- * on a test-only `/user-settings-probe` route instead; that route was deleted
- * when this one replaced it, so what is exercised here is now the real thing on
- * a real page rather than a stand-in beside it.
+ * It is opened from the avatar at the foot of the Lit-Tracker's sidebar, which
+ * is the modal's only trigger anywhere on the site. Until that page existed the
+ * modal was mounted on a test-only `/user-settings-probe` route instead; that
+ * route was deleted when this one replaced it, so what is exercised here is now
+ * the real thing on a real page rather than a stand-in beside it.
  *
  * The behavior asserted here is deliberately the behavior jsdom can't judge:
  * where focus goes and stays, what the two actions do to the session on the
@@ -117,12 +117,12 @@ test.describe('user settings modal', () => {
       'rgb(245, 245, 245)', // --color-bg-surface, light
     )
 
-    // The tracker header carries no theme toggle — the toggle belongs to the
-    // site-wide header — so the theme is changed the other way it can be, by
-    // the OS preference the pre-paint script reads.
+    // The theme toggle lives in the header, which a modal deliberately seals
+    // off — so close first. That the modal blocks it is the correct behavior,
+    // not an obstacle to work around with a forced click.
     await page.keyboard.press('Escape')
     await expect(light).toBeHidden()
-    await setOsThemeTo(page, 'dark')
+    await toggleThemeTo(page, 'dark')
 
     const dark = await openSettings(page)
     await expect(dark).toHaveCSS(
@@ -136,9 +136,11 @@ test.describe('user settings modal', () => {
       'color',
       'rgb(245, 163, 160)', // --color-error, dark
     )
-    // `setOsThemeTo` reloaded to get here, and the theme was already correct on
-    // that first frame — the blocking inline script applies it before paint, so
-    // there is no light-then-dark flash to catch.
+
+    await page.reload()
+    // After a reload the theme is applied by the blocking inline script before
+    // first paint, so there is no light-then-dark flash to catch.
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   })
 
   test('fits a phone-width screen without sideways scrolling', async ({
@@ -174,11 +176,11 @@ test.describe('user settings modal', () => {
     await light.getByRole('button', DELETE_BUTTON).click()
     await expectNoA11yViolations()
 
-    // Dark theme: the OS preference plus a reload, since the tracker header
-    // has no toggle of its own.
+    // Dark theme needs the modal closed to reach the header toggle, then
+    // reopened — the same route a reader would take.
     await page.keyboard.press('Escape')
     await expect(light).toBeHidden()
-    await setOsThemeTo(page, 'dark')
+    await toggleThemeTo(page, 'dark')
 
     const dark = await openSettings(page)
     await expectNoA11yViolations()

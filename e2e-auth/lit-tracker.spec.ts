@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, setOsThemeTo, test } from '../e2e/fixtures'
+import { expect, test, toggleThemeTo } from '../e2e/fixtures'
 import {
   closeArticleConnection,
   deleteArticlesOf,
@@ -76,6 +76,42 @@ test.describe('lit-tracker shell', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: 'collection' }),
     ).toBeVisible()
+  })
+
+  test('puts the account control in the sidebar and the theme toggle in the header', async ({
+    page,
+  }) => {
+    await signInAndLandOn(page, TRACKER)
+
+    const header = page.getByRole('banner')
+    const account = page.getByRole('button', { name: 'Account settings' })
+    const toggle = page.getByRole('button', { name: 'Toggle theme' })
+
+    // The account control belongs at the foot of the sidebar, per the sample
+    // mockup — not in the header, and not inside the scrolling content.
+    await expect(account).toBeVisible()
+    await expect(
+      header.getByRole('button', { name: 'Account settings' }),
+    ).toHaveCount(0)
+    await expect(
+      page.locator('main').getByRole('button', { name: 'Account settings' }),
+    ).toHaveCount(0)
+
+    // The theme toggle is in the header at its far end, the same position it
+    // holds on the site-wide header. Without it the tracker would be the one
+    // place on the site with no way to change theme.
+    await expect(
+      header.getByRole('button', { name: 'Toggle theme' }),
+    ).toHaveCount(1)
+
+    // It sits below the content's top edge — i.e. it really is in the rail,
+    // not floating in the header row.
+    const accountBox = await account.boundingBox()
+    const headerBox = await header.boundingBox()
+    expect(accountBox?.y ?? 0).toBeGreaterThan(
+      (headerBox?.y ?? 0) + (headerBox?.height ?? 0),
+    )
+    await expect(toggle).toBeVisible()
   })
 
   test('shows the empty state once the collection is known to be empty', async ({
@@ -207,11 +243,10 @@ test.describe('lit-tracker shell', () => {
       'rgb(245, 245, 245)', // --color-bg-surface, light
     )
 
-    // The tracker header carries no theme toggle — that control belongs to the
-    // site-wide header — so the theme moves the other way it can, via the OS
-    // preference the pre-paint script reads. That reload is also the no-flash
-    // check: the attribute is already correct on the first frame.
-    await setOsThemeTo(page, 'dark')
+    // The tracker carries its own copy of the site's theme toggle, in the
+    // same far-right position — so this is the control a reader would actually
+    // reach for, not a stand-in for one.
+    await toggleThemeTo(page, 'dark')
     await expect(header).toHaveCSS(
       'background-color',
       'rgb(31, 31, 31)', // --color-bg-surface, dark
@@ -238,7 +273,7 @@ test.describe('lit-tracker shell', () => {
     await expect(articleEntries(page)).toHaveCount(1)
     await expectNoA11yViolations()
 
-    await setOsThemeTo(page, 'dark')
+    await toggleThemeTo(page, 'dark')
     await expect(articleEntries(page)).toHaveCount(1)
     await expectNoA11yViolations()
   })

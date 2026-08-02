@@ -1,0 +1,37 @@
+/*
+ * The left rail of the app shell. It sizes to its contents rather than taking a
+ * fixed share of the width: today that is one avatar, so the rail is a slim
+ * strip; when #8 adds the tag filters it widens to fit them without this file
+ * changing. A fixed percentage would look like a broken empty column until then.
+ *
+ * The divider on its right edge is the one in the sample mockup, and it is what
+ * makes the two panels read as separate scroll regions rather than as one
+ * column of content.
+ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+/*
+ * Everything above the account control scrolls on its own — a long tag list
+ * must not push the avatar off the bottom of the rail, which is the whole
+ * reason the app shell uses bounded panels instead of one scrolling page.
+ */
+.filters {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Pinned to the foot of the rail, and separated from the filters above it so
+   the account control never looks like the last item in that list. */
+.account {
+  flex-shrink: 0;
+  padding: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}

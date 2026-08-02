@@ -42,19 +42,34 @@ app name ("Literature Tracker") on the left, breadcrumb-style path indicator
   graph main content scrolls independently of its Tags/Notes/Citations/
   Annotations sidebar.
 
-## Open question raised at implementation (2026-08-02)
+## Revision (2026-08-02), decided with the user at implementation
 
-Building this header for `/lit-tracker` surfaced one thing the decision above
-does not cover: **there is no theme toggle anywhere in the Lit Tracker.** The
-list above is app name, breadcrumb, and avatar, and
-[../../../design-system.md](../../../design-system.md) places the toggle on the
-site-wide header surface — which the tracker deliberately does not use. So a
-reader inside the tracker cannot change theme without leaving for the personal
-site.
+Building this for `/lit-tracker` moved two controls. The decision above stands
+on the layout model and on the header being its own component; what changed is
+which controls sit in the header row.
 
-It is not broken: the choice is stored in `localStorage` and applies site-wide,
-so switching once on the personal site persists into the tracker. But it is a
-gap created by the (correct) decision to give each sub-application its own
-header, and it will apply to every sub-application added later. The
-implementation followed the spec as written rather than adding a fourth item;
-recorded here so the next header does not rediscover it.
+- **The account avatar moved out of the header, to the foot of the sidebar.**
+  That is where
+  [../../../sample-mockups/literature-tracker-sample.png](../../../sample-mockups/literature-tracker-sample.png)
+  actually puts it — the bullet above read the mockup's avatar as belonging to
+  the header row, and it does not. It still opens the same shared
+  [user-settings.md](../../site-wide/components/user-settings.md) modal; only
+  its home changed. The sidebar it sits in is the same rail that holds
+  [collection-view.md](../pages/collection-view.md)'s tag filters.
+- **The avatar shows the Google account's own picture**, falling back to a
+  single letter when there is none, when the account has no image, or when the
+  third-party request fails. The mockup's lettered square is that fallback.
+- **The theme toggle joined the header, at its far end** — the same component
+  and the same position it holds on the
+  [site header](../../site-wide/components/header.md). Without it the tracker
+  would have been the one part of the site with no way to change theme, since it
+  deliberately does not use the site-wide header; that gap is a consequence of
+  giving each sub-application its own header, so every later sub-application
+  header should carry the toggle too.
+- **The breadcrumb's root segment is a link** back to the tracker root, which is
+  what the segment-clicking behaviour above already implied for every other
+  segment.
+
+The resulting row reads like the site header — name, then path, then the theme
+toggle pushed to the far end — which is the point: the two should look like the
+same site rather than two products.

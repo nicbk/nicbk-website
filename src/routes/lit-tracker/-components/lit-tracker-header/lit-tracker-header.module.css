@@ -24,24 +24,15 @@
   font-weight: var(--font-weight-bold);
   color: var(--color-text);
   text-decoration: none;
-  /* The app name is the one thing that may be clipped rather than pushing the
-     avatar off a narrow screen — the breadcrumb tells you where you are, and
-     the avatar is the only control up here. */
+  /* The app name is what may be clipped rather than pushing the toggle off a
+     narrow screen — the breadcrumb tells you where you are, and the toggle is
+     the only control up here. */
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-@media (hover: hover) {
-  .appName:hover {
-    text-decoration: underline;
-  }
-}
-
 .breadcrumb {
   color: var(--color-text-muted);
-  /* Pushes the avatar to the far end while leaving the breadcrumb next to the
-     app name, per the header spec's left/right split. */
-  margin-right: auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -56,30 +47,26 @@
 }
 
 /*
- * The avatar: a rounded square holding one letter, as in the sample mockup.
- * Sized in `em` so it tracks the header's fluid font size instead of needing
- * its own breakpoint, and floored at the 24px minimum-target guidance for a
- * control this small.
+ * The path segments read as part of the breadcrumb rather than as prose links:
+ * they keep its muted colour, with the underline as the hover affordance. Same
+ * treatment as the site header's nav links, and for the same reason — the
+ * global accent colour would make the one dim thing in the row the loudest.
  */
-.avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: max(2em, 24px);
-  height: max(2em, 24px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-weight: var(--font-weight-bold);
-  line-height: 1;
-  cursor: pointer;
+.breadcrumbLink {
+  color: inherit;
+  text-decoration: none;
 }
 
+/* Hover-only affordance: a touch device would latch this on after a tap and
+   never release it (see styling-conventions.md). */
 @media (hover: hover) {
-  .avatar:hover {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+  .appName:hover,
+  .breadcrumbLink:hover {
+    text-decoration: underline;
   }
+}
+
+/* Push the theme toggle to the row's far end, exactly as the site header does. */
+.header > :last-child {
+  margin-left: auto;
 }

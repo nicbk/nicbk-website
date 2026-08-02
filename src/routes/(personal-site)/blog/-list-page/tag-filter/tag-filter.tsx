@@ -1,5 +1,5 @@
 import { Toggle } from '@base-ui/react/toggle'
-import { type MouseEvent } from 'react'
+import type { MouseEvent } from 'react'
 import styles from './tag-filter.module.css'
 
 /**

@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import Fixture from './fixture.mdx'
 import { PostPage } from './post-page'
-import { type Frontmatter } from '~blog/frontmatter-schema'
+import type { Frontmatter } from '~blog/frontmatter-schema'
 
 // The "back to blog list" link is a router <Link>; mock it to a plain anchor so
 // the page renders without a live router (the decided unit-test pattern).

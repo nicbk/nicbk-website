@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type DatabaseHandle } from '~/db/create-database'
+import type { DatabaseHandle } from '~/db/create-database'
 import { createAuth } from './create-auth'
 
 /**

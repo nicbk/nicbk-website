@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { filterPosts } from './filter-posts'
-import { type PostListItem } from '~blog/posts'
+import type { PostListItem } from '~blog/posts'
 
 /** Build a listing item with the fields the filter reads. */
 function item(

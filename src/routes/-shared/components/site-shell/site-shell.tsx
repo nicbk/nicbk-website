@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { SiteHeader } from '~/routes/-shared/components/site-header/site-header'
 import styles from './site-shell.module.css'
 

@@ -1,6 +1,6 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
-import { type BlogSearch } from './search-schema'
+import type { BlogSearch } from './search-schema'
 
 /**
  * The `/blog` route API, resolved by id rather than by importing the route

@@ -1,7 +1,8 @@
 import { db, pool } from '~/db/client'
 import { env } from '~/env'
 import { createAuth } from './create-auth'
-import { type AuthSession, getSessionFrom } from './session'
+import type { AuthSession } from './session'
+import { getSessionFrom } from './session'
 
 /**
  * The application's Better Auth instance, configured from the validated

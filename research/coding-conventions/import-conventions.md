@@ -23,11 +23,12 @@ configured with groups in this order: Node built-ins → external packages →
 `~/`-aliased imports → relative imports → CSS/asset imports. Within each
 group, natural-sort ordering (Biome's default).
 
-**Type-only imports: inline style**
-(`import { type Foo, bar } from './foo'`), not a separate `import type { Foo }`
-statement — one import statement per module regardless of whether some of
-its imports are type-only. Enforced via Biome's `useImportType` rule
-configured to its `inlineType` style option.
+**Type-only imports: separated style**
+(`import type { Foo } from './foo'` as its own statement), not the inline
+`import { type Foo, bar }` form. Enforced via Biome's `useImportType` rule
+configured to its `separatedType` style option. This supersedes the original
+inline-style decision — see the 2026-08-01 revision below for why the choice
+turned out not to be cosmetic.
 
 ## Reasoning
 
@@ -46,12 +47,15 @@ configured to its `inlineType` style option.
   follows the natural "most foreign to most local" progression, making it
   easy to scan an import block and immediately tell how far away a given
   import is coming from.
-- Inline `import { type Foo, bar }` reduces total import-statement count
+- ~~Inline `import { type Foo, bar }` reduces total import-statement count
   per file (relevant since this project already tends to import several
   colocated siblings per component) without losing the explicitness
   benefit of `import type` — the type-only distinction Biome's
   `useImportType` rule is enforcing is preserved either way, this is purely
-  a formatting choice between the two supported styles.
+  a formatting choice between the two supported styles.~~ **Superseded
+  2026-08-01** — the final clause is false under `verbatimModuleSyntax`; see
+  the revision below. The statement-count saving was real but small, and it
+  was bought with a silent bundling hazard.
 
 ## Revision (2026-08-01): inline type imports are not purely cosmetic
 
@@ -79,15 +83,34 @@ then died on `ReferenceError: Buffer is not defined` — and because that kills
 hydration for the whole app, *every* page silently stopped responding to
 clicks, with only a console error to show for it.
 
-**Current state:** the convention stands, with a documented `biome-ignore`
-exception at that one boundary (`src/auth/session.ts`). The narrow fix was
-chosen over flipping `useImportType` to `separatedType` project-wide because
-the latter changes a recorded decision across the whole codebase.
+**Resolved (2026-08-01): switched to `separatedType` project-wide.** The
+initial fix was a documented `biome-ignore` at the one boundary that had bitten
+(`src/auth/session.ts`), deferring the wider question. Settled with the user
+before feature #7, and settled in favour of changing the rule:
 
-**Open for decision:** whether to keep the exception-per-boundary approach or
-switch the rule to `separatedType`. The exceptions multiply as more
-client-reachable modules name server-only types, which #7 will do repeatedly —
-every protected route reaches the guard. Worth settling before that lands.
+- The exception-per-boundary approach requires the author to *first recognize*
+  that a module is client-reachable and names a server-only type. That
+  recognition is exactly what failed here — and #7 multiplies the opportunities,
+  since every protected route it adds reaches the guard.
+- The failure is silent and disproportionate. Nothing throws at build time; the
+  bundle simply grows a side-effect import, and hydration dies at runtime on the
+  *whole app*, not just the offending page. Lint, typecheck, unit, integration,
+  and e2e all passed with it broken — only opening the site in a browser caught
+  it.
+- `separatedType` makes the erasure-safe form the default everywhere, so no
+  judgement call is required at the point of writing an import. The cost is one
+  extra statement in files that import both a type and a value from the same
+  module — a real but minor readability cost, and the one the original decision
+  was optimizing away.
+- The migration was mechanical: `biome check --write` rewrote 33 imports across
+  28 files, and Biome then flagged the `biome-ignore` in `session.ts` as
+  redundant, which is how the exception came out.
+
+The remaining risk is not eliminated, only made much less likely: a value
+import of a server-only module still leaks, and no lint rule catches that.
+What guards it is the server/client boundary discipline in
+[../system-architecture/index.md](../system-architecture/index.md), plus
+verifying real pages in a browser.
 
 ## Sources
 
@@ -104,4 +127,4 @@ every protected route reaches the guard. Worth settling before that lands.
   Biome's `organizeImports` group configuration (`:NODE:`, `:PACKAGE:`,
   `:ALIAS:` placeholders, natural-sort default).
 - [biomejs.dev/linter/rules/use-import-type](https://biomejs.dev/linter/rules/use-import-type/) —
-  Biome's `useImportType` rule and its `inlineType` style option.
+  Biome's `useImportType` rule and its `inlineType` / `separatedType` style options.

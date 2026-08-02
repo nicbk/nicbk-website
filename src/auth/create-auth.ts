@@ -1,7 +1,7 @@
 import { drizzleAdapter } from '@better-auth/drizzle-adapter'
 import { betterAuth } from 'better-auth'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
-import { type DatabaseHandle } from '~/db/create-database'
+import type { DatabaseHandle } from '~/db/create-database'
 import * as schema from '~/db/schema'
 
 /** How long a session stays valid without any activity. */

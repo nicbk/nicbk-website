@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
 import { getSession } from './auth'
-import { type AuthSession } from './session'
+import type { AuthSession } from './session'
 
 /**
  * Resolves the current request's session from anywhere a route runs.

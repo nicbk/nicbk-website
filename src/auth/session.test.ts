@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { type Auth } from './create-auth'
+import type { Auth } from './create-auth'
 import { getSessionFrom } from './session'
 
 describe('getSessionFrom', () => {

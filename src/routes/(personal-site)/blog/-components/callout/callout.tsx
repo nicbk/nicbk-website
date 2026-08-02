@@ -1,5 +1,6 @@
-import { Info, Lightbulb, type LucideIcon, TriangleAlert } from 'lucide-react'
-import { type ReactNode } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import { Info, Lightbulb, TriangleAlert } from 'lucide-react'
+import type { ReactNode } from 'react'
 import styles from './callout.module.css'
 
 export type CalloutType = 'note' | 'warning' | 'tip'

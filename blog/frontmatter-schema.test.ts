@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { type Frontmatter, parseFrontmatter } from './frontmatter-schema'
+import type { Frontmatter } from './frontmatter-schema'
+import { parseFrontmatter } from './frontmatter-schema'
 
 describe('parseFrontmatter', () => {
   const valid = {

@@ -8,7 +8,7 @@ import { useIncrementalReveal } from '../-utils/use-incremental-reveal'
 import { TagFilter } from './tag-filter/tag-filter'
 import { useBlogFilters } from './use-blog-filters'
 import styles from './list-page.module.css'
-import { type PostListItem } from '~blog/posts'
+import type { PostListItem } from '~blog/posts'
 
 interface ListPageProps {
   /** Posts to list, already filtered (drafts) and ordered (newest-first). */

@@ -4,7 +4,7 @@ import {
   Outlet,
   Scripts,
 } from '@tanstack/react-router'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { ErrorPage } from '~/routes/-shared/components/error-page/error-page'
 import { NotFoundPage } from '~/routes/-shared/components/not-found-page/not-found-page'
 import { SiteShell } from '~/routes/-shared/components/site-shell/site-shell'

@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { test as base, expect } from '@playwright/test'
 
 /**
@@ -38,6 +38,90 @@ export async function toggleThemeTo(
       ),
     ),
   )
+}
+
+/**
+ * Toggles a tag in the blog's tag filter and waits until it actually reports
+ * the requested pressed state.
+ *
+ * Same hydration race as `toggleThemeTo` above, and the same remedy. It is
+ * worth being concrete about why a bare `.click()` right after `page.goto()`
+ * is a race rather than an occasional hiccup: the tag toggles are
+ * server-rendered, so Playwright finds and clicks a *real, visible, enabled*
+ * button well before React has attached any handler to it. Nothing reports an
+ * error — the click simply lands on inert markup and is lost.
+ *
+ * Measured on the dev server this suite runs locally, the gap is roughly
+ * 600-900ms: `window.__TSR_ROUTER__` appears around 590ms and React's handlers
+ * around 650ms, while clicks only start taking effect around 820ms. CI builds
+ * for production and hydrates fast enough that the window rarely opens, which
+ * is why this failed locally while CI stayed green.
+ *
+ * Waiting on a framework internal (a React fiber key, or `__TSR_ROUTER__`) was
+ * considered and rejected: the first is private API React has renamed before,
+ * and the second was measured landing *before* handlers attach, so it is not
+ * actually the signal it looks like. Retrying click-then-assert needs no such
+ * knowledge — it observes the only thing the test cares about, which is that
+ * the control responded.
+ *
+ * Asserting the desired end state (rather than "something changed") is what
+ * makes retrying safe on a toggle: a click that was swallowed changes nothing
+ * and is retried, and a click that landed satisfies the assertion, so no
+ * second click is sent.
+ */
+export async function toggleTagTo(
+  page: Page,
+  tag: string,
+  pressed: boolean,
+  { via = 'pointer' }: { via?: 'pointer' | 'keyboard' | 'touch' } = {},
+): Promise<Locator> {
+  const toggle = page.getByRole('button', { name: tag })
+  await expect(async () => {
+    // The modality is load-bearing in some of these tests — a tap and a
+    // keyboard activation are specified to leave focus in different places —
+    // so the caller chooses it rather than getting a click either way.
+    if (via === 'keyboard') {
+      await toggle.focus()
+      await toggle.press('Enter')
+    } else if (via === 'touch') {
+      await toggle.tap()
+    } else {
+      await toggle.click()
+    }
+    await expect(toggle).toHaveAttribute('aria-pressed', String(pressed), {
+      timeout: 1_000,
+    })
+  }).toPass()
+  return toggle
+}
+
+/**
+ * Types a query into the blog's search box and waits until it has actually
+ * taken effect.
+ *
+ * `fill()` has the same pre-hydration hazard as `click()`, and a quieter one:
+ * it sets the input's value directly, so the field *looks* filled even when
+ * React never saw the event and nothing filtered. A following assertion then
+ * measures an unfiltered list against a value that is visibly there, which
+ * reads as a product bug rather than a lost event.
+ *
+ * Settling is judged by the URL, since the query is mirrored there (debounced
+ * ~250ms) only by the handler that hydration attaches — so a URL carrying the
+ * query is proof the input was really processed, not just populated.
+ */
+export async function searchPostsFor(
+  page: Page,
+  query: string,
+): Promise<Locator> {
+  const search = page.getByRole('searchbox', { name: 'Search posts' })
+  await expect(async () => {
+    await search.fill(query)
+    await expect(page).toHaveURL(
+      new RegExp(`[?&]q=${encodeURIComponent(query)}\\b`),
+      { timeout: 2_000 },
+    )
+  }).toPass()
+  return search
 }
 
 interface AxeFixture {

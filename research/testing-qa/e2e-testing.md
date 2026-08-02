@@ -131,6 +131,54 @@ Assertions written with `toHaveCSS`/`toHaveAttribute` retry and so settle on
 their own; one-shot reads (`evaluate`, `screenshot`, an axe scan) do not. That
 distinction is the thing to remember.
 
+## Addendum (2026-08-01): the hydration gap, measured — and why the local run lies
+
+The hydration-timing gap flagged above was recorded as "a known rough edge,
+not something this research found a fix for". It has now been measured and
+closed, and measuring it turned up a second, separate problem.
+
+**The gap is real and large.** On the dev server this suite runs locally,
+against `/blog`: `window.__TSR_ROUTER__` appears around **590ms**, React
+attaches handlers around **650ms**, and clicks only start taking effect around
+**820ms**. Before that, Playwright finds and clicks a real, visible, enabled,
+server-rendered button and the click lands on inert markup. Nothing errors.
+
+`fill()` is the quieter version of the same thing: it sets the input's value
+directly, so the field *looks* filled while React never saw the event. A
+following assertion then measures an unfiltered list against a value that is
+plainly on screen, which reads as a product bug rather than a lost event.
+
+**The fix is to assert the end state and retry the interaction**, which is what
+`toggleThemeTo` already did and what `toggleTagTo` / `searchPostsFor`
+(`e2e/fixtures.ts`) now do for the other two controls. Retrying is safe
+precisely because the assertion names the desired end state: an interaction
+that was swallowed changed nothing and is retried, one that landed satisfies
+the assertion and is not repeated.
+
+Two tempting alternatives were measured and rejected:
+
+- **Waiting on `window.__TSR_ROUTER__`** looks like a first-party hydration
+  signal but lands ~60ms *before* handlers attach, so it is not one.
+- **Waiting on a React fiber key** (`__reactFiber$…` / `__reactProps$…`) does
+  track the real moment, but it is private API that React has renamed before.
+
+**The second problem: `npm run test:e2e` locally is not the suite CI runs.**
+Locally the webServer is `npm run dev`; in CI it is `npm run build && npm run
+start`. That is not just a speed difference — the dev server deliberately
+serves draft posts for local preview (`import.meta.env.PROD` gates the
+exclusion in `blog/-lib/load-listing.ts`), so every assertion about how many
+posts the list contains is written against the production set and **cannot
+pass in dev**. Dev-only framework markup also trips axe: an injected
+`<code style="color: red">` on the error-fallback route fails contrast at
+4.0:1 and does not exist in a production build.
+
+So a local `npm run test:e2e` reporting a handful of failures is expected, and
+reading those as regressions wastes real time — it did here. `npm run
+test:e2e:prod` runs this config with `CI=true` and is the one to trust:
+production build, drafts excluded, 62/62 green and stable across repeats.
+Keep `npm run test:e2e` for iterating on a single test, not for judging the
+suite.
+
 ## Sources
 
 - Playwright vs. Cypress 2026 market-share/adoption and benchmark

@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures'
+import { expect, test, toggleThemeTo } from './fixtures'
 
 test.describe('app shell', () => {
   test('skip link is the first focusable element and moves focus to main', async ({
@@ -118,7 +118,7 @@ test.describe('app shell', () => {
   }) => {
     await page.goto('/')
     await expectNoA11yViolations()
-    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await toggleThemeTo(page, 'dark')
     await expectNoA11yViolations()
   })
 

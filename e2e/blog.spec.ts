@@ -1,4 +1,10 @@
-import { expect, test } from './fixtures'
+import {
+  expect,
+  searchPostsFor,
+  test,
+  toggleTagTo,
+  toggleThemeTo,
+} from './fixtures'
 
 const POST = {
   slug: 'building-this-site',
@@ -79,7 +85,7 @@ test.describe('blog list page', () => {
   }) => {
     await page.goto('/blog')
     await expectNoA11yViolations()
-    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await toggleThemeTo(page, 'dark')
     await expectNoA11yViolations()
   })
 
@@ -136,11 +142,9 @@ test.describe('blog search and tag filter', () => {
     await page.goto('/blog')
     await expect(postRows(page)).toHaveCount(2)
 
-    await page.getByRole('searchbox', { name: 'Search posts' }).fill('zod')
-
     // Settled URL carries the query (debounced), and the list narrows to the
     // single matching post.
-    await expect(page).toHaveURL(/[?&]q=zod\b/)
+    await searchPostsFor(page, 'zod')
     await expect(postRows(page)).toHaveCount(1)
     await expect(page.getByRole('link', { name: TYPESAFE })).toBeVisible()
     await expect(page.getByRole('link', { name: BUILDING })).toHaveCount(0)
@@ -153,7 +157,7 @@ test.describe('blog search and tag filter', () => {
 
     const typescriptTag = page.getByRole('button', { name: 'typescript' })
     await expect(typescriptTag).toHaveAttribute('aria-pressed', 'false')
-    await typescriptTag.click()
+    await toggleTagTo(page, 'typescript', true)
 
     await expect(page).toHaveURL(/tags=.*typescript/)
     await expect(typescriptTag).toHaveAttribute('aria-pressed', 'true')
@@ -170,12 +174,10 @@ test.describe('blog search and tag filter', () => {
     // update, yanking focus to the <h1> — so the reader had to click back into
     // the field after every settle. Filtering must leave focus on the input.
     await page.goto('/blog')
-    const search = page.getByRole('searchbox', { name: 'Search posts' })
-    await search.fill('zod')
 
-    // Wait for the (debounced) URL mirror to land — i.e. the navigation that
-    // used to steal focus has actually happened by now.
-    await expect(page).toHaveURL(/[?&]q=zod\b/)
+    // The helper returns once the (debounced) URL mirror has landed — i.e. the
+    // navigation that used to steal focus has actually happened by now.
+    const search = await searchPostsFor(page, 'zod')
     await expect(postRows(page)).toHaveCount(1)
     await expect(search).toBeFocused()
   })
@@ -187,9 +189,9 @@ test.describe('blog search and tag filter', () => {
     // (same pathname), which must not hand focus off to the heading. A keyboard
     // user must keep focus on the toggle so they can move along the tag row.
     await page.goto('/blog')
-    const typescriptTag = page.getByRole('button', { name: 'typescript' })
-    await typescriptTag.focus()
-    await typescriptTag.press('Enter')
+    const typescriptTag = await toggleTagTo(page, 'typescript', true, {
+      via: 'keyboard',
+    })
 
     await expect(page).toHaveURL(/tags=.*typescript/)
     await expect(typescriptTag).toBeFocused()
@@ -204,17 +206,14 @@ test.describe('blog search and tag filter', () => {
     // visible on mobile). It also must not be stranded on the heading. So after
     // a pointer tap, focus rests on neither the tag nor the <h1>.
     await page.goto('/blog')
-    const typescriptTag = page.getByRole('button', { name: 'typescript' })
 
     // Select, then deselect — the exact sequence that surfaced the lingering
     // ring — filters correctly and leaves focus on the tag at no point.
-    await typescriptTag.click()
+    const typescriptTag = await toggleTagTo(page, 'typescript', true)
     await expect(page).toHaveURL(/tags=.*typescript/)
-    await expect(typescriptTag).toHaveAttribute('aria-pressed', 'true')
     await expect(typescriptTag).not.toBeFocused()
 
-    await typescriptTag.click()
-    await expect(typescriptTag).toHaveAttribute('aria-pressed', 'false')
+    await toggleTagTo(page, 'typescript', false)
     await expect(typescriptTag).not.toBeFocused()
     await expect(
       page.getByRole('heading', { level: 1, name: 'blog' }),
@@ -225,10 +224,10 @@ test.describe('blog search and tag filter', () => {
     // "mdx" (a tag on both posts) matches both; adding the "meta" tag (only on
     // Building this site) narrows the AND-composed result to that one post.
     await page.goto('/blog')
-    await page.getByRole('searchbox', { name: 'Search posts' }).fill('mdx')
+    await searchPostsFor(page, 'mdx')
     await expect(postRows(page)).toHaveCount(2)
 
-    await page.getByRole('button', { name: 'meta' }).click()
+    await toggleTagTo(page, 'meta', true)
     await expect(postRows(page)).toHaveCount(1)
     await expect(page.getByRole('link', { name: BUILDING })).toBeVisible()
     await expect(page.getByRole('link', { name: TYPESAFE })).toHaveCount(0)
@@ -255,9 +254,7 @@ test.describe('blog search and tag filter', () => {
     page,
   }) => {
     await page.goto('/blog')
-    await page
-      .getByRole('searchbox', { name: 'Search posts' })
-      .fill('kubernetes')
+    await searchPostsFor(page, 'kubernetes')
 
     await expect(page.getByText('No posts match your search.')).toBeVisible()
     await expect(postRows(page)).toHaveCount(0)
@@ -273,8 +270,9 @@ test.describe('blog search and tag filter', () => {
     await page.goto('/blog')
 
     // A tag toggle is its own history entry, so back returns to the unfiltered
-    // list.
-    await page.getByRole('button', { name: 'typescript' }).click()
+    // list. (A swallowed pre-hydration click pushes no entry, so retrying to
+    // reach the pressed state cannot inflate the history count measured below.)
+    await toggleTagTo(page, 'typescript', true)
     await expect(page).toHaveURL(/typescript/)
     await page.goBack()
     await expect(page).not.toHaveURL(/typescript/)
@@ -309,7 +307,7 @@ test.describe('blog search and tag filter', () => {
     expect(overflows).toBe(false)
 
     // The toggle still filters at this width.
-    await page.getByRole('button', { name: 'typescript' }).click()
+    await toggleTagTo(page, 'typescript', true)
     await expect(page).toHaveURL(/tags=.*typescript/)
     await expect(postRows(page)).toHaveCount(1)
   })
@@ -326,24 +324,23 @@ test.describe('blog search and tag filter', () => {
       // selected color, so an ungated :hover left a just-deselected tag looking
       // selected (accent, only missing the bold) until something else was
       // tapped. The hover rule is now gated on `@media (hover: hover)`.
-      // Wait for the page to go quiet before tapping: under touch emulation the
-      // first tap otherwise lands before hydration attaches the toggle's
-      // handler, and is simply dropped.
-      await page.goto('/blog', { waitUntil: 'networkidle' })
+      await page.goto('/blog')
 
       const typescriptTag = page.getByRole('button', { name: 'typescript' })
       const color = () =>
         typescriptTag.evaluate((el) => getComputedStyle(el).color)
 
-      // An untouched tag establishes the muted baseline to return to.
+      // An untouched tag establishes the muted baseline to return to — read
+      // before the first tap, while nothing has interacted with it.
       const baseline = await color()
 
-      await typescriptTag.tap()
-      await expect(typescriptTag).toHaveAttribute('aria-pressed', 'true')
+      // `waitUntil: 'networkidle'` used to stand in for the hydration wait
+      // here; the shared helper does it properly and by the same rule as every
+      // other tag interaction in this file.
+      await toggleTagTo(page, 'typescript', true, { via: 'touch' })
       expect(await color()).not.toBe(baseline) // selected: accent + bold
 
-      await typescriptTag.tap()
-      await expect(typescriptTag).toHaveAttribute('aria-pressed', 'false')
+      await toggleTagTo(page, 'typescript', false, { via: 'touch' })
       expect(await color()).toBe(baseline)
     })
   })
@@ -353,11 +350,11 @@ test.describe('blog search and tag filter', () => {
     expectNoA11yViolations,
   }) => {
     await page.goto('/blog')
-    await page.getByRole('button', { name: 'typescript' }).click()
+    await toggleTagTo(page, 'typescript', true)
     await expect(page).toHaveURL(/typescript/)
 
     await expectNoA11yViolations()
-    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await toggleThemeTo(page, 'dark')
     await expectNoA11yViolations()
   })
 })
@@ -422,7 +419,7 @@ test.describe('blog post page', () => {
   }) => {
     await page.goto(`/blog/${POST.slug}`)
     await expectNoA11yViolations()
-    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await toggleThemeTo(page, 'dark')
     await expectNoA11yViolations()
   })
 

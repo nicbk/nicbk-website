@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures'
+import { expect, test, toggleThemeTo } from './fixtures'
 
 // /error-probe is the test-only forced-throw route (src/routes/error-probe.tsx),
 // enabled here via the webServer's VITE_E2E_ERROR_PROBE flag. Hitting it makes a
@@ -40,7 +40,7 @@ test.describe('error-fallback page', () => {
   }) => {
     await page.goto('/error-probe')
     await expectNoA11yViolations()
-    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await toggleThemeTo(page, 'dark')
     await expectNoA11yViolations()
   })
 })

@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures'
+import { expect, test, toggleThemeTo } from './fixtures'
 
 test.describe('404 / not-found page', () => {
   test('an unmatched route returns HTTP 404 and renders the designed page inside the header', async ({
@@ -55,7 +55,7 @@ test.describe('404 / not-found page', () => {
   }) => {
     await page.goto('/definitely-not-a-page')
     await expectNoA11yViolations()
-    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await toggleThemeTo(page, 'dark')
     await expectNoA11yViolations()
   })
 })

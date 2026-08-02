@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures'
+import { expect, test, toggleThemeTo } from './fixtures'
 
 const TRACKER_NAME = 'Academic Literature Tracker'
 const TRACKER_DESCRIPTION =
@@ -48,7 +48,7 @@ test.describe('projects page', () => {
   }) => {
     await page.goto('/projects')
     await expectNoA11yViolations()
-    await page.getByRole('button', { name: 'Toggle theme' }).click()
+    await toggleThemeTo(page, 'dark')
     await expectNoA11yViolations()
   })
 })

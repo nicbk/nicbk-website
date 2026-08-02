@@ -6,6 +6,18 @@ const isCi = process.env['CI'] === 'true'
 // E2e suite (e2e/*.spec.ts) — smoke coverage of the app shell. Locally it
 // runs against the dev server (fast iteration); in CI it runs against the
 // built production server so the real serving path is what's exercised.
+//
+// The two are NOT interchangeable, and a plain `npm run test:e2e` will report
+// a handful of failures that are not bugs. The dev server deliberately serves
+// draft posts for local preview (`import.meta.env.PROD` gates the exclusion —
+// see blog/-lib/load-listing.ts), so every assertion about how many posts the
+// list contains is written against the production set and cannot hold in dev.
+// Dev also hydrates far more slowly, widening the pre-hydration window that
+// `toggleTagTo`/`searchPostsFor` (e2e/fixtures.ts) exist to absorb.
+//
+// Use `npm run test:e2e:prod` (this config with CI=true) to reproduce what CI
+// actually gates on. `npm run test:e2e` stays the fast loop for iterating on a
+// single test.
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,

@@ -44,6 +44,8 @@ const placeholderEnv = {
   BETTER_AUTH_URL: 'http://localhost:3000',
   GOOGLE_CLIENT_ID: 'schema-generation-placeholder',
   GOOGLE_CLIENT_SECRET: 'schema-generation-placeholder',
+  ZERO_QUERY_API_KEY: 'schema-generation-placeholder-zero-query-key',
+  ZERO_MUTATE_API_KEY: 'schema-generation-placeholder-zero-mutate-key',
 }
 
 function run(command, args) {

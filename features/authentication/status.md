@@ -1,12 +1,15 @@
 # Status: Authentication
 
-**Feature state:** In progress (2026-08-01). Task 1
-(`auth-backend-and-config`) merged as
-[#57](https://github.com/nicbk/nicbk-website/pull/57) and deployed; task 2
-(`sign-in-and-route-guard`) merged as
-[#59](https://github.com/nicbk/nicbk-website/pull/59); task 3
-(`user-settings-modal`) implemented and awaiting PR + CI + review — the last
-task in the feature. Depends on
+**Feature state:** Complete (2026-08-01). All three tasks merged:
+`auth-backend-and-config` as
+[#57](https://github.com/nicbk/nicbk-website/pull/57),
+`sign-in-and-route-guard` as
+[#59](https://github.com/nicbk/nicbk-website/pull/59), and
+`user-settings-modal` as
+[#60](https://github.com/nicbk/nicbk-website/pull/60). **Deployment lags the
+merge:** only task 1 is live on nicbk-tower — sign-in and the settings modal
+reach production on the next deploy (the real Google credentials are already
+provisioned there). Depends on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — extends its
 app server, `src/env.ts` + `parseEnv`, and `docker-compose*.yml`, and reuses its
 `(personal-site)` shell/header, design tokens, and theming. This is the
@@ -28,7 +31,7 @@ Feature parent issue:
 |---|---|---|---|---|
 | `auth-backend-and-config` | Merged ([#28](https://github.com/nicbk/nicbk-website/issues/28)) | [#57](https://github.com/nicbk/nicbk-website/pull/57) | passed | merged |
 | `sign-in-and-route-guard` | Merged ([#29](https://github.com/nicbk/nicbk-website/issues/29)) | [#59](https://github.com/nicbk/nicbk-website/pull/59) | passed | merged |
-| `user-settings-modal` | Implemented ([#30](https://github.com/nicbk/nicbk-website/issues/30)) | pending | pending | pending |
+| `user-settings-modal` | Merged ([#30](https://github.com/nicbk/nicbk-website/issues/30)) | [#60](https://github.com/nicbk/nicbk-website/pull/60) | passed | merged |
 
 ## Definition of Done (feature)
 
@@ -134,3 +137,20 @@ login-flow test, injected sessions elsewhere).
   the first is recorded as a dated revision in
   [import-conventions.md](../../research/coding-conventions/import-conventions.md)
   with an open question for the user. Awaiting PR + CI + review.
+- 2026-08-01 — Task 3 **merged as [#60](https://github.com/nicbk/nicbk-website/pull/60)**
+  (CI green, approved), completing the feature. Parent issue #27 closed.
+- 2026-08-01 — **Two threads left open for #7**, both recorded here so they are
+  not lost with this feature's context:
+  1. *Import-convention decision.* `useImportType` is still `inlineType` with a
+     single documented `biome-ignore` at the one boundary that needed it. The
+     alternative — `separatedType` project-wide — is written up as an open
+     question in
+     [import-conventions.md](../../research/coding-conventions/import-conventions.md).
+     Worth settling before #7, because every protected route it adds will name
+     a server-only type and can hit the same client-bundle trap.
+  2. *Optional delete-path hardening.* Two integration cases were identified but
+     not written: that a backdated session is still refused when the request
+     carries a bogus `password` or `token`. Both branches are closed by
+     configuration today (no credential accounts; no delete-account verification
+     values are ever minted), so this asserts a property currently held only by
+     reading the library, not by a test.

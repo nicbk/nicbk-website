@@ -54,11 +54,11 @@ need them (see Phases 2–3).
 | 4 | Blog (MDX pipeline + list + post) | [`blog`](./blog/description.md) | **Complete** (2026-07-18; all 3 tasks merged, #37 + #39 + #46) | #1 |
 | 5 | 404 + error-fallback pages | [`error-and-not-found`](./error-and-not-found/description.md) | **Complete** (2026-07-07; both tasks merged, #32 + #33) | #1 |
 
-### Phase 2 — Authentication (gates all of the Lit Tracker; introduces Postgres + Better Auth)
+### Phase 2 — Authentication (complete 2026-08-01; gates all of the Lit Tracker; introduced Postgres + Better Auth)
 
 | # | Feature | Slug | Status | Depends on |
 |---|---|---|---|---|
-| 6 | Authentication (Better Auth + Google OAuth, session hardening, sign-in page, user settings) | [`authentication`](./authentication/description.md) | **Spec'd** (2026-07-06; 3 tasks, not started) | #1 |
+| 6 | Authentication (Better Auth + Google OAuth, session hardening, sign-in page, user settings) | [`authentication`](./authentication/description.md) | **Complete** (2026-08-01; all 3 tasks merged, #57 + #59 + #60) | #1 |
 
 ### Phase 3 — Lit Tracker (each needs auth; #7 is the ingest slice everything else builds on; introduces Garage/GROBID/Zero/pg-boss)
 
@@ -75,7 +75,7 @@ need them (see Phases 2–3).
 Following the decided one-at-a-time, gated process, features are fleshed out
 **just-in-time** rather than all at once — `app-shell-and-home` (complete),
 `about-page` (complete), `error-and-not-found` (complete), `blog` (complete),
-`projects-page` (complete), and `authentication` (spec'd) have
+`projects-page` (complete), and `authentication` (complete) have
 full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

@@ -1,13 +1,15 @@
 # Status: User-Settings Modal
 
-**State:** Implemented (2026-08-01); awaiting PR + CI + review. Built on
-`auth-backend-and-config` (session helper, Better Auth endpoints) and
+**State:** Merged (2026-08-01) — the last task of the authentication feature.
+Built on `auth-backend-and-config` (session helper, Better Auth endpoints) and
 `sign-in-and-route-guard` (the guard, which the test-only probe page uses).
 
-- Branch: `authentication/user-settings-modal`.
-- Sub-issue: [#30](https://github.com/nicbk/nicbk-website/issues/30)
-  (parent [#27](https://github.com/nicbk/nicbk-website/issues/27)); self-assigned.
-- PR / CI / review: _pending._
+- Branch: `authentication/user-settings-modal` (merged, deleted).
+- Sub-issue: [#30](https://github.com/nicbk/nicbk-website/issues/30) (closed;
+  parent [#27](https://github.com/nicbk/nicbk-website/issues/27), also closed).
+- PR: [#60](https://github.com/nicbk/nicbk-website/pull/60) — all five CI jobs
+  green (lint/typecheck/unit, integration, PR title, e2e + axe, sign-in e2e),
+  approved and merged.
 
 ## What was built
 
@@ -104,3 +106,8 @@
 - 2026-08-01 — Implemented on `authentication/user-settings-modal`. Two bugs
   found by browser verification (client-bundle leak, destructive styling
   override) fixed and locked in. Awaiting PR + CI + review.
+- 2026-08-01 — **Merged as [#60](https://github.com/nicbk/nicbk-website/pull/60)**
+  (CI green, approved), closing #30 and completing the feature. The two threads
+  it leaves open — the project-wide import-convention question and the optional
+  delete-path hardening tests — are carried forward on the
+  [feature status](../../status.md) so they survive this task's context.

@@ -28,7 +28,7 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `zero-sync-foundation` | In review ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | — | — |
+| `zero-sync-foundation` | In review ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | passed | awaiting |
 | `lit-tracker-shell` | Not started ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | — | — | — |
 | `pdf-upload-and-storage` | Not started ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | — | — | — |
 | `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |

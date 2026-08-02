@@ -122,4 +122,8 @@ future reader will meet it rather than only here.
   `ZERO_QUERY_URL`/`ZERO_MUTATE_URL`, and cookie auth needs zero-cache on a
   subdomain in production. All recorded in
   [research.md](../../research.md). Opened as
-  [PR #73](https://github.com/nicbk/nicbk-website/pull/73); awaiting CI + review.
+  [PR #73](https://github.com/nicbk/nicbk-website/pull/73). **CI green on all
+  five jobs** after one fix: adding required variables to `src/env.ts` broke
+  `gen-auth-schema.mjs`, whose placeholder environment has to satisfy the same
+  schema — the general shape being that a generator booting the app config
+  inherits every constraint that config gains.

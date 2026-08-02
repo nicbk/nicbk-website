@@ -70,6 +70,10 @@ const TEXT_TOKENS = [
   '--color-text',
   '--color-text-muted',
   '--color-accent',
+  // Audited as text (the stricter bar) rather than as non-text UI: it colors
+  // inline error copy as well as the border of destructive controls, so
+  // clearing 4.5:1 covers both uses.
+  '--color-error',
 ] as const
 const NON_TEXT_TOKENS = ['--color-border', '--color-focus-ring'] as const
 // Syntax colors are code text, so they must clear the 4.5:1 text bar — audited

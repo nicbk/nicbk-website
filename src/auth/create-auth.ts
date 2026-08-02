@@ -14,6 +14,21 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
  */
 const SESSION_REFRESH_AGE_SECONDS = 60 * 60 * 24
 
+/**
+ * How recently the user must have signed in for Better Auth to accept an
+ * irreversible account action — today, deleting the account.
+ *
+ * Activity extends a session's expiry but never its `createdAt`, so this is
+ * "time since sign-in", not "time since last use": a session stolen from a
+ * user who signed in days ago cannot delete their account, even though it can
+ * still read their pages. Setting it to 0 would disable the check entirely.
+ *
+ * Google is the only sign-in method here, so the way back from a stale session
+ * is another trip through Google — which the settings modal offers inline when
+ * the delete is refused for this reason.
+ */
+const SESSION_FRESH_AGE_SECONDS = 60 * 60 * 24
+
 export interface AuthConfig {
   /**
    * The app's own public base URL. OAuth callback URLs are derived from it, so
@@ -68,6 +83,13 @@ export function createAuth({ db }: DatabaseHandle, config: AuthConfig) {
     session: {
       expiresIn: SESSION_MAX_AGE_SECONDS,
       updateAge: SESSION_REFRESH_AGE_SECONDS,
+      freshAge: SESSION_FRESH_AGE_SECONDS,
+    },
+    user: {
+      // Off by default in Better Auth: without this, `/delete-user` 404s.
+      // Users own their identity here, so they get to remove it — and once
+      // sub-app tables exist (#7) the ownership foreign keys cascade from it.
+      deleteUser: { enabled: true },
     },
     trustedOrigins: config.trustedOrigins,
     advanced: {

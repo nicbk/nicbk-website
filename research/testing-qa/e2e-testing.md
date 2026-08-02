@@ -109,6 +109,28 @@ GitHub-hosted `ubuntu-latest` in the live CI workflow (traces are
 retrieved via the `actions/upload-artifact` failure path rather than
 `docker cp`).
 
+## Addendum (2026-08-01): CSS transitions are a second flakiness source
+
+Alongside the hydration-timing gap flagged above, a distinct and equally
+repeatable one showed up while testing the user-settings modal: **a colour
+check that runs while a CSS transition is still playing measures a blend that
+is never a resting state.** It hit both an `@axe-core/playwright` contrast scan
+right after a theme toggle (the site's controls transition colour over
+`--motion-duration-fast`) and one taken on a modal still fading in.
+
+Two fixes, both in place:
+
+- `toggleThemeTo` (`e2e/fixtures.ts`) now awaits
+  `document.getAnimations()` before returning, so "the theme is dark" means the
+  page has finished *looking* dark.
+- A test that opens an animated surface waits for it to settle — e.g.
+  `await expect(dialog).toHaveCSS('opacity', '1')` — because Playwright counts
+  an element as visible from the first frame of its fade-in.
+
+Assertions written with `toHaveCSS`/`toHaveAttribute` retry and so settle on
+their own; one-shot reads (`evaluate`, `screenshot`, an axe scan) do not. That
+distinction is the thing to remember.
+
 ## Sources
 
 - Playwright vs. Cypress 2026 market-share/adoption and benchmark

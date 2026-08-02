@@ -21,6 +21,22 @@ export async function toggleThemeTo(
       timeout: 1_000,
     })
   }).toPass()
+
+  // The attribute flips instantly; the colors it changes do not — controls
+  // that transition color/border spend ~150ms somewhere between the two
+  // palettes (src/styles/motion.css). A contrast check run during that window
+  // measures a blend that is never a resting state, which is a real source of
+  // flaky axe failures. Waiting for every running transition to finish makes
+  // "the theme is dark" mean the page actually looks dark.
+  await page.evaluate(() =>
+    Promise.all(
+      document.getAnimations().map((animation) =>
+        // A transition interrupted by another one rejects; that is fine, it
+        // means something newer is already being waited on.
+        animation.finished.catch(() => undefined),
+      ),
+    ),
+  )
 }
 
 interface AxeFixture {

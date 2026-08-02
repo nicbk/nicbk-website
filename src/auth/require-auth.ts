@@ -56,9 +56,11 @@ export function requireSession(
  * })
  * ```
  *
- * No route uses it yet — the first protected pages arrive with the Lit Tracker
- * (issue #7). It ships now, tested, because the sign-in page it redirects to is
- * only half a feature without it.
+ * No page a visitor can reach uses it yet — the first protected pages arrive
+ * with the Lit Tracker (issue #7). It ships now, tested, because the sign-in
+ * page it redirects to is only half a feature without it. The one live caller
+ * is the test-only `/user-settings-probe` route, which is how the guard gets
+ * exercised in a real browser ahead of those pages.
  */
 export async function requireAuth({
   location,

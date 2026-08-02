@@ -73,6 +73,12 @@ const appEnv = {
   GOOGLE_CLIENT_ID: 'auth-e2e-google-client-id',
   GOOGLE_CLIENT_SECRET: 'auth-e2e-google-client-secret',
   PORT: String(AUTH_E2E_PORT),
+  // Enables the test-only page that mounts the user-settings modal
+  // (src/routes/user-settings-probe.tsx) — this is the only place it is ever
+  // set, so a production build renders an ordinary 404 there. Vite inlines it
+  // at build/dev start, which is why it belongs in the environment the build
+  // below also runs under.
+  VITE_E2E_USER_SETTINGS_PROBE: '1',
   // NODE_OPTIONS rather than an argv flag so the stub survives the `npm run`
   // wrapper: it is inherited by whatever child process ends up being the
   // server.

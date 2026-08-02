@@ -3,8 +3,10 @@
 **Feature state:** In progress (2026-08-01). Task 1
 (`auth-backend-and-config`) merged as
 [#57](https://github.com/nicbk/nicbk-website/pull/57) and deployed; task 2
-(`sign-in-and-route-guard`) implemented and awaiting PR + CI + review; task 3
-not started. Depends on
+(`sign-in-and-route-guard`) merged as
+[#59](https://github.com/nicbk/nicbk-website/pull/59); task 3
+(`user-settings-modal`) implemented and awaiting PR + CI + review — the last
+task in the feature. Depends on
 [`app-shell-and-home`](../app-shell-and-home/status.md) (Complete) — extends its
 app server, `src/env.ts` + `parseEnv`, and `docker-compose*.yml`, and reuses its
 `(personal-site)` shell/header, design tokens, and theming. This is the
@@ -25,8 +27,8 @@ Feature parent issue:
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `auth-backend-and-config` | Merged ([#28](https://github.com/nicbk/nicbk-website/issues/28)) | [#57](https://github.com/nicbk/nicbk-website/pull/57) | passed | merged |
-| `sign-in-and-route-guard` | Implemented ([#29](https://github.com/nicbk/nicbk-website/issues/29)) | pending | pending | pending |
-| `user-settings-modal` | Not started ([#30](https://github.com/nicbk/nicbk-website/issues/30)) | — | — | — |
+| `sign-in-and-route-guard` | Merged ([#29](https://github.com/nicbk/nicbk-website/issues/29)) | [#59](https://github.com/nicbk/nicbk-website/pull/59) | passed | merged |
+| `user-settings-modal` | Implemented ([#30](https://github.com/nicbk/nicbk-website/issues/30)) | pending | pending | pending |
 
 ## Definition of Done (feature)
 
@@ -114,3 +116,21 @@ login-flow test, injected sessions elsewhere).
   [mocking-external-services.md](../../research/testing-qa/mocking-external-services.md)
   and reasoned in the [task status](./tasks/sign-in-and-route-guard/status.md).
   Awaiting PR + CI + review.
+- 2026-08-01 — Task 2 **merged as [#59](https://github.com/nicbk/nicbk-website/pull/59)**
+  (CI green, approved). Sign-in is live on the next deploy — the real Google
+  credentials are already on nicbk-tower — though with no protected page yet,
+  a successful sign-in returns the reader to `/`.
+- 2026-08-01 — Task 3 (`user-settings-modal`) implemented on
+  `authentication/user-settings-modal` (#30 self-assigned): the reusable
+  `<UserSettings>` dialog, the type-to-match confirmation, `--color-error` in
+  both palettes, `deleteUser` enabled server-side, and a gated test-only page
+  that mounts the modal so it can be exercised in a browser before #7 supplies
+  its avatar trigger. Three decisions were taken with the user beforehand (add
+  the error token; keep delete-time session freshness and offer
+  re-authentication; build the gated probe page). Browser verification found
+  two bugs the whole test suite had missed — server-only modules leaking into
+  the client bundle through an inline type import, and the destructive button
+  losing its color to a `composes:` specificity tie — both fixed and locked in;
+  the first is recorded as a dated revision in
+  [import-conventions.md](../../research/coding-conventions/import-conventions.md)
+  with an open question for the user. Awaiting PR + CI + review.

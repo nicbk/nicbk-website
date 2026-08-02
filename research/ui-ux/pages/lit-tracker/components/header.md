@@ -66,9 +66,18 @@ which controls sit in the header row.
   deliberately does not use the site-wide header; that gap is a consequence of
   giving each sub-application its own header, so every later sub-application
   header should carry the toggle too.
-- **The breadcrumb's root segment is a link** back to the tracker root, which is
-  what the segment-clicking behaviour above already implied for every other
-  segment.
+- **The breadcrumb's root segment is the personal site, and links to it.**
+  `nicbk_home` is literal and identical for every account — it names the site
+  this sub-application is hosted on, the same owner the site header spells out
+  as "Nicolás Kennedy". It is *not* derived from whoever is signed in, and it is
+  *not* a second route to the tracker root: the app name on the left is that.
+  Reading it as a per-reader handle is the natural misreading, and it is wrong —
+  the path runs from the site's home outwards, which is exactly why
+  [article-detail.md](../pages/article-detail.md) grows it into
+  `↳/nicbk_home/Article A/Article B`.
+- **The row splits left and right**, like the site header: app name alone on the
+  left; the path and then the theme toggle grouped on the right, the path
+  immediately left of the toggle.
 
 The resulting row reads like the site header — name, then path, then the theme
 toggle pushed to the far end — which is the point: the two should look like the

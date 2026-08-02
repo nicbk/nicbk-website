@@ -31,7 +31,13 @@
   text-overflow: ellipsis;
 }
 
+/*
+ * Everything from here rightwards forms the row's right-hand group: the path,
+ * then the theme toggle. The app name is alone on the left, so the header
+ * splits the same way the site header does.
+ */
 .breadcrumb {
+  margin-left: auto;
   color: var(--color-text-muted);
   min-width: 0;
   overflow: hidden;
@@ -64,9 +70,4 @@
   .breadcrumbLink:hover {
     text-decoration: underline;
   }
-}
-
-/* Push the theme toggle to the row's far end, exactly as the site header does. */
-.header > :last-child {
-  margin-left: auto;
 }

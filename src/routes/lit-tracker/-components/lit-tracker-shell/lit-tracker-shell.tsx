@@ -5,7 +5,7 @@ import { LitTrackerSidebar } from '../lit-tracker-sidebar/lit-tracker-sidebar'
 import styles from './lit-tracker-shell.module.css'
 
 interface LitTrackerShellProps {
-  /** The signed-in account, for the breadcrumb and the sidebar's avatar. */
+  /** The signed-in account, for the sidebar's avatar. */
   account: AvatarAccount
   /** Called once the session ends, so the guarded page can leave. */
   onSignedOut?: (() => void) | undefined
@@ -43,7 +43,7 @@ export function LitTrackerShell({
 }: LitTrackerShellProps) {
   return (
     <div className={styles.shell}>
-      <LitTrackerHeader account={account} />
+      <LitTrackerHeader />
       <div className={styles.panels}>
         <LitTrackerSidebar
           account={account}

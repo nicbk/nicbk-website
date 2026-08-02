@@ -31,7 +31,7 @@ const EMPTY_STATE = 'no articles yet.'
 /**
  * The article rows, scoped to their own list.
  *
- * A bare `listitem` role would also match the header's breadcrumb, which is a
+ * A bare `listitem` role would also match the header's path, which is a
  * one-item list of its own — so an unscoped count silently reads one too many,
  * or reads "1" on a page showing no articles at all.
  */
@@ -76,6 +76,29 @@ test.describe('lit-tracker shell', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: 'collection' }),
     ).toBeVisible()
+  })
+
+  test('sends the header path to the personal site, and the app name to the tracker', async ({
+    page,
+  }) => {
+    await signInAndLandOn(page, TRACKER)
+
+    // Two links, two destinations. `nicbk_home` is the root of the path — the
+    // site the tracker is hosted on — and is literal for every account.
+    const path = page.getByRole('navigation', { name: 'Breadcrumb' })
+    await expect(
+      path.getByRole('link', { name: 'nicbk_home' }),
+    ).toHaveAttribute('href', '/')
+    await expect(
+      page.getByRole('link', { name: 'Literature Tracker' }),
+    ).toHaveAttribute('href', '/lit-tracker')
+
+    // And it really leaves: following it lands on the personal site's home.
+    await expect(async () => {
+      await path.getByRole('link', { name: 'nicbk_home' }).click()
+      await expect(page).toHaveURL('/', { timeout: 2_000 })
+    }).toPass()
+    await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible()
   })
 
   test('puts the account control in the sidebar and the theme toggle in the header', async ({

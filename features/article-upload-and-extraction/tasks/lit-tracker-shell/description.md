@@ -14,9 +14,10 @@ reactivity is visible in a browser.
   the requested URL, with no interstitial.
 - **Builds the lit-tracker header and its sidebar rail** — the header a
   separate component from the site header, not a variant of it: the app name on
-  the left linking to the tracker root, a breadcrumb-style path indicator
-  showing just the root segment (e.g. `↳/nicbk_home`), and the site's theme
-  toggle at the far end, mirroring the site header's arrangement.
+  the left linking to the tracker root, and on the right a breadcrumb-style
+  path indicator showing just the root segment (`↳/nicbk_home`, a link to the
+  **personal site's** home) followed by the site's theme toggle — the same
+  left/right split the site header uses.
 
   **Revision (2026-08-02), decided with the user:** the account avatar is at the
   **foot of the sidebar**, not on the far right of the header — which is where

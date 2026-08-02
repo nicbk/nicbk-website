@@ -33,9 +33,9 @@ open, CI green on all five jobs. Second of five.
 - **`/lit-tracker`, its own top-level route group**, with `requireAuth`
   attached at the group root so every page added later inherits it. It is the
   guard's first attachment to a page a visitor can reach.
-- **`LitTrackerHeader`** — app name linking to the tracker root, the
-  `↳/…_home` breadcrumb (its segment a link back), and the site's theme toggle
-  at the far end, mirroring the site header's arrangement.
+- **`LitTrackerHeader`** — app name linking to the tracker root on the left;
+  the `↳/nicbk_home` path and the site's theme toggle grouped on the right,
+  mirroring the site header's left/right split. It takes no props at all.
 - **`LitTrackerSidebar`** — the left rail, with the account avatar pinned to its
   foot. Near-empty above that today; #8 fills it with the tag and
   reading-status filters.
@@ -110,11 +110,13 @@ open, CI green on all five jobs. Second of five.
   switching back rather than leaving a broken-image glyph. `referrerPolicy="no-referrer"`
   keeps the current URL from travelling to Google: which article a reader is
   looking at is not Google's business.
-- **The breadcrumb's root segment is derived, not stored.** There is no username
-  column anywhere in the schema, and adding one to render a piece of chrome
-  would be a data-model decision made for a styling reason. It is a pure
-  function over the account, so a real handle later turns it into a lookup and
-  nothing else moves.
+- **The breadcrumb's root segment names the site, not the reader.** `nicbk_home`
+  is literal and identical for every account, and links to the *personal site's*
+  home — not back to the tracker, which is what the app name on the left is for.
+  Corrected by the user in review after a first attempt derived a per-account
+  handle from the email; that reading also made the header need the session,
+  which it now does not. The path runs from the site's home outwards, which is
+  what makes #9's `↳/nicbk_home/Article A/Article B` coherent.
 - **The rail sizes to its contents rather than taking a fixed share of the
   width.** Today that is one avatar, so it reads as a slim strip holding one
   control; a fixed percentage would look like a broken empty column until #8
@@ -135,10 +137,23 @@ the account avatar to the foot of a sidebar rail (where the mockup has it, and
 showing the Google account's own picture), and the site's theme toggle into the
 header at its far end. The `↳/…_home` breadcrumb segment became a link.
 
-Worth carrying: **the mockup was right and the prose describing it was not.**
-The decided header doc listed the avatar as a header item; the image it cites
-puts it bottom-left in the sidebar. Reading the artifact rather than only the
-summary of it would have caught that before implementation.
+A second round moved the path to the right of the row, immediately left of the
+toggle, and corrected what it *means*: `nicbk_home` is the site owner's name,
+constant across accounts, linking to the personal site's home — not a handle
+derived from the signed-in reader, and not a second way back to the tracker
+root. The derivation and its tests were deleted outright, and the header now
+takes no props.
+
+Two things worth carrying:
+
+- **The mockup was right and the prose describing it was not.** The decided
+  header doc listed the avatar as a header item; the image it cites puts it
+  bottom-left in the sidebar. Reading the artifact rather than only the summary
+  of it would have caught that before implementation.
+- **An example in a spec is not a template.** `↳/nicbk_home` was written as
+  "e.g." and read as a pattern to fill in per account, when it was the literal
+  string. Where a doc gives one concrete example of a value, it is worth asking
+  which parts of it vary — the answer here was "none of it".
 
 ## Verification
 

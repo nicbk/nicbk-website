@@ -9,10 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UserSettingsProbeRouteImport } from './routes/user-settings-probe'
 import { Route as ErrorProbeRouteImport } from './routes/error-probe'
 import { Route as SignInRouteRouteImport } from './routes/sign-in/route'
+import { Route as LitTrackerRouteRouteImport } from './routes/lit-tracker/route'
 import { Route as personalSiteRouteRouteImport } from './routes/(personal-site)/route'
+import { Route as LitTrackerIndexRouteImport } from './routes/lit-tracker/index'
 import { Route as personalSiteProjectsRouteRouteImport } from './routes/(personal-site)/projects/route'
 import { Route as personalSiteAboutRouteRouteImport } from './routes/(personal-site)/about/route'
 import { Route as personalSiteBlogIndexRouteImport } from './routes/(personal-site)/blog/index'
@@ -22,11 +23,6 @@ import { Route as ApiZeroMutateRouteImport } from './routes/api/zero/mutate'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog/$slug'
 
-const UserSettingsProbeRoute = UserSettingsProbeRouteImport.update({
-  id: '/user-settings-probe',
-  path: '/user-settings-probe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ErrorProbeRoute = ErrorProbeRouteImport.update({
   id: '/error-probe',
   path: '/error-probe',
@@ -37,9 +33,19 @@ const SignInRouteRoute = SignInRouteRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LitTrackerRouteRoute = LitTrackerRouteRouteImport.update({
+  id: '/lit-tracker',
+  path: '/lit-tracker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const personalSiteRouteRoute = personalSiteRouteRouteImport.update({
   id: '/(personal-site)',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LitTrackerIndexRoute = LitTrackerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LitTrackerRouteRoute,
 } as any)
 const personalSiteProjectsRouteRoute =
   personalSiteProjectsRouteRouteImport.update({
@@ -84,11 +90,12 @@ const personalSiteBlogSlugRoute = personalSiteBlogSlugRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/lit-tracker': typeof LitTrackerRouteRouteWithChildren
   '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
-  '/user-settings-probe': typeof UserSettingsProbeRoute
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
+  '/lit-tracker/': typeof LitTrackerIndexRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/zero/mutate': typeof ApiZeroMutateRoute
@@ -99,9 +106,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
-  '/user-settings-probe': typeof UserSettingsProbeRoute
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
+  '/lit-tracker': typeof LitTrackerIndexRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/zero/mutate': typeof ApiZeroMutateRoute
@@ -112,11 +119,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(personal-site)': typeof personalSiteRouteRouteWithChildren
+  '/lit-tracker': typeof LitTrackerRouteRouteWithChildren
   '/sign-in': typeof SignInRouteRoute
   '/error-probe': typeof ErrorProbeRoute
-  '/user-settings-probe': typeof UserSettingsProbeRoute
   '/(personal-site)/about': typeof personalSiteAboutRouteRoute
   '/(personal-site)/projects': typeof personalSiteProjectsRouteRoute
+  '/lit-tracker/': typeof LitTrackerIndexRoute
   '/(personal-site)/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/zero/mutate': typeof ApiZeroMutateRoute
@@ -127,11 +135,12 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/lit-tracker'
     | '/sign-in'
     | '/error-probe'
-    | '/user-settings-probe'
     | '/about'
     | '/projects'
+    | '/lit-tracker/'
     | '/blog/$slug'
     | '/api/auth/$'
     | '/api/zero/mutate'
@@ -142,9 +151,9 @@ export interface FileRouteTypes {
   to:
     | '/sign-in'
     | '/error-probe'
-    | '/user-settings-probe'
     | '/about'
     | '/projects'
+    | '/lit-tracker'
     | '/blog/$slug'
     | '/api/auth/$'
     | '/api/zero/mutate'
@@ -154,11 +163,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/(personal-site)'
+    | '/lit-tracker'
     | '/sign-in'
     | '/error-probe'
-    | '/user-settings-probe'
     | '/(personal-site)/about'
     | '/(personal-site)/projects'
+    | '/lit-tracker/'
     | '/(personal-site)/blog/$slug'
     | '/api/auth/$'
     | '/api/zero/mutate'
@@ -169,9 +179,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   personalSiteRouteRoute: typeof personalSiteRouteRouteWithChildren
+  LitTrackerRouteRoute: typeof LitTrackerRouteRouteWithChildren
   SignInRouteRoute: typeof SignInRouteRoute
   ErrorProbeRoute: typeof ErrorProbeRoute
-  UserSettingsProbeRoute: typeof UserSettingsProbeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiZeroMutateRoute: typeof ApiZeroMutateRoute
   ApiZeroQueryRoute: typeof ApiZeroQueryRoute
@@ -179,13 +189,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/user-settings-probe': {
-      id: '/user-settings-probe'
-      path: '/user-settings-probe'
-      fullPath: '/user-settings-probe'
-      preLoaderRoute: typeof UserSettingsProbeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/error-probe': {
       id: '/error-probe'
       path: '/error-probe'
@@ -200,12 +203,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lit-tracker': {
+      id: '/lit-tracker'
+      path: '/lit-tracker'
+      fullPath: '/lit-tracker'
+      preLoaderRoute: typeof LitTrackerRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(personal-site)': {
       id: '/(personal-site)'
       path: ''
       fullPath: ''
       preLoaderRoute: typeof personalSiteRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/lit-tracker/': {
+      id: '/lit-tracker/'
+      path: '/'
+      fullPath: '/lit-tracker/'
+      preLoaderRoute: typeof LitTrackerIndexRouteImport
+      parentRoute: typeof LitTrackerRouteRoute
     }
     '/(personal-site)/projects': {
       id: '/(personal-site)/projects'
@@ -285,11 +302,23 @@ const personalSiteRouteRouteChildren: personalSiteRouteRouteChildren = {
 const personalSiteRouteRouteWithChildren =
   personalSiteRouteRoute._addFileChildren(personalSiteRouteRouteChildren)
 
+interface LitTrackerRouteRouteChildren {
+  LitTrackerIndexRoute: typeof LitTrackerIndexRoute
+}
+
+const LitTrackerRouteRouteChildren: LitTrackerRouteRouteChildren = {
+  LitTrackerIndexRoute: LitTrackerIndexRoute,
+}
+
+const LitTrackerRouteRouteWithChildren = LitTrackerRouteRoute._addFileChildren(
+  LitTrackerRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   personalSiteRouteRoute: personalSiteRouteRouteWithChildren,
+  LitTrackerRouteRoute: LitTrackerRouteRouteWithChildren,
   SignInRouteRoute: SignInRouteRoute,
   ErrorProbeRoute: ErrorProbeRoute,
-  UserSettingsProbeRoute: UserSettingsProbeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiZeroMutateRoute: ApiZeroMutateRoute,
   ApiZeroQueryRoute: ApiZeroQueryRoute,

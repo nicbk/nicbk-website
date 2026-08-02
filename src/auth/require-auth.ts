@@ -47,20 +47,18 @@ export function requireSession(
  * The drop-in route guard: resolves the session for the current request, then
  * applies {@link requireSession}.
  *
- * Meant to be used unchanged as a route's `beforeLoad`:
+ * Meant to be used unchanged as a route's `beforeLoad`. Attaching it to a group
+ * layout rather than to each page is what makes it cover routes added later:
  *
  * ```ts
- * export const Route = createFileRoute('/lit/collection')({
- *   beforeLoad: requireAuth,
- *   component: Collection,
+ * export const Route = createFileRoute('/lit-tracker')({
+ *   beforeLoad: async (context) => ({ auth: await requireAuth(context) }),
+ *   component: LitTrackerLayout,
  * })
  * ```
  *
- * No page a visitor can reach uses it yet — the first protected pages arrive
- * with the Lit Tracker (issue #7). It ships now, tested, because the sign-in
- * page it redirects to is only half a feature without it. The one live caller
- * is the test-only `/user-settings-probe` route, which is how the guard gets
- * exercised in a real browser ahead of those pages.
+ * That is its one live caller today, and every `/lit-tracker` page inherits it
+ * from there.
  */
 export async function requireAuth({
   location,

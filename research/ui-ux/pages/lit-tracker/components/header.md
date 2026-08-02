@@ -41,3 +41,20 @@ app name ("Literature Tracker") on the left, breadcrumb-style path indicator
   [article-detail.md](../pages/article-detail.md)'s PDF reader/citation
   graph main content scrolls independently of its Tags/Notes/Citations/
   Annotations sidebar.
+
+## Open question raised at implementation (2026-08-02)
+
+Building this header for `/lit-tracker` surfaced one thing the decision above
+does not cover: **there is no theme toggle anywhere in the Lit Tracker.** The
+list above is app name, breadcrumb, and avatar, and
+[../../../design-system.md](../../../design-system.md) places the toggle on the
+site-wide header surface — which the tracker deliberately does not use. So a
+reader inside the tracker cannot change theme without leaving for the personal
+site.
+
+It is not broken: the choice is stored in `localStorage` and applies site-wide,
+so switching once on the personal site persists into the tracker. But it is a
+gap created by the (correct) decision to give each sub-application its own
+header, and it will apply to every sub-application added later. The
+implementation followed the spec as written rather than adding a fourth item;
+recorded here so the next header does not rediscover it.

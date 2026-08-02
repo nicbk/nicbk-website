@@ -14,6 +14,14 @@ x-app-image: &app-image
   build:
     context: .
     target: runner
+    args:
+      # Interpolated from the project-root .env, like the POSTGRES_* values
+      # below. This one is needed at BUILD time rather than run time: Vite
+      # inlines VITE_-prefixed variables into the client bundle, so a value
+      # supplied only via env_file would never reach the browser. It is public
+      # by construction (the browser dials this address itself) — see
+      # src/zero/cache-url.ts.
+      VITE_ZERO_CACHE_URL: ${VITE_ZERO_CACHE_URL:?set VITE_ZERO_CACHE_URL in .env}
 
 services:
   db:
@@ -133,10 +141,19 @@ services:
       # authorized. Explicitly off.
       ZERO_ENABLE_CRUD_MUTATIONS: "false"
     ports:
-      # Published for the reverse proxy in front of it. Clients connect over
-      # websockets, and — for the cookie to be sent at all — must reach it on a
-      # subdomain of the site's own domain.
-      - "4848:4848"
+      # Loopback only. In production the host's nginx is the sole client — it
+      # proxies https://nicbk.com/zero/ straight through to here, leaving the
+      # leading path segment in place because zero-cache's own router expects
+      # it. Serving the sync engine from the site's own origin (rather than a
+      # zero.nicbk.com subdomain) is what lets the browser send its Better Auth
+      # session cookie without that cookie having to be widened to every
+      # subdomain of the site. Locally the browser reaches this address
+      # directly, which works because cookies are keyed by host, not port.
+      #
+      # Binding 127.0.0.1 rather than 0.0.0.0: Docker's published ports insert
+      # their own rules ahead of the host firewall, so an unqualified mapping
+      # would expose the sync engine on every interface for no gain.
+      - "127.0.0.1:4848:4848"
     volumes:
       - zero-replica:/data
     depends_on:

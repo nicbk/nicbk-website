@@ -337,15 +337,25 @@ finding of our own.
   `docker-compose.yml` does. `drizzle-zero` is the other half — its generated
   schema carries `enableLegacyQueries: false` and `enableLegacyMutators: false`
   as long as the `--enable-legacy-*` flags stay off.
-- **Cookie auth needs a subdomain in production.** zero-cache forwards the
-  browser's cookies to `/query` and `/mutate` when
+- **Cookie auth needs zero-cache to be same-site in production.** zero-cache
+  forwards the browser's cookies to `/query` and `/mutate` when
   `ZERO_QUERY_FORWARD_COOKIES` / `ZERO_MUTATE_FORWARD_COOKIES` are set, which is
   how those endpoints know who is asking. For the browser to send the cookie to
-  zero-cache at all, it must be served from a subdomain of the site
-  (`zero.nicbk.com`) and Better Auth must issue cookies for the parent domain
-  via `crossSubDomainCookies`. Locally this is free — browsers key cookies by
-  host, not port. **That auth-config and nginx change belongs to task 2**, where
-  a browser first connects; nothing in task 1 has a client.
+  zero-cache at all, the two must be same-site. Locally this is free — browsers
+  key cookies by host, not port. **That change belongs to task 2**, where a
+  browser first connects; nothing in task 1 has a client.
+
+  **Superseded in part by task 2 (2026-08-02).** Task 1 recorded that this meant
+  a `zero.nicbk.com` subdomain plus Better Auth's `crossSubDomainCookies`. Task
+  2 found the cheaper answer and took it, with the user's agreement: zero-cache
+  is served **same-origin at `https://nicbk.com/zero`**. Its own router matches
+  `(/:base)/:worker/v:version/:action` — an optional leading base segment — and
+  Zero's client validator permits a `cacheURL` with at most one path component,
+  so nginx proxies `/zero/` through without stripping anything. Same-origin
+  needs no change to how the session cookie is issued, where the subdomain route
+  would have widened that cookie to every subdomain of the site permanently, and
+  added a DNS record and a certificate. **The auth configuration is unchanged by
+  this feature.**
 - **The default publication is much wider than "everything except pg-boss".**
   Left alone, zero-cache publishes *every table in the `public` schema* — which
   would replicate Better Auth's `session` and `account` rows, including Google
@@ -362,7 +372,12 @@ finding of our own.
   defeatable by any row that happens to exist.
 - **Zero does not support SSR.** The `ZeroProvider` has to be loaded
   client-only (`React.lazy` in TanStack Start). Task 2's problem, recorded here
-  so it is not discovered at render time.
+  so it is not discovered at render time. **Confirmed and handled in task 2**
+  with `React.lazy` inside TanStack Router's `ClientOnly` — both halves are
+  needed, since a lazy component still renders on the server if nothing stops
+  it. The consequence every tracker page inherits: nothing under that provider
+  exists until hydration, which is why the collection distinguishes "still
+  syncing" from "genuinely empty".
 - **`X-Api-Key` on both endpoints (our addition).** `/query` and `/mutate` are
   routes on the public app server, so anyone can POST to them. zero-cache can
   present a shared secret (`ZERO_QUERY_API_KEY` / `ZERO_MUTATE_API_KEY`), and
@@ -372,3 +387,28 @@ finding of our own.
   callbacks are not open endpoints. These are the only new variables the *app*
   reads; zero-cache's own connection settings are Compose-level, like the
   existing `POSTGRES_*` ones.
+
+## Found while building task 2 (2026-08-02)
+
+- **The dev server treats zero-cache as a stranger.** zero-cache resolves every
+  query by calling back into this app, and it always does so from inside a
+  container — so the request arrives with a `Host` of `app` (the Compose
+  service) or `host.docker.internal` (the gateway, in the e2e tier). Vite's dev
+  server rejects unrecognized hosts as DNS-rebinding protection, answering 403
+  with a plain-text body, and the symptom in the browser is a collection stuck
+  on its loading placeholder — which reads as a Zero fault and is not one. Both
+  names are allowed in `vite.config.ts`; the production server has no such
+  check, so nothing about what ships changes. The general shape: **a service
+  calling back into this app from a container is a different client than a
+  browser, and the dev server does not treat them alike.**
+- **`userID` is the link that makes the client and the server agree.**
+  zero-cache compares the `userID` the client declares against the one
+  `/api/zero/query` returns, and refuses the connection outright if they differ
+  ("Connection userID does not match validated server userID"), pinning a client
+  group to one account. It is not what authorizes anything — the session decides
+  that, independently — but passing the guard's session id is what keeps a
+  correctly-authorized client from being disconnected.
+- **`ZeroProvider` re-creates its Zero instance when any option's value changes
+  identity.** Its effect depends on every prop value, so an inline `context={{
+  id }}` object literal would tear down and rebuild the WebSocket on every
+  render. It has to be memoized; the schema and the URL are already stable.

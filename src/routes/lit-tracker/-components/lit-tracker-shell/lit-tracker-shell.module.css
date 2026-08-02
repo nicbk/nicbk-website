@@ -1,0 +1,45 @@
+/*
+ * The fixed app-shell layout: exactly one viewport tall, header row sized to
+ * its content, everything below it a single bounded row that scrolls itself.
+ *
+ * `100dvh` rather than `100vh` so a mobile browser's collapsing address bar
+ * doesn't leave the panel's last rows permanently under the chrome. Nothing in
+ * the document outside this element has height (the skip link is `position:
+ * fixed`), so the page itself never gains a scrollbar — which is the whole
+ * behavioural difference from the personal site's sticky header.
+ */
+.shell {
+  display: grid;
+  /* minmax(0, 1fr), not 1fr: a grid row's default minimum is its content's
+     size, so a long list would stretch the row past the viewport and put the
+     scrollbar back on the document instead of inside the panel. */
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+}
+
+.main {
+  min-height: 0;
+  overflow-y: auto;
+  /* Reaching the end of the list shouldn't start scrolling anything behind it,
+     or trigger pull-to-refresh mid-collection. */
+  overscroll-behavior: contain;
+  /* The page inset for everything the panel holds, defined once here so a page
+     and the placeholder standing in for it start at the same spot and nothing
+     shifts when one replaces the other. The inline value shrinks with the
+     viewport, matching the header's rhythm. #8 introduces panels that want
+     their own edges (the filter sidebar and its divider) and moves this onto
+     the panels then. */
+  padding: var(--space-lg) clamp(0.5rem, 2.5vw, 1.5rem);
+}
+
+/*
+ * The route-change focus handoff (src/focus-handoff.ts) focuses the page's <h1>
+ * or this landmark purely to reposition screen-reader reading order. Both are
+ * non-interactive and out of the tab order, so the global :focus-visible ring
+ * would otherwise draw a box around the whole panel. Same rule, same reason, as
+ * site-shell.module.css.
+ */
+.main:focus,
+.main h1:focus {
+  outline: none;
+}

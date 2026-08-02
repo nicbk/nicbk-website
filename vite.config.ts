@@ -127,6 +127,27 @@ function revalidateOptimizedDepsInDev(): Plugin {
 export default defineConfig({
   server: {
     port: 3000,
+    // Vite's dev server rejects requests whose Host header it doesn't
+    // recognize — DNS-rebinding protection, and correct by default. But
+    // zero-cache calls back into this app to resolve every query, and it always
+    // does so from inside a container, under whatever name reaches the dev
+    // server from there:
+    //
+    //   app                   — the Compose service name, when both run in the
+    //                           dev stack (docker-compose.override.yml)
+    //   host.docker.internal  — the Docker gateway, when zero-cache is a
+    //                           container and the dev server is on the host
+    //                           (the signed-in e2e tier,
+    //                           scripts/e2e-auth-server.mjs)
+    //
+    // Without these, /api/zero/query answers 403 with Vite's "Blocked request"
+    // body, the client never syncs, and the collection sits on its loading
+    // placeholder forever — a failure that looks like a Zero problem and isn't.
+    //
+    // Narrow on purpose: two names, neither resolvable from outside this
+    // machine's Docker networking. Dev-server-only — the production server has
+    // no such check, so this changes nothing about what ships.
+    allowedHosts: ['app', 'host.docker.internal'],
   },
   resolve: {
     // Resolves the `~/` alias from tsconfig.json `paths`.

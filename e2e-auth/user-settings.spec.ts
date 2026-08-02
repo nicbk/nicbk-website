@@ -1,8 +1,8 @@
 import type { Page } from '@playwright/test'
-// The axe fixture and the hydration-safe theme toggle are the ordinary
-// suite's, reused rather than reimplemented — this tier differs in what it
-// needs *running*, not in how it asserts.
-import { expect, test, toggleThemeTo } from '../e2e/fixtures'
+// The axe fixture and the theme helper are the ordinary suite's, reused rather
+// than reimplemented — this tier differs in what it needs *running*, not in how
+// it asserts.
+import { expect, setOsThemeTo, test } from '../e2e/fixtures'
 import { GOOGLE_TEST_ACCOUNT } from './support/google-stub.mjs'
 import { sessionCookie, signInAndLandOn } from './support/sign-in'
 
@@ -10,18 +10,18 @@ import { sessionCookie, signInAndLandOn } from './support/sign-in'
  * The user-settings modal against a real server: a real session from a real
  * sign-in, a real log-out, and a real account deletion.
  *
- * It is mounted on `/user-settings-probe`, a test-only route
- * (src/routes/user-settings-probe.tsx) that exists because nothing else opens
- * this modal yet — its avatar trigger lives in the Lit-Tracker header and
- * arrives with #7. The probe is also behind `requireAuth`, so getting here at
- * all exercises the route guard.
+ * It is opened from the Lit-Tracker header's avatar, which is the modal's only
+ * trigger anywhere on the site. Until that header existed the modal was mounted
+ * on a test-only `/user-settings-probe` route instead; that route was deleted
+ * when this one replaced it, so what is exercised here is now the real thing on
+ * a real page rather than a stand-in beside it.
  *
  * The behavior asserted here is deliberately the behavior jsdom can't judge:
  * where focus goes and stays, what the two actions do to the session on the
  * server, and how the modal looks in both themes at a phone width.
  */
 
-const PROBE = '/user-settings-probe'
+const TRACKER = '/lit-tracker'
 const TRIGGER = { name: 'Account settings' }
 const DELETE_BUTTON = { name: 'delete account' }
 
@@ -41,17 +41,17 @@ async function openSettings(page: Page) {
 
 test.describe('user settings modal', () => {
   test('sends a signed-out visitor to sign in first', async ({ page }) => {
-    await page.goto(PROBE)
+    await page.goto(TRACKER)
 
     // The guard, doing the job it was built for in task 2: not an error page,
     // just the step that hasn't happened yet — carrying the destination.
     await expect(page).toHaveURL(
-      `/sign-in?returnTo=${encodeURIComponent(PROBE)}`,
+      `/sign-in?returnTo=${encodeURIComponent(TRACKER)}`,
     )
   })
 
   test('shows the signed-in Google account, display only', async ({ page }) => {
-    await signInAndLandOn(page, PROBE)
+    await signInAndLandOn(page, TRACKER)
     const dialog = await openSettings(page)
 
     await expect(dialog).toContainText('signed in as')
@@ -64,7 +64,7 @@ test.describe('user settings modal', () => {
   test('traps focus while open and gives it back to the trigger on Escape', async ({
     page,
   }) => {
-    await signInAndLandOn(page, PROBE)
+    await signInAndLandOn(page, TRACKER)
     const dialog = await openSettings(page)
 
     // A real browser is the only place this can be asserted honestly: it needs
@@ -83,7 +83,7 @@ test.describe('user settings modal', () => {
   test('keeps delete inert until the account email is typed exactly', async ({
     page,
   }) => {
-    await signInAndLandOn(page, PROBE)
+    await signInAndLandOn(page, TRACKER)
     const dialog = await openSettings(page)
 
     await dialog.getByRole('button', DELETE_BUTTON).click()
@@ -108,7 +108,7 @@ test.describe('user settings modal', () => {
     page,
   }) => {
     await page.emulateMedia({ colorScheme: 'light' })
-    await signInAndLandOn(page, PROBE)
+    await signInAndLandOn(page, TRACKER)
 
     const light = await openSettings(page)
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
@@ -117,12 +117,12 @@ test.describe('user settings modal', () => {
       'rgb(245, 245, 245)', // --color-bg-surface, light
     )
 
-    // The theme toggle lives in the header, which a modal deliberately seals
-    // off — so close first. That the modal blocks it is the correct behavior,
-    // not an obstacle to work around with a forced click.
+    // The tracker header carries no theme toggle — the toggle belongs to the
+    // site-wide header — so the theme is changed the other way it can be, by
+    // the OS preference the pre-paint script reads.
     await page.keyboard.press('Escape')
     await expect(light).toBeHidden()
-    await toggleThemeTo(page, 'dark')
+    await setOsThemeTo(page, 'dark')
 
     const dark = await openSettings(page)
     await expect(dark).toHaveCSS(
@@ -136,18 +136,16 @@ test.describe('user settings modal', () => {
       'color',
       'rgb(245, 163, 160)', // --color-error, dark
     )
-
-    await page.reload()
-    // After a reload the theme is applied by the blocking inline script before
-    // first paint, so there is no light-then-dark flash to catch.
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+    // `setOsThemeTo` reloaded to get here, and the theme was already correct on
+    // that first frame — the blocking inline script applies it before paint, so
+    // there is no light-then-dark flash to catch.
   })
 
   test('fits a phone-width screen without sideways scrolling', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 360, height: 720 })
-    await signInAndLandOn(page, PROBE)
+    await signInAndLandOn(page, TRACKER)
     const dialog = await openSettings(page)
 
     // The confirmation is the widest the modal ever gets: an email address
@@ -166,7 +164,7 @@ test.describe('user settings modal', () => {
     expectNoA11yViolations,
   }) => {
     await page.emulateMedia({ colorScheme: 'light' })
-    await signInAndLandOn(page, PROBE)
+    await signInAndLandOn(page, TRACKER)
 
     const light = await openSettings(page)
     await expectNoA11yViolations()
@@ -176,11 +174,11 @@ test.describe('user settings modal', () => {
     await light.getByRole('button', DELETE_BUTTON).click()
     await expectNoA11yViolations()
 
-    // Dark theme needs the modal closed to reach the header toggle, then
-    // reopened — the same route a reader would take.
+    // Dark theme: the OS preference plus a reload, since the tracker header
+    // has no toggle of its own.
     await page.keyboard.press('Escape')
     await expect(light).toBeHidden()
-    await toggleThemeTo(page, 'dark')
+    await setOsThemeTo(page, 'dark')
 
     const dark = await openSettings(page)
     await expectNoA11yViolations()
@@ -189,7 +187,7 @@ test.describe('user settings modal', () => {
   })
 
   test('logging out ends the session on the server', async ({ page }) => {
-    await signInAndLandOn(page, PROBE)
+    await signInAndLandOn(page, TRACKER)
     const dialog = await openSettings(page)
 
     await dialog.getByRole('button', { name: 'log out' }).click()
@@ -205,7 +203,7 @@ test.describe('user settings modal', () => {
   test('deleting the account removes it, and the session with it', async ({
     page,
   }) => {
-    await signInAndLandOn(page, PROBE)
+    await signInAndLandOn(page, TRACKER)
     const dialog = await openSettings(page)
 
     await dialog.getByRole('button', DELETE_BUTTON).click()
@@ -217,9 +215,9 @@ test.describe('user settings modal', () => {
     expect(await session.json()).toBeNull()
 
     // And the guard now treats this browser as a stranger again.
-    await page.goto(PROBE)
+    await page.goto(TRACKER)
     await expect(page).toHaveURL(
-      `/sign-in?returnTo=${encodeURIComponent(PROBE)}`,
+      `/sign-in?returnTo=${encodeURIComponent(TRACKER)}`,
     )
   })
 })

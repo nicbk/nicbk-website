@@ -113,9 +113,17 @@ applied it exits with `Unknown or invalid publications` and restarts until it
 has been; `up` without `--build` after adding a migration is the usual cause,
 since the migrator runs from the built image.
 
+The browser talks to `zero-cache` directly on 4848 in local development —
+`VITE_ZERO_CACHE_URL=http://localhost:4848` — with no proxy in between, because
+cookies are keyed by host and ignore the port, so the session cookie set on
+:3000 is sent to :4848 already. Production routes it through the site's own
+origin instead; see step 5 of the deployment section.
+
 Secrets/config come from a git-ignored `.env` next to the compose file. It is
 **required** now: the app refuses to start without it, and Compose fails with
-a named error if the Postgres credentials are missing.
+a named error if the Postgres credentials are missing. `VITE_ZERO_CACHE_URL` is
+read at **build** time rather than start time (Vite inlines it into the client
+bundle), so changing it needs a rebuild, not just a restart.
 
 If the dev container ever loads a blank/"something went wrong" page in a
 browser that opened it before — typically a phone, reporting a module error
@@ -158,7 +166,13 @@ One-time host setup:
    credentials whose authorized redirect URI is
    `https://nicbk.com/api/auth/callback/google`, and freshly generated
    `ZERO_QUERY_API_KEY`, `ZERO_MUTATE_API_KEY`, and `ZERO_ADMIN_PASSWORD`
-   values.
+   values, plus `VITE_ZERO_CACHE_URL=https://nicbk.com/zero`.
+
+   `VITE_ZERO_CACHE_URL` is the one variable here that must be right *before
+   the build*, not just before the start: Vite inlines `VITE_`-prefixed values
+   into the client bundle, and Compose passes it through as a build arg. It is
+   also the only public one — the browser opens that WebSocket itself. See
+   step 5 for the nginx rule it depends on.
 
 3. Wire this repo's NixOS module ([flake.nix](./flake.nix)) into the
    host's system flake:
@@ -184,8 +198,32 @@ One-time host setup:
    starts the stack on its own (the deploy script self-heals a
    not-yet-running stack).
 
-The app serves on host port 3000; TLS/reverse-proxying to it is
-host-level scope, outside this repo (see
+5. Proxy `/zero/` to the sync engine in the host's reverse proxy, alongside
+   the existing rule for the app:
+
+   ```nginx
+   location /zero/ {
+       proxy_pass http://127.0.0.1:4848;   # no trailing slash: keep the prefix
+       proxy_http_version 1.1;
+       proxy_set_header Upgrade $http_upgrade;
+       proxy_set_header Connection "upgrade";
+       proxy_set_header Host $host;
+       proxy_read_timeout 1d;              # long-lived sync connections
+   }
+   ```
+
+   Three things matter here. **Do not strip the `/zero` prefix** — zero-cache's
+   own router matches an optional leading base segment and expects to see it.
+   The `Upgrade`/`Connection` headers are what let the WebSocket through; without
+   them clients connect, fail, and retry forever. And serving the sync engine
+   from the site's **own origin**, rather than a `zero.nicbk.com` subdomain, is
+   what lets the browser send its Better Auth session cookie — which is how
+   `/api/zero/query` knows who is asking — without that cookie having to be
+   widened to every subdomain of the site.
+
+The app serves on host port 3000 and zero-cache on 127.0.0.1:4848 (loopback
+only — nginx is its sole client). TLS/reverse-proxying is host-level scope,
+outside this repo (see
 [research/devops-deployment/hosting-and-infrastructure.md](./research/devops-deployment/hosting-and-infrastructure.md)).
 
 **Rollback** = revert the offending commit on `main` through a normal
@@ -201,7 +239,8 @@ typecheck, unit tests with a ratchet coverage gate (coverage must not
 drop below the last `main` baseline), drift checks on the generated GPG and
 auth-schema artifacts, integration tests against a real Postgres started by
 Testcontainers, Playwright e2e + axe against the
-production build, the sign-in flow e2e against a stubbed Google, and
+production build, the signed-in e2e (stubbed Google, real Postgres, real
+zero-cache) covering the sign-in flow and the Lit Tracker's live sync, and
 Conventional-Commits PR-title lint. The workflows
 use zero repository secrets and pin all third-party actions by commit
 SHA; design and threat model in

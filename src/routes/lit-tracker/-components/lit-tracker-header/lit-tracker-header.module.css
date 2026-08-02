@@ -1,0 +1,85 @@
+/*
+ * The lit-tracker header's row contents. Where the row *sits* — pinned to the
+ * top of the viewport, outside the scrolling document — is LitTrackerShell's
+ * job, so nothing here positions itself.
+ *
+ * The horizontal rhythm mirrors the site header's: one custom property that
+ * shrinks with the viewport, so the single row survives a ~320px phone without
+ * wrapping or scrolling sideways.
+ */
+.header {
+  display: flex;
+  align-items: center;
+  --header-inline-space: clamp(0.5rem, 2.5vw, 1.5rem);
+  gap: var(--header-inline-space);
+  padding: var(--space-sm) var(--header-inline-space);
+  background-color: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
+}
+
+.appName {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  text-decoration: none;
+  /* The app name is the one thing that may be clipped rather than pushing the
+     avatar off a narrow screen — the breadcrumb tells you where you are, and
+     the avatar is the only control up here. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (hover: hover) {
+  .appName:hover {
+    text-decoration: underline;
+  }
+}
+
+.breadcrumb {
+  color: var(--color-text-muted);
+  /* Pushes the avatar to the far end while leaving the breadcrumb next to the
+     app name, per the header spec's left/right split. */
+  margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumbList {
+  display: flex;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * The avatar: a rounded square holding one letter, as in the sample mockup.
+ * Sized in `em` so it tracks the header's fluid font size instead of needing
+ * its own breakpoint, and floored at the 24px minimum-target guidance for a
+ * control this small.
+ */
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: max(2em, 24px);
+  height: max(2em, 24px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .avatar:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}

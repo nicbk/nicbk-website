@@ -64,7 +64,7 @@ need them (see Phases 2–3).
 
 | # | Feature | Slug | Status | Depends on |
 |---|---|---|---|---|
-| 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **In progress** (5 tasks; task 1 implemented 2026-08-02) | #6 |
+| 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **In progress** (5 tasks; task 1 merged, task 2 implemented 2026-08-02) | #6 |
 | 8 | Collection view (list, tags, reading status, filter/sort, live sync) | `collection-view` | Not yet spec'd | #7 |
 | 9 | Article detail + PDF reader + annotations | `article-detail-and-reader` | Not yet spec'd | #7 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |

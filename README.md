@@ -62,15 +62,24 @@ it can run alongside a dev server) and needs Docker. Everything else about
 Database schema:
 
 ```bash
-npm run db:generate-schema     # regenerate src/db/schema.ts from the auth config
-npm run db:generate-migration  # diff the schema into src/db/migrations/*.sql
-npm run db:migrate             # apply migrations (containers do this on `up`)
+npm run db:generate-schema       # regenerate src/db/schema/identity.ts from the auth config
+npm run db:generate-zero-schema  # regenerate src/zero/schema.gen.ts from the Drizzle schema
+npm run db:generate-migration    # diff the schema into src/db/migrations/*.sql
+npm run db:migrate               # apply migrations (containers do this on `up`)
 ```
+
+Two files under `src/` are generated and guarded by CI drift checks, so both
+generators must be re-run after a schema change. Adding a table that Zero should
+sync also means naming it in
+[drizzle-zero.config.ts](./drizzle-zero.config.ts) and adding it to the
+`zero_data` publication in the same migration — see the comments in
+[src/db/migrations/0001_lit_tracker_articles_and_upload_jobs.sql](./src/db/migrations/0001_lit_tracker_articles_and_upload_jobs.sql).
 
 A pre-commit hook (lefthook, installed by `npm ci`) auto-formats staged
 files. Environment variables are validated at startup by `src/env.ts`, which
 throws naming any that are missing or malformed. The database URL, Better Auth
-secret/URL, and Google OAuth credentials are all **required** — copy
+secret/URL, Google OAuth credentials, and the two Zero API keys are all
+**required** — copy
 [.env.example](./.env.example) to `.env` and fill it in before starting the
 app. Everything there is server-only; nothing is `VITE_`-prefixed, so no value
 reaches the client bundle.
@@ -91,11 +100,18 @@ docker compose up
 docker compose -f docker-compose.yml up -d
 ```
 
-Both serve <http://localhost:3000>, and both bring up three services: the
+Both serve <http://localhost:3000>, and both bring up four services: the
 Postgres database, a one-shot `migrate` job that applies the committed
-migrations and exits, and the app, which starts only once that job has
-succeeded. Re-running `up` re-runs the migration job harmlessly — Drizzle
-records what it has already applied.
+migrations and exits, the app, which starts only once that job has succeeded,
+and `zero-cache` (the sync engine) on <http://localhost:4848>. Re-running `up`
+re-runs the migration job harmlessly — Drizzle records what it has already
+applied.
+
+`zero-cache` also waits on the migration job, because it reads the `zero_data`
+publication that a migration creates. If a migration has not actually been
+applied it exits with `Unknown or invalid publications` and restarts until it
+has been; `up` without `--build` after adding a migration is the usual cause,
+since the migrator runs from the built image.
 
 Secrets/config come from a git-ignored `.env` next to the compose file. It is
 **required** now: the app refuses to start without it, and Compose fails with
@@ -138,9 +154,11 @@ One-time host setup:
    **Required** — the stack will not start without it. Use
    [.env.example](./.env.example) as the template: Postgres credentials, a
    `DATABASE_URL` matching them, a freshly generated `BETTER_AUTH_SECRET`,
-   `BETTER_AUTH_URL=https://nicbk.com`, and the Google OAuth client
+   `BETTER_AUTH_URL=https://nicbk.com`, the Google OAuth client
    credentials whose authorized redirect URI is
-   `https://nicbk.com/api/auth/callback/google`.
+   `https://nicbk.com/api/auth/callback/google`, and freshly generated
+   `ZERO_QUERY_API_KEY`, `ZERO_MUTATE_API_KEY`, and `ZERO_ADMIN_PASSWORD`
+   values.
 
 3. Wire this repo's NixOS module ([flake.nix](./flake.nix)) into the
    host's system flake:

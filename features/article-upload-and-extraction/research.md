@@ -316,4 +316,59 @@ are recorded in the "Notes" section below rather than left implicit — per
   pg-boss's internal tables are documented as unstable across versions, and
   Zero's replication scope is controlled by the Postgres publication rather than
   by what `zero/schema.ts` declares. Getting this wrong replicates churn to
-  every client and couples us to a private schema.
+  every client and couples us to a private schema. (Task 1 settled this by
+  making the publication an explicit allowlist — see the 2026-08-02 section
+  below, which found a larger version of the same problem.)
+
+## Verified against Zero 1.8 while building task 1 (2026-08-02)
+
+Re-checked against the installed package and the current docs rather than the
+July notes above, per research-over-recall. Five things had moved, and one is a
+finding of our own.
+
+- **The API is `defineQuery`/`defineQueries`, not "synced queries".** The server
+  resolves them with `handleQueryRequest` + `mustGetQuery`, and the per-request
+  identity is a `ctx` object the endpoint builds from the session. The shape the
+  July research described is intact — only the names changed. The endpoint
+  variables are `ZERO_QUERY_URL` and `ZERO_MUTATE_URL`.
+- **`ZERO_ENABLE_CRUD_MUTATIONS` defaults to `true`.** The spec said to leave the
+  legacy path off; it has to be turned off. Every one of Rocicorp's own
+  deployment examples sets it to `'false'` explicitly, which is what
+  `docker-compose.yml` does. `drizzle-zero` is the other half — its generated
+  schema carries `enableLegacyQueries: false` and `enableLegacyMutators: false`
+  as long as the `--enable-legacy-*` flags stay off.
+- **Cookie auth needs a subdomain in production.** zero-cache forwards the
+  browser's cookies to `/query` and `/mutate` when
+  `ZERO_QUERY_FORWARD_COOKIES` / `ZERO_MUTATE_FORWARD_COOKIES` are set, which is
+  how those endpoints know who is asking. For the browser to send the cookie to
+  zero-cache at all, it must be served from a subdomain of the site
+  (`zero.nicbk.com`) and Better Auth must issue cookies for the parent domain
+  via `crossSubDomainCookies`. Locally this is free — browsers key cookies by
+  host, not port. **That auth-config and nginx change belongs to task 2**, where
+  a browser first connects; nothing in task 1 has a client.
+- **The default publication is much wider than "everything except pg-boss".**
+  Left alone, zero-cache publishes *every table in the `public` schema* — which
+  would replicate Better Auth's `session` and `account` rows, including Google
+  OAuth access and refresh tokens, into its SQLite replica. pg-boss was never
+  the exposure: it lives in its own `pgboss` schema and the default already
+  excludes it. Task 1 therefore creates an explicit `zero_data` publication
+  naming only the synced tables, decided with the user. Changing the publication
+  set later forces a full replica resync, so this was much cheaper to get right
+  at the start than to narrow in #8.
+- **The docs' deny-a-read pattern does not survive server-side ZQL.** Zero
+  documents returning `where(({or}) => or())` to match no rows. Run through
+  `ZQLDatabase` against Postgres it compiles to `WHERE ()`, a syntax error. The
+  queries use `.limit(0)` instead — same meaning, valid on both paths, and not
+  defeatable by any row that happens to exist.
+- **Zero does not support SSR.** The `ZeroProvider` has to be loaded
+  client-only (`React.lazy` in TanStack Start). Task 2's problem, recorded here
+  so it is not discovered at render time.
+- **`X-Api-Key` on both endpoints (our addition).** `/query` and `/mutate` are
+  routes on the public app server, so anyone can POST to them. zero-cache can
+  present a shared secret (`ZERO_QUERY_API_KEY` / `ZERO_MUTATE_API_KEY`), and
+  the handlers verify it with a timing-safe comparison before anything else.
+  This is not an authorization decision about data — the session still makes
+  that one, independently and unconditionally — it just means the sync engine's
+  callbacks are not open endpoints. These are the only new variables the *app*
+  reads; zero-cache's own connection settings are Compose-level, like the
+  existing `POSTGRES_*` ones.

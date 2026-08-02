@@ -17,6 +17,8 @@ import { Route as personalSiteProjectsRouteRouteImport } from './routes/(persona
 import { Route as personalSiteAboutRouteRouteImport } from './routes/(personal-site)/about/route'
 import { Route as personalSiteBlogIndexRouteImport } from './routes/(personal-site)/blog/index'
 import { Route as personalSitehomeIndexRouteImport } from './routes/(personal-site)/(home)/index'
+import { Route as ApiZeroQueryRouteImport } from './routes/api/zero/query'
+import { Route as ApiZeroMutateRouteImport } from './routes/api/zero/mutate'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog/$slug'
 
@@ -60,6 +62,16 @@ const personalSitehomeIndexRoute = personalSitehomeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => personalSiteRouteRoute,
 } as any)
+const ApiZeroQueryRoute = ApiZeroQueryRouteImport.update({
+  id: '/api/zero/query',
+  path: '/api/zero/query',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiZeroMutateRoute = ApiZeroMutateRouteImport.update({
+  id: '/api/zero/mutate',
+  path: '/api/zero/mutate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -79,6 +91,8 @@ export interface FileRoutesByFullPath {
   '/projects': typeof personalSiteProjectsRouteRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/zero/mutate': typeof ApiZeroMutateRoute
+  '/api/zero/query': typeof ApiZeroQueryRoute
   '/': typeof personalSitehomeIndexRoute
   '/blog/': typeof personalSiteBlogIndexRoute
 }
@@ -90,6 +104,8 @@ export interface FileRoutesByTo {
   '/projects': typeof personalSiteProjectsRouteRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/zero/mutate': typeof ApiZeroMutateRoute
+  '/api/zero/query': typeof ApiZeroQueryRoute
   '/': typeof personalSitehomeIndexRoute
   '/blog': typeof personalSiteBlogIndexRoute
 }
@@ -103,6 +119,8 @@ export interface FileRoutesById {
   '/(personal-site)/projects': typeof personalSiteProjectsRouteRoute
   '/(personal-site)/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/zero/mutate': typeof ApiZeroMutateRoute
+  '/api/zero/query': typeof ApiZeroQueryRoute
   '/(personal-site)/(home)/': typeof personalSitehomeIndexRoute
   '/(personal-site)/blog/': typeof personalSiteBlogIndexRoute
 }
@@ -116,6 +134,8 @@ export interface FileRouteTypes {
     | '/projects'
     | '/blog/$slug'
     | '/api/auth/$'
+    | '/api/zero/mutate'
+    | '/api/zero/query'
     | '/'
     | '/blog/'
   fileRoutesByTo: FileRoutesByTo
@@ -127,6 +147,8 @@ export interface FileRouteTypes {
     | '/projects'
     | '/blog/$slug'
     | '/api/auth/$'
+    | '/api/zero/mutate'
+    | '/api/zero/query'
     | '/'
     | '/blog'
   id:
@@ -139,6 +161,8 @@ export interface FileRouteTypes {
     | '/(personal-site)/projects'
     | '/(personal-site)/blog/$slug'
     | '/api/auth/$'
+    | '/api/zero/mutate'
+    | '/api/zero/query'
     | '/(personal-site)/(home)/'
     | '/(personal-site)/blog/'
   fileRoutesById: FileRoutesById
@@ -149,6 +173,8 @@ export interface RootRouteChildren {
   ErrorProbeRoute: typeof ErrorProbeRoute
   UserSettingsProbeRoute: typeof UserSettingsProbeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiZeroMutateRoute: typeof ApiZeroMutateRoute
+  ApiZeroQueryRoute: typeof ApiZeroQueryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -209,6 +235,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof personalSitehomeIndexRouteImport
       parentRoute: typeof personalSiteRouteRoute
     }
+    '/api/zero/query': {
+      id: '/api/zero/query'
+      path: '/api/zero/query'
+      fullPath: '/api/zero/query'
+      preLoaderRoute: typeof ApiZeroQueryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/zero/mutate': {
+      id: '/api/zero/mutate'
+      path: '/api/zero/mutate'
+      fullPath: '/api/zero/mutate'
+      preLoaderRoute: typeof ApiZeroMutateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -251,6 +291,8 @@ const rootRouteChildren: RootRouteChildren = {
   ErrorProbeRoute: ErrorProbeRoute,
   UserSettingsProbeRoute: UserSettingsProbeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiZeroMutateRoute: ApiZeroMutateRoute,
+  ApiZeroQueryRoute: ApiZeroQueryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -49,6 +49,8 @@ const validEnvironment = {
   BETTER_AUTH_URL: 'https://nicbk.com',
   GOOGLE_CLIENT_ID: 'client-id.apps.googleusercontent.com',
   GOOGLE_CLIENT_SECRET: 'client-secret',
+  ZERO_QUERY_API_KEY: 'q'.repeat(48),
+  ZERO_MUTATE_API_KEY: 'm'.repeat(48),
 }
 
 describe('the application environment schema', () => {
@@ -66,6 +68,8 @@ describe('the application environment schema', () => {
     'BETTER_AUTH_URL',
     'GOOGLE_CLIENT_ID',
     'GOOGLE_CLIENT_SECRET',
+    'ZERO_QUERY_API_KEY',
+    'ZERO_MUTATE_API_KEY',
   ])('refuses to start without %s', (variable) => {
     const incomplete: Record<string, string> = { ...validEnvironment }
     delete incomplete[variable]
@@ -95,6 +99,18 @@ describe('the application environment schema', () => {
     expect(() =>
       parseEnv(envSchema, { ...validEnvironment, DATABASE_URL: 'db:5432' }),
     ).toThrowError(/DATABASE_URL/)
+  })
+
+  it.each([
+    'ZERO_QUERY_API_KEY',
+    'ZERO_MUTATE_API_KEY',
+  ])('rejects a %s too short to be a real key', (variable) => {
+    // Same reasoning as the session secret: a placeholder value would let the
+    // stack start with a guessable key on the endpoint that resolves every
+    // read of user data.
+    expect(() =>
+      parseEnv(envSchema, { ...validEnvironment, [variable]: 'short' }),
+    ).toThrowError(new RegExp(variable))
   })
 
   it('keeps every variable server-only', () => {

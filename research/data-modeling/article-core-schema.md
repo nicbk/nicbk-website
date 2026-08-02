@@ -15,7 +15,8 @@ already-decided `user_id` FK pattern (applied here, not re-derived).
 ```sql
 articles (
   id                 uuid primary key,        -- client-generated UUIDv7
-  user_id            uuid not null references "user"(id) on delete cascade,
+  user_id            text not null references "user"(id) on delete cascade,
+                       -- `uuid` as first written; corrected 2026-08-02, below
 
   title              text not null,
   authors            jsonb not null,          -- [{ name, given?, family? }, ...]
@@ -49,6 +50,22 @@ Required fields: `title`, `authors` (per
 [article-edit.md](../ui-ux/pages/lit-tracker/components/article-edit.md)).
 Everything else — `publication_year`, `venue`, `doi`, `abstract`, `notes` —
 is optional/nullable.
+
+### Revision (2026-08-02): the ownership column is `text`, not `uuid`
+
+Written in July against a `user` table that did not exist yet, this decision
+assumed Better Auth's primary key would be a `uuid`. It is not: the generated
+identity schema (`src/db/schema/identity.ts`) declares `user.id` as `text`, and
+Postgres will not let a `uuid` foreign key reference a `text` primary key. So
+`articles.user_id` — and `upload_jobs.user_id`, the same correction in
+[upload-jobs-schema.md](./upload-jobs-schema.md) — is `text`.
+
+Nothing else changes. Each table's *own* primary key is still a `uuid` holding a
+UUIDv7, because that one is this project's choice; the ownership column's type
+is Better Auth's, and the schema that owns a value owns its type. The general
+point worth carrying: a decision about how this project's tables join a
+third-party table is only provisional until that table exists, because half of
+it was never ours to make.
 
 ### Authors — `jsonb` array, not a normalized table
 

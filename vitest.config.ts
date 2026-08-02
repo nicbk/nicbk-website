@@ -49,7 +49,8 @@ export default defineConfig({
       // this ratchet doesn't measure.
       exclude: [
         'src/routeTree.gen.ts',
-        'src/db/schema.ts',
+        'src/db/schema/identity.ts',
+        'src/zero/schema.gen.ts',
         'src/db/migrations/**',
         'src/db/test-support/**',
       ],

@@ -72,6 +72,10 @@ const appEnv = {
   BETTER_AUTH_URL: BASE_URL,
   GOOGLE_CLIENT_ID: 'auth-e2e-google-client-id',
   GOOGLE_CLIENT_SECRET: 'auth-e2e-google-client-secret',
+  // Required by src/env.ts from startup on; nothing in this suite is
+  // zero-cache, so these only have to clear the schema's minimum length.
+  ZERO_QUERY_API_KEY: 'auth-e2e-placeholder-zero-query-api-key',
+  ZERO_MUTATE_API_KEY: 'auth-e2e-placeholder-zero-mutate-api-key',
   PORT: String(AUTH_E2E_PORT),
   // Enables the test-only page that mounts the user-settings modal
   // (src/routes/user-settings-probe.tsx) — this is the only place it is ever

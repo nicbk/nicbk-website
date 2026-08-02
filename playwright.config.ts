@@ -49,6 +49,11 @@ export default defineConfig({
       BETTER_AUTH_URL: 'http://localhost:3000',
       GOOGLE_CLIENT_ID: 'e2e-placeholder-client-id',
       GOOGLE_CLIENT_SECRET: 'e2e-placeholder-client-secret',
+      // Also required from startup on. Nothing in this suite is zero-cache, so
+      // no request will ever present these — they only have to satisfy the
+      // schema's minimum length.
+      ZERO_QUERY_API_KEY: 'e2e-placeholder-zero-query-api-key-32-chars',
+      ZERO_MUTATE_API_KEY: 'e2e-placeholder-zero-mutate-api-key-32-chars',
     },
     port: 3000,
     reuseExistingServer: !isCi,

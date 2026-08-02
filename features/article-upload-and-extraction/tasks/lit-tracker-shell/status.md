@@ -70,7 +70,7 @@ open, CI green on all five jobs. Second of five.
   `zero.nicbk.com` subdomain** — agreed with the user, and a reversal of what
   task 1 recorded. zero-cache's router accepts an optional leading base path
   segment (`(/:base)/:worker/v:version/:action`) and Zero's client permits at
-  most one, so nginx can proxy `/zero/` through untouched. Same-origin means
+  most one, so Caddy can proxy `/zero/*` through untouched. Same-origin means
   the browser sends the session cookie with **no change to how that cookie is
   issued**; the subdomain route would have required `crossSubDomainCookies`,
   widening the session cookie to every subdomain of the site permanently, plus
@@ -208,7 +208,7 @@ Two things worth carrying:
 ## Before this merges
 
 `VITE_ZERO_CACHE_URL=https://nicbk.com/zero` must be in
-`/var/lib/nicbk-website/.env` on nicbk-tower, and the nginx `location /zero/`
+`/var/lib/nicbk-website/.env` on nicbk-tower, and the Caddy `handle /zero/*`
 block (README step 5) in place. Compose interpolates the variable at **build**
 time with `:?`, so a missing value fails the build with a named error rather
 than shipping a client that silently syncs nothing.

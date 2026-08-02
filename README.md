@@ -81,8 +81,9 @@ throws naming any that are missing or malformed. The database URL, Better Auth
 secret/URL, Google OAuth credentials, and the two Zero API keys are all
 **required** — copy
 [.env.example](./.env.example) to `.env` and fill it in before starting the
-app. Everything there is server-only; nothing is `VITE_`-prefixed, so no value
-reaches the client bundle.
+app. Everything there is server-only except `VITE_ZERO_CACHE_URL` — the address
+the browser dials zero-cache at, which is public by construction and is the only
+value inlined into the client bundle.
 
 ## Running in Docker
 
@@ -172,7 +173,7 @@ One-time host setup:
    the build*, not just before the start: Vite inlines `VITE_`-prefixed values
    into the client bundle, and Compose passes it through as a build arg. It is
    also the only public one — the browser opens that WebSocket itself. See
-   step 5 for the nginx rule it depends on.
+   step 5 for the Caddy route it depends on.
 
 3. Wire this repo's NixOS module ([flake.nix](./flake.nix)) into the
    host's system flake:
@@ -198,31 +199,41 @@ One-time host setup:
    starts the stack on its own (the deploy script self-heals a
    not-yet-running stack).
 
-5. Proxy `/zero/` to the sync engine in the host's reverse proxy, alongside
-   the existing rule for the app:
+5. Route `/zero/*` to the sync engine in the host's Caddy config, alongside the
+   existing proxy to the app:
 
-   ```nginx
-   location /zero/ {
-       proxy_pass http://127.0.0.1:4848;   # no trailing slash: keep the prefix
-       proxy_http_version 1.1;
-       proxy_set_header Upgrade $http_upgrade;
-       proxy_set_header Connection "upgrade";
-       proxy_set_header Host $host;
-       proxy_read_timeout 1d;              # long-lived sync connections
-   }
+   ```nix
+   services.caddy.virtualHosts."nicbk.com".extraConfig = ''
+     handle /zero/* {
+       reverse_proxy 127.0.0.1:4848
+     }
+     handle {
+       reverse_proxy 127.0.0.1:3000
+     }
+   '';
    ```
 
-   Three things matter here. **Do not strip the `/zero` prefix** — zero-cache's
-   own router matches an optional leading base segment and expects to see it.
-   The `Upgrade`/`Connection` headers are what let the WebSocket through; without
-   them clients connect, fail, and retry forever. And serving the sync engine
-   from the site's **own origin**, rather than a `zero.nicbk.com` subdomain, is
-   what lets the browser send its Better Auth session cookie — which is how
-   `/api/zero/query` knows who is asking — without that cookie having to be
-   widened to every subdomain of the site.
+   **`handle`, never `handle_path`** — `handle_path` strips the matched prefix,
+   and zero-cache's own router expects to see it: it matches
+   `(/:base)/:worker/v:version/:action`, so `/zero/sync/v51/connect` is what it
+   is looking for. A plain path matcher does not rewrite anything, so the prefix
+   survives.
+
+   Nothing else is needed. Caddy upgrades WebSockets on its own — no
+   `Upgrade`/`Connection` headers to set, unlike nginx — and `reverse_proxy` has
+   no stream timeout by default, so long-lived sync connections are not cut off.
+   One optional nicety: Caddy closes streaming connections immediately on a
+   config reload, so every `nixos-rebuild switch` touching Caddy drops open sync
+   sockets. Zero's client reconnects by itself, so this is cosmetic; adding
+   `stream_close_delay 10s` inside the `/zero/*` block smooths it over.
+
+   Serving the sync engine from the site's **own origin**, rather than a
+   `zero.nicbk.com` subdomain, is what lets the browser send its Better Auth
+   session cookie — which is how `/api/zero/query` knows who is asking — without
+   that cookie having to be widened to every subdomain of the site.
 
 The app serves on host port 3000 and zero-cache on 127.0.0.1:4848 (loopback
-only — nginx is its sole client). TLS/reverse-proxying is host-level scope,
+only — Caddy is its sole client). TLS/reverse-proxying is host-level scope,
 outside this repo (see
 [research/devops-deployment/hosting-and-infrastructure.md](./research/devops-deployment/hosting-and-infrastructure.md)).
 

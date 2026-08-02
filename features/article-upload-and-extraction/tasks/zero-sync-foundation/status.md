@@ -1,12 +1,12 @@
 # Status: Zero Sync Foundation
 
-**State:** Implemented, awaiting PR + CI + review. First of five.
+**State:** In review — [PR #73](https://github.com/nicbk/nicbk-website/pull/73) open. First of five.
 
 - Branch: `article-upload-and-extraction/zero-sync-foundation`.
 - Sub-issue: [#67](https://github.com/nicbk/nicbk-website/issues/67)
   (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)),
   self-assigned.
-- PR: —
+- PR: [#73](https://github.com/nicbk/nicbk-website/pull/73).
 
 ## Notes carried into implementation
 
@@ -121,4 +121,5 @@ future reader will meet it rather than only here.
   `ZERO_ENABLE_CRUD_MUTATIONS` defaults to **on**, the endpoint variables are
   `ZERO_QUERY_URL`/`ZERO_MUTATE_URL`, and cookie auth needs zero-cache on a
   subdomain in production. All recorded in
-  [research.md](../../research.md). Awaiting PR + CI + review.
+  [research.md](../../research.md). Opened as
+  [PR #73](https://github.com/nicbk/nicbk-website/pull/73); awaiting CI + review.

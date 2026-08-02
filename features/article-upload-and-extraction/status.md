@@ -28,7 +28,7 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| `zero-sync-foundation` | Implemented ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | — | — | — |
+| `zero-sync-foundation` | In review ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | — | — |
 | `lit-tracker-shell` | Not started ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | — | — | — |
 | `pdf-upload-and-storage` | Not started ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | — | — | — |
 | `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
@@ -119,7 +119,8 @@ against stubbed GROBID and Semantic Scholar.
   [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md)
   that GitHub closes a parent automatically — corrected there as a dated
   revision, and #53 closed. Next: task 1, `zero-sync-foundation`.
-- 2026-08-02 — **Task 1 (`zero-sync-foundation`) implemented**, awaiting PR.
+- 2026-08-02 — **Task 1 (`zero-sync-foundation`) implemented**, opened as
+  [PR #73](https://github.com/nicbk/nicbk-website/pull/73).
   zero-cache is in the Compose stack and replicating, `articles` and
   `upload_jobs` are migrated, `src/zero/schema.gen.ts` is generated under a CI
   drift check, and `/query` + `/mutate` are live with cross-user isolation

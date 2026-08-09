@@ -1,4 +1,3 @@
-import type { Page } from '@playwright/test'
 import { expect, test, toggleThemeTo } from '../e2e/fixtures'
 import {
   closeArticleConnection,

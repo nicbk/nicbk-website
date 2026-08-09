@@ -1,12 +1,18 @@
 # Status: Tags and Reading Status
 
-**State:** In progress. Second of four.
+**State:** Implemented, awaiting review. Second of four.
 
 - Branch: `collection-view/tags-and-reading-status`, from `main` at `afc316e`.
 - Sub-issue: [#83](https://github.com/nicbk/nicbk-website/issues/83)
   (parent [#81](https://github.com/nicbk/nicbk-website/issues/81)),
   self-assigned.
-- PR: none yet.
+- PR: opened once every tier is green locally.
+
+All four tiers pass locally: 683 unit, 92 integration (including the 27 that
+run the five mutators against real Postgres under two users' contexts), 61
+production e2e, and 64 signed-in e2e. Plus a manual pass in Chrome, in both
+themes at three widths, against the four real papers — see below, since it is
+where most of the interesting failures came from.
 
 ## Settled with the user before implementation (2026-08-09)
 
@@ -63,7 +69,22 @@ research-over-recall. Two findings change the plan:
 
 ## What was found in the browser
 
-Four things the automated tiers could not have caught, all fixed:
+Five things the automated tiers could not have caught, all fixed:
+
+- **A card with more tags than fit deformed the whole grid.** The chip row
+  wrapped, and `grid-auto-rows: 1fr` gives every row the height of its tallest
+  card — so one paper with ten tags made every card beside it taller, including
+  the ones with none. Raised by the user, who also decided the answer: keep every
+  card the same size, scroll the chips **horizontally** with no visible
+  scrollbar, and let nothing else in the card move. Implemented as
+  `flex-wrap: nowrap` + `overflow-x: auto` + hidden scrollbar on the row, and
+  `overflow: hidden` on the card so the row is the only thing that can scroll.
+  Hiding the scrollbar hides an affordance, so the row takes focus itself —
+  otherwise the tags past the right-hand edge are reachable by pointer and by
+  screen reader but not by keyboard (WCAG 2.1.1, and axe's
+  `scrollable-region-focusable`). Measured in the browser afterwards: four cards
+  at 171px each with one of them carrying eleven chips, `scrollWidth` 1031 in a
+  304px row, and a scrollbar thickness of zero.
 
 - **A menu label rendered one character per line.** Base UI unmounts a
   `RadioItemIndicator` that is not ticked, so an unticked row has a single child
@@ -87,6 +108,14 @@ Four things the automated tiers could not have caught, all fixed:
 Also confirmed against the live stack rather than assumed: a tag inserted
 directly into Postgres appeared in an open card menu with no reload, and every
 write made from the UI was read back out of Postgres afterwards.
+
+And one thing the *specs* got wrong rather than the code — worth recording
+because it was silent. A card's tag chips are a nested list, so
+`getByRole('list', {name: 'Articles'}).getByRole('listitem')` — the locator three
+specs shared — began matching every chip as well as every cell. It does not fail
+loudly; it counts the collection wrong. Both scopings a card locator now needs
+(past the header's one-item path list, and past its own chips) live in
+`e2e-auth/support/collection.ts` rather than in three copies.
 
 ## Notes carried into implementation
 

@@ -1,12 +1,19 @@
 import type { Job, PgBoss } from 'pg-boss'
 import { db, pool } from '~/db/client'
-import type { ExtractJob, FinalizeJob } from '~/lit-tracker/jobs/queue'
+import type {
+  EnrichJob,
+  ExtractJob,
+  FinalizeJob,
+} from '~/lit-tracker/jobs/queue'
 import {
+  ENRICH_DEAD_LETTER_QUEUE,
+  ENRICH_QUEUE,
   EXTRACT_DEAD_LETTER_QUEUE,
   EXTRACT_QUEUE,
   FINALIZE_QUEUE,
   getQueue,
 } from '~/lit-tracker/jobs/queue'
+import { runEnrichStage, runExhaustedEnrichStage } from './enrich-stage'
 import { runExhaustedExtractStage, runExtractStage } from './extract-stage'
 import { runFinalizeStage } from './finalize-stage'
 import type { ExtractionServices } from './services'
@@ -103,6 +110,12 @@ export async function registerExtractionHandlers(
   )
   await boss.work<ExtractJob>(EXTRACT_DEAD_LETTER_QUEUE, (jobs) =>
     handleEach(jobs, (job) => runExhaustedExtractStage(job, services)),
+  )
+  await boss.work<EnrichJob>(ENRICH_QUEUE, (jobs) =>
+    handleEach(jobs, (job) => runEnrichStage(job, services)),
+  )
+  await boss.work<EnrichJob>(ENRICH_DEAD_LETTER_QUEUE, (jobs) =>
+    handleEach(jobs, (job) => runExhaustedEnrichStage(job, services)),
   )
   await boss.work<FinalizeJob>(FINALIZE_QUEUE, (jobs) =>
     handleEach(jobs, (job) => runFinalizeStage(job, services)),

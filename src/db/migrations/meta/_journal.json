@@ -15,6 +15,13 @@
       "when": 1785640214549,
       "tag": "0001_lit_tracker_articles_and_upload_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786250641459,
+      "tag": "0002_citation_edges",
+      "breakpoints": true
     }
   ]
 }

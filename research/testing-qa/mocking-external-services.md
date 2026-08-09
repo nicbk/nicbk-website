@@ -133,6 +133,38 @@ process Playwright starts — the same reason the Google token stub is
 in-process — so that constraint does not apply, and a container would add an
 image pull to every run for a few hundred bytes of XML.
 
+### Revision (2026-08-09, at implementation time): Semantic Scholar follows the same pattern, and MSW is still not the unit-test tool
+
+Building the enrichment stage
+(`features/article-upload-and-extraction/tasks/semantic-scholar-enrichment`)
+produced the second half of what this file describes, plus one standing
+divergence worth stating rather than leaving to be rediscovered.
+
+**The Semantic Scholar stub is a process too**
+(`e2e-auth/support/semantic-scholar-stub.mjs`), for the reasons the revision
+above gives, and for one specific to this service: the real API is a pool
+shared with every other unauthenticated caller on the internet and throttles by
+current load, so a suite pointed at it would pass or fail depending on how busy
+that pool happened to be. Twelve concurrent requests against it returned eight
+429s. The mocking decision this file makes was never in doubt here; the only
+question was packaging.
+
+Its instruction reaches it the same way GROBID's does — out of the uploaded
+file. The GROBID stub emits whatever DOI the upload's directive names, and this
+stub decides what to do from that DOI's shape. One directive in one file
+therefore chooses the behaviour of both services, which keeps the stateless,
+no-control-channel property the revision above singles out.
+
+**MSW is still not installed, and unit tests stub `fetch` directly.** This file
+decides MSW for the unit tier; task 4 stubbed `fetch` with `vi.stubGlobal`
+instead, and task 5 followed it rather than run two HTTP-mocking mechanisms in
+adjacent files. Both clients are small — one `fetch` call each, no client
+library underneath — which is the case MSW's transparency argument is weakest
+for. Recorded here because it is now a *pattern* rather than an oversight: the
+next server-side client should stub `fetch` too, or MSW should be adopted
+deliberately and both existing clients moved onto it. What must not happen is a
+third file inventing a third way.
+
 One premise above did weaken and is worth naming: the "~4 GB RAM footprint"
 describes `grobid:0.9.1-full`, and the stack runs `0.9.1-crf` (~510 MB,
 CPU-only), which starts in well under a minute. Mocking still holds on the

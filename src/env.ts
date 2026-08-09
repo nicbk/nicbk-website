@@ -108,6 +108,27 @@ export const envSchema = z.object({
    * nothing outside `app-internal` can address it.
    */
   GROBID_URL: z.url({ protocol: /^https?$/ }),
+
+  /**
+   * Where the enrichment stage reaches Semantic Scholar's Graph API — normally
+   * `https://api.semanticscholar.org/graph/v1`.
+   *
+   * Required rather than defaulted, so the signed-in e2e tier can point it at
+   * its stub. A default would mean a test run that forgot to override it
+   * silently made real calls against a shared, rate-limited public API.
+   */
+  SEMANTIC_SCHOLAR_URL: z.url({ protocol: /^https?$/ }),
+
+  /**
+   * An optional Semantic Scholar API key.
+   *
+   * **Optional on purpose.** The API answers unauthenticated requests from a
+   * pool shared with everyone else, which is enough for a personal collection
+   * and is what this site runs on; a key buys a dedicated 1 request/second, not
+   * access. Requiring one would make an unconfigurable third party a
+   * prerequisite for the site starting at all.
+   */
+  SEMANTIC_SCHOLAR_API_KEY: z.string().min(1).optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

@@ -11,6 +11,18 @@ export interface DatabaseHandle {
 }
 
 /**
+ * The handle a `db.transaction(...)` callback receives.
+ *
+ * Named here so a module can require "runs inside someone else's transaction"
+ * in its signature. Several of the extraction pipeline's writes are only
+ * correct as part of a larger commit — an article and its citation edges, say —
+ * and a function taking a `DatabaseHandle` could quietly commit on its own.
+ */
+export type DatabaseTransaction = Parameters<
+  Parameters<DatabaseHandle['db']['transaction']>[0]
+>[0]
+
+/**
  * Builds a Drizzle client over a `pg` pool for the given connection string.
  *
  * A factory rather than a module-level singleton so a caller can point at a

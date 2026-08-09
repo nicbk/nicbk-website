@@ -139,6 +139,81 @@ placeholder, not delete the citing article's bibliography entry — the
 citing article still cited that paper, whether or not it remains in this
 user's collection.
 
+## Revision (2026-08-09, at implementation time): what the rule costs, measured
+
+Implemented in
+`features/article-upload-and-extraction/tasks/semantic-scholar-enrichment`.
+The schema above was built exactly as specified and the matching rule was
+implemented exactly as written. Two things are worth recording, because both
+are invisible until real papers go through it.
+
+### The rule is sound, but it needed the IDs to exist
+
+"Only fall back when *neither* side has an ID" keeps the false-positive risk
+near zero, and it does. But an *enriched* article always has an ID, so it can
+only ever be matched by an edge that also has one — and whether an edge has one
+depends entirely on whether the citing paper printed an identifier for that
+reference. Most do not: a machine-learning bibliography cites proceedings by
+name.
+
+Observed directly, before the fix below: *BERT* cites *Attention Is All You
+Need*, both were in the collection, and the edge did not graduate. The rule
+declined correctly by its own terms, and the graph was 13% full for BERT and
+95% full for a PLOS ONE article whose bibliography printed DOIs throughout.
+
+**The rule was not changed.** What changed is that the IDs now exist before it
+runs. `GET /paper/{id}/references` returns Semantic Scholar's own resolved
+reference list for the citing paper — one request, every entry carrying a
+`paperId` — and those are matched onto the parsed entries locally by title
+(`src/lit-tracker/enrichment/reference-list.ts`). An identifier-less edge
+therefore arrives at the graduation rule already carrying an ID, so the
+ID-first path does the work and the loose fallback stays where it was.
+
+### An edge no longer has to come from the PDF's own parse
+
+This *is* a departure from "one row per bibliography entry parsed from a citing
+article's PDF" at the top of this document, taken deliberately. Semantic
+Scholar's list is bigger than GROBID's parse — 63 entries against 54 for BERT —
+because GROBID drops what it cannot segment. *Attention Is All You Need* cites
+*Layer Normalization*, GROBID emitted no title for it, and that citation
+existed nowhere in the graph. A reference the citing paper genuinely made is a
+real edge whoever managed to read it, so for a paper Semantic Scholar knows,
+its reference list is a source of edges alongside the parse, and its record is
+what those edges store.
+
+The parse is still what covers everything Semantic Scholar does not know —
+datasets, technical reports, and papers it has never indexed — which is why it
+is not simply replaced.
+
+Measured on real papers, references resolving to a Semantic Scholar paper:
+13% → 97% (BERT), 38% → 98% (*Attention*), 28% → 94% (*Convolutional Sequence
+to Sequence Learning*). Uploaded together, they link to each other in the graph.
+What remains unresolved is references Semantic Scholar could not resolve either,
+plus entries that are not papers at all.
+
+Title matching is used there and not here because the candidate sets are
+different in kind. Graduation compares against an entire collection, where a
+false positive links two unrelated papers forever. Reference alignment compares
+against **the ~50 papers this exact paper cited**, both sides describing the
+same reference — which is what pays for a normalization tolerant enough to
+absorb GROBID keeping a year prefix or a trailing venue on a title. The two
+must not be merged.
+
+What remains unresolved is GROBID mis-parsing rather than anything this layer
+can reach: a reference merged with its neighbour, or a title truncated past
+recognition. [article-edit.md](../ui-ux/pages/lit-tracker/components/article-edit.md)
+is the escape hatch for those.
+
+### The surname is compared, not the whole name
+
+The fallback says "the first author's `family` (or `name` when `family` isn't
+available)". Taken literally that never matches across sources: Semantic
+Scholar returns authors as `{"name": "Ashish Vaswani"}` and never splits them,
+so its `name` would be compared against GROBID's `family` of "Vaswani". Both
+sides are therefore reduced to the last word of whichever field is available.
+A compound surname ("van der Berg") reduces to its last word — a match refused
+rather than a wrong one accepted, and the title must still agree exactly.
+
 ## Sources
 
 - [postgresql.org — SQL Key Words](https://www.postgresql.org/docs/current/sql-keywords-appendix.html) —

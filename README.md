@@ -57,8 +57,8 @@ npm run test:e2e:auth  # sign-in flow: stubbed Google + Testcontainers Postgres
 `test:e2e:auth` is its own tier because everything in it needs a real session:
 the Google sign-in round trip, the Lit Tracker's live sync, and uploads becoming
 articles. It starts its own Postgres, zero-cache, and Garage containers, a
-stubbed GROBID, and a patched app server (on port 3100, so it can run alongside
-a dev server), and needs Docker.
+stubbed GROBID and a stubbed Semantic Scholar, and a patched app server (on
+port 3100, so it can run alongside a dev server), and needs Docker.
 Everything else about `/sign-in` is covered by the ordinary `test:e2e` suite.
 
 Database schema:
@@ -209,6 +209,16 @@ One-time host setup:
    Compose service's address, and the port is never published — but `src/env.ts`
    validates it at startup, so a deploy without it stops there.
 
+   Enrichment needs `SEMANTIC_SCHOLAR_URL=https://api.semanticscholar.org/graph/v1`,
+   the real public API. Also not a secret, and also validated at startup —
+   required rather than defaulted so the e2e tier can point it at its stub.
+   `SEMANTIC_SCHOLAR_API_KEY` is **optional and normally unset**: the API
+   answers unauthenticated requests from a shared pool, which is plenty for a
+   personal collection, and a key only buys a dedicated 1 request/second. If
+   Semantic Scholar is unreachable or throttling, uploads still succeed — the
+   article simply keeps `extraction_status = 'grobid_only'` instead of being
+   enriched with its venue, year and citation graph.
+
    `VITE_ZERO_CACHE_URL` is the one variable here that must be right *before
    the build*, not just before the start: Vite inlines `VITE_`-prefixed values
    into the client bundle, and Compose passes it through as a build arg. It is
@@ -294,10 +304,11 @@ typecheck, unit tests with a ratchet coverage gate (coverage must not
 drop below the last `main` baseline), drift checks on the generated GPG and
 auth-schema artifacts, integration tests against a real Postgres and a real
 Garage started by Testcontainers, Playwright e2e + axe against the
-production build, the signed-in e2e (stubbed Google and GROBID, real Postgres,
-real zero-cache, real Garage) covering the sign-in flow, the Lit Tracker's live
-sync, and an upload becoming an article, and Conventional-Commits PR-title
-lint. The workflows
+production build, the signed-in e2e (stubbed Google, GROBID and Semantic
+Scholar, real Postgres, real zero-cache, real Garage) covering the sign-in
+flow, the Lit Tracker's live sync, an upload becoming an article, and that a
+Semantic Scholar outage degrades an upload rather than failing it, and
+Conventional-Commits PR-title lint. The workflows
 use zero repository secrets and pin all third-party actions by commit
 SHA; design and threat model in
 [research/devops-deployment/ci-pipeline.md](./research/devops-deployment/ci-pipeline.md).

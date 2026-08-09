@@ -3,6 +3,7 @@
 // Server module: the doubles below stand in for Postgres, Garage and GROBID.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DatabaseHandle } from '~/db/create-database'
+import { citationEdges } from '~/db/schema'
 import type { ExtractJob } from '~/lit-tracker/jobs/queue'
 import { PdfOwnershipError } from '~/storage/pdf-storage'
 import { runExhaustedExtractStage, runExtractStage } from './extract-stage'
@@ -30,6 +31,8 @@ const JOB: ExtractJob = {
 
 const FILENAME = 'a-paper-with-a-long-name.pdf'
 
+const NO_IDENTIFIERS = { doi: null, arxivId: null, pubmedId: null }
+
 /** A complete extraction, as the parser would report it. */
 const COMPLETE: ExtractedMetadata = {
   title: 'Bounded Staleness for Single-Node Sync Engines',
@@ -37,9 +40,29 @@ const COMPLETE: ExtractedMetadata = {
   abstract: 'We characterise the staleness a single-node deployment exhibits.',
   publicationYear: 2024,
   venue: 'Journal of Practical Replication',
-  doi: '10.1145/3612345.3612399',
+  identifiers: { ...NO_IDENTIFIERS, doi: '10.1145/3612345.3612399' },
   bibliography: [],
 }
+
+/** Two references: one Semantic Scholar can resolve, one it cannot. */
+const REFERENCES: ExtractedMetadata['bibliography'] = [
+  {
+    title: 'A Reference With An ArXiv Id',
+    authors: [{ name: 'Ada Byron', family: 'Byron' }],
+    publicationYear: 2019,
+    venue: null,
+    identifiers: { ...NO_IDENTIFIERS, arxivId: '1901.00001' },
+    raw: 'Byron, A. A Reference With An ArXiv Id. 2019.',
+  },
+  {
+    title: 'A Reference With Nothing To Look It Up By',
+    authors: [{ name: 'Grace Hopper', family: 'Hopper' }],
+    publicationYear: 1959,
+    venue: 'Proceedings of Something',
+    identifiers: NO_IDENTIFIERS,
+    raw: null,
+  },
+]
 
 /** What a run wrote, and in what order. */
 interface Recorded {
@@ -47,6 +70,7 @@ interface Recorded {
   article: Record<string, unknown> | undefined
   articleOnConflict: Record<string, unknown> | undefined
   jobUpdate: Record<string, unknown> | undefined
+  edges: Record<string, unknown>[]
   sent: { queue: string; job: unknown }[]
 }
 
@@ -61,27 +85,64 @@ let recorded: Recorded
 function fakeDatabase(
   uploadJob: { filename: string } | undefined,
 ): DatabaseHandle {
+  // Which table is being written decides what is recorded, taken from the
+  // table Drizzle was handed rather than from the shape of the call — the
+  // article's insert and the edges' differ only in whether they go on to
+  // `.onConflictDoUpdate`, which is far too subtle a thing to key a double on.
   const tx = {
-    insert: () => ({
-      values: (values: Record<string, unknown>) => ({
-        onConflictDoUpdate: async ({
-          set,
-        }: {
-          set: Record<string, unknown>
-        }) => {
-          recorded.steps.push('insert-article')
-          recorded.article = values
-          recorded.articleOnConflict = set
-        },
-      }),
+    insert: (table: unknown) => ({
+      values: (values: Record<string, unknown> | Record<string, unknown>[]) => {
+        // Edges are inserted plainly, so this call is awaited as it stands.
+        if (table === citationEdges) {
+          recorded.steps.push('insert-edges')
+          recorded.edges = values as Record<string, unknown>[]
+          return Promise.resolve()
+        }
+        // The article's insert continues into `.onConflictDoUpdate`, because a
+        // replayed stage has to be able to write it twice.
+        return {
+          onConflictDoUpdate: async ({
+            set,
+          }: {
+            set: Record<string, unknown>
+          }) => {
+            recorded.steps.push('insert-article')
+            recorded.article = values as Record<string, unknown>
+            recorded.articleOnConflict = set
+          },
+        }
+      },
     }),
     update: () => ({
       set: (values: Record<string, unknown>) => ({
-        where: async () => {
-          recorded.steps.push('update-job')
-          recorded.jobUpdate = values
+        where: () => {
+          const done = Promise.resolve().then(() => {
+            recorded.steps.push('update-job')
+            recorded.jobUpdate = values
+          })
+          // Awaitable directly, and continuable into `.returning()` — which is
+          // how `graduateEdgesCiting` asks which rows it changed.
+          return Object.assign(done, {
+            returning: async () => {
+              await done
+              return []
+            },
+          })
         },
       }),
+    }),
+    delete: () => ({
+      where: async () => {
+        recorded.steps.push('delete-edges')
+      },
+    }),
+    // The graduation scan: this user's unresolved edges waiting on this paper.
+    select: () => ({ from: () => ({ where: async () => [] }) }),
+    // UUIDv7s come from Postgres, so the double has to supply them.
+    execute: async () => ({
+      rows: REFERENCES.map((_entry, index) => ({
+        id: `01930000-0000-7000-8000-00000000ed0${index}`,
+      })),
     }),
   }
 
@@ -132,6 +193,18 @@ function fakeServices(options: {
         recorded.steps.push('extract')
         return COMPLETE
       }),
+    // This stage never reaches Semantic Scholar — enrichment is a stage of its
+    // own, and calling one from here would be the failure these doubles exist
+    // to make visible.
+    lookupPapers: async () => {
+      throw new Error('the extract stage must not call Semantic Scholar')
+    },
+    matchPaperByTitle: async () => {
+      throw new Error('the extract stage must not call Semantic Scholar')
+    },
+    fetchReferences: async () => {
+      throw new Error('the extract stage must not call Semantic Scholar')
+    },
   }
 }
 
@@ -141,12 +214,13 @@ beforeEach(() => {
     article: undefined,
     articleOnConflict: undefined,
     jobUpdate: undefined,
+    edges: [],
     sent: [],
   }
 })
 
 describe('a successful extraction', () => {
-  it('writes the article, resolves the job and enqueues finalize, in one transaction', async () => {
+  it('writes the article, resolves the job and enqueues enrichment, in one transaction', async () => {
     await runExtractStage(JOB, fakeServices({}))
 
     // The whole sequence as one assertion: everything that must commit together
@@ -159,11 +233,61 @@ describe('a successful extraction', () => {
       'begin',
       'insert-article',
       'update-job',
+      // An empty bibliography still clears whatever a replay left behind.
+      'delete-edges',
       'enqueue-next',
       'commit',
     ])
-    expect(recorded.sent[0]?.queue).toBe('lit-tracker.finalize')
-    expect(recorded.sent[0]?.job).toEqual({ uploadJobId: JOB.uploadJobId })
+    // Enrichment, not finalize: the chain gained a stage, and the row must stay
+    // in the popup until Semantic Scholar has had its turn.
+    expect(recorded.sent[0]?.queue).toBe('lit-tracker.enrich')
+    expect(recorded.sent[0]?.job).toMatchObject({
+      uploadJobId: JOB.uploadJobId,
+      articleId: JOB.uploadJobId,
+    })
+  })
+
+  it('hands enrichment a lookup key for the paper and for each reference that has one', async () => {
+    await runExtractStage(
+      JOB,
+      fakeServices({
+        extract: async () => ({ ...COMPLETE, bibliography: REFERENCES }),
+      }),
+    )
+
+    // The keys travel in the payload because most of them have nowhere to be
+    // read back from: an edge stores the Semantic Scholar id it ends up with,
+    // never the arXiv id the citing paper printed.
+    expect(recorded.sent[0]?.job).toMatchObject({
+      articleLookupKey: 'DOI:10.1145/3612345.3612399',
+      edgeLookups: [
+        { edgeId: expect.any(String), key: 'ARXIV:1901.00001' },
+        // The reference with no identifier contributes no lookup at all rather
+        // than a request that could only fail.
+      ],
+    })
+  })
+
+  it('writes one edge per reference, whether or not it can be resolved', async () => {
+    await runExtractStage(
+      JOB,
+      fakeServices({
+        extract: async () => ({ ...COMPLETE, bibliography: REFERENCES }),
+      }),
+    )
+
+    // Written here, in the transaction that creates the article, rather than
+    // during enrichment: a public API being busy must not cost the user a
+    // paper's whole bibliography.
+    expect(recorded.edges).toHaveLength(2)
+    expect(recorded.edges[0]).toMatchObject({
+      citingArticleId: JOB.uploadJobId,
+      userId: JOB.userId,
+      title: REFERENCES[0]?.title,
+      publicationYear: 2019,
+      // Nothing has been resolved yet — that is what enrichment is for.
+      citedArticleId: null,
+    })
   })
 
   it('adopts the pre-allocated id and the object already stored under it', async () => {
@@ -188,9 +312,9 @@ describe('a successful extraction', () => {
       abstract: COMPLETE.abstract,
       publicationYear: 2024,
       venue: COMPLETE.venue,
-      doi: COMPLETE.doi,
-      // A complete outcome, not a placeholder for enrichment: task 5 upgrades
-      // it to `enriched`, and an article that never gets there is still done.
+      doi: COMPLETE.identifiers.doi,
+      // A complete outcome, not a placeholder: enrichment upgrades it to
+      // `enriched`, and an article that never gets there is still done.
       extractionStatus: 'grobid_only',
     })
     // Reading status is left to the column default, `pending`.
@@ -299,14 +423,16 @@ describe('a document GROBID could not extract', () => {
         extract: async () => ({
           ...COMPLETE,
           venue: null,
-          doi: null,
+          identifiers: NO_IDENTIFIERS,
           abstract: null,
         }),
       }),
     )
 
     expect(recorded.article).toMatchObject({ extractionStatus: 'grobid_only' })
-    expect(recorded.sent[0]?.queue).toBe('lit-tracker.finalize')
+    expect(recorded.sent[0]?.queue).toBe('lit-tracker.enrich')
+    // Nothing to look it up by, so enrichment will have to try the title.
+    expect(recorded.sent[0]?.job).toMatchObject({ articleLookupKey: null })
   })
 })
 

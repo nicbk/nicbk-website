@@ -77,3 +77,14 @@ export const GARAGE_BUCKET = 'auth-e2e'
 export const GROBID_STUB_PORT = 8071
 
 export const GROBID_URL = `http://localhost:${GROBID_STUB_PORT}`
+
+/**
+ * The stubbed Semantic Scholar (support/semantic-scholar-stub.mjs), in the
+ * launcher process for the same reasons the GROBID stub is — and for one more:
+ * the real API is a pool shared with every other unauthenticated caller on the
+ * internet, so a suite pointed at it would pass or fail depending on how busy
+ * that pool happened to be.
+ */
+export const SEMANTIC_SCHOLAR_STUB_PORT = 8072
+
+export const SEMANTIC_SCHOLAR_URL = `http://localhost:${SEMANTIC_SCHOLAR_STUB_PORT}/graph/v1`

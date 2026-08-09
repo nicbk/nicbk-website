@@ -178,6 +178,7 @@ describe('the committed migrations', () => {
 
     expect(rows.map((row) => row.tablename)).toEqual([
       'articles',
+      'citation_edges',
       'upload_jobs',
     ])
   })

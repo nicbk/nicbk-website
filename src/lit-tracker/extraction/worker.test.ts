@@ -31,9 +31,13 @@ describe('registerExtractionHandlers', () => {
 
     expect(work.mock.calls.map(([name]) => name)).toEqual([
       'lit-tracker.extract',
-      // The dead-letter queue needs a handler as much as the others do: an
-      // unhandled one would collect jobs nobody ever resolves.
+      // A dead-letter queue needs a handler as much as the others do: an
+      // unhandled one would collect jobs nobody ever resolves. The two have
+      // opposite jobs — an exhausted extract becomes a visible failure, an
+      // exhausted enrich becomes an ordinary success.
       'lit-tracker.extract-exhausted',
+      'lit-tracker.enrich',
+      'lit-tracker.enrich-exhausted',
       'lit-tracker.finalize',
     ])
   })
@@ -98,7 +102,7 @@ describe('startExtractionWorker', () => {
     await started
 
     expect(getQueue).toHaveBeenCalledTimes(2)
-    expect(work).toHaveBeenCalledTimes(3)
+    expect(work).toHaveBeenCalledTimes(5)
   })
 
   it('starts only once, however many times it is called', async () => {

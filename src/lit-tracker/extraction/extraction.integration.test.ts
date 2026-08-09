@@ -76,7 +76,11 @@ const EXTRACTED: ExtractedMetadata = {
   abstract: 'We characterise the staleness a single-node deployment exhibits.',
   publicationYear: 2024,
   venue: 'Journal of Practical Replication',
-  doi: '10.1145/3612345.3612399',
+  identifiers: {
+    doi: '10.1145/3612345.3612399',
+    arxivId: null,
+    pubmedId: null,
+  },
   bibliography: [],
 }
 
@@ -144,11 +148,24 @@ afterEach(async () => {
   await database.pool.end()
 })
 
-/** Services with a real database, Garage and queue, and a stubbed GROBID. */
+/**
+ * Services with a real database, Garage and queue, and stubbed externals.
+ *
+ * Semantic Scholar is stubbed to find nothing — which is a *successful* lookup,
+ * not a failure. That keeps this file about extraction: the chain still runs
+ * end to end through enrichment, and the article settles as `grobid_only`.
+ * Enrichment's own behaviour is exercised in
+ * `~/lit-tracker/citations/citations.integration.test.ts`.
+ */
 function servicesWith(
   extractMetadata: (pdf: Uint8Array) => Promise<ExtractedMetadata>,
 ) {
-  return { ...productionServices(database, queue), extractMetadata }
+  return {
+    ...productionServices(database, queue),
+    extractMetadata,
+    lookupPapers: async () => new Map(),
+    matchPaperByTitle: async () => null,
+  }
 }
 
 /** An upload sitting in `processing`, exactly as the endpoint leaves one. */
@@ -191,7 +208,7 @@ describe('the extract stage, against real services', () => {
       title: EXTRACTED.title,
       publication_year: 2024,
       venue: EXTRACTED.venue,
-      doi: EXTRACTED.doi,
+      doi: EXTRACTED.identifiers.doi,
       extraction_status: 'grobid_only',
       // Inherited from the column default, per the decided upload flow.
       status: 'pending',
@@ -425,6 +442,9 @@ describe('what Zero replicates', () => {
     expect(published.map((row) => row.schemaname)).not.toContain('pgboss')
     expect(published.map((row) => row.tablename).sort()).toEqual([
       'articles',
+      // Added by the migration that creates it, in the same commit — #10
+      // traverses this table from the client.
+      'citation_edges',
       'upload_jobs',
     ])
   })

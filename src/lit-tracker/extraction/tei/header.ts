@@ -2,7 +2,9 @@ import type { Author } from '~/db/schema'
 import { authorsOf } from './authors'
 import type { TeiElement } from './document'
 import { element, elementWhere, path, textOrNull } from './document'
-import { doiIn, publicationYearIn, titleIn } from './fields'
+import { publicationYearIn, titleIn } from './fields'
+import type { PaperIdentifiers } from './identifiers'
+import { identifiersIn } from './identifiers'
 
 /**
  * The uploaded paper's own metadata, out of the TEI header.
@@ -19,7 +21,12 @@ export interface HeaderMetadata {
   abstract: string | null
   publicationYear: number | null
   venue: string | null
-  doi: string | null
+  /**
+   * What this paper can be looked up by. The DOI is also stored on the article
+   * row; the others exist only to resolve it against Semantic Scholar, which is
+   * why none of them beyond the DOI has a column of its own.
+   */
+  identifiers: PaperIdentifiers
 }
 
 export function parseHeader(root: TeiElement): HeaderMetadata {
@@ -35,7 +42,9 @@ export function parseHeader(root: TeiElement): HeaderMetadata {
     abstract: textOrNull(path(root, 'teiHeader', 'profileDesc', 'abstract')),
     publicationYear: publicationYearOf(fileDesc, source),
     venue: source ? venueOf(source) : null,
-    doi: source ? doiIn(source) : null,
+    identifiers: source
+      ? identifiersIn(source)
+      : { doi: null, arxivId: null, pubmedId: null },
   }
 }
 

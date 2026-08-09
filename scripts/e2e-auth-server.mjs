@@ -10,7 +10,7 @@
  * ran against a hand-built schema could pass while the migrations that actually
  * ship are broken.
  *
- * Seven things happen here before the server starts:
+ * Eight things happen here before the server starts:
  *   1. a private Docker network, so the containers can address each other,
  *   2. a throwaway Postgres container (the image production runs) with logical
  *      replication turned on, which is what Zero subscribes to,
@@ -23,7 +23,9 @@
  *   6. the stubbed Google token endpoint preloaded into the server process
  *      (see e2e-auth/support/google-token-endpoint-stub.mjs),
  *   7. a stubbed GROBID on its own port, which the app is simply pointed at —
- *      a config swap rather than a patch (see e2e-auth/support/grobid-stub.mjs).
+ *      a config swap rather than a patch (see e2e-auth/support/grobid-stub.mjs),
+ *   8. a stubbed Semantic Scholar on another, by the same mechanism (see
+ *      e2e-auth/support/semantic-scholar-stub.mjs).
  *
  * Runs on its own ports so it can coexist with a dev server, the ordinary e2e
  * suite on 3000, or a local Compose stack's zero-cache on 4848.
@@ -34,6 +36,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { PostgreSqlContainer } from '@testcontainers/postgresql'
 import { GenericContainer, Network, Wait } from 'testcontainers'
 import { startGrobidStub } from '../e2e-auth/support/grobid-stub.mjs'
+import { startSemanticScholarStub } from '../e2e-auth/support/semantic-scholar-stub.mjs'
 import {
   AUTH_E2E_BASE_URL,
   AUTH_E2E_PORT,
@@ -51,6 +54,8 @@ import {
   POSTGRES_NETWORK_ALIAS,
   POSTGRES_PASSWORD,
   POSTGRES_USER,
+  SEMANTIC_SCHOLAR_STUB_PORT,
+  SEMANTIC_SCHOLAR_URL,
   ZERO_CACHE_HOST_PORT,
   ZERO_CACHE_URL,
 } from '../e2e-auth/support/services.mjs'
@@ -179,9 +184,10 @@ const appEnv = {
   GARAGE_ACCESS_KEY_ID,
   GARAGE_SECRET_ACCESS_KEY,
   GARAGE_BUCKET,
-  // The stubbed extraction service, started below. Pointing at it is the whole
-  // of the mocking here — nothing in the app is patched.
+  // The stubbed extraction and enrichment services, started below. Pointing at
+  // them is the whole of the mocking here — nothing in the app is patched.
   GROBID_URL,
+  SEMANTIC_SCHOLAR_URL,
   // Where the browser dials zero-cache. Vite inlines this into the client
   // bundle at build time, which is why that port is fixed. No proxy is
   // involved: cookies are keyed by host and ignore the port, so the session
@@ -291,6 +297,12 @@ await bootstrapGarage({
 // the app server, which runs on the host in this tier, so there is nothing for
 // a container to be closer to. See e2e-auth/support/grobid-stub.mjs.
 const grobidStub = await startGrobidStub(GROBID_STUB_PORT)
+// Mocked for the reason above and for one more: the real Semantic Scholar is a
+// pool shared with every other unauthenticated caller, so a suite pointed at it
+// would pass or fail depending on how busy the internet was.
+const semanticScholarStub = await startSemanticScholarStub(
+  SEMANTIC_SCHOLAR_STUB_PORT,
+)
 
 // Locally the dev server keeps the edit-run loop short; in CI the built
 // production server is what gets exercised, matching playwright.config.ts.
@@ -323,6 +335,7 @@ async function shutDown(code) {
   // makes a clean run leave nothing behind immediately. Order matters only in
   // that zero-cache holds a replication slot on the database.
   await grobidStub.close().catch(() => {})
+  await semanticScholarStub.close().catch(() => {})
   await zeroCache.stop().catch(() => {})
   await garage.stop().catch(() => {})
   await container.stop().catch(() => {})

@@ -56,6 +56,7 @@ const validEnvironment = {
   GARAGE_SECRET_ACCESS_KEY: 'f'.repeat(64),
   GARAGE_BUCKET: 'nicbk-website',
   GROBID_URL: 'http://grobid:8070',
+  SEMANTIC_SCHOLAR_URL: 'https://api.semanticscholar.org/graph/v1',
 }
 
 describe('the application environment schema', () => {
@@ -80,6 +81,7 @@ describe('the application environment schema', () => {
     'GARAGE_SECRET_ACCESS_KEY',
     'GARAGE_BUCKET',
     'GROBID_URL',
+    'SEMANTIC_SCHOLAR_URL',
   ])('refuses to start without %s', (variable) => {
     const incomplete: Record<string, string> = { ...validEnvironment }
     delete incomplete[variable]
@@ -87,6 +89,18 @@ describe('the application environment schema', () => {
     expect(() => parseEnv(envSchema, incomplete)).toThrowError(
       new RegExp(variable),
     )
+  })
+
+  it('starts without a Semantic Scholar API key', () => {
+    // Asserted directly, because treating it as required would break the way
+    // this site actually runs: the Graph API answers unauthenticated requests
+    // from a shared pool, and a key only buys a dedicated rate. Requiring one
+    // would make signing up with a third party a prerequisite for starting.
+    expect(validEnvironment).not.toHaveProperty('SEMANTIC_SCHOLAR_API_KEY')
+
+    const env = parseEnv(envSchema, validEnvironment)
+
+    expect(env.SEMANTIC_SCHOLAR_API_KEY).toBeUndefined()
   })
 
   it('rejects a session secret too short to be a real key', () => {
@@ -142,6 +156,7 @@ describe('the application environment schema', () => {
   it.each([
     'GARAGE_ENDPOINT',
     'GROBID_URL',
+    'SEMANTIC_SCHOLAR_URL',
   ])('rejects a %s that is not an HTTP URL', (variable) => {
     expect(() =>
       parseEnv(envSchema, { ...validEnvironment, [variable]: 'host:8070' }),

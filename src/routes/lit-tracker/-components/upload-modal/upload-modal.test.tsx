@@ -54,8 +54,8 @@ describe('UploadModal', () => {
     await user.click(screen.getByRole('button', { name: 'upload 2 PDFs' }))
 
     expect(uploadPdfs).toHaveBeenCalledTimes(1)
-    const [submitted] = uploadPdfs.mock.calls[0]
-    expect(submitted.map((file: File) => file.name)).toEqual(['a.pdf', 'b.pdf'])
+    const submitted = uploadPdfs.mock.calls[0]?.[0] as File[]
+    expect(submitted.map((file) => file.name)).toEqual(['a.pdf', 'b.pdf'])
   })
 
   it('closes immediately once the upload is accepted', async () => {

@@ -22,6 +22,10 @@ vi.mock('./store-upload', () => ({ storeUpload }))
 /** Never touched: every test here either refuses before storing, or stubs it. */
 const database = {} as DatabaseHandle
 
+/** Likewise: `storeUpload` is stubbed, so nothing ever sends on it. */
+const queue = { send: vi.fn() }
+const getQueue = async () => queue
+
 /**
  * Backed by an explicit `ArrayBuffer` so the result is a `Uint8Array<ArrayBuffer>`
  * — `new Uint8Array(n)` widens to `ArrayBufferLike`, which `BlobPart` (and so
@@ -51,12 +55,12 @@ function submission(
 
 const onePdf = [{ name: 'paper.pdf', type: 'application/pdf' }]
 
-const signedIn = { getUserId: async () => 'user-a', database }
+const signedIn = { getUserId: async () => 'user-a', database, getQueue }
 
 beforeEach(() => {
   storeUpload.mockReset()
   storeUpload.mockImplementation(
-    async (_db: unknown, upload: { filename: string }) => ({
+    async (_db: unknown, _queue: unknown, upload: { filename: string }) => ({
       id: `id-for-${upload.filename}`,
       filename: upload.filename,
     }),
@@ -76,6 +80,7 @@ describe('respondToUpload', () => {
     // rule /api/zero/query follows.
     expect(storeUpload).toHaveBeenCalledWith(
       database,
+      queue,
       expect.objectContaining({ userId: 'user-a', filename: 'paper.pdf' }),
     )
   })
@@ -104,6 +109,7 @@ describe('respondToUpload', () => {
     const response = await respondToUpload(submission(onePdf), {
       getUserId: async () => null,
       database,
+      getQueue,
     })
 
     expect(response.status).toBe(401)

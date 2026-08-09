@@ -1,4 +1,5 @@
 import type { DatabaseHandle } from '~/db/create-database'
+import type { JobQueue } from './queue'
 import { storeUpload } from './store-upload'
 import type { CandidateFile, UploadRejection } from './validation'
 import {
@@ -45,6 +46,14 @@ export interface UploadEndpointOptions {
   /** Resolves the signed-in user, or `null`. Injected so tests need no cookie jar. */
   getUserId: (request: Request) => Promise<string | null>
   database: DatabaseHandle
+  /**
+   * The job queue, resolved lazily.
+   *
+   * A function rather than the queue itself because connecting starts pg-boss
+   * and installs its schema — work that should not happen while answering a
+   * request that turns out to be unauthenticated or invalid.
+   */
+  getQueue: () => Promise<JobQueue>
 }
 
 /**
@@ -58,7 +67,7 @@ export interface UploadEndpointOptions {
  */
 export async function respondToUpload(
   request: Request,
-  { getUserId, database }: UploadEndpointOptions,
+  { getUserId, database, getQueue }: UploadEndpointOptions,
 ): Promise<Response> {
   const userId = await getUserId(request)
   if (!userId) {
@@ -102,12 +111,15 @@ export async function respondToUpload(
     return json({ accepted: [], rejected: rejections }, 400)
   }
 
+  // Resolved only now that the submission is known to be storable.
+  const queue = await getQueue()
+
   // Sequential rather than concurrent: a submission is up to twenty files of up
   // to 50 MB, and running them together would multiply peak memory by twenty
   // for no gain on a single-node store.
   const accepted = []
   for (const candidate of candidates) {
-    const stored = await storeUpload(database, {
+    const stored = await storeUpload(database, queue, {
       userId,
       filename: candidate.name,
       bytes: candidate.bytes,

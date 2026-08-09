@@ -4,8 +4,8 @@ import type { DatabaseHandle } from '~/db/create-database'
 import { uploadJobs } from '~/db/schema'
 import { pdfObjectKey } from '~/storage/object-key'
 import { putArticlePdf } from '~/storage/pdf-storage'
-import type { ExtractJob } from './queue'
-import { EXTRACT_QUEUE, getBoss } from './queue'
+import type { ExtractJob, JobQueue } from './queue'
+import { EXTRACT_QUEUE } from './queue'
 
 /**
  * Stores one validated PDF and records the work of extracting it.
@@ -49,20 +49,22 @@ export interface StoredUpload {
 /**
  * Writes one PDF to the blob store and records its extraction job.
  *
- * Takes the database handle rather than importing the singleton so the
- * integration tests can run the real thing against a throwaway Postgres — the
- * same reason `createDatabase` is a factory.
+ * Takes the database handle and the queue rather than reaching for either
+ * singleton, so the integration tests can run the real thing against throwaway
+ * infrastructure — the same reason `createDatabase` is a factory. It matters
+ * more for the queue than it looks: pg-boss holds connections and an installed
+ * schema, and a cached instance cannot be pointed at a database that is dropped
+ * and recreated between tests.
  */
 export async function storeUpload(
   { db }: DatabaseHandle,
+  queue: JobQueue,
   upload: { userId: string; filename: string; bytes: Uint8Array },
 ): Promise<StoredUpload> {
   const id = await allocateId(db)
   const key = pdfObjectKey(upload.userId, id)
 
   await putArticlePdf(key, upload.bytes)
-
-  const boss = await getBoss()
 
   await db.transaction(async (tx) => {
     await tx.insert(uploadJobs).values({
@@ -79,7 +81,7 @@ export async function storeUpload(
     }
     // `fromDrizzle` is pg-boss's own adapter: it wraps this transaction as the
     // connection the insert runs on, so the job row lands inside it.
-    await boss.send(EXTRACT_QUEUE, job, { db: fromDrizzle(tx, sql) })
+    await queue.send(EXTRACT_QUEUE, job, { db: fromDrizzle(tx, sql) })
   })
 
   return { id, filename: upload.filename }

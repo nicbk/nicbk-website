@@ -189,7 +189,20 @@ Measured on real papers, references resolving to a Semantic Scholar paper:
 13% → 97% (BERT), 38% → 98% (*Attention*), 28% → 94% (*Convolutional Sequence
 to Sequence Learning*). Uploaded together, they link to each other in the graph.
 What remains unresolved is references Semantic Scholar could not resolve either,
-plus entries that are not papers at all.
+plus entries that are not papers at all — a dataset, a technical report. Those
+are real bibliography entries and are stored as such; they are simply not
+links, which is the case `cited_article_id IS NULL` was designed for.
+
+Measured on those papers, **no true citation edge is missing**. The remaining
+defects are two spurious rows, where GROBID merged two references into one and
+both halves also arrived from Semantic Scholar's list. The concrete steps for
+closing that — deduping mis-segmented rows, storing the printed reference text
+as the evidence behind each row, and recording the expected reference count so
+a shortfall is visible rather than silent — are listed in
+`features/article-upload-and-extraction/tasks/semantic-scholar-enrichment/status.md`
+and are work for
+[citation-graph.md (component)](../ui-ux/pages/lit-tracker/components/citation-graph.md),
+which is what renders any of it.
 
 Title matching is used there and not here because the candidate sets are
 different in kind. Graduation compares against an entire collection, where a

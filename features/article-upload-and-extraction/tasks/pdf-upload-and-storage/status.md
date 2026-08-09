@@ -110,9 +110,25 @@
   good assertion that the bootstrap actually worked rather than a startup gate.
 - **The ordinary e2e tier broke on the new environment variables.** All 61 of its
   tests failed on a server that refused to start, because `src/env.ts` validates
-  at startup and `playwright.config.ts` had no Garage placeholders. Nothing in
-  that suite uploads — the fix is placeholders, and the failure was loud, which
-  is the behaviour that env schema is for.
+  at startup and `playwright.config.ts` had no Garage placeholders. The auth
+  schema drift check then failed the same way, for the same reason, in its own
+  copy. Three copies of "the placeholder environment" had drifted from the
+  schema in this task alone, so they are now **one shared set**
+  (`scripts/placeholder-env.mjs`) with a test asserting it satisfies the schema
+  and names every required variable. The next one added fails in `npm test`
+  naming itself, instead of surfacing as a server that refused to boot.
+- **The coverage ratchet caught a real gap and a real config hole.** It fell
+  80.58% → 72.92%, because most of this task's server code is exercised by the
+  integration tier, which the ratchet does not measure. The single biggest drag
+  was the Garage test helper — 228 uncovered lines of scaffolding that should
+  never have counted, since `src/db/test-support/**` was already excluded for
+  exactly that reason; the exclusion is now a glob. The rest became unit tests
+  worth having on their own, most importantly `storeUpload`'s **ordering**,
+  asserted as one list of steps. Worth carrying into task 4: a task that is
+  mostly job handlers will hit this again, and the answer is to unit-test the
+  decisions (sequence, fallbacks, terminal-vs-retryable) with the infrastructure
+  stubbed, leaving the integration tier to prove they hold against real
+  services.
 
 ## Browser verification
 

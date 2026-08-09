@@ -1,11 +1,12 @@
 # Status: Semantic Scholar Enrichment
 
-**State:** Implemented, awaiting review. Fifth of five; completes the feature.
+**State:** **Merged** (2026-08-09). Fifth of five; completes the feature.
 
 - Branch: `article-upload-and-extraction/semantic-scholar-enrichment`.
 - Sub-issue: [#71](https://github.com/nicbk/nicbk-website/issues/71)
   (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)).
-- PR: [#78](https://github.com/nicbk/nicbk-website/pull/78)
+- PR: [#78](https://github.com/nicbk/nicbk-website/pull/78), CI green on all five
+  jobs. Verified after merge that the whole branch tip reached `main`.
 
 ## What was built
 

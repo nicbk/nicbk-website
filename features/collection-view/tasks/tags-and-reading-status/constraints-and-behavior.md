@@ -38,8 +38,10 @@ task satisfies.
 
 **From "Tag and reading-status interaction" — all of it:**
 
-- Tags are user-defined, freely created and deleted, and applied to any number
-  of articles.
+- Tags are user-defined, freely created, and applied to any number of articles.
+  **Deleting one is task 3's**, from the filter rail and behind a confirmation
+  (user-decided 2026-08-09 — see status.md). The `tags.delete` mutator it calls
+  is built and proven here; only its trigger moved.
 - The three reading statuses render as tags in the same treatment, cannot be
   renamed or deleted, and are **mutually exclusive** — choosing one clears the
   previous.
@@ -77,6 +79,7 @@ task satisfies.
 A signed-in user opens a card's three-dot menu, types a new tag and applies it,
 and marks the paper `reading`. Both appear on the card at once, and both appear
 in a **second browser window** with no refresh. Marking it `read` clears
-`reading`. Deleting the tag removes it from every card carrying it. Underneath,
-an integration test proves that the same mutations, run under another user's
-context against these rows, write nothing at all.
+`reading`. Applying the same tag to a second card reuses it rather than making a
+second tag of the same name. Underneath, an integration test proves that the same
+mutations — including the delete whose trigger is task 3's — run under another
+user's context against these rows, write nothing at all.

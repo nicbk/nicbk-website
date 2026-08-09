@@ -27,6 +27,14 @@
   /* A title is arbitrary text and can carry an unbroken run — a DOI, a URL, a
      German compound. It wraps rather than widening the card past its cell. */
   overflow-wrap: anywhere;
+  /*
+   * The card is never a scroll container. The chip row inside it is the only
+   * thing here that scrolls, and only sideways — so a paper with a dozen tags
+   * moves its chips and leaves the title, authors, and menu exactly where they
+   * were. Without this, the overflowing row would find the nearest ancestor
+   * that could scroll and take the whole card with it.
+   */
+  overflow: hidden;
 }
 
 /*

@@ -28,21 +28,36 @@ interface TagListProps {
  * (WCAG 1.4.1). Every status always shows — an article nobody has opened is
  * `pending`, and hiding that would make the commonest state the invisible one.
  *
- * Nothing here is interactive. Applying and removing tags is the card menu's
- * job, so a chip is a label rather than a control — a card full of tiny buttons
- * would also put a tab stop on every tag of every card in the grid.
+ * No chip is a control. Applying and removing tags is the card menu's job, so a
+ * chip is a label — a card full of tiny buttons would put a tab stop on every
+ * tag of every card in the grid.
+ *
+ * **The row itself is focusable, though**, and that is not a contradiction. It
+ * scrolls sideways when a paper carries more tags than fit (see the stylesheet
+ * for why it scrolls rather than wraps), and a scroll container with nothing
+ * focusable inside it can be scrolled by pointer but not by keyboard. One tab
+ * stop per card buys the tags past the right-hand edge; the alternative leaves
+ * them unreachable, which is WCAG 2.1.1.
  */
 export function TagList({ status, tags }: TagListProps) {
   const StatusIcon = STATUS_ICONS[status]
 
   return (
-    <ul className={styles.list}>
+    // biome-ignore lint/a11y/noNoninteractiveTabindex: a scroll container with no focusable content needs to take focus itself to be keyboard-scrollable
+    <ul className={styles.list} tabIndex={0} aria-label="status and tags">
       <li className={styles.statusChip}>
         <StatusIcon className={styles.statusIcon} aria-hidden="true" />
-        {/* Named for assistive technology, because "reading" on its own does
-            not say that it is this article's reading status rather than a tag
-            the reader happened to create with that name. */}
-        <span className={styles.srOnly}>reading status: </span>
+        {/*
+          Named for assistive technology, because "reading" on its own does not
+          say that it is this article's reading status rather than a tag the
+          reader happened to create with that name.
+
+          "status:" rather than "reading status:" deliberately: the longer form
+          makes *every* status chip contain the word "reading", including the one
+          reading `read` — which reads oddly aloud and made a test asserting "no
+          chip says reading" pass against a chip that said `read`.
+        */}
+        <span className={styles.srOnly}>status: </span>
         {ARTICLE_STATUS_LABELS[status]}
       </li>
 

@@ -131,7 +131,7 @@ describe('ArticleCard', () => {
 
     const chips = screen.getAllByRole('listitem')
     expect(chips.map((chip) => chip.textContent)).toEqual([
-      'reading status: reading',
+      'status: reading',
       'attention',
       'survey',
     ])
@@ -142,7 +142,7 @@ describe('ArticleCard', () => {
     // paper is one — so it is the one that must not be the invisible one.
     renderCard({ tags: [] })
 
-    expect(screen.getByText(/reading status/)).toBeInTheDocument()
+    expect(screen.getByText(/status:/)).toBeInTheDocument()
   })
 
   it('treats a missing status as pending', () => {
@@ -151,7 +151,7 @@ describe('ArticleCard', () => {
     renderCard({ article: articleWith({ status: null }) })
 
     const [chip] = screen.getAllByRole('listitem')
-    expect(chip?.textContent).toBe('reading status: pending')
+    expect(chip?.textContent).toBe('status: pending')
   })
 
   it('reveals the full text of an elided line on hover', async () => {

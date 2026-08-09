@@ -1,6 +1,7 @@
 import { useZero } from '@rocicorp/zero/react'
 import { useCallback, useMemo } from 'react'
 import type { ArticleStatus } from '~/db/schema/lit-tracker'
+import type { ErrorToast } from '~/routes/-shared/components/toast/use-error-toast'
 import { useErrorToast } from '~/routes/-shared/components/toast/use-error-toast'
 import { mutators } from '~/zero/mutators'
 
@@ -64,13 +65,13 @@ export function useCollectionMutations(): CollectionMutations {
         )
         const failure = outcomes.find((outcome) => outcome.type === 'error')
         if (failure) {
-          showError(failure.error.message)
+          showError(toastFor(failure.error))
         }
-      } catch (error) {
-        // A promise rejects, rather than resolving to an error outcome, when
-        // the request itself fails — offline, or a 500 — as opposed to the
-        // mutator refusing. The reader needs to know either way.
-        showError(messageFor(error))
+      } catch {
+        // A promise rejects, rather than resolving to an error outcome, only
+        // when something went wrong before Zero could form an outcome at all.
+        // Whatever it was, it is not something to put in front of a reader.
+        showError(NOT_SAVED_YET)
       }
     },
     [showError],
@@ -129,9 +130,50 @@ interface MutationResult {
   server: Promise<MutationOutcome>
 }
 
-type MutationOutcome =
-  | { type: 'success' }
-  | { type: 'error'; error: { message: string } }
+type MutationOutcome = { type: 'success' } | { type: 'error'; error: ZeroError }
+
+/**
+ * `'app'` is a throw from one of this project's mutators; `'zero'` is the sync
+ * engine's own failure — it could not reach the server, or the server answered
+ * with something it did not understand.
+ */
+interface ZeroError {
+  type: 'app' | 'zero'
+  message: string
+}
+
+/**
+ * Shown when the write never reached the server, rather than being refused by
+ * it.
+ *
+ * The wording matters, and both halves of it were corrected after watching the
+ * real thing. Stopping the app server and changing a status produced a toast
+ * reading *"that did not save — Fetch from API server threw error: fetch
+ * failed"*: the description was Zero's internal wording, true and unactionable,
+ * and the title was **wrong**, because Zero had queued the mutation and applied
+ * it the moment the server came back. A reader told their change did not save
+ * would reasonably make it again.
+ */
+const NOT_SAVED_YET: ErrorToast = {
+  title: 'not saved yet',
+  message:
+    'the server could not be reached. this change is queued and will be sent when the connection returns.',
+}
+
+/**
+ * What to put in front of the reader, which is not always what Zero said.
+ *
+ * A mutator's own message is written to be read — "that item is not available
+ * to this account." — so it is passed through, and it is final: an application
+ * refusal is never retried. Anything Zero raises itself is a transport problem
+ * wearing developer wording, and is not.
+ */
+function toastFor(error: ZeroError): ErrorToast {
+  if (error.type === 'app' && error.message !== '') {
+    return { title: 'that did not save', message: error.message }
+  }
+  return NOT_SAVED_YET
+}
 
 /**
  * A UUIDv7 — time-ordered, so a table of these stays index-friendly as it grows,
@@ -165,14 +207,6 @@ function timeOrderedId(): string {
     hex.slice(8, 10).join(''),
     hex.slice(10, 16).join(''),
   ].join('-')
-}
-
-/** The readable half of whatever a failed request threw. */
-function messageFor(error: unknown): string {
-  if (error instanceof Error && error.message !== '') {
-    return error.message
-  }
-  return 'the change could not be saved. check your connection and try again.'
 }
 
 export { timeOrderedId }

@@ -25,6 +25,17 @@
 - **The Playwright typecheck gap went out separately** as chore PR #87, before
   this branch, so this task's diff stays about schema, mutators, and
   authorization.
+- **Deleting a tag outright moved to task 3's filter rail**, behind a required
+  confirmation. Raised mid-implementation, because the criteria here ask for
+  tag deletion and no decided doc says where it happens: `collection-view.md`
+  says tags are "freely created/deleted" and stops, and `article-edit.md` is
+  about deleting the *article*. The rail is the only surface that lists every
+  tag, and deleting from a list is where deletion belongs; putting it in the card
+  menu would leave "remove from this article" and "delete everywhere" one row
+  apart. The user added the confirmation requirement — a small control in a list
+  of toggles is easy to mis-hit — and task 3's docs now carry both. **The
+  `tags.delete` mutator is still built, authorized, and integration-tested
+  here**; only its trigger moved.
 
 ## Re-verified against the installed packages (2026-08-09)
 
@@ -49,6 +60,33 @@ research-over-recall. Two findings change the plan:
   composed by `defineMutators({…})`, dispatched server-side by
   `mustGetMutator(registry, name).fn({args, tx, ctx})`, and Base UI 1.6.0 ships
   `menu`, `toggle-group`, `combobox`, `tooltip`, and `toast`.
+
+## What was found in the browser
+
+Four things the automated tiers could not have caught, all fixed:
+
+- **A menu label rendered one character per line.** Base UI unmounts a
+  `RadioItemIndicator` that is not ticked, so an unticked row has a single child
+  — which CSS grid auto-places into the *first* column, the 1rem one meant for
+  the tick. "reading" then wrapped inside a 16px box. Naming both tracks
+  explicitly (`grid-column: 1` / `2`) is the fix, and it is what Base UI's own
+  example does. Invisible in jsdom, which has no layout.
+- **The failure toast quoted the sync engine at the reader.** With the app server
+  stopped, it read *"that did not save — Fetch from API server threw error: fetch
+  failed"*. Zero tags an error `app` (a mutator threw) or `zero` (transport), and
+  ignoring that distinction was the bug.
+- **And the title was worse than the message.** Restarting the server showed why:
+  Zero had **queued** the mutation and applied it on reconnect, so the write it
+  said had failed was sitting in a retry queue. It now reads "not saved yet …
+  queued and will be sent when the connection returns", which is true either way.
+- **`autoFocus` on the dialog's field was redundant** and tripped Biome's
+  `noAutofocus`. Base UI's `Dialog` already focuses the popup's first tabbable
+  element — and deliberately does not on touch, where it would throw a keyboard
+  over a dialog the reader has not read yet.
+
+Also confirmed against the live stack rather than assumed: a tag inserted
+directly into Postgres appeared in an open card menu with no reload, and every
+write made from the UI was read back out of Postgres afterwards.
 
 ## Notes carried into implementation
 

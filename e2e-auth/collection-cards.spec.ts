@@ -6,6 +6,7 @@ import {
   insertArticle,
   signedInUserId,
 } from './support/articles'
+import { cards } from './support/collection'
 import { signInAndLandOn } from './support/sign-in'
 
 /**
@@ -22,11 +23,6 @@ import { signInAndLandOn } from './support/sign-in'
  */
 
 const TRACKER = '/lit-tracker'
-
-/** The article cards, scoped to their own list — the header's path is a list too. */
-function cards(page: Page): Locator {
-  return page.getByRole('list', { name: 'Articles' }).getByRole('listitem')
-}
 
 /** A signed-in page on the tracker with an empty collection to seed into. */
 async function emptyCollection(page: Page): Promise<string> {
@@ -83,7 +79,14 @@ test.describe('collection cards', () => {
     })
 
     const card = cards(page)
-    await expect(card).toHaveText('Local-First Software RevisitedAda Fenwick')
+    await expect(card.getByRole('heading')).toHaveText(
+      'Local-First Software Revisited',
+    )
+    await expect(card).toContainText('Ada Fenwick')
+    // The whole line is absent, not merely empty of venue text — asserted by
+    // what is missing rather than against the card's entire text, which since
+    // task 2 also carries a status chip.
+    await expect(card.locator('p')).toHaveCount(1)
   })
 
   test('lays out multiple columns when there is room and one when there is not', async ({
@@ -140,24 +143,38 @@ test.describe('collection cards', () => {
       (element) => element.scrollHeight > element.clientHeight,
     )
     expect(clipped).toBe(true)
-    // Elided on screen, complete to a screen reader and on hover.
-    await expect(longTitle).toHaveAttribute(
-      'title',
-      'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding',
-    )
+    // Elided on screen, complete to a screen reader — the clamping is CSS, so
+    // the whole string is in the DOM either way — and readable on hover. Task 2
+    // replaced the `title` attribute this used to assert with Base UI's
+    // tooltip, so the check is now that hovering produces a second copy.
+    await longTitle.hover()
+    await expect(
+      page.getByText(
+        'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding',
+        { exact: true },
+      ),
+    ).toHaveCount(2)
   })
 
-  test('offers nothing on a card to click', async ({ page }) => {
+  test('offers nowhere on a card to navigate to', async ({ page }) => {
     // #9 owns navigation to the article detail page. Until it exists the card
-    // must not look interactive: a click target that does nothing is worse than
-    // no click target at all.
+    // body must not look interactive: a click target that does nothing is worse
+    // than no click target at all.
+    //
+    // Task 2 gave the card exactly one control — the menu in its corner — so
+    // this is no longer "nothing is clickable" but "nothing *navigates*", and
+    // the one button is named rather than merely counted, so a second control
+    // appearing by accident still fails.
     const userId = await emptyCollection(page)
     await insertArticle(userId, { title: 'Attention Is All You Need' })
     await expect(cards(page)).toHaveCount(1)
 
     const list = page.getByRole('list', { name: 'Articles' })
     await expect(list.getByRole('link')).toHaveCount(0)
-    await expect(list.getByRole('button')).toHaveCount(0)
+    await expect(list.getByRole('button')).toHaveCount(1)
+    await expect(list.getByRole('button')).toHaveAccessibleName(
+      'Options for Attention Is All You Need',
+    )
   })
 })
 

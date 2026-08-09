@@ -1,18 +1,30 @@
 /*
- * The chips at the foot of a card.
+ * The chips at the foot of a card: one line, always, scrolling sideways when
+ * there are more than fit.
  *
- * They wrap onto as many lines as they need — a paper with eight tags is not
- * unusual and truncating the list would hide exactly the thing the reader
- * applied. The card's own height is uniform across the grid, so a long tag list
- * is the one thing that can push a card's content past its box; the card scrolls
- * nothing and clips nothing, so this is where a very heavily tagged paper shows
- * as a fuller cell.
+ * **Why not wrap.** Wrapping was the first version and it was wrong in a way
+ * only a heavily tagged paper shows: the grid gives every row the height of its
+ * tallest card (`grid-auto-rows: 1fr`), so one article with nine tags makes
+ * every card in its row taller, including the ones with none. A single paper
+ * would visibly deform the whole grid. Truncating the list is the other obvious
+ * answer and is worse — it hides exactly the thing the reader applied.
+ *
+ * So the row stays one line and the overflow becomes horizontal, inside the
+ * chips and nowhere else. The card cannot scroll (`.card { overflow: hidden }`
+ * in article-card.module.css), so the title and authors stay put while the
+ * chips move under them.
  */
 
 .list {
   display: flex;
-  flex-wrap: wrap;
+  /* One line. The chips scroll; the card does not grow. */
+  flex-wrap: nowrap;
   gap: var(--space-2xs);
+  overflow-x: auto;
+  /* A flex item's automatic minimum is its content's, which for a row of chips
+     is all of them — without this the row would never overflow, it would widen
+     the card instead. */
+  min-width: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -20,6 +32,33 @@
      which is what keeps the chip rows of neighbouring cards on one line. */
   margin-block-start: auto;
   padding-block-start: var(--space-xs);
+  /*
+   * No scrollbar. A visible one would eat a few pixels of every card's height —
+   * including the cards with one tag, which never scroll — and the grid's equal
+   * rows would then be equal-but-shorter for no visible reason.
+   *
+   * Both properties are needed: `scrollbar-width` is the standard and Firefox
+   * honours it; WebKit and Blink still need the pseudo-element. Hiding a
+   * scrollbar hides an affordance, which is why the region is focusable below.
+   */
+  scrollbar-width: none;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * The row is a scroll container with nothing focusable inside it, so it takes
+ * focus itself — otherwise the tags past the right-hand edge are reachable by
+ * pointer and by screen reader but not by keyboard, which is WCAG 2.1.1 and is
+ * what axe's `scrollable-region-focusable` rule is for. It costs one tab stop
+ * per card, and that is the price of the hidden scrollbar above.
+ */
+.list:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .chip,
@@ -27,15 +66,16 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2xs);
-  max-width: 100%;
   padding: 0 var(--space-2xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-  /* A tag name is arbitrary text; a long one wraps inside its chip rather than
-     widening the card past its grid cell. */
-  overflow-wrap: anywhere;
+  /* Chips keep their own width and their text stays on one line: this row
+     scrolls rather than reflowing, so a squashed chip would just be unreadable
+     rather than usefully smaller. */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /*

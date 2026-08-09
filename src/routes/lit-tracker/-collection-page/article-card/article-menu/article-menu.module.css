@@ -110,7 +110,16 @@
   background-color: var(--color-bg);
 }
 
+/*
+ * Both tracks are named explicitly, and that is load-bearing rather than
+ * tidiness. Base UI unmounts an indicator that is not currently ticked, so an
+ * unticked row has exactly one child — which grid auto-places into the *first*
+ * column, the 1rem one. The label then wraps inside a 16px box, one character
+ * per line. It looks like a font bug and is a placement bug; Base UI's own
+ * example pins the columns for the same reason.
+ */
 .indicator {
+  grid-column: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -124,6 +133,7 @@
 }
 
 .itemLabel {
+  grid-column: 2;
   /* Tag names are user-supplied and can be a single long run. */
   overflow-wrap: anywhere;
 }

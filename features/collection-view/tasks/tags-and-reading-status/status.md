@@ -1,10 +1,54 @@
 # Status: Tags and Reading Status
 
-**State:** Not started. Second of four.
+**State:** In progress. Second of four.
 
-- Branch: `collection-view/tags-and-reading-status` (not yet created).
-- Sub-issue: not yet filed.
-- PR: none.
+- Branch: `collection-view/tags-and-reading-status`, from `main` at `afc316e`.
+- Sub-issue: [#83](https://github.com/nicbk/nicbk-website/issues/83)
+  (parent [#81](https://github.com/nicbk/nicbk-website/issues/81)),
+  self-assigned.
+- PR: none yet.
+
+## Settled with the user before implementation (2026-08-09)
+
+- **A rejected mutation surfaces through a shared toast**, built on Base UI's
+  `Toast` under `src/routes/-shared/components/` — the open item this task was
+  required to open with. That is `design-system.md`'s decided pattern for an
+  error outside a form context, and this task's writes are issued from a popup
+  menu that has closed by the time the server answers, so there is no inline
+  slot to put the message in. The collection's own inline error notice may move
+  onto it. The rejected alternative was an inline message beside the card.
+- **The card's elided lines move from the native `title` attribute to Base UI's
+  `Tooltip`.** Task 1 chose `title` because the card was inert and a Base UI
+  trigger is focusable — three extra tab stops per card, on a card with no other
+  interaction. This task makes the card interactive anyway, so that objection
+  no longer holds.
+- **The Playwright typecheck gap went out separately** as chore PR #87, before
+  this branch, so this task's diff stays about schema, mutators, and
+  authorization.
+
+## Re-verified against the installed packages (2026-08-09)
+
+Redone here rather than trusted from the spec-time note, per
+research-over-recall. Two findings change the plan:
+
+- **`zero.mutate(request)` returns `{client, server}` promises**, each resolving
+  to `{type: 'success'} | {type: 'error', error: {type: 'app' | 'zero', message}}`
+  (`zero-client/src/client/custom.d.ts`). The toast must be fed by awaiting
+  **`.server`**: `client` is the optimistic half and resolves first, so awaiting
+  it would report success on precisely the write the server then refuses — the
+  failure the toast exists for.
+- **`ZeroProvider` is not being given a `mutators` prop.** `zero-client.tsx`
+  passes `schema`, `cacheURL`, `userID`, and `context` only. `mutators` is a real
+  `ZeroOptions` field and is what applies a write locally before the server sees
+  it, so this task adds it — subject to Zero's own constraint that **client
+  mutators must be idempotent**, since a mutation is rebased repeatedly as
+  authoritative changes arrive. "Attach a tag" is required to be idempotent for
+  an unrelated reason already, which is convenient rather than sufficient: every
+  one of the five needs checking against this.
+- Otherwise as recorded: `defineMutator(validator, ({args, ctx, tx}) => …)`
+  composed by `defineMutators({…})`, dispatched server-side by
+  `mustGetMutator(registry, name).fn({args, tx, ctx})`, and Base UI 1.6.0 ships
+  `menu`, `toggle-group`, `combobox`, `tooltip`, and `toast`.
 
 ## Notes carried into implementation
 
@@ -33,15 +77,6 @@
   the mutually-exclusive status group, `combobox` for tag entry with
   create-if-missing. Build on them rather than hand-rolling — the same rule the
   blog's `Toggle`-based tag filter follows.
-- **A rejected mutation needs somewhere to go.** The decided pattern for an
-  error outside a form context is a dismissible toast, and the site has none;
-  `ArticleCollection`'s comment already flags this. The proposal — build a shared
-  toast on Base UI's `Toast` — is recorded in
-  [the feature's research.md](../../research.md) as an **open item to settle with
-  the user at the start of this task**, because it makes a site-wide component
-  out of a lit-tracker need.
+- **A rejected mutation needs somewhere to go** — settled above: a shared toast.
 - **Verify with a second window, not a second tab.** Zero drops sync for a
   hidden document.
-- Re-verify Zero 1.8's mutator API against the installed package before writing
-  code (research-over-recall). Checked at spec time on 2026-08-09 — see
-  [the feature's research.md](../../research.md) — but that check ages.

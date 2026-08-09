@@ -1,6 +1,7 @@
 # Status: GROBID Extraction Pipeline
 
-**State:** Implemented; awaiting review. Fourth of five.
+**State:** Implemented; [PR #77](https://github.com/nicbk/nicbk-website/pull/77)
+open, awaiting CI and review. Fourth of five.
 
 - Branch: `article-upload-and-extraction/grobid-extraction-pipeline`.
 - Sub-issue: [#70](https://github.com/nicbk/nicbk-website/issues/70)

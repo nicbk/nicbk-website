@@ -65,7 +65,7 @@ need them (see Phases 2–3).
 | # | Feature | Slug | Status | Depends on |
 |---|---|---|---|---|
 | 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **Complete** (2026-08-09; all 5 tasks merged, #67 + #68 + #69 + #70 + #71) | #6 |
-| 8 | Collection view (list, tags, reading status, filter/sort, live sync) | `collection-view` | Not yet spec'd | #7 |
+| 8 | Collection view (card grid, tags, reading status, filtering, live search) | [`collection-view`](./collection-view/description.md) | **Spec'd** (2026-08-09; 4 tasks, awaiting spec review) | #7 |
 | 9 | Article detail + PDF reader + annotations | `article-detail-and-reader` | Not yet spec'd | #7 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
@@ -75,18 +75,23 @@ need them (see Phases 2–3).
 Following the decided one-at-a-time, gated process, features are fleshed out
 **just-in-time** rather than all at once — `app-shell-and-home` (complete),
 `about-page` (complete), `error-and-not-found` (complete), `blog` (complete),
-`projects-page` (complete), `authentication` (complete), and
-`article-upload-and-extraction` (complete) have full folders today. The rest carry a one-line
+`projects-page` (complete), `authentication` (complete),
+`article-upload-and-extraction` (complete), and `collection-view` (spec'd) have
+full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
 up-front draft.
 
-#8–#11 stay one-liners for now on purpose: each is shaped by what #7 actually
-leaves behind, and #7 is now merged, so they can be spec'd against real code
-rather than a forecast of it. #8 upgrades the minimal collection surface #7
-builds rather than starting from nothing; #11 inherits the failure path #7
-deliberately leaves unresolvable; and #10 inherits a populated citation graph
-plus a measured list of what is still wrong with it (see
+#8 was spec'd this way — written the day after #7 merged, against the code #7
+actually left rather than a forecast of it: it upgrades that minimal collection
+surface (the reserved search slot, the empty sidebar rail, the plain article
+list) instead of starting from nothing, and it is the first consumer of the
+`/mutate` endpoint #7 shipped real but unexercised.
+
+#9–#11 stay one-liners for the same reason. #11 inherits the failure path #7
+deliberately leaves unresolvable, and extends the card menu #8 builds rather
+than adding a second one; #10 inherits a populated citation graph plus a
+measured list of what is still wrong with it (see
 [#7's task status](./article-upload-and-extraction/tasks/semantic-scholar-enrichment/status.md)) —
 the graph's accuracy is deliberately #10's problem, not #7's.

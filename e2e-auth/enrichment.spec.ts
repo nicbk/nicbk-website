@@ -115,10 +115,7 @@ test.describe('enrichment, end to end', () => {
             authors: ['Ada Byron'],
             doi: '10.5555/known-a-reference',
           },
-          {
-            title: 'A Reference With No Identifier',
-            authors: ['Grace Hopper'],
-          },
+          { title: REFERENCE_LIST_ONLY_TITLE, authors: ['Grace Hopper'] },
         ],
       }),
     ])

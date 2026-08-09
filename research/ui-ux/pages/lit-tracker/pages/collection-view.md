@@ -60,3 +60,27 @@ drew a large "collection" heading above the controls and the list.
   row lines up with the collection beneath it. Three separately-aligned
   bands — a centred title, right-hand controls, a left-aligned list — was the
   problem this fixes.
+
+## Revision — 2026-08-09: a uniform grid, with elided text
+
+Three clarifications made while building #8's first task, after seeing the first
+card grid against a real collection.
+
+- **Every card is the same size.** Columns are equal-width tracks and every row
+  takes the height of the tallest, so a paper with a three-line title and one
+  with a three-word title occupy identical cells. Cards sized to their own
+  content read as an arrangement of boxes rather than as a grid, and the effect
+  is worse the more varied a real collection is.
+- **Text that does not fit is elided, and hovering reveals it.** The title
+  clamps to two lines and the author and publication lines to one, each with an
+  ellipsis and a native tooltip carrying the full string. This is what makes a
+  uniform cell possible without losing anything: the complete text stays in the
+  accessibility tree and one hover away. A native tooltip rather than the
+  component library's is deliberate while the card is non-interactive — a
+  tooltip trigger is focusable, and it would put three tab stops on every card
+  in the collection.
+- **The content column fills the panel.** It is inset by the shell's own
+  padding and nothing else, so the gap above the grid, the gap beside the
+  sidebar, and the gaps between cards are one measure. An earlier capped and
+  centred column — correct when the panel held a single narrow list — left the
+  grid floating with a wide gutter on each side.

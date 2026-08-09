@@ -20,29 +20,31 @@ const ARTICLES: CollectionArticle[] = [
     id: '1',
     title: 'Attention Is All You Need',
     authors: [{ name: 'Ashish Vaswani' }, { name: 'Noam Shazeer' }],
+    publicationYear: 2017,
+    venue: 'Advances in Neural Information Processing Systems',
   },
   {
     id: '2',
     title: 'A Mathematical Theory of Communication',
     authors: [{ name: 'Claude Shannon' }],
+    publicationYear: 1948,
+    venue: 'Bell System Technical Journal',
   },
 ]
 
 describe('ArticleCollection', () => {
-  it('lists each article with its title and authors', () => {
+  it('renders one card per article', () => {
     render(<ArticleCollection articles={ARTICLES} state="ready" />)
 
-    const entries = within(
+    const cells = within(
       screen.getByRole('list', { name: 'Articles' }),
     ).getAllByRole('listitem')
 
-    expect(entries).toHaveLength(2)
-    expect(entries[0]).toHaveTextContent('Attention Is All You Need')
-    expect(entries[0]).toHaveTextContent('Ashish Vaswani, Noam Shazeer')
-    expect(entries[1]).toHaveTextContent(
-      'A Mathematical Theory of Communication',
-    )
-    expect(entries[1]).toHaveTextContent('Claude Shannon')
+    expect(cells).toHaveLength(2)
+    expect(cells[0]).toHaveTextContent('Attention Is All You Need')
+    expect(cells[0]).toHaveTextContent('Ashish Vaswani, Noam Shazeer')
+    expect(cells[1]).toHaveTextContent('A Mathematical Theory of Communication')
+    expect(cells[1]).toHaveTextContent('Claude Shannon')
   })
 
   it('shows plain inline text when the collection is empty', () => {

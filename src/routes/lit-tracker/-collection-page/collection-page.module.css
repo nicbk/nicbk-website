@@ -3,22 +3,26 @@
  * nothing here sets a height, scrolls, or insets itself — the panel does all
  * three, and a second scroll container would nest one inside the other.
  *
- * #8 replaces .list/.entry with the card grid and fills the toolbar's search
- * slot; the column and the notice states stay.
+ * The card grid landed in #8's first task; the search slot in the toolbar above
+ * is still #8's last one.
  */
 
 /*
  * One content column for everything in the panel, so the toolbar's controls and
  * the articles beneath them share an edge instead of each finding their own.
- * Capped and centred because the panel is as wide as the window: a row of
- * controls stretched across 1500px reads as two unrelated corners.
+ *
+ * It fills the panel rather than being capped and centred, which is what it was
+ * when the panel held a single narrow list. A centred column leaves the grid
+ * floating in the middle of the panel with a wide gutter against the sidebar and
+ * another against the window — read side by side with the shell's own even
+ * inset, that reads as a mistake. The panel's padding is the only inset there
+ * is, so the gap above the grid, the gap beside the rail, and the gaps between
+ * cards are all the same measure.
  */
 .page {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 64rem;
-  margin-inline: auto;
 }
 
 /*
@@ -45,31 +49,54 @@
   color: var(--color-text-muted);
 }
 
-.list {
-  display: flex;
-  flex-direction: column;
+/*
+ * The card grid: even cells, even gaps, reflowing as the panel resizes.
+ *
+ * `auto-fill` with a `minmax` floor is what reflows it — down to a single column
+ * on a narrow window — rather than a breakpoint: the browser fits as many tracks
+ * as the panel allows and drops one whenever the next no longer fits. That keeps
+ * it correct at widths nobody chose to test, and it responds to the *panel*,
+ * whose width is the window's minus the rail.
+ *
+ * Two rules make the result a grid rather than an arrangement of differently
+ * sized boxes: `1fr` tracks give every column the same width, and
+ * `grid-auto-rows: 1fr` gives every row the same height as the tallest in the
+ * grid — so a one-line title and a three-line one produce identically sized
+ * cards. The cards clamp their own text to fit (article-card.module.css); this
+ * is the half that guarantees the frame around it.
+ */
+.grid {
+  display: grid;
+  /* `min(18rem, 100%)`, not a bare `18rem`: the floor is a hard minimum, and on
+     a phone-width panel — 360px less the rail and the shell's inset — 18rem is
+     wider than the whole column, so the single remaining track overflows it
+     sideways. Capping the floor at the column's own width is what makes the
+     single-column case actually fit. Caught by the shell's overflow test, at
+     360px only. */
+  grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
+  grid-auto-rows: 1fr;
   gap: var(--space-md);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.entry {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-  max-width: var(--prose-max-width);
-  /* Long titles wrap rather than widening the panel and putting a horizontal
-     scrollbar under a list that should only ever scroll vertically. A DOI-like
-     unbroken run is the realistic worst case. */
-  overflow-wrap: anywhere;
-}
-
-.entryTitle {
-  font-weight: var(--font-weight-medium);
-}
-
-.authors {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+/*
+ * Each cell is the card's **container**, in both senses: it declares the
+ * containment the card's own queries resolve against, and it stretches so the
+ * card can fill the row's height. Containment has to sit here rather than on
+ * the card because an element cannot query its own size.
+ */
+.cell {
+  container-type: inline-size;
+  /* `grid`, not `flex`: a lone grid item stretches to fill its container on both
+     axes, where a flex item is sized to its content and would leave a card with
+     a short title narrower than its neighbours — a visibly ragged row. */
+  display: grid;
+  /* A grid item's automatic minimum size is its *content's* minimum, and the
+     card holds two deliberately unwrappable lines — so without this the tracks
+     grow to fit the longest venue name in the collection and the grid runs off
+     the side of the panel. The whole point of eliding that text is that the cell
+     decides the width, not the text. */
+  min-width: 0;
 }

@@ -16,6 +16,14 @@ task satisfies.
 - The cards are laid out as a **grid that collapses to a single column** on
   narrow screens, and the **card itself adapts by container query** so it is
   correct in any container it is placed in.
+- **Every card is the same size**, whatever its text: equal-width tracks and
+  equal-height rows, with the title clamped to two lines and the author and
+  publication lines to one. What does not fit is **elided, with the full string
+  in the accessibility tree and one hover away**. The content column **fills the
+  panel**, inset by the shell's padding alone. All three are the 2026-08-09
+  revision in
+  [collection-view.md](../../../../research/ui-ux/pages/lit-tracker/pages/collection-view.md),
+  decided after seeing this task's first grid against a real collection.
 - The card **does not navigate** and offers no affordance suggesting it does.
 - The **empty collection** renders as plain inline text, and the
   **syncing / ready / error** distinction is preserved unchanged.

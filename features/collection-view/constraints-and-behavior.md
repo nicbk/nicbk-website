@@ -21,6 +21,13 @@ Per
   card itself adapts by **container query**, not by page width, so it is correct
   in the main grid and in any narrower container a later feature places it in
   ([design-system.md](../../research/ui-ux/design-system.md)).
+- **Every card is the same size**, and text that does not fit is **elided with
+  the full string one hover away** — the 2026-08-09 revision in
+  [collection-view.md](../../research/ui-ux/pages/lit-tracker/pages/collection-view.md),
+  made after seeing the first grid against a real collection. The content column
+  **fills the panel**, inset by the shell's own padding and nothing else, so the
+  gap above the grid, the gap beside the sidebar, and the gaps between cards are
+  one measure.
 - The card carries a **three-dot menu in its top-right corner**. In this feature
   it holds tag and reading-status controls; #11 adds "edit…" and "delete…" to
   the same menu.

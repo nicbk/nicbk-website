@@ -65,17 +65,31 @@ interface InsertedArticle {
  */
 export async function insertArticle(
   userId: string,
-  { title, authors = [] }: { title: string; authors?: { name: string }[] },
+  {
+    title,
+    authors = [],
+    publicationYear = null,
+    venue = null,
+  }: {
+    title: string
+    authors?: { name: string }[]
+    /** Both default to null — the shape a preprint really has. */
+    publicationYear?: number | null
+    venue?: string | null
+  },
 ): Promise<InsertedArticle> {
   const id = randomUUID()
   await connection().query(
-    `insert into articles (id, user_id, title, authors, pdf_object_key)
-     values ($1, $2, $3, $4::jsonb, $5)`,
+    `insert into articles
+       (id, user_id, title, authors, publication_year, venue, pdf_object_key)
+     values ($1, $2, $3, $4::jsonb, $5, $6, $7)`,
     [
       id,
       userId,
       title,
       JSON.stringify(authors),
+      publicationYear,
+      venue,
       `lit-tracker/${userId}/${id}/source.pdf`,
     ],
   )
@@ -93,13 +107,11 @@ export interface StoredEnrichment {
 /**
  * The enrichment columns of the article with this title.
  *
- * Read from the database rather than the page because **nothing renders any of
- * it yet** — the collection list shows a title and its authors, and the venue,
- * the year and the citation graph arrive with #8 and #10. The task's testing.md
- * asked for "enriched metadata visible" in the browser, which is not something
- * this task can deliver without building #8's UI inside it. What the browser
- * proves here is the live round-trip; what the database proves is that the
- * round-trip enriched anything.
+ * Read from the database rather than the page because most of it still renders
+ * nowhere: #8's first task put the venue and the year on the card, but the
+ * extraction status and the Semantic Scholar id have no display surface at all,
+ * and the citation graph waits for #10. What the browser proves here is the live
+ * round-trip; what the database proves is that the round-trip enriched anything.
  */
 export async function enrichmentOfArticle(
   userId: string,

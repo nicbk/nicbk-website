@@ -22,9 +22,11 @@ import styles from './collection-page.module.css'
  * materialized views by query hash, so the identical request resolves to the
  * identical view.
  *
- * This is still a minimal surface — no search, no tags, no filter sidebar, no
- * infinite scroll. Task 3 added the toolbar above the list; the full collection
- * view is #8, which builds on this page rather than replacing it.
+ * The surface is filling in one task at a time: #7 gave it the toolbar and a
+ * plain list, and #8's first task made the list a card grid. Still absent —
+ * tags and the card menu, the filter rail, and search — are #8's remaining
+ * three, each of which changes what this page renders without changing how it
+ * asks for it.
  */
 export function CollectionPage() {
   const [articles, details] = useQuery(queries.articles.mine())

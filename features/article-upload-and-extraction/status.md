@@ -1,6 +1,6 @@
 # Status: Article Upload and Extraction
 
-**Feature state:** In progress (tasks 1–2 of 5 implemented). Five tasks, sequential,
+**Feature state:** In progress (tasks 1–2 of 5 merged). Five tasks, sequential,
 each gated by its own PR + CI + human review. Depends on
 [`authentication`](../authentication/status.md) (Complete) — it consumes that
 feature's Postgres service, Drizzle migration pipeline, Better Auth session,
@@ -29,7 +29,7 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | `zero-sync-foundation` | **Merged** ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | passed | approved |
-| `lit-tracker-shell` | In review ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | awaiting |
+| `lit-tracker-shell` | **Merged** ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | approved |
 | `pdf-upload-and-storage` | Not started ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | — | — | — |
 | `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
 | `semantic-scholar-enrichment` | Not started ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | — | — | — |
@@ -66,7 +66,7 @@ against stubbed GROBID and Semantic Scholar.
   `zero_0/cdc` schemas, and separate databases could not be created by a
   migration or by the Postgres image's init scripts.
 - **zero-cache is served same-origin, at `nicbk.com/zero`.** Its router accepts
-  an optional leading base path segment, so the host's nginx proxies `/zero/`
+  an optional leading base path segment, so the host's Caddy proxies `/zero/*`
   through untouched and the browser sends the session cookie because nothing is
   cross-origin. Settled in task 2, reversing task 1's note about a
   `zero.nicbk.com` subdomain — which would have meant widening the session
@@ -138,7 +138,7 @@ against stubbed GROBID and Semantic Scholar.
   cookie auth needing zero-cache on a subdomain in production — all recorded in
   [research.md](./research.md), with the details and the decisions taken in the
   [task status](./tasks/zero-sync-foundation/status.md). Two carried forward:
-  **task 2 owns the cookie and nginx change**, and Zero has no SSR support, so
+  **task 2 owns the cookie and reverse-proxy change**, and Zero has no SSR support, so
   its provider must be loaded client-only.
 - 2026-08-02 — **Task 1 merged as [PR #73](https://github.com/nicbk/nicbk-website/pull/73)**;
   the three Zero secrets were provisioned on nicbk-tower beforehand.
@@ -152,7 +152,15 @@ against stubbed GROBID and Semantic Scholar.
   `/user-settings-probe` was deleted with them. One decision reversed task 1's
   note, with the user's agreement: **zero-cache is served same-origin at
   `nicbk.com/zero`, not from a `zero.nicbk.com` subdomain**, so the Better Auth
-  configuration is untouched and the production change is a single nginx
-  `location` block. Opened as [PR #74](https://github.com/nicbk/nicbk-website/pull/74),
+  configuration is untouched and the production change is a single Caddy
+  `handle` block. Opened as [PR #74](https://github.com/nicbk/nicbk-website/pull/74),
   CI green on all five jobs. Details and the rest in the
   [task status](./tasks/lit-tracker-shell/status.md).
+- 2026-08-08 — **Task 2 merged as [PR #74](https://github.com/nicbk/nicbk-website/pull/74).**
+  The squash-merge was taken from a head that predated the branch's final
+  commit, so the docs correcting the host's reverse proxy from nginx to **Caddy**
+  did not land with it and are being re-applied as a follow-up. Worth noting as a
+  process hazard rather than a one-off: a push that lands close to a merge click
+  is not guaranteed to be in the squash, so a branch's tip should be compared
+  against `main` after merging rather than assumed present. Next: task 3,
+  `pdf-upload-and-storage`.

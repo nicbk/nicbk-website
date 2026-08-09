@@ -12,7 +12,7 @@
  * and `/api/zero/query` is what decides what may be read.
  *
  * In production this is same-origin with a single path segment
- * (`https://nicbk.com/zero`), which the host's nginx proxies through to
+ * (`https://nicbk.com/zero`), which the host's Caddy proxies through to
  * zero-cache untouched: zero-cache's own router accepts an optional leading
  * base segment, and Zero's client permits at most one. Same-origin means the
  * browser sends the Better Auth session cookie with no change to how that

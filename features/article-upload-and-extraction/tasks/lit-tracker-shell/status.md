@@ -1,7 +1,7 @@
 # Status: Lit Tracker Shell
 
-**State:** In review — [PR #74](https://github.com/nicbk/nicbk-website/pull/74)
-open, CI green on all five jobs. Second of five.
+**State:** **Merged** — [PR #74](https://github.com/nicbk/nicbk-website/pull/74),
+CI green on all five jobs, approved. Second of five.
 
 - Branch: `article-upload-and-extraction/lit-tracker-shell`.
 - Sub-issue: [#68](https://github.com/nicbk/nicbk-website/issues/68)
@@ -70,7 +70,7 @@ open, CI green on all five jobs. Second of five.
   `zero.nicbk.com` subdomain** — agreed with the user, and a reversal of what
   task 1 recorded. zero-cache's router accepts an optional leading base path
   segment (`(/:base)/:worker/v:version/:action`) and Zero's client permits at
-  most one, so nginx can proxy `/zero/` through untouched. Same-origin means
+  most one, so Caddy can proxy `/zero/*` through untouched. Same-origin means
   the browser sends the session cookie with **no change to how that cookie is
   issued**; the subdomain route would have required `crossSubDomainCookies`,
   widening the session cookie to every subdomain of the site permanently, plus
@@ -205,10 +205,15 @@ Two things worth carrying:
   container on GitHub-hosted Linux — the one part of this that could not be
   proven locally, since `host-gateway` behaves differently on macOS.
 
-## Before this merges
+## Before this deploys
 
 `VITE_ZERO_CACHE_URL=https://nicbk.com/zero` must be in
-`/var/lib/nicbk-website/.env` on nicbk-tower, and the nginx `location /zero/`
+`/var/lib/nicbk-website/.env` on nicbk-tower, and the Caddy `handle /zero/*`
 block (README step 5) in place. Compose interpolates the variable at **build**
 time with `:?`, so a missing value fails the build with a named error rather
 than shipping a client that silently syncs nothing.
+
+This merged (2026-08-08) before either was confirmed done. The failure mode is
+loud and safe — the deploy timer's `docker compose build` stops on the missing
+variable and the running stack is left alone — but the site does not pick up
+this task until both are in place.

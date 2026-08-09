@@ -351,7 +351,7 @@ finding of our own.
   is served **same-origin at `https://nicbk.com/zero`**. Its own router matches
   `(/:base)/:worker/v:version/:action` — an optional leading base segment — and
   Zero's client validator permits a `cacheURL` with at most one path component,
-  so nginx proxies `/zero/` through without stripping anything. Same-origin
+  so Caddy proxies `/zero/*` through without stripping anything. Same-origin
   needs no change to how the session cookie is issued, where the subdomain route
   would have widened that cookie to every subdomain of the site permanently, and
   added a DNS record and a certificate. **The auth configuration is unchanged by

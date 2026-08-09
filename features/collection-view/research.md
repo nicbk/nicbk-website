@@ -226,7 +226,10 @@ rediscovers it:
   data already in memory, and splitting "filter by tag" into ZQL while "filter by
   text" stays local would mean two filtering mechanisms whose composition is the
   feature's whole point. One predicate, one place.
-- **`e2e/` and `e2e-auth/` are outside `tsconfig.json`'s `include`** — carried
-  over from #7, where a missing import in a Playwright spec surfaced only at
-  runtime. Not this feature's cause, but this feature adds specs to both, so
-  whichever task touches them first should close it.
+- ~~**`e2e/` and `e2e-auth/` are outside `tsconfig.json`'s `include`**~~ —
+  **closed 2026-08-09**, as its own chore PR rather than inside a task, so the
+  build-config change and the eight pre-existing errors it exposed stayed
+  reviewable apart from task 2's authorization work. Both folders and the two
+  Playwright configs are now typechecked in CI, and `allowJs` types the suite's
+  `.mjs` support modules by inference; the decision is recorded in
+  [../../research/coding-conventions/typescript-conventions.md](../../research/coding-conventions/typescript-conventions.md).

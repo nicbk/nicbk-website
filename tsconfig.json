@@ -12,6 +12,19 @@
     "noEmit": true,
     "skipLibCheck": true,
 
+    // The test tooling has a handful of plain-JavaScript modules — the e2e
+    // service constants and the upstream-API stubs — which are `.mjs` because
+    // the signed-in-suite launcher (scripts/e2e-auth-server.mjs) runs them
+    // under bare `node`, with no build step to transpile them first. `allowJs`
+    // lets TypeScript *infer* their shapes where a spec imports them, so those
+    // imports are typed from the source of truth. The alternative, a
+    // hand-written `.d.mts` beside each one, is a second copy of every
+    // signature that nothing keeps honest.
+    //
+    // `checkJs` stays off: these files are not written to this project's
+    // TypeScript standard and are not being held to it.
+    "allowJs": true,
+
     // Strictness: `strict` plus the agreed low-friction extras.
     // `exactOptionalPropertyTypes` is deliberately NOT enabled — see
     // research/coding-conventions/typescript-conventions.md.
@@ -44,6 +57,14 @@
   "include": [
     "src",
     "blog",
+    // The Playwright suites and the configs that drive them. They were outside
+    // this list until 2026-08-09, which meant a spec could reference a symbol
+    // that did not exist and nothing said so until the browser ran it — the way
+    // a missing import in an e2e spec surfaced during #7.
+    "e2e",
+    "e2e-auth",
+    "playwright.config.ts",
+    "playwright.auth.config.ts",
     "vite.config.ts",
     "vitest.config.ts",
     "vitest.setup.ts",

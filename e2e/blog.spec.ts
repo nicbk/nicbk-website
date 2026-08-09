@@ -17,13 +17,17 @@ const POST = {
 // The two published sample posts, newest-first by frontmatter date. The third
 // sample post (notes-on-minimalism) is draft: true and must not appear in the
 // production list.
+//
+// `as const` makes this a fixed-length tuple rather than an array, so taking the
+// first element yields a post rather than a possibly-absent one. The list is a
+// literal three lines up; there is nothing here that can be missing.
 const PUBLISHED_NEWEST_FIRST = [
   { slug: 'type-safe-frontmatter', title: 'Type-safe frontmatter with Zod' },
   {
     slug: 'building-this-site',
     title: 'Building this site with TanStack Start and MDX',
   },
-]
+] as const
 const DRAFT_TITLE = 'Notes on a monospace, minimalist design'
 
 test.describe('blog list page', () => {

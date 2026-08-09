@@ -47,6 +47,14 @@ It is called out here so a reviewer is not surprised by it, and so nobody
 
 ## Not in this task
 
-pg-boss, GROBID, Semantic Scholar, and anything that reads a stored PDF back —
-tasks 4 and 5. The `articles` rows those stages create do not exist yet, so the
+GROBID, Semantic Scholar, and anything that reads a stored PDF back — tasks 4
+and 5. The `articles` rows those stages create do not exist yet, so the
 collection surface stays empty through this task.
+
+**pg-boss is split across the boundary**, which an earlier draft of this
+document got wrong by listing it here outright. Its *send* side belongs to this
+task: [constraints-and-behavior.md](./constraints-and-behavior.md) requires the
+job to be enqueued inside the same transaction as the `upload_jobs` write, and
+that transaction is written here. What task 4 adds is the **handler** that
+drains the queue. Deferring the enqueue would mean reopening and rewriting the
+upload path later — the rework this feature's ordering exists to avoid.

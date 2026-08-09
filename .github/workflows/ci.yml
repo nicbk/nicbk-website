@@ -115,7 +115,7 @@ jobs:
           retention-days: 14
 
   integration:
-    name: Integration tests (Testcontainers Postgres)
+    name: Integration tests (Testcontainers Postgres + Garage)
     # ubuntu-latest ships a running Docker daemon, which is all Testcontainers
     # needs — see the 2026-07-06 runner addendum in
     # research/testing-qa/integration-testing-strategy.md.
@@ -176,7 +176,7 @@ jobs:
           retention-days: 14
 
   e2e-auth:
-    name: Signed-in e2e (stubbed Google + Postgres + zero-cache)
+    name: Signed-in e2e (stubbed Google + Postgres + zero-cache + Garage)
     # ubuntu-latest ships a running Docker daemon, which is what the throwaway
     # Postgres and zero-cache need — the same arrangement the integration job
     # relies on. It also supports the `host-gateway` extra host the sync engine

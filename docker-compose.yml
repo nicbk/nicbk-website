@@ -141,7 +141,7 @@ services:
       # authorized. Explicitly off.
       ZERO_ENABLE_CRUD_MUTATIONS: "false"
     ports:
-      # Loopback only. In production the host's nginx is the sole client — it
+      # Loopback only. In production the host's Caddy is the sole client — it
       # proxies https://nicbk.com/zero/ straight through to here, leaving the
       # leading path segment in place because zero-cache's own router expects
       # it. Serving the sync engine from the site's own origin (rather than a

@@ -1,11 +1,12 @@
 # Status: Semantic Scholar Enrichment
 
-**State:** Implemented, awaiting review. Fifth of five; completes the feature.
+**State:** **Merged** (2026-08-09). Fifth of five; completes the feature.
 
 - Branch: `article-upload-and-extraction/semantic-scholar-enrichment`.
 - Sub-issue: [#71](https://github.com/nicbk/nicbk-website/issues/71)
   (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)).
-- PR: [#78](https://github.com/nicbk/nicbk-website/pull/78)
+- PR: [#78](https://github.com/nicbk/nicbk-website/pull/78), CI green on all five
+  jobs. Verified after merge that the whole branch tip reached `main`.
 
 ## What was built
 
@@ -210,6 +211,58 @@ tier looks like duplicated coverage.
 Separately: `e2e/` and `e2e-auth/` are **not** in `tsconfig.json`'s `include`,
 so `tsc --noEmit` never typechecks the Playwright specs. A missing import in a
 spec surfaced only at runtime during this task. Pre-existing, not fixed here.
+
+## Deferred: closing the rest of the citation graph
+
+Raised with the user, measured, and postponed by agreement — the graph is to
+become a source of truth the reader can trust, and these are what that needs
+beyond what this task ships. Recorded here rather than in an issue because #10
+is where they will be built and this is what #10 should be planned against.
+
+Measured on four real papers, the residue after this task is **not** missing
+edges. Every true citation edge those papers make is present. What is wrong is:
+
+- **Two spurious rows.** GROBID merged two references into one garbled row, and
+  both halves also arrived cleanly from Semantic Scholar's list — so the graph
+  holds three rows where the paper printed two. Fixable by dropping an
+  unresolved row whose title contains an S2-sourced row's title from the same
+  article.
+- **Four rows with nothing to point at.** An LDC dataset, a technical report, a
+  challenge paper, and one Semantic Scholar's own list did not resolve. These
+  are real references and correctly stored; they simply are not links, and no
+  amount of better PDF reading creates a node that does not exist.
+
+The ideas worth taking into #10, in the order they are worth doing:
+
+1. **Dedupe mis-segmented rows** against the S2-sourced ones, as above.
+2. **Store the printed reference text.** `includeRawCitations=1` already gives
+   the parser `raw`, and `writeBibliography` currently discards it. It is the
+   evidence behind every row — what makes a row verifiable by eye, and what
+   lets an unlinkable reference display as the paper printed it rather than as
+   GROBID's guess. One additive column.
+3. **Record what was expected.** Semantic Scholar reports `referenceCount`, and
+   the row count is known. Storing both makes a shortfall visible instead of
+   silent; today nothing distinguishes "this paper cites nothing else you own"
+   from "its bibliography was not read", and that ambiguity costs more trust
+   than the last few percent of resolution does.
+4. **`/paper/search/match` for the leftovers.** Ruled out during this task at
+   ~24 requests per upload; the reference list absorbed enough that it is now
+   ~4, and it targets exactly the residue.
+5. **#11's article-edit as the closing mechanism.** Some references will always
+   need a human, and a graph that shows its gaps beats one that claims
+   completeness.
+
+**Not verified:** whether a reference exists in a printed PDF that *neither*
+GROBID nor Semantic Scholar caught. That needs hand-counting one paper's
+reference list against its rows, and should be done before completeness is
+called solved.
+
+A vision-model reader was evaluated and set aside for this. It addresses
+segmentation, and segmentation is the half already covered — the merges it
+would fix are the ones Semantic Scholar's list already supplies, and the
+unlinkable references stay unlinkable. See
+[citation-graph-schema.md](../../../../research/data-modeling/citation-graph-schema.md)'s
+2026-08-09 revision.
 
 ## Log
 

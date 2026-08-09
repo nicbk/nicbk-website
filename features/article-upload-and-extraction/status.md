@@ -1,7 +1,8 @@
 # Status: Article Upload and Extraction
 
-**Feature state:** In progress (tasks 1–4 of 5 merged; task 5 implemented,
-awaiting review). Five tasks, sequential,
+**Feature state:** **Complete** (2026-08-09; all five tasks merged). The parent
+issue [#66](https://github.com/nicbk/nicbk-website/issues/66) still needs
+closing by hand — GitHub does not close a parent when its sub-issues close. Five tasks, sequential,
 each gated by its own PR + CI + human review. Depends on
 [`authentication`](../authentication/status.md) (Complete) — it consumes that
 feature's Postgres service, Drizzle migration pipeline, Better Auth session,
@@ -33,7 +34,7 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 | `lit-tracker-shell` | **Merged** ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | approved |
 | `pdf-upload-and-storage` | **Merged** ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | [#76](https://github.com/nicbk/nicbk-website/pull/76) | passed | approved |
 | `grobid-extraction-pipeline` | **Merged** ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | [#77](https://github.com/nicbk/nicbk-website/pull/77) | passed | approved |
-| `semantic-scholar-enrichment` | Implemented ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | [#78](https://github.com/nicbk/nicbk-website/pull/78) | passed | pending |
+| `semantic-scholar-enrichment` | **Merged** ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | [#78](https://github.com/nicbk/nicbk-website/pull/78) | passed | approved |
 
 ## Definition of Done (feature)
 
@@ -214,3 +215,22 @@ against stubbed GROBID and Semantic Scholar.
   rather than the enrich stage, and Semantic Scholar may correct `venue` and
   `publication_year` when the match came from an identifier. Remaining: review,
   merge, and **closing #66 by hand**.
+- 2026-08-09 — **Task 5 merged as [PR #78](https://github.com/nicbk/nicbk-website/pull/78)**,
+  CI green on all five jobs, and the whole branch tip confirmed on `main`. The
+  feature's code is complete: an uploaded PDF becomes an article with its
+  metadata extracted, enriched against Semantic Scholar, and its bibliography
+  stored as citation edges that resolve against the rest of the collection in
+  both directions.
+
+  Two things grew during review and are worth carrying into #8/#10. The citation
+  graph is only usable for machine-learning papers because Semantic Scholar's
+  own reference list is used as a source of edges, not just of identifiers —
+  13% → 97% on BERT — since a printed ML bibliography cites proceedings by name
+  and GROBID silently drops what it cannot segment. And the remaining
+  inaccuracy, measured rather than assumed, is **not** missing edges but two
+  spurious rows plus four references with no node to point at; the steps for
+  closing that are recorded in
+  [the task's status.md](./tasks/semantic-scholar-enrichment/status.md) and are
+  work for #10.
+
+  Remaining for this feature: **close #66 by hand**.

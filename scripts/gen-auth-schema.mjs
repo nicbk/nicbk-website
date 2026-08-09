@@ -25,28 +25,16 @@
  * committed file is stable run-to-run, which the drift check depends on.
  *
  * The generator needs the auth config to import cleanly, and that config reads
- * the validated environment. It never connects to the database, so placeholder
- * values are enough and are supplied here rather than requiring a real .env.
+ * the validated environment. It never connects to the database, so the shared
+ * placeholder values are enough — see scripts/placeholder-env.mjs for why they
+ * are shared rather than repeated here.
  */
 import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { placeholderEnv } from './placeholder-env.mjs'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
-
-/**
- * Environment that satisfies src/env.ts without pointing at anything real.
- * The secret only has to clear the schema's 32-character minimum.
- */
-const placeholderEnv = {
-  DATABASE_URL: 'postgres://schema:generation@localhost:5432/unused',
-  BETTER_AUTH_SECRET: 'schema-generation-placeholder-secret-value',
-  BETTER_AUTH_URL: 'http://localhost:3000',
-  GOOGLE_CLIENT_ID: 'schema-generation-placeholder',
-  GOOGLE_CLIENT_SECRET: 'schema-generation-placeholder',
-  ZERO_QUERY_API_KEY: 'schema-generation-placeholder-zero-query-key',
-  ZERO_MUTATE_API_KEY: 'schema-generation-placeholder-zero-mutate-key',
-}
 
 function run(command, args) {
   execFileSync(command, args, {

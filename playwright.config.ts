@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { placeholderEnv } from './scripts/placeholder-env.mjs'
 
 // biome-ignore lint/complexity/useLiteralKeys: tsconfig's noPropertyAccessFromIndexSignature requires bracket access on process.env
 const isCi = process.env['CI'] === 'true'
@@ -37,32 +38,15 @@ export default defineConfig({
     // inert (renders the normal 404 instead of throwing).
     env: {
       VITE_E2E_ERROR_PROBE: '1',
-      // The server validates its whole environment at startup and now
-      // requires database and Google OAuth settings (src/env.ts). Nothing in
-      // this suite signs in or touches the database yet — the auth surface
-      // arrives with the sign-in page — so obvious placeholders are supplied
-      // here rather than requiring a real .env (or a database) to run the e2e
-      // suite. When a test does exercise sign-in, it brings its own real
-      // Postgres and stubbed Google instead of these.
-      DATABASE_URL: 'postgres://e2e:placeholder@localhost:5432/unused',
-      BETTER_AUTH_SECRET: 'e2e-placeholder-secret-at-least-32-characters',
-      BETTER_AUTH_URL: 'http://localhost:3000',
-      GOOGLE_CLIENT_ID: 'e2e-placeholder-client-id',
-      GOOGLE_CLIENT_SECRET: 'e2e-placeholder-client-secret',
-      // Also required from startup on. Nothing in this suite is zero-cache, so
-      // no request will ever present these — they only have to satisfy the
-      // schema's minimum length.
-      ZERO_QUERY_API_KEY: 'e2e-placeholder-zero-query-api-key-32-chars',
-      ZERO_MUTATE_API_KEY: 'e2e-placeholder-zero-mutate-api-key-32-chars',
-      // Likewise required from startup on. Nothing in this suite uploads — the
-      // upload flow is signed-in, so it lives in the auth tier, which brings a
-      // real Garage. The access key id must still be `GK` plus hex: src/env.ts
-      // validates the shape so a bad value fails at startup rather than on the
-      // first upload.
-      GARAGE_ENDPOINT: 'http://localhost:3900',
-      GARAGE_ACCESS_KEY_ID: 'GK000000000000000000000000',
-      GARAGE_SECRET_ACCESS_KEY: 'e2e-placeholder-garage-secret-access-key',
-      GARAGE_BUCKET: 'unused',
+      // The server validates its whole environment at startup (src/env.ts) and
+      // throws on anything missing. Nothing in this suite signs in, touches the
+      // database, or uploads — those all need a session, which is the auth
+      // tier's job, and that tier brings real Postgres, zero-cache, and Garage
+      // containers instead of these. So the shared placeholders are enough;
+      // they live in one place because keeping a copy here drifted from the
+      // schema twice, each time failing the whole suite on a server that
+      // refused to boot. See scripts/placeholder-env.mjs.
+      ...placeholderEnv,
       // Inlined into the client bundle at build time, so it has to be set for
       // the build this command runs — not just for the server it then starts.
       // No zero-cache runs in this tier and nothing in it reaches /lit-tracker

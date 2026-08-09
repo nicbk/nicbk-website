@@ -54,6 +54,15 @@ export default defineConfig({
       // schema's minimum length.
       ZERO_QUERY_API_KEY: 'e2e-placeholder-zero-query-api-key-32-chars',
       ZERO_MUTATE_API_KEY: 'e2e-placeholder-zero-mutate-api-key-32-chars',
+      // Likewise required from startup on. Nothing in this suite uploads — the
+      // upload flow is signed-in, so it lives in the auth tier, which brings a
+      // real Garage. The access key id must still be `GK` plus hex: src/env.ts
+      // validates the shape so a bad value fails at startup rather than on the
+      // first upload.
+      GARAGE_ENDPOINT: 'http://localhost:3900',
+      GARAGE_ACCESS_KEY_ID: 'GK000000000000000000000000',
+      GARAGE_SECRET_ACCESS_KEY: 'e2e-placeholder-garage-secret-access-key',
+      GARAGE_BUCKET: 'unused',
       // Inlined into the client bundle at build time, so it has to be set for
       // the build this command runs — not just for the server it then starts.
       // No zero-cache runs in this tier and nothing in it reaches /lit-tracker

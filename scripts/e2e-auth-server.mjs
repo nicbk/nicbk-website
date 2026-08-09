@@ -10,7 +10,7 @@
  * ran against a hand-built schema could pass while the migrations that actually
  * ship are broken.
  *
- * Five things happen here before the server starts:
+ * Six things happen here before the server starts:
  *   1. a private Docker network, so the containers can address each other,
  *   2. a throwaway Postgres container (the image production runs) with logical
  *      replication turned on, which is what Zero subscribes to,
@@ -18,7 +18,9 @@
  *      script, not a shortcut — this is also what creates the `zero_data`
  *      publication zero-cache reads at startup,
  *   4. a zero-cache container (the image production runs) replicating from it,
- *   5. the stubbed Google token endpoint preloaded into the server process
+ *   5. a Garage container, bootstrapped through the same module the Compose job
+ *      uses, so an upload has somewhere real to land,
+ *   6. the stubbed Google token endpoint preloaded into the server process
  *      (see e2e-auth/support/google-token-endpoint-stub.mjs).
  *
  * Runs on its own ports so it can coexist with a dev server, the ordinary e2e
@@ -33,6 +35,11 @@ import {
   AUTH_E2E_BASE_URL,
   AUTH_E2E_PORT,
   DATABASE_URL,
+  GARAGE_ACCESS_KEY_ID,
+  GARAGE_BUCKET,
+  GARAGE_ENDPOINT,
+  GARAGE_HOST_PORT,
+  GARAGE_SECRET_ACCESS_KEY,
   INTERNAL_DATABASE_URL,
   POSTGRES_DB,
   POSTGRES_HOST_PORT,
@@ -42,6 +49,7 @@ import {
   ZERO_CACHE_HOST_PORT,
   ZERO_CACHE_URL,
 } from '../e2e-auth/support/services.mjs'
+import { bootstrapGarage } from './garage-bootstrap.mjs'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -52,6 +60,13 @@ const POSTGRES_IMAGE = 'postgres:18.4'
 const ZERO_CACHE_IMAGE = 'rocicorp/zero:1.8.0'
 
 const ZERO_CACHE_PORT = 4848
+
+/** Likewise pinned with docker-compose.yml. */
+const GARAGE_IMAGE = 'dxflrs/garage:v2.3.0'
+
+const GARAGE_S3_PORT = 3900
+const GARAGE_ADMIN_PORT = 3903
+const GARAGE_ADMIN_TOKEN = 'auth-e2e-placeholder-garage-admin-token'
 
 /**
  * How a container reaches the app server, which runs on the host rather than in
@@ -153,6 +168,12 @@ const appEnv = {
   GOOGLE_CLIENT_SECRET: 'auth-e2e-google-client-secret',
   ZERO_QUERY_API_KEY,
   ZERO_MUTATE_API_KEY,
+  // The app server runs on the host in this tier, so it reaches Garage through
+  // the published port rather than the container network.
+  GARAGE_ENDPOINT,
+  GARAGE_ACCESS_KEY_ID,
+  GARAGE_SECRET_ACCESS_KEY,
+  GARAGE_BUCKET,
   // Where the browser dials zero-cache. Vite inlines this into the client
   // bundle at build time, which is why that port is fixed. No proxy is
   // involved: cookies are keyed by host and ignore the port, so the session
@@ -208,6 +229,56 @@ const zeroCache = await new GenericContainer(ZERO_CACHE_IMAGE)
   .withStartupTimeout(180_000)
   .start()
 
+const garage = await new GenericContainer(GARAGE_IMAGE)
+  .withLabels({ 'com.nicbk.test-tier': 'auth-e2e' })
+  .withNetwork(network)
+  .withEnvironment({
+    GARAGE_RPC_SECRET: '0'.repeat(64),
+    GARAGE_ADMIN_TOKEN,
+  })
+  .withCopyContentToContainer([
+    {
+      content: `
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "sqlite"
+replication_factor = 1
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "127.0.0.1:3901"
+
+[s3_api]
+s3_region = "garage"
+api_bind_addr = "[::]:${GARAGE_S3_PORT}"
+root_domain = ".s3.garage.internal"
+
+[admin]
+api_bind_addr = "[::]:${GARAGE_ADMIN_PORT}"
+`,
+      target: '/etc/garage.toml',
+    },
+  ])
+  .withExposedPorts(
+    { container: GARAGE_S3_PORT, host: GARAGE_HOST_PORT },
+    GARAGE_ADMIN_PORT,
+  )
+  // Not the default port-listening strategy: it probes from *inside* the
+  // container with a shell command, and the Garage image is `scratch` plus one
+  // static binary — there is no shell for it to run, so it times out while
+  // Garage is in fact listening.
+  .withWaitStrategy(Wait.forLogMessage(/S3 API server listening/))
+  .withStartupTimeout(180_000)
+  .start()
+
+// The same module the Compose job runs: a fresh node has no cluster layout and
+// answers no S3 request until one is applied.
+await bootstrapGarage({
+  adminUrl: `http://${garage.getHost()}:${garage.getMappedPort(GARAGE_ADMIN_PORT)}`,
+  adminToken: GARAGE_ADMIN_TOKEN,
+  accessKeyId: GARAGE_ACCESS_KEY_ID,
+  secretAccessKey: GARAGE_SECRET_ACCESS_KEY,
+  bucket: GARAGE_BUCKET,
+})
+
 // Locally the dev server keeps the edit-run loop short; in CI the built
 // production server is what gets exercised, matching playwright.config.ts.
 if (isCi) {
@@ -239,6 +310,7 @@ async function shutDown(code) {
   // makes a clean run leave nothing behind immediately. Order matters only in
   // that zero-cache holds a replication slot on the database.
   await zeroCache.stop().catch(() => {})
+  await garage.stop().catch(() => {})
   await container.stop().catch(() => {})
   await network.stop().catch(() => {})
   process.exit(code)

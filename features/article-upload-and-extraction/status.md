@@ -33,7 +33,7 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 | `lit-tracker-shell` | **Merged** ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | approved |
 | `pdf-upload-and-storage` | **Merged** ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | [#76](https://github.com/nicbk/nicbk-website/pull/76) | passed | approved |
 | `grobid-extraction-pipeline` | **Merged** ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | [#77](https://github.com/nicbk/nicbk-website/pull/77) | passed | approved |
-| `semantic-scholar-enrichment` | Implemented ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | [#78](https://github.com/nicbk/nicbk-website/pull/78) | running | pending |
+| `semantic-scholar-enrichment` | Implemented ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | [#78](https://github.com/nicbk/nicbk-website/pull/78) | passed | pending |
 
 ## Definition of Done (feature)
 

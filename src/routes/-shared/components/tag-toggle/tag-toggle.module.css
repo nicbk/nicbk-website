@@ -1,0 +1,57 @@
+/*
+ * The site's tag-toggle style, shared by the blog's tag filter and the Lit
+ * Tracker's collection filters. Originally the blog's alone; extracted when the
+ * tracker needed the same control, so the two cannot drift.
+ */
+.toggle {
+  /* A text toggle, not a boxed pill — keeps the minimalist monospace look. */
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+  /* A long tag name elides rather than widening whatever holds it. The full
+     text stays in the accessibility tree, and the tracker's rail additionally
+     carries it in a `title`. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Decorative hash, matching the inline post tags (PostTags); kept in CSS, out of
+   the DOM, so the visible label stays the plain tag text. Drawn only where the
+   surface asks for it — the blog writes tags `#name` everywhere, the Lit
+   Tracker writes them plainly. */
+.toggle[data-hash]::before {
+  content: "#";
+}
+
+/*
+ * Hover is gated on a device that can actually hover. A touch device latches
+ * :hover on the last-tapped element and never releases it, which here left a
+ * just-deselected tag sitting in the accent color — visually the selected state
+ * minus the bold — reading as "still selected". See the hover-affordance rule in
+ * research/coding-conventions/styling-conventions.md.
+ */
+@media (hover: hover) {
+  .toggle:hover {
+    color: var(--color-accent);
+  }
+}
+
+/*
+ * Pressed (selected) state, keyed off Base UI Toggle's `data-pressed` styling
+ * hook. Conveyed by BOTH color and weight — never color alone — so it survives
+ * WCAG 1.4.1 (use of color): a selected tag is the accent color AND bold,
+ * distinguishing it from an unselected tag for readers who don't perceive the
+ * hue difference.
+ */
+.toggle[data-pressed] {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-bold);
+}

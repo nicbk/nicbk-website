@@ -23,44 +23,6 @@
   list-style: none;
 }
 
-.tag {
-  /* A text toggle, not a boxed pill — keeps the minimalist monospace look. */
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--color-text-muted);
-  font-family: inherit;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-}
-
-/* Decorative hash, matching the inline post tags (PostTags); kept in CSS, out of
-   the DOM, so the visible label stays the plain tag text. */
-.tag::before {
-  content: "#";
-}
-
-/*
- * Hover is gated on a device that can actually hover. A touch device latches
- * :hover on the last-tapped element and never releases it, which here left a
- * just-deselected tag sitting in the accent color — visually the selected state
- * minus the bold — reading as "still selected". See the hover-affordance rule in
- * research/coding-conventions/styling-conventions.md.
- */
-@media (hover: hover) {
-  .tag:hover {
-    color: var(--color-accent);
-  }
-}
-
-/*
- * Pressed (selected) state, keyed off Base UI Toggle's `data-pressed` styling
- * hook. Conveyed by BOTH color and weight — never color alone — so it survives
- * WCAG 1.4.1 (use of color): a selected tag is the accent color AND bold,
- * distinguishing it from an unselected tag for readers who don't perceive the
- * hue difference.
- */
-.tag[data-pressed] {
-  color: var(--color-accent);
-  font-weight: var(--font-weight-bold);
-}
+/* The toggles themselves are styled by the shared control
+   (src/routes/-shared/components/tag-toggle/) — this file owns only the
+   arrangement around them. */

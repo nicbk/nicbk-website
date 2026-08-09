@@ -20,8 +20,8 @@ parent when its sub-issues close.
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`article-cards`](./tasks/article-cards/status.md) ([#82](https://github.com/nicbk/nicbk-website/issues/82)) | **Merged** | [#86](https://github.com/nicbk/nicbk-website/pull/86) | Green | Merged 2026-08-09 |
-| [`tags-and-reading-status`](./tasks/tags-and-reading-status/status.md) ([#83](https://github.com/nicbk/nicbk-website/issues/83)) | In progress | — | — | — |
-| [`collection-filters`](./tasks/collection-filters/status.md) ([#84](https://github.com/nicbk/nicbk-website/issues/84)) | Not started | — | — | — |
+| [`tags-and-reading-status`](./tasks/tags-and-reading-status/status.md) ([#83](https://github.com/nicbk/nicbk-website/issues/83)) | **Merged** | [#88](https://github.com/nicbk/nicbk-website/pull/88) | Green | Merged 2026-08-09 |
+| [`collection-filters`](./tasks/collection-filters/status.md) ([#84](https://github.com/nicbk/nicbk-website/issues/84)) | In progress | — | — | — |
 | [`collection-search`](./tasks/collection-search/status.md) ([#85](https://github.com/nicbk/nicbk-website/issues/85)) | Not started | — | — | — |
 
 One change landed outside this table: the Playwright suites were unchecked by
@@ -29,7 +29,17 @@ One change landed outside this table: the Playwright suites were unchecked by
 `e2e/` first. It was closed as its own chore PR,
 [#87](https://github.com/nicbk/nicbk-website/pull/87), rather than inside task 2
 — a build-config change plus eight unrelated fixes had no business sharing a
-diff with the write path's authorization.
+diff with the write path's authorization. Task 2 also produced a docs-only PR,
+[#89](https://github.com/nicbk/nicbk-website/pull/89), adding AGENTS.md's
+"Design UI that is simple and pleasant to use" section after a run of
+clunky-interface corrections.
+
+**Queued next, and for the same reason:** the signed-in e2e tier takes about ten
+minutes, because all 88 of its tests drive a full OAuth round trip before they
+start. Task 3 measured it and agreed with the user (2026-08-09) to fix it —
+`storageState` reuse, then per-worker accounts — as **its own chore PR once task
+3 merges**, not folded into a feature branch. See
+[task 3's status](./tasks/collection-filters/status.md).
 
 ## Definition of Done (feature)
 

@@ -1,5 +1,6 @@
 import { useQuery } from '@rocicorp/zero/react'
 import { queries } from '~/zero/queries'
+import { FiltersDrawer } from '../../-collection-filters/filters-drawer'
 import { UploadModal } from '../upload-modal/upload-modal'
 import { UploadStatus } from '../upload-status/upload-status'
 import styles from './collection-toolbar.module.css'
@@ -31,12 +32,20 @@ export function CollectionToolbar() {
   const [jobs] = useQuery(queries.uploadJobs.mine())
 
   return (
-    // Not a <nav> or a <toolbar>: two unrelated controls, one of which opens a
-    // dialog. A toolbar role would promise arrow-key navigation between them.
+    // Not a <nav> or a <toolbar>: a handful of unrelated controls, two of which
+    // open a dialog. A toolbar role would promise arrow-key navigation between
+    // them.
     <div className={styles.toolbar}>
       {/* Holds the row's width open for #8's search input. */}
       <div className={styles.searchSlot} />
       <div className={styles.controls}>
+        {/*
+          Only rendered as a control below the responsive breakpoint — above it
+          the rail is showing the same filters permanently, and the sheet would
+          be a second way to reach one thing. It sits leftmost of the three so
+          the "+" stays where it has always been, at the row's trailing edge.
+        */}
+        <FiltersDrawer />
         <UploadModal />
         <UploadStatus jobs={jobs} />
       </div>

@@ -82,3 +82,30 @@ which controls sit in the header row.
 The resulting row reads like the site header — name, then path, then the theme
 toggle pushed to the far end — which is the point: the two should look like the
 same site rather than two products.
+
+## Revision (2026-08-09), decided with the user at implementation
+
+**The account avatar came back to the header**, between the path and the theme
+toggle — restoring the original 2026-07-04 placement and reversing the first
+bullet of the revision above. It was moved to the sidebar because that is where
+the mockup draws it; what the mockup could not show is what the sidebar looks
+like once it holds a real filter list. Building
+[collection-view.md](../pages/collection-view.md)'s tag rail put thirty tags in
+that rail, and a single avatar pinned beneath them reads as the last item of the
+list rather than as the account control. The header is where the rest of the
+site keeps account-level controls, and it is visible at every width.
+
+Two consequences worth recording, because they are what makes this simpler
+rather than merely different:
+
+- **The rail now holds one thing.** It no longer splits into a scrolling region
+  plus a pinned foot, and it no longer has to survive being reduced to a bar on
+  a narrow screen — below the breakpoint it goes away entirely, with its filters
+  moving into the drawer that
+  [collection-view.md](../pages/collection-view.md)'s revision describes.
+- **The account control no longer depends on the rail existing.** It sits above
+  the panels and outside the Zero provider, so it works at any width and whether
+  or not sync ever connects — which is precisely when signing out matters most.
+
+The row is now: app name on the left; path, account, theme toggle on the right,
+in that order.

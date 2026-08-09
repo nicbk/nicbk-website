@@ -196,6 +196,24 @@ export async function insertTag(
 }
 
 /**
+ * Applies a tag that already exists to an article.
+ *
+ * Distinct from `tagArticleWith`, which makes a new tag per name: the filter
+ * specs need *one* tag on *several* articles, which is the whole point of an
+ * AND-composed filter and impossible to set up with a helper that creates as it
+ * applies.
+ */
+export async function applyTagTo(
+  articleId: string,
+  tagId: string,
+): Promise<void> {
+  await connection().query(
+    'insert into article_tags (id, article_id, tag_id) values ($1, $2, $3)',
+    [randomUUID(), articleId, tagId],
+  )
+}
+
+/**
  * Creates several tags and applies all of them to one article.
  *
  * For the layout case a single tag cannot produce: a card carrying more tags

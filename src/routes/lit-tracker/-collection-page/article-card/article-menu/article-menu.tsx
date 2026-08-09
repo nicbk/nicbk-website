@@ -10,6 +10,9 @@ import {
   ARTICLE_STATUS_LABELS,
   ARTICLE_STATUSES,
 } from '~/lit-tracker/article-status'
+// Shared with the filter rail, which lists the same tags for the opposite
+// purpose and has to find them the same way.
+import { matchingTags } from '~/lit-tracker/tag-matching'
 import styles from './article-menu.module.css'
 
 /** A tag as this menu needs it: something to name and something to identify. */
@@ -68,7 +71,22 @@ export function ArticleMenu({
   const filterId = useId()
 
   const trimmed = query.trim()
-  const matching = matchingTags(allTags, trimmed)
+  /**
+   * What the list shows: everything the query matches, **plus every tag already
+   * on this article**, in the tag list's own alphabetical order.
+   *
+   * An applied tag that stops matching must not disappear, for the same reason
+   * it must not in the filter rail: the ticked boxes are how the reader knows
+   * what this article already carries, and searching for one more tag should not
+   * make the others look like they came off. It also keeps the un-tick within
+   * reach — otherwise removing a tag means first clearing the field to find it.
+   */
+  const matchedIds = new Set(
+    matchingTags(allTags, trimmed).map((tag) => tag.id),
+  )
+  const matching = allTags.filter(
+    (tag) => matchedIds.has(tag.id) || appliedTagIds.has(tag.id),
+  )
   const exact = exactMatch(allTags, trimmed)
   /** Only when the reader has typed something that is not already a tag. */
   const creatable = trimmed !== '' && exact === undefined
@@ -251,24 +269,6 @@ const MAX_TAG_NAME_LENGTH = 64
 
 /** Shown when the reader has no tags at all and has typed nothing. */
 export const EMPTY_TAGS_MESSAGE = 'no tags yet. type a name to make one.'
-
-/**
- * The tags worth showing for what has been typed.
- *
- * Substring rather than prefix matching, and case-insensitively: a reader who
- * types "attn" is looking for the tag they half-remember, not completing a
- * known string from the left.
- */
-function matchingTags(
-  tags: readonly CollectionTag[],
-  query: string,
-): readonly CollectionTag[] {
-  if (query === '') {
-    return tags
-  }
-  const needle = query.toLowerCase()
-  return tags.filter((tag) => tag.name.toLowerCase().includes(needle))
-}
 
 /**
  * The tag whose name *is* what was typed, if there is one.

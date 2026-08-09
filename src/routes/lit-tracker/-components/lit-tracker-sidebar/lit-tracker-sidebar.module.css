@@ -1,8 +1,10 @@
 /*
- * The left rail of the app shell. It sizes to its contents rather than taking a
- * fixed share of the width: today that is one avatar, so the rail is a slim
- * strip; when #8 adds the tag filters it widens to fit them without this file
- * changing. A fixed percentage would look like a broken empty column until then.
+ * The left rail of the app shell: the collection's filters, scrolling on their
+ * own beside the content.
+ *
+ * The width is reserved here rather than by whatever fills the slot, so the
+ * column is the same width before the first sync as after it. A rail that
+ * widened the moment data landed would drag the whole collection sideways.
  *
  * The divider on its right edge is the one in the sample mockup, and it is what
  * makes the two panels read as separate scroll regions rather than as one
@@ -11,27 +13,34 @@
 .sidebar {
   display: flex;
   flex-direction: column;
+  width: 11rem;
   min-height: 0;
+  /*
+   * The rail itself does **not** scroll, and that is the point rather than an
+   * omission: scrolling here would move the reading statuses off the top along
+   * with the tags. The rail hands its height down and the tag list alone scrolls
+   * inside it (filter-groups.module.css).
+   */
+  overflow: hidden;
   border-right: 1px solid var(--color-border);
   background-color: var(--color-bg);
 }
 
 /*
- * Everything above the account control scrolls on its own — a long tag list
- * must not push the avatar off the bottom of the rail, which is the whole
- * reason the app shell uses bounded panels instead of one scrolling page.
+ * Narrow screens: the rail goes entirely, because the one thing in it has
+ * somewhere better to be. `FiltersDrawer` shows the same list in a sheet opened
+ * from the control row above the collection — the "toggleable drawer" option in
+ * the decided responsive convention (research/ui-ux/design-system.md), taken
+ * over the "move below the main content" one because the next task makes the
+ * collection scroll endlessly and filters below an endless list are filters
+ * nobody reaches.
+ *
+ * 768px is the decided breakpoint for page-level structural shifts, and the same
+ * one the drawer's trigger appears at, so the filters are never in both places
+ * or in neither.
  */
-.filters {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-/* Pinned to the foot of the rail, and separated from the filters above it so
-   the account control never looks like the last item in that list. */
-.account {
-  flex-shrink: 0;
-  padding: var(--space-md);
-  border-top: 1px solid var(--color-border);
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
 }

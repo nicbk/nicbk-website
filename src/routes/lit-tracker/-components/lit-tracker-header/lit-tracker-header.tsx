@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ThemeToggle } from '~/routes/-shared/components/theme-toggle/theme-toggle'
+import type { AvatarAccount } from '../account-avatar/account-avatar'
+import { AccountAvatar } from '../account-avatar/account-avatar'
 import styles from './lit-tracker-header.module.css'
 
 /**
@@ -11,6 +13,15 @@ import styles from './lit-tracker-header.module.css'
  * whoever is signed in.
  */
 const SITE_ROOT_SEGMENT = 'nicbk_home'
+
+interface LitTrackerHeaderProps {
+  /** The signed-in account, for the avatar that opens the settings modal. */
+  account: AvatarAccount
+  /** Called once the session ends, so the guarded page can leave. */
+  onSignedOut?: (() => void) | undefined
+  /** Called once the account is deleted. */
+  onDeleted?: (() => void) | undefined
+}
 
 /**
  * The Lit Tracker's own header: app name on the left, and on the right the
@@ -39,10 +50,19 @@ const SITE_ROOT_SEGMENT = 'nicbk_home'
  *    the path, which is why article detail (#9) grows it one segment per
  *    citation-graph hop into `↳/nicbk_home/Article A/Article B`.
  *
- * The account control is **not** here. It lives at the foot of the sidebar
- * (LitTrackerSidebar), where the sample mockup puts it.
+ * **The account control sits between the path and the toggle.** It began here,
+ * moved to the foot of the sidebar when #7 read the mockup's bottom-left avatar
+ * as its home, and came back at the user's request while #8's filter rail was
+ * being built (2026-08-09): a single avatar alone at the bottom of a rail full
+ * of tags is an odd place for it, and the header is where every other
+ * account-level control on the site already lives. It opens the same shared
+ * settings modal wherever it sits.
  */
-export function LitTrackerHeader() {
+export function LitTrackerHeader({
+  account,
+  onSignedOut,
+  onDeleted,
+}: LitTrackerHeaderProps) {
   return (
     <header className={styles.header}>
       <Link to="/lit-tracker" className={styles.appName}>
@@ -63,6 +83,12 @@ export function LitTrackerHeader() {
           </li>
         </ol>
       </nav>
+
+      <AccountAvatar
+        account={account}
+        onSignedOut={onSignedOut}
+        onDeleted={onDeleted}
+      />
 
       <ThemeToggle />
     </header>

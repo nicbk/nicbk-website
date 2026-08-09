@@ -1,0 +1,223 @@
+/*
+ * The filter list, shared by the rail (wide) and the drawer (narrow). Only the
+ * container around it differs, so every measurement here is expressed against
+ * the space it is given rather than against the viewport.
+ *
+ * **Three regions, one scroll.** The whole column is bounded by whatever holds
+ * it, the statuses and the find field take the height they need, and the tag
+ * list takes the rest and scrolls inside it. `min-height: 0` appears at every
+ * level of that chain because a flex item's automatic minimum is its content's
+ * height — without it the list refuses to shrink, the column grows past its
+ * container, and the scrollbar reappears on the outside where it takes the
+ * statuses with it.
+ */
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-height: 0;
+  /* Fills a bounded parent (the rail, the sheet) and merely sits at its natural
+     height in an unbounded one. */
+  flex: 1;
+}
+
+.group,
+.tagGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+/* The statuses keep their height whatever the tag list does. */
+.group {
+  flex-shrink: 0;
+}
+
+/* The tags take the leftover height, so the list inside is what runs out of
+   room — which is what makes it, and only it, the thing that scrolls. */
+.tagGroup {
+  flex: 1;
+  min-height: 0;
+}
+
+/* The tag group's heading shares its row with the control that turns removal
+   on, which sits at the rail's trailing edge. */
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+/*
+ * Borderless and muted, so the resting rail shows one quiet glyph rather than a
+ * button competing with the tags under it. It gains the accent colour when
+ * pressed — the same signal every other toggle in this list uses for "on".
+ */
+.editToggle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  /* 24×24, per the target-size note on `.row` below — the glyph inside is far
+     smaller, and the button is what a finger has to land on. */
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .editToggle:hover {
+    color: var(--color-accent);
+  }
+}
+
+.editToggle[data-pressed] {
+  color: var(--color-accent);
+}
+
+.editIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/*
+ * A quiet heading per group. It is a real <h2> — the rail is a landmark and its
+ * contents should be navigable by heading — but styled well below the tags it
+ * labels, because the tags are what the reader is here to press.
+ */
+.groupLabel {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  text-transform: lowercase;
+  /*
+   * No `opacity` softening it further. The muted token is the quietest colour
+   * that still clears 4.5:1 against the page (src/styles/contrast.test.ts holds
+   * that line), so fading it fails WCAG 1.4.3 — as the light-theme axe scan
+   * duly reported. Quiet has a floor, and this is it.
+   */
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The one scroll container in the filters. `overscroll-behavior` keeps reaching
+   its end from starting to scroll the collection behind it. */
+.tagList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/*
+ * The find field. Flat and quiet — it is a way into the list below it rather
+ * than a form control the reader is meant to notice first — and fixed above that
+ * list rather than inside it, which is the whole point of it existing.
+ */
+.find {
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+}
+
+.find::placeholder {
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) {
+  .find:hover {
+    border-color: var(--color-accent);
+  }
+}
+
+/*
+ * One row: the toggle, and — for a user tag — the delete beside it. The gap is
+ * deliberately wider than it needs to be: these two controls do opposite things
+ * and sit a few pixels apart, so the space between them is the first line of
+ * defence against a misclick (the confirmation dialog is the second).
+ */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+/*
+ * Every control in this list is at least 24×24 CSS pixels — WCAG 2.2's Target
+ * Size (Minimum), which a row of bare text toggles stacked four pixels apart
+ * fails: the text is about seventeen pixels tall and the gap is too small to
+ * earn the spacing exception. Caught by the axe scan over a populated rail,
+ * which is the reason that scan seeds a real number of tags.
+ *
+ * Applied to the elements rather than through the shared toggle's own
+ * stylesheet, because it is this *arrangement* that is tight — the blog's
+ * filter wraps its toggles across a row with far more space around each one.
+ */
+.row > * {
+  min-height: 1.5rem;
+  /* Through the line box rather than through padding, so a single-line label
+     ends up vertically centred in its 24px target without the toggle losing the
+     block layout its ellipsis depends on. */
+  line-height: 1.5rem;
+}
+
+/*
+ * Only drawn while removal is on, and red the whole time it is. There is no
+ * muted resting state to design here because there is no resting state: the
+ * button exists exactly when the reader has asked for it, so it can say plainly
+ * what it does rather than hiding until hovered.
+ *
+ * Red is not the only signal — an `×` is an `×` in grayscale (WCAG 1.4.1) — and
+ * every one of these leads to a confirmation naming the tag, so the colour is a
+ * warning rather than the last thing between a slip and a lost label.
+ */
+.delete {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  /* 24×24, as the edit control above and for the same reason. */
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-error);
+  cursor: pointer;
+}
+
+.deleteIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.empty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

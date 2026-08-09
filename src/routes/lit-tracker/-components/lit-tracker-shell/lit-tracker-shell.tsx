@@ -2,15 +2,36 @@ import type { ReactNode } from 'react'
 import type { AvatarAccount } from '../account-avatar/account-avatar'
 import { LitTrackerHeader } from '../lit-tracker-header/lit-tracker-header'
 import { LitTrackerSidebar } from '../lit-tracker-sidebar/lit-tracker-sidebar'
+import { TrackerLoading } from '../tracker-loading/tracker-loading'
+import { ZeroClientProvider } from '../zero-client/zero-client-provider'
 import styles from './lit-tracker-shell.module.css'
 
+/**
+ * What the shell needs to know about who is signed in: everything the header's
+ * avatar shows, plus the id the Zero client partitions its local storage by. The
+ * avatar itself has no use for an id, which is why this extends its type rather
+ * than widening it.
+ */
+export interface ShellAccount extends AvatarAccount {
+  id: string
+}
+
 interface LitTrackerShellProps {
-  /** The signed-in account, for the sidebar's avatar. */
-  account: AvatarAccount
+  /** The signed-in account: the header's avatar, and the Zero client's user. */
+  account: ShellAccount
   /** Called once the session ends, so the guarded page can leave. */
   onSignedOut?: (() => void) | undefined
   /** Called once the account is deleted. */
   onDeleted?: (() => void) | undefined
+  /**
+   * What fills the rail above the account control — the collection's filters.
+   *
+   * Taken as an element rather than named here, so the shell stays chrome and
+   * knows nothing about what any page puts in it. Creating the element outside
+   * the Zero provider is fine and is the point: JSX is a description, so its
+   * hooks run where the shell *renders* it, which is inside.
+   */
+  filters?: ReactNode
   children: ReactNode
 }
 
@@ -34,26 +55,65 @@ interface LitTrackerShellProps {
  * `<h1>` inside it or on the landmark itself. Duplicating the element rather
  * than reusing SiteShell is deliberate — what differs between the two shells is
  * precisely the layout wrapped around it.
+ *
+ * **The Zero client is mounted here, around both panels**, and it moved here in
+ * #8's third task for a concrete reason: the filter rail lives in the sidebar,
+ * beside the page rather than inside it, and a provider wrapping only the page
+ * left the rail unable to ask for the tag list it exists to show. One client
+ * still — one WebSocket per session, not one per panel.
  */
 export function LitTrackerShell({
   account,
   onSignedOut,
   onDeleted,
+  filters,
   children,
 }: LitTrackerShellProps) {
   return (
     <div className={styles.shell}>
-      <LitTrackerHeader />
-      <div className={styles.panels}>
-        <LitTrackerSidebar
-          account={account}
-          onSignedOut={onSignedOut}
-          onDeleted={onDeleted}
-        />
-        <main id="main-content" className={styles.main} tabIndex={-1}>
-          {children}
-        </main>
-      </div>
+      {/* Outside the provider on purpose: the header needs no synced data, and
+          the account control it carries must work whether or not Zero ever
+          connects — signing out of a tracker whose sync is broken is exactly
+          when you would want to. */}
+      <LitTrackerHeader
+        account={account}
+        onSignedOut={onSignedOut}
+        onDeleted={onDeleted}
+      />
+      {/* Zero has no SSR, so nothing under this provider exists until the
+          browser has hydrated. */}
+      <ZeroClientProvider
+        userId={account.id}
+        fallback={
+          <Panels>
+            <TrackerLoading />
+          </Panels>
+        }
+      >
+        <Panels filters={filters}>{children}</Panels>
+      </ZeroClientProvider>
+    </div>
+  )
+}
+
+/**
+ * The two panels, factored out so the pre-hydration fallback is the same layout
+ * as the hydrated page rather than a second one written to look like it.
+ *
+ * The fallback passes no `filters`: the rail's contents come from Zero, which is
+ * precisely what does not exist yet at that point. The rail is still there, at
+ * its own width, so nothing shifts sideways when the real filters arrive.
+ */
+function Panels({
+  filters,
+  children,
+}: Pick<LitTrackerShellProps, 'filters' | 'children'>) {
+  return (
+    <div className={styles.panels}>
+      <LitTrackerSidebar filters={filters} />
+      <main id="main-content" className={styles.main} tabIndex={-1}>
+        {children}
+      </main>
     </div>
   )
 }

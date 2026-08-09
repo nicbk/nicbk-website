@@ -84,3 +84,32 @@ card grid against a real collection.
   sidebar, and the gaps between cards are one measure. An earlier capped and
   centred column — correct when the panel held a single narrow list — left the
   grid floating with a wide gutter on each side.
+
+## Revision — 2026-08-09: the filters become a drawer on narrow screens
+
+Decided with the user while building #8's third task.
+
+[../../../design-system.md](../../../design-system.md) offers two responsive
+treatments for this rail — move it below the main content, or make it a
+toggleable drawer — and names it as the example of a page-level structural
+shift. **Below the content is the wrong one here**, because the next task makes
+this same collection scroll infinitely: filters underneath a list that never
+ends are filters nobody can reach. So below the breakpoint the rail goes away
+and its list reappears in a bottom sheet, opened from a "filters" control in the
+row that already holds the search bar and the "+".
+
+- **One list, two containers.** The rail and the sheet render the same component
+  over the same synced tags and the same URL state, so the two cannot disagree
+  about what is selected. Only one of them is ever mounted: the rail is
+  `display: none` below the breakpoint (out of the accessibility tree, not just
+  out of sight), and the sheet's contents exist only while it is open. Widening
+  the window past the breakpoint closes the sheet, or both would show at once.
+- **Statuses and tags are grouped, and each group is labelled.** The unified
+  model above is unchanged — both render as the same toggle, in the same list —
+  but the three statuses are single-select and the tags are not, and a reader
+  cannot see a selection rule. A quiet heading over each group is what makes the
+  difference visible without making them look like two different mechanisms.
+- **Deleting a tag lives in this list**, behind a confirmation naming the tag and
+  how many articles carry it. The rail is the only surface that lists every tag,
+  and "remove from this article" deliberately stays in the card menu rather than
+  sitting one row away from "delete everywhere".

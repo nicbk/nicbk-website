@@ -50,6 +50,18 @@ vi.mock('@tanstack/react-router', async () => {
 vi.mock('./-components/zero-client/zero-client-provider', () => ({
   ZeroClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }))
+// Stubbed for the same reason: with the provider mocked to a pass-through, the
+// real rail would run its Zero queries against no client. That it renders the
+// tags, filters on them, and names its landmark is
+// `-collection-filters/filter-rail`'s own coverage; what this file asserts is
+// that the layout hands it to the shell at all.
+vi.mock('./-collection-filters/filter-rail', async () => {
+  const { createElement } = await import('react')
+  return {
+    FilterRail: ({ label }: { label: string }) =>
+      createElement('nav', { 'aria-label': label }),
+  }
+})
 
 const { Route } = await import('./route')
 
@@ -57,6 +69,7 @@ const { Route } = await import('./route')
 interface RouteOptions {
   beforeLoad: (context: { location: { href: string } }) => Promise<unknown>
   component: () => React.ReactNode
+  validateSearch: { parse: (input: unknown) => unknown }
 }
 
 const options = Route.options as unknown as RouteOptions
@@ -88,6 +101,30 @@ describe('the /lit-tracker group layout', () => {
     expect(screen.queryByRole('navigation', { name: 'Site' })).toBeNull()
     expect(screen.getByRole('main')).toContainElement(
       screen.getByText('page content'),
+    )
+  })
+
+  it('gives the shell a filter rail, named for what it filters', () => {
+    const Layout = options.component
+    render(<Layout />)
+
+    // The rail is a landmark now that it has contents (#7 deliberately left it
+    // un-named while it was empty), and it sits outside the content panel.
+    const rail = screen.getByRole('navigation', { name: 'filter collection' })
+    expect(screen.getByRole('main')).not.toContainElement(rail)
+  })
+
+  it('validates the collection filters at the group root', () => {
+    // Not on the collection page: the rail that writes these renders in the
+    // shell's sidebar, outside the page, so a page-level schema would be
+    // unreadable from the control that sets it.
+    const { validateSearch } = options
+
+    expect(validateSearch.parse({ tags: ['rlhf'], status: 'reading' })).toEqual(
+      {
+        tags: ['rlhf'],
+        status: 'reading',
+      },
     )
   })
 })

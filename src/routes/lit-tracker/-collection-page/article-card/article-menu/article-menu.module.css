@@ -20,7 +20,7 @@
   justify-content: center;
   flex-shrink: 0;
   padding: var(--space-2xs);
-  border: 1px solid transparent;
+  border: none;
   border-radius: var(--radius-sm);
   background: none;
   color: var(--color-text-muted);
@@ -29,18 +29,25 @@
   cursor: pointer;
 }
 
+/*
+ * Hover and open both show as the accent colour rather than as a box.
+ *
+ * A border appearing on hover added an outline inside a card that is already an
+ * outlined box, so the corner gained a second frame for as long as the pointer
+ * sat there. Recolouring the glyph says the same thing with nothing drawn — and
+ * it is what the rail's edit control does, so the site has one idea of what a
+ * borderless icon button looks like when you touch it.
+ */
 @media (hover: hover) {
   .trigger:hover {
-    border-color: var(--color-border);
-    color: var(--color-text);
+    color: var(--color-accent);
   }
 }
 
 /* While the popover is open the trigger stays lit, so it is obvious which card
    it belongs to when several are on screen. */
 .trigger[data-popup-open] {
-  border-color: var(--color-border);
-  color: var(--color-text);
+  color: var(--color-accent);
 }
 
 .triggerIcon {

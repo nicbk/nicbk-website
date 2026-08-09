@@ -1,0 +1,18 @@
+/*
+ * The filter list inside the sidebar rail.
+ *
+ * Only the inset lives here. The rail's *width*, its scrolling, and its
+ * disappearance below the responsive breakpoint all belong to the sidebar
+ * (lit-tracker-sidebar.module.css) — it reserves that width whether or not there
+ * are filters to put in it, so the column does not jump sideways when the first
+ * sync lands.
+ */
+.rail {
+  display: flex;
+  flex-direction: column;
+  /* Fills the rail's height and passes the bound down, so the tag list inside
+     is what scrolls rather than this. */
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-md);
+}

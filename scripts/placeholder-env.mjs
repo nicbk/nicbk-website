@@ -36,4 +36,7 @@ export const placeholderEnv = {
   GARAGE_SECRET_ACCESS_KEY: 'placeholder-garage-secret-access-key',
   GARAGE_BUCKET: 'unused',
   GROBID_URL: 'http://localhost:8070',
+  SEMANTIC_SCHOLAR_URL: 'http://localhost:8072/graph/v1',
+  // SEMANTIC_SCHOLAR_API_KEY is deliberately absent: it is optional, and this
+  // set is the one place that would quietly stop proving that.
 }

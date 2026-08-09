@@ -139,6 +139,52 @@ placeholder, not delete the citing article's bibliography entry — the
 citing article still cited that paper, whether or not it remains in this
 user's collection.
 
+## Revision (2026-08-09, at implementation time): what the rule costs, measured
+
+Implemented in
+`features/article-upload-and-extraction/tasks/semantic-scholar-enrichment`.
+The schema above was built exactly as specified and the matching rule was
+implemented exactly as written. Two things are worth recording, because both
+are invisible until real papers go through it.
+
+### The asymmetric case is more common than it sounds
+
+"Only fall back when *neither* side has an ID" was chosen to keep the
+false-positive risk near zero, and it does. But an *enriched* article always
+has an ID, so it can only ever be matched by an edge that also has one — and
+whether an edge has one depends entirely on whether the citing paper printed an
+identifier for that reference.
+
+Observed directly: *BERT* cites *Attention Is All You Need*, both are in the
+collection, and the edge does not graduate. BERT's reference list names it as a
+NeurIPS paper with no arXiv id, so the edge has no ID and the article does. The
+rule declines, correctly by its own terms.
+
+The practical shape of this: the graph fills in well where bibliographies print
+identifiers and poorly where they do not. Across four real papers, references
+resolved to a Semantic Scholar paper 39/41 of the time for a PLOS ONE article
+(DOIs and PubMed ids throughout) and 7/54 for BERT.
+
+This is not proposed as a change to the rule — the reasoning for it stands, and
+loosening it is exactly the fuzzy matching it was chosen over. The cheap
+improvement, deferred by agreement, is `GET /paper/{id}/references`: Semantic
+Scholar's own resolved reference list for the citing paper, one extra request,
+matched to the parsed entries locally by normalized title. That gives the
+identifier-less edges an ID *before* the rule runs, so the ID-first path does
+the work instead of the fallback. Worth revisiting when
+[citation-graph.md (component)](../ui-ux/pages/lit-tracker/components/citation-graph.md)
+makes the gaps visible.
+
+### The surname is compared, not the whole name
+
+The fallback says "the first author's `family` (or `name` when `family` isn't
+available)". Taken literally that never matches across sources: Semantic
+Scholar returns authors as `{"name": "Ashish Vaswani"}` and never splits them,
+so its `name` would be compared against GROBID's `family` of "Vaswani". Both
+sides are therefore reduced to the last word of whichever field is available.
+A compound surname ("van der Berg") reduces to its last word — a match refused
+rather than a wrong one accepted, and the title must still agree exactly.
+
 ## Sources
 
 - [postgresql.org — SQL Key Words](https://www.postgresql.org/docs/current/sql-keywords-appendix.html) —

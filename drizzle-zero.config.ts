@@ -41,6 +41,18 @@ export default drizzleZeroConfig(drizzleSchema, {
       createdAt: true,
       updatedAt: true,
     },
+    citationEdges: {
+      id: true,
+      userId: true,
+      citingArticleId: true,
+      citedArticleId: true,
+      title: true,
+      authors: true,
+      publicationYear: true,
+      semanticScholarId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
     uploadJobs: {
       id: true,
       userId: true,

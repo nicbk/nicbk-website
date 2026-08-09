@@ -1,6 +1,7 @@
 # Status: Article Upload and Extraction
 
-**Feature state:** In progress (tasks 1–3 of 5 merged). Five tasks, sequential,
+**Feature state:** In progress (tasks 1–4 of 5 merged; task 5 implemented,
+awaiting review). Five tasks, sequential,
 each gated by its own PR + CI + human review. Depends on
 [`authentication`](../authentication/status.md) (Complete) — it consumes that
 feature's Postgres service, Drizzle migration pipeline, Better Auth session,
@@ -31,8 +32,8 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 | `zero-sync-foundation` | **Merged** ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | passed | approved |
 | `lit-tracker-shell` | **Merged** ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | approved |
 | `pdf-upload-and-storage` | **Merged** ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | [#76](https://github.com/nicbk/nicbk-website/pull/76) | passed | approved |
-| `grobid-extraction-pipeline` | Implemented ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | [#77](https://github.com/nicbk/nicbk-website/pull/77) | passed | pending |
-| `semantic-scholar-enrichment` | Not started ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | — | — | — |
+| `grobid-extraction-pipeline` | **Merged** ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | [#77](https://github.com/nicbk/nicbk-website/pull/77) | passed | approved |
+| `semantic-scholar-enrichment` | Implemented ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | — | — | pending |
 
 ## Definition of Done (feature)
 
@@ -193,3 +194,23 @@ against stubbed GROBID and Semantic Scholar.
   but their specified content includes tags and a menu opening `article-edit`
   (#11), so one built now would be missing half its parts. Next: task 4,
   `grobid-extraction-pipeline`.
+- 2026-08-08 — **Task 4 merged as [PR #77](https://github.com/nicbk/nicbk-website/pull/77)**,
+  CI green on all five jobs. The pipeline's failure classification was rewritten
+  during implementation after running real PDFs through a real GROBID: every
+  `GrobidException` arrives as **HTTP 500 with the status enum in the body**, so
+  the planned "500 is transient" would have retried every corrupt upload to
+  exhaustion. A dead-letter queue was added so "transient" cannot mean
+  "forever". Next: task 5, `semantic-scholar-enrichment`.
+- 2026-08-09 — **Task 5 implemented**, completing the feature's code. The
+  citation graph is populated and enrichment runs, verified in the browser
+  against a real GROBID and the **real, unauthenticated** Semantic Scholar on
+  five papers: venue recovered on every enriched article, *Attention Is All You
+  Need* corrected from 2023 (the arXiv revision stamp GROBID read) to 2017, and
+  both graduation directions confirmed in the data. Three decisions were taken
+  with the user before implementation and are recorded in the task's
+  [status.md](./tasks/semantic-scholar-enrichment/status.md): the TEI parser now
+  reads arXiv and PubMed identifiers as well as DOIs (without which the feature
+  does nothing for preprints), the **extract** stage writes `citation_edges`
+  rather than the enrich stage, and Semantic Scholar may correct `venue` and
+  `publication_year` when the match came from an identifier. Remaining: review,
+  merge, and **closing #66 by hand**.

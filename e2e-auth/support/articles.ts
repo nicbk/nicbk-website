@@ -82,6 +82,54 @@ export async function insertArticle(
   return { id, title }
 }
 
+/** What enrichment left on an article, read straight out of Postgres. */
+export interface StoredEnrichment {
+  extraction_status: string
+  semantic_scholar_id: string | null
+  venue: string | null
+  publication_year: number | null
+}
+
+/**
+ * The enrichment columns of the article with this title.
+ *
+ * Read from the database rather than the page because **nothing renders any of
+ * it yet** — the collection list shows a title and its authors, and the venue,
+ * the year and the citation graph arrive with #8 and #10. The task's testing.md
+ * asked for "enriched metadata visible" in the browser, which is not something
+ * this task can deliver without building #8's UI inside it. What the browser
+ * proves here is the live round-trip; what the database proves is that the
+ * round-trip enriched anything.
+ */
+export async function enrichmentOfArticle(
+  userId: string,
+  title: string,
+): Promise<StoredEnrichment | undefined> {
+  const { rows } = await connection().query<StoredEnrichment>(
+    `select extraction_status, semantic_scholar_id, venue, publication_year
+       from articles where user_id = $1 and title = $2`,
+    [userId, title],
+  )
+  return rows[0]
+}
+
+/** One bibliography entry as stored, resolved or not. */
+export interface StoredEdge {
+  title: string
+  semantic_scholar_id: string | null
+  cited_article_id: string | null
+}
+
+/** This user's citation edges, whichever article they came out of. */
+export async function citationEdgesOf(userId: string): Promise<StoredEdge[]> {
+  const { rows } = await connection().query<StoredEdge>(
+    `select title, semantic_scholar_id, cited_article_id
+       from citation_edges where user_id = $1 order by title`,
+    [userId],
+  )
+  return rows
+}
+
 /** Removes every article owned by `userId`, so specs start from a known state. */
 export async function deleteArticlesOf(userId: string): Promise<void> {
   await connection().query('delete from articles where user_id = $1', [userId])

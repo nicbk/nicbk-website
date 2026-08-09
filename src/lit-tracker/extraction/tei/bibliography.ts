@@ -9,15 +9,18 @@ import {
   path,
   textOrNull,
 } from './document'
-import { doiIn, publicationYearIn, titleIn } from './fields'
+import { publicationYearIn, titleIn } from './fields'
+import type { PaperIdentifiers } from './identifiers'
+import { identifiersIn } from './identifiers'
 
 /**
  * The parsed reference list, out of TEI's `<listBibl>`.
  *
- * **Nothing persists these yet.** `citation_edges` and the resolution of an
- * entry against the user's other articles are task 5's; this task parses and
- * tests them so that task inherits a surface already known to work against real
- * GROBID output, rather than writing the parser and the graph in one review.
+ * Each entry becomes one `citation_edges` row. What it does *not* become is a
+ * lookup of its own: the identifiers below are collected and resolved in a
+ * single Semantic Scholar batch request per upload, because resolving forty
+ * references one at a time against a shared, aggressively throttled API is not
+ * a thing this pipeline can afford to do.
  */
 export interface BibliographyEntry {
   title: string | null
@@ -25,7 +28,8 @@ export interface BibliographyEntry {
   publicationYear: number | null
   /** The journal or proceedings the reference appeared in. */
   venue: string | null
-  doi: string | null
+  /** What this reference can be looked up by, where the citing paper said. */
+  identifiers: PaperIdentifiers
   /**
    * The reference exactly as it was printed, from `includeRawCitations=1`.
    *
@@ -85,7 +89,7 @@ function parseEntry(entry: TeiElement): BibliographyEntry {
     authors: referenceAuthorsOf(analytic, monogr),
     publicationYear: imprint ? publicationYearIn(imprint) : null,
     venue: articleTitle ? containerTitle : null,
-    doi: doiIn(entry),
+    identifiers: identifiersIn(entry),
     raw: textOrNull(elementWhere(entry, 'note', 'type', 'raw_reference')),
   }
 }

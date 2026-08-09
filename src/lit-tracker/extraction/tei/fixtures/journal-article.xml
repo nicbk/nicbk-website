@@ -8,6 +8,10 @@
   the whitespace are the service's, only the paper is invented. Every shape the
   bibliography parser has to handle appears in the reference list below —
   analytic-plus-monogr, monogr-only, and an entry GROBID could not segment.
+
+  The identifiers are as varied as a real reference list's: a DOI, an arXiv id,
+  a PubMed id printed with its `PMID:` label, an untyped `<idno>` GROBID could
+  not classify, and an entry carrying nothing at all.
 -->
 <TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -124,6 +128,24 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		<imprint/>
 	</monogr>
 	<note type="raw_reference">Working group on synchronisation, technical report, undated.</note>
+</biblStruct>
+
+<biblStruct status="extracted" xml:id="b3">
+	<analytic>
+		<title level="a" type="main">Replication lag and clinical data capture</title>
+		<author>
+			<persName><forename type="first">Hana</forename><surname>Ferreira</surname></persName>
+		</author>
+		<idno type="PMID">PMID: 28288169</idno>
+		<idno>CoRR, abs/1409.0473</idno>
+	</analytic>
+	<monogr>
+		<title level="j">Journal of Clinical Informatics</title>
+		<imprint>
+			<date type="published" when="2017">2017</date>
+		</imprint>
+	</monogr>
+	<note type="raw_reference">Hana Ferreira. Replication lag and clinical data capture. Journal of Clinical Informatics, 2017. PMID: 28288169.</note>
 </biblStruct>
 
 				</listBibl>

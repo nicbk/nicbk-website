@@ -78,6 +78,40 @@ regressed.
 - Retrying matchers with generous timeouts; the chain is now three stages long.
 - Judge the suite with `npm run test:e2e:prod`.
 
+## Revision (2026-08-09, at implementation time)
+
+Three things above did not survive contact with the code, and each is recorded
+here rather than quietly done differently.
+
+- **"S2 mocked via the mock-server container"** — it is an in-process stub
+  (`e2e-auth/support/semantic-scholar-stub.mjs`), following the precedent task
+  4 set for GROBID. Same mechanism, different packaging; see the dated
+  revisions in
+  [mocking-external-services.md](../../../../research/testing-qa/mocking-external-services.md).
+- **"MSW for in-process HTTP"** — unit tests stub `fetch` with `vi.stubGlobal`,
+  as task 4's GROBID client tests do. MSW is not installed. Also recorded in
+  that document, because it is now a pattern rather than a one-off.
+- **"an article whose enriched metadata is visible, live, with no reload"** —
+  not achievable in this task. The collection list renders a title and its
+  authors; venue, year and the citation graph are #8 and #10. What the e2e
+  specs prove in the browser is the live round-trip — the article arrives and
+  the job row clears itself, with the chain now three stages long — and the
+  enrichment itself is asserted against the database. Splitting it that way is
+  the honest version of the intent; claiming the UI shows something it does not
+  would have been the alternative.
+
+Added beyond this list, because the implementation created the risk:
+
+- **The batch response is positional.** Its alignment with the ids that were
+  sent is the only thing mapping a resolved paper back to the reference it came
+  from, and an off-by-one there points every citation edge at a plausible wrong
+  paper. Covered in `enrichment/client.test.ts`, including a `null` in the
+  middle of a response.
+- **The rate limiter's own behaviour** (`enrichment/throttle.test.ts`):
+  serialization, adaptive spacing, and that a rejection is waited out **once**
+  rather than twice — the bug that made a single failed enrichment take over
+  three minutes.
+
 ## Browser verification (manual, recorded in status.md)
 
 - Upload **real** papers that cite each other and confirm the graduation

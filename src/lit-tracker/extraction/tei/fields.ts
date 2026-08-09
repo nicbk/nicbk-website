@@ -13,8 +13,11 @@ import {
  * TEI describes a paper and a reference to a paper with the same elements, so
  * these read identically in both places. They live here rather than in either
  * file so the two cannot drift into disagreeing about what a title or a year
- * is — which would surface in task 5 as references failing to match articles
- * that are in fact the same paper.
+ * is — which would surface during enrichment as references failing to match
+ * articles that are in fact the same paper.
+ *
+ * Identifiers are the third shared reader and live in `identifiers.ts`, which
+ * is large enough to be its own concern.
  */
 
 /**
@@ -48,31 +51,6 @@ export function publicationYearIn(container: TeiElement): number | null {
     const year = Number(match[1])
     if (year >= 1000) {
       return year
-    }
-  }
-  return null
-}
-
-/**
- * A DOI, searched across a `<biblStruct>` and both of its parts.
- *
- * GROBID attaches `<idno type="DOI">` to whichever part the identifier belongs
- * to — directly on the structure for a preprint, under `<analytic>` for a
- * published article, under `<monogr>` for a book — so all three are searched
- * rather than guessing at the document's kind.
- */
-export function doiIn(biblStruct: TeiElement): string | null {
-  const containers = [
-    biblStruct,
-    element(biblStruct, 'analytic'),
-    element(biblStruct, 'monogr'),
-  ]
-  for (const container of containers) {
-    const doi = container
-      ? textOrNull(elementWhere(container, 'idno', 'type', 'DOI'))
-      : null
-    if (doi) {
-      return doi
     }
   }
   return null

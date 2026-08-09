@@ -19,14 +19,23 @@ import { env } from '~/env'
  *
  * ## The chain
  *
- * `extract` → `finalize`, with each stage sending the next inside the same
- * transaction as its own database writes. The decided pipeline is separate
- * chained jobs, one per stage, so each retries and fails independently; task 5
- * inserts `enrich` between these two by changing what `extract` sends.
+ * `extract` → `enrich` → `finalize`, with each stage sending the next inside
+ * the same transaction as its own database writes. The decided pipeline is
+ * separate chained jobs, one per stage, so each retries and fails
+ * independently.
+ *
+ * The two dead-letter queues are what make "independently" true in both
+ * directions: an exhausted `extract` becomes a visible failure the user can
+ * act on, while an exhausted `enrich` becomes a *success* — it hands the job
+ * straight to `finalize`, because Semantic Scholar being unreachable is not
+ * something a user's upload should be made to care about.
  */
 
-/** Fetches the PDF, calls GROBID, and creates the article row. */
+/** Fetches the PDF, calls GROBID, and creates the article and its edges. */
 export const EXTRACT_QUEUE = 'lit-tracker.extract'
+
+/** Resolves the article and its bibliography against Semantic Scholar. */
+export const ENRICH_QUEUE = 'lit-tracker.enrich'
 
 /** Deletes the resolved `upload_jobs` row, emptying the status popup. */
 export const FINALIZE_QUEUE = 'lit-tracker.finalize'
@@ -42,11 +51,44 @@ export const FINALIZE_QUEUE = 'lit-tracker.finalize'
  */
 export const EXTRACT_DEAD_LETTER_QUEUE = 'lit-tracker.extract-exhausted'
 
+/**
+ * Where an enrich job lands once its retries are exhausted.
+ *
+ * Its handler finalizes the upload rather than failing it. Semantic Scholar is
+ * a shared, aggressively throttled third party, and the decided behaviour is
+ * that it can never fail a user's upload — the article simply stays
+ * `grobid_only`. Without this queue an outage lasting past the backoff would
+ * strand the job in `processing`, which is the one outcome that rule exists to
+ * prevent.
+ */
+export const ENRICH_DEAD_LETTER_QUEUE = 'lit-tracker.enrich-exhausted'
+
 /** What an extract job carries. The handler needs no more than this to start. */
 export interface ExtractJob {
   uploadJobId: string
   userId: string
   pdfObjectKey: string
+}
+
+/**
+ * What an enrich job carries: the article, and every lookup key extraction
+ * found.
+ *
+ * The keys travel in the payload rather than being re-read from the database
+ * because most of them have nowhere to be read *from* — an edge stores the
+ * Semantic Scholar id it ends up with, not the arXiv id or DOI the citing paper
+ * printed, and the uploaded paper's own arXiv id has no column either. Carrying
+ * them here is what avoids both a second GROBID call and three columns that
+ * exist for the length of one request.
+ */
+export interface EnrichJob {
+  uploadJobId: string
+  userId: string
+  articleId: string
+  /** `DOI:…`, `ARXIV:…` or `PMID:…` for the uploaded paper; null if it had none. */
+  articleLookupKey: string | null
+  /** One entry per written edge that carried an identifier. */
+  edgeLookups: { edgeId: string; key: string }[]
 }
 
 /** What a finalize job carries: the row to remove. */
@@ -79,6 +121,29 @@ const EXTRACT_RETRY_POLICY = {
 } as const
 
 /**
+ * How hard the enrich stage tries before the article settles for
+ * `grobid_only`.
+ *
+ * **Shorter than extraction's, deliberately.** Throttling is not handled here
+ * at all — the in-process limiter in `enrichment/throttle.ts` already spaces
+ * requests and backs off across four attempts, which is what absorbs the bursts
+ * Semantic Scholar actually produces. This outer loop is only for an outage
+ * that outlives that, and waiting it out is not free: the upload's row stays in
+ * the status popup for as long as this runs, still reading as in progress.
+ *
+ * Roughly seventy seconds of waiting, then the article settles for
+ * `grobid_only`. That is a documented success state — a complete, readable
+ * article — so trading a longer window of "still working on it" for a slightly
+ * better chance of a venue field is the wrong way round.
+ */
+const ENRICH_RETRY_POLICY = {
+  retryLimit: 3,
+  retryDelay: 10,
+  retryBackoff: true,
+  deadLetter: ENRICH_DEAD_LETTER_QUEUE,
+} as const
+
+/**
  * Connects to the queue and makes sure its schema and queues exist.
  *
  * `start()` creates and migrates the `pgboss` schema, and `createQueue` is
@@ -100,14 +165,17 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
   // The dead-letter queue first: naming a queue that does not exist yet as
   // another queue's `deadLetter` is not something pg-boss accepts.
   await boss.createQueue(EXTRACT_DEAD_LETTER_QUEUE)
+  await boss.createQueue(ENRICH_DEAD_LETTER_QUEUE)
   await boss.createQueue(FINALIZE_QUEUE)
   await boss.createQueue(EXTRACT_QUEUE, EXTRACT_RETRY_POLICY)
+  await boss.createQueue(ENRICH_QUEUE, ENRICH_RETRY_POLICY)
   // `createQueue` is a no-op on a queue that already exists — including its
   // options — so a database that already carries the extract queue from an
   // earlier version would keep that version's retry policy. Applying it again
   // here is what makes this function describe the queue rather than merely
   // create it.
   await boss.updateQueue(EXTRACT_QUEUE, EXTRACT_RETRY_POLICY)
+  await boss.updateQueue(ENRICH_QUEUE, ENRICH_RETRY_POLICY)
   return boss
 }
 

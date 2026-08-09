@@ -2,15 +2,21 @@ import { eq, sql } from 'drizzle-orm'
 import { fromDrizzle } from 'pg-boss'
 import type { DatabaseHandle } from '~/db/create-database'
 import { articles, uploadJobs } from '~/db/schema'
-import type { ExtractJob, FinalizeJob } from '~/lit-tracker/jobs/queue'
-import { FINALIZE_QUEUE } from '~/lit-tracker/jobs/queue'
+import {
+  graduateEdgesCiting,
+  writeBibliography,
+} from '~/lit-tracker/citations/edges'
+import { lookupKeyFor } from '~/lit-tracker/enrichment/client'
+import type { EnrichJob, ExtractJob } from '~/lit-tracker/jobs/queue'
+import { ENRICH_QUEUE } from '~/lit-tracker/jobs/queue'
 import { PdfOwnershipError } from '~/storage/pdf-storage'
 import { ExtractionFailedError } from './failure'
 import type { ExtractionServices } from './services'
 import type { ExtractedMetadata } from './tei'
 
 /**
- * The stage that turns an upload into an article.
+ * The stage that turns an upload into an article — and, when it succeeds, into
+ * a node in the citation graph.
  *
  * ## It always creates the article row
  *
@@ -199,7 +205,7 @@ async function recordOutcome(
     abstract: metadata?.abstract ?? null,
     publicationYear: metadata?.publicationYear ?? null,
     venue: metadata?.venue ?? null,
-    doi: metadata?.doi ?? null,
+    doi: metadata?.identifiers.doi ?? null,
     extractionStatus:
       outcome.kind === 'extracted'
         ? ('grobid_only' as const)
@@ -235,14 +241,50 @@ async function recordOutcome(
       })
       .where(eq(uploadJobs.id, job.uploadJobId))
 
-    if (outcome.kind === 'extracted') {
-      const finalize: FinalizeJob = { uploadJobId: job.uploadJobId }
-      await services.queue.send(FINALIZE_QUEUE, finalize, {
-        db: fromDrizzle(tx, sql),
-      })
+    if (outcome.kind !== 'extracted') {
+      // A failed job enqueues nothing: its row has to stay, because it is the
+      // only thing telling the user this upload needs them. Its bibliography
+      // is not written either — an article that could not be given a title is
+      // not yet a citing node worth putting in the graph.
+      return
     }
-    // A failed job enqueues nothing: its row has to stay, because it is the
-    // only thing telling the user this upload needs them.
+
+    // The bibliography is written here, in the transaction that creates the
+    // article, rather than in the stage that enriches it. Enrichment reaches a
+    // third party that is allowed to be unavailable; the references are already
+    // in hand, and losing a paper's whole bibliography because a public API was
+    // busy would be a much worse outcome than an unresolved edge.
+    const edges = await writeBibliography(
+      tx,
+      { articleId: job.uploadJobId, userId: job.userId },
+      outcome.metadata.bibliography,
+    )
+
+    // Direction two of the decided graduation rule, in its GROBID-only form:
+    // edges that other articles have been carrying, unresolved, waiting for
+    // this paper to be uploaded. Enrichment runs the same check again by
+    // Semantic Scholar id once it has one.
+    await graduateEdgesCiting(tx, {
+      id: job.uploadJobId,
+      userId: job.userId,
+      semanticScholarId: null,
+      title: extracted.title,
+      authors: extracted.authors,
+    })
+
+    const enrich: EnrichJob = {
+      uploadJobId: job.uploadJobId,
+      userId: job.userId,
+      articleId: job.uploadJobId,
+      articleLookupKey: lookupKeyFor(outcome.metadata.identifiers),
+      edgeLookups: edges.flatMap((edge) => {
+        const key = lookupKeyFor(edge.identifiers)
+        return key ? [{ edgeId: edge.id, key }] : []
+      }),
+    }
+    await services.queue.send(ENRICH_QUEUE, enrich, {
+      db: fromDrizzle(tx, sql),
+    })
   })
 }
 

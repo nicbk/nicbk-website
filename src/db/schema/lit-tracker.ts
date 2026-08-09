@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core'
 import { user } from './identity'
@@ -168,12 +169,115 @@ export const uploadJobs = pgTable(
   (table) => [index('upload_jobs_user_id_idx').on(table.userId)],
 )
 
+/**
+ * One bibliography entry parsed from a citing article's PDF — the citation
+ * graph, stored as edges.
+ *
+ * Written to the letter of research/data-modeling/citation-graph-schema.md.
+ * Two things about it are easy to misread:
+ *
+ * - **A placeholder is not a separate entity.** Every parsed reference becomes
+ *   a row immediately, whether or not the paper it names is in the collection.
+ *   `cited_article_id IS NULL` *is* "not in collection", and "graduation" is
+ *   nothing more than filling that column in later. The denormalized
+ *   `title`/`authors`/`publication_year` are what let such a row render with no
+ *   join at all.
+ * - **The table is its own inverse.** "References of A" and "articles citing A"
+ *   are the same rows read from opposite ends, which is why there is no
+ *   second, separately-maintained index of the reverse direction.
+ *
+ * `citation_edges` rather than `references` because `REFERENCES` is a reserved
+ * SQL key word, and quoting it in every hand-written query and every generated
+ * artifact would be pure friction.
+ */
+export const citationEdges = pgTable(
+  'citation_edges',
+  {
+    /** Client-generated UUIDv7, per zero-schema-conventions.md. */
+    id: uuid('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    /** The article whose bibliography this entry came out of. */
+    citingArticleId: uuid('citing_article_id')
+      .notNull()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+    /**
+     * The referenced paper, once it turns out to also be in this user's
+     * collection. Null until then — and null again if that article is deleted:
+     * the citing paper still cited it, so `set null` reverts this row to a
+     * placeholder rather than erasing a bibliography entry that really exists.
+     */
+    citedArticleId: uuid('cited_article_id').references(() => articles.id, {
+      onDelete: 'set null',
+    }),
+
+    /** As the citing paper printed it — the display fields for an unresolved row. */
+    title: text('title').notNull(),
+    authors: jsonb('authors').$type<Author[]>().notNull(),
+    publicationYear: integer('publication_year'),
+    /** The referenced paper's Semantic Scholar `paperId`, when enrichment found one. */
+    semanticScholarId: text('semantic_scholar_id'),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    // Data integrity, not an upsert mechanism: one article cannot cite the same
+    // resolved paper twice. Re-extraction deletes and reinserts instead.
+    unique('citation_edges_citing_s2_key').on(
+      table.citingArticleId,
+      table.semanticScholarId,
+    ),
+    index('citation_edges_citing_idx').on(table.citingArticleId),
+    index('citation_edges_cited_idx').on(table.citedArticleId),
+    // Partial, because the only query that reads it is graduation: "which of
+    // this user's unresolved edges does the article just uploaded satisfy?"
+    // Resolved rows are dead weight in that index.
+    index('citation_edges_user_s2_idx')
+      .on(table.userId, table.semanticScholarId)
+      .where(sql`${table.citedArticleId} is null`),
+  ],
+)
+
 export const articlesRelations = relations(articles, ({ one, many }) => ({
   owner: one(user, {
     fields: [articles.userId],
     references: [user.id],
   }),
   uploadJobs: many(uploadJobs),
+  /** This article's own bibliography. */
+  references: many(citationEdges, { relationName: 'citingArticle' }),
+  /** The bibliography entries of other articles that point at this one. */
+  citedBy: many(citationEdges, { relationName: 'citedArticle' }),
+}))
+
+/**
+ * Both ends are named explicitly because `citation_edges` points at `articles`
+ * twice — without `relationName` Drizzle cannot tell which foreign key each
+ * side of the graph is travelling along.
+ */
+export const citationEdgesRelations = relations(citationEdges, ({ one }) => ({
+  owner: one(user, {
+    fields: [citationEdges.userId],
+    references: [user.id],
+  }),
+  citingArticle: one(articles, {
+    fields: [citationEdges.citingArticleId],
+    references: [articles.id],
+    relationName: 'citingArticle',
+  }),
+  citedArticle: one(articles, {
+    fields: [citationEdges.citedArticleId],
+    references: [articles.id],
+    relationName: 'citedArticle',
+  }),
 }))
 
 export const uploadJobsRelations = relations(uploadJobs, ({ one }) => ({

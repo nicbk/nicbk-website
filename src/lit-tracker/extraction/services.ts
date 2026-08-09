@@ -1,4 +1,6 @@
 import type { DatabaseHandle } from '~/db/create-database'
+import type { SemanticScholarPaper } from '~/lit-tracker/enrichment/client'
+import { createSemanticScholarClient } from '~/lit-tracker/enrichment/client'
 import type { JobQueue } from '~/lit-tracker/jobs/queue'
 import { getArticlePdf } from '~/storage/pdf-storage'
 import { requestTei } from './grobid'
@@ -23,6 +25,13 @@ export interface ExtractionServices {
   fetchPdf: (key: string, userId: string) => Promise<Uint8Array>
   /** One PDF in, structured metadata out. Throws per failure.ts. */
   extractMetadata: (pdf: Uint8Array) => Promise<ExtractedMetadata>
+  /**
+   * Resolves Semantic Scholar lookup keys — the uploaded paper's and its
+   * references' together — in as few requests as the API allows.
+   */
+  lookupPapers: (keys: string[]) => Promise<Map<string, SemanticScholarPaper>>
+  /** The last resort for a paper carrying no identifier at all. */
+  matchPaperByTitle: (title: string) => Promise<SemanticScholarPaper | null>
 }
 
 /**
@@ -37,10 +46,17 @@ export function productionServices(
   database: DatabaseHandle,
   queue: JobQueue,
 ): ExtractionServices {
+  // One client, and so one throttle, for the life of the process — the rate
+  // limiter only works if every Semantic Scholar request in the app queues
+  // behind the same one.
+  const semanticScholar = createSemanticScholarClient()
+
   return {
     database,
     queue,
     fetchPdf: getArticlePdf,
     extractMetadata: async (pdf) => parseTei(await requestTei(pdf)),
+    lookupPapers: semanticScholar.lookupPapers,
+    matchPaperByTitle: semanticScholar.matchByTitle,
   }
 }

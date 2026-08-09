@@ -1,6 +1,7 @@
 # Status: PDF Upload and Storage
 
-**State:** Implemented, awaiting PR. Third of five.
+**State:** **Merged** — [PR #76](https://github.com/nicbk/nicbk-website/pull/76),
+CI green on all five jobs, approved. Third of five.
 
 - Branch: `article-upload-and-extraction/pdf-upload-and-storage`.
 - Sub-issue: [#69](https://github.com/nicbk/nicbk-website/issues/69)

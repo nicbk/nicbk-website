@@ -1,6 +1,6 @@
 # Status: Article Upload and Extraction
 
-**Feature state:** In progress (tasks 1–2 of 5 merged). Five tasks, sequential,
+**Feature state:** In progress (tasks 1–3 of 5 merged). Five tasks, sequential,
 each gated by its own PR + CI + human review. Depends on
 [`authentication`](../authentication/status.md) (Complete) — it consumes that
 feature's Postgres service, Drizzle migration pipeline, Better Auth session,
@@ -30,8 +30,8 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 |---|---|---|---|---|
 | `zero-sync-foundation` | **Merged** ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | passed | approved |
 | `lit-tracker-shell` | **Merged** ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | approved |
-| `pdf-upload-and-storage` | In review ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | [#76](https://github.com/nicbk/nicbk-website/pull/76) | — | awaiting |
-| `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
+| `pdf-upload-and-storage` | **Merged** ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | [#76](https://github.com/nicbk/nicbk-website/pull/76) | passed | approved |
+| `grobid-extraction-pipeline` | In progress ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
 | `semantic-scholar-enrichment` | Not started ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -180,3 +180,15 @@ against stubbed GROBID and Semantic Scholar.
   enqueue is supported rather than hand-rolled; and Zero drops sync for a
   *hidden* document, so multi-client checks need a second window, not a second
   tab.
+- 2026-08-08 — **Task 3 merged as [PR #76](https://github.com/nicbk/nicbk-website/pull/76)**,
+  CI green on all five jobs. Two UI corrections came out of review and are now
+  decided-doc revisions rather than task notes: the collection page draws **no
+  visible title** and puts its toolbar and list in one content column
+  ([collection-view.md](../../research/ui-ux/pages/lit-tracker/pages/collection-view.md)),
+  and **dialog headers are one row**, title leading, site-wide
+  ([user-settings.md](../../research/ui-ux/pages/site-wide/components/user-settings.md)) —
+  the latter a deliberate departure from the popup mockup. The **card grid stays
+  deferred to #8**, confirmed with the user: cards are the decided presentation,
+  but their specified content includes tags and a menu opening `article-edit`
+  (#11), so one built now would be missing half its parts. Next: task 4,
+  `grobid-extraction-pipeline`.

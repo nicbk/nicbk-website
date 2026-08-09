@@ -114,6 +114,52 @@ should discuss the topic with the user and wait for the user to explicitly
 tell it to execute before acting on a plan. Do not jump ahead to
 implementation during a research/planning discussion.
 
+## Design UI that is simple and pleasant to use
+
+Every user-facing feature must be *designed*, not merely assembled. Meeting the
+written requirements is the floor, not the goal: an interface that does
+everything the spec asks and is confusing, cluttered, or awkward to operate has
+failed. Aim for the simplest arrangement that does the job, and hold the result
+to established UI/UX principles rather than to personal taste — the ones below
+are the ones this project keeps needing.
+
+- **Design for the content that will really be there, not the least of it.**
+  The commonest failure by far. A layout built against two short tags and a
+  three-word title breaks the moment it meets thirty tags and a full paper
+  title. Before building, decide what happens at empty, at typical, and at
+  *much more than expected* — long strings, many items, missing fields — and
+  make the layout hold in all three. If a realistic amount of content deforms
+  the page, the design is wrong even though every test passes.
+- **Establish a visual hierarchy and respect it.** Decide what the most
+  important thing on a surface is, and make sure nothing secondary outweighs
+  it. Borders, fills, and weight are loud; use them on what matters. A status
+  indicator that draws the eye before the title it belongs to is a hierarchy
+  inverted, no matter how correct its data.
+- **Prefer removing to adding.** Fewer elements, fewer steps, fewer decisions
+  asked of the reader. When a surface needs something new, first ask what it
+  can stop doing. Two ways to reach the same outcome is usually one too many.
+- **Keep primary actions reachable without hunting.** Nothing a user does often
+  should sit behind scrolling, behind a hover, or at the end of a list that
+  grows. Controls that stay put while their content scrolls are worth the extra
+  markup.
+- **Match the primitive to the interaction, not to the plan.** A component named
+  in a task's plan is a starting suggestion, and plans are written before the
+  interaction is understood. If the right behavior fights the chosen primitive —
+  a role's semantics, its keyboard model, its scrolling — that is evidence the
+  primitive is wrong, not that the behavior should be compromised. Raise it and
+  change it (see "Build on what already exists and is already decided" for when
+  the deviation needs re-deciding with the user).
+- **Uniform things should look uniform.** Repeated elements — cards in a grid,
+  rows in a list — should share size, spacing, and alignment unless a difference
+  carries meaning. Ragged repetition reads as a rendering fault.
+- **Make it pleasant, not merely possible.** Predictable behavior, no dead ends,
+  no surprise motion, and the shortest path through the common case. Ask what
+  the interaction feels like on the tenth use, not the first.
+
+These are design decisions, so they are subject to the same rules as any other:
+they build on what `research/ui-ux/` has already decided, and a genuine conflict
+with a decided document is raised with the user rather than resolved silently.
+
 ## Verify features against their intent, in the browser
 
 Every visual/interactive feature must be verified against what it is actually
@@ -128,6 +174,11 @@ tests and manual viewing are complementary — the tests guard against
 regressions, but only exercising the real page catches layout, spacing,
 overflow, and interaction problems.
 
+- **Check the design, not only the behavior.** The section above is the
+  checklist: is the hierarchy right, does it hold at realistic content volumes,
+  is the common action reachable without hunting? **Seed the page with enough
+  content to find out** — a surface viewed only with the two rows that happen to
+  be in the database has not been checked at all.
 - **Compare against the reference.** When the feature has a mockup or written
   spec, put the running feature next to it and confirm it matches — the style,
   the layout, the affordances — instead of settling for something that merely

@@ -51,11 +51,11 @@ export interface SemanticScholarPaper {
 const FIELDS = 'paperId,title,abstract,year,venue,externalIds,authors'
 
 /**
- * A reference list is only ever read for its ids, matched onto GROBID's
- * entries by title. Everything else about those papers is already stored on the
- * edge, from the citing document itself.
+ * A reference list is read for its ids *and* its metadata: where Semantic
+ * Scholar resolved a reference, its record is the better one, and some of these
+ * references become edges the PDF's own parse never produced.
  */
-const REFERENCE_FIELDS = 'title'
+const REFERENCE_FIELDS = 'title,authors,year'
 
 /**
  * The API's maximum page size for a reference list.
@@ -243,7 +243,14 @@ export function createSemanticScholarClient(
       return body.data.flatMap((entry) => {
         const cited = (entry as { citedPaper?: unknown }).citedPaper
         return isPaper(cited)
-          ? [{ paperId: cited.paperId, title: cited.title }]
+          ? [
+              {
+                paperId: cited.paperId,
+                title: cited.title,
+                authors: cited.authors,
+                year: cited.year,
+              },
+            ]
           : []
       })
     },

@@ -16,31 +16,36 @@ import { alignReferences, normalizeForAlignment } from './reference-list'
  * `citations/matching.ts` and is tested separately; the two must not converge.
  */
 
+function candidate(paperId: string, title: string | null) {
+  return { paperId, title, authors: null, year: null }
+}
+
 const CANDIDATES = [
-  {
-    paperId: 'p-deep-contextualized',
-    title: 'Deep Contextualized Word Representations',
-  },
-  {
-    paperId: 'p-linear-time',
-    title: 'Neural Machine Translation in Linear Time',
-  },
-  {
-    paperId: 'p-findings',
-    title: 'Findings of the 2016 Conference on Machine Translation',
-  },
-  { paperId: 'p-attention', title: 'Attention is All you Need' },
-  {
-    paperId: 'p-effective',
-    title: 'Effective Approaches to Attention-based Neural Machine Translation',
-  },
+  candidate(
+    'p-deep-contextualized',
+    'Deep Contextualized Word Representations',
+  ),
+  candidate('p-linear-time', 'Neural Machine Translation in Linear Time'),
+  candidate(
+    'p-findings',
+    'Findings of the 2016 Conference on Machine Translation',
+  ),
+  candidate('p-attention', 'Attention is All you Need'),
+  candidate(
+    'p-effective',
+    'Effective Approaches to Attention-based Neural Machine Translation',
+  ),
 ]
 
+/** The matched pairs, flattened to what the assertions below care about. */
 function align(...titles: string[]) {
   return alignReferences(
     titles.map((title, index) => ({ edgeId: `e${index}`, title })),
     CANDIDATES,
-  )
+  ).matched.map((entry) => ({
+    edgeId: entry.edgeId,
+    semanticScholarId: entry.paper.paperId,
+  }))
 }
 
 describe('matching a parsed reference to the paper it names', () => {
@@ -110,16 +115,10 @@ describe('what it refuses to match', () => {
       alignReferences(
         [{ edgeId: 'e0', title: 'Neural Machine Translation' }],
         [
-          {
-            paperId: 'p-a',
-            title: 'Neural Machine Translation in Linear Time',
-          },
-          {
-            paperId: 'p-b',
-            title: 'Neural Machine Translation by Jointly Learning',
-          },
+          candidate('p-a', 'Neural Machine Translation in Linear Time'),
+          candidate('p-b', 'Neural Machine Translation by Jointly Learning'),
         ],
-      ),
+      ).matched,
     ).toEqual([])
   })
 
@@ -127,20 +126,20 @@ describe('what it refuses to match', () => {
     expect(
       alignReferences(
         [{ edgeId: 'e0', title: 'Same Title' }],
-        [
-          { paperId: 'p-a', title: 'Same Title' },
-          { paperId: 'p-b', title: 'Same Title' },
-        ],
-      ),
+        [candidate('p-a', 'Same Title'), candidate('p-b', 'Same Title')],
+      ).matched,
     ).toEqual([])
   })
 
   it('ignores candidates the API could not title', () => {
+    // Untitled either way: nothing to match on, and nothing worth inserting —
+    // `addReferenceEdges` drops it for the same reason a titleless parsed entry
+    // is dropped.
     expect(
       alignReferences(
         [{ edgeId: 'e0', title: 'Anything' }],
-        [{ paperId: 'p-a', title: null }],
-      ),
+        [candidate('p-a', null)],
+      ).matched,
     ).toEqual([])
   })
 
@@ -161,6 +160,46 @@ describe('several references at once', () => {
       { edgeId: 'e0', semanticScholarId: 'p-deep-contextualized' },
       { edgeId: 'e2', semanticScholarId: 'p-attention' },
     ])
+  })
+})
+
+describe('references the parsed bibliography never covered', () => {
+  it('reports what the reference list holds and no edge claimed', () => {
+    // The larger half of the coverage gap: GROBID drops a reference it cannot
+    // segment — *Attention Is All You Need* cites *Layer Normalization* and no
+    // title was emitted for it at all — while Semantic Scholar's list has it.
+    const { unclaimed } = alignReferences(
+      [{ edgeId: 'e0', title: 'Attention is All you Need' }],
+      CANDIDATES,
+    )
+
+    expect(unclaimed.map((paper) => paper.paperId)).toEqual([
+      'p-deep-contextualized',
+      'p-linear-time',
+      'p-findings',
+      'p-effective',
+    ])
+  })
+
+  it('does not report one an edge already claimed from a printed identifier', () => {
+    // Those edges are not passed in for matching — they are already resolved —
+    // so without being told, the alignment would offer them for insertion and
+    // create a second edge to the same paper.
+    const { unclaimed } = alignReferences([], CANDIDATES, ['p-attention'])
+
+    expect(unclaimed.map((paper) => paper.paperId)).not.toContain('p-attention')
+  })
+
+  it('reports nothing when every reference was matched', () => {
+    const { unclaimed } = alignReferences(
+      CANDIDATES.map((paper, index) => ({
+        edgeId: `e${index}`,
+        title: paper.title as string,
+      })),
+      CANDIDATES,
+    )
+
+    expect(unclaimed).toEqual([])
   })
 })
 

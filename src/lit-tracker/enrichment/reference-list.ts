@@ -38,10 +38,19 @@
  * letters-and-digits only and allowing one title to contain the other.
  */
 
-/** One entry of Semantic Scholar's reference list. */
+/**
+ * One entry of Semantic Scholar's reference list.
+ *
+ * Carries the metadata, not just the id, because for a reference Semantic
+ * Scholar resolved its record *is* the better one — a canonical title where
+ * GROBID has "2018a. Deep contextualized word representations", and a year and
+ * author list where GROBID often has neither.
+ */
 export interface ReferenceCandidate {
   paperId: string
   title: string | null
+  authors: { name?: string }[] | null
+  year: number | null
 }
 
 /** A written edge that still has no identifier of its own. */
@@ -60,18 +69,35 @@ export interface UnresolvedEdge {
  */
 const MIN_CONTAINMENT_LENGTH = 20
 
+/** What aligning the two lists produced. */
+export interface ReferenceAlignment {
+  /** Parsed edges that turned out to name a paper Semantic Scholar resolved. */
+  matched: { edgeId: string; paper: ReferenceCandidate }[]
+  /**
+   * References Semantic Scholar resolved that no parsed edge claimed.
+   *
+   * These are the ones GROBID dropped or garbled past recognition, and they are
+   * the larger half of the gap: 21 of them across the four papers this was
+   * measured on, including *Layer Normalization*, which *Attention Is All You
+   * Need* plainly cites and GROBID did not emit a title for at all. They become
+   * edges of their own.
+   */
+  unclaimed: ReferenceCandidate[]
+}
+
 /**
- * Matches unresolved edges against the citing paper's reference list.
+ * Matches parsed edges against the citing paper's reference list, and reports
+ * what the list holds that they did not cover.
  *
- * Returns only the ones that matched; an entry Semantic Scholar's list does not
- * cover simply stays a placeholder, which is a normal outcome rather than a
- * failure. Nothing here overwrites an identifier the paper itself printed —
- * only edges with no id are passed in.
+ * `alreadyClaimed` names papers some other edge of this article has already
+ * resolved to — from an identifier the document itself printed. Without it
+ * those would look unclaimed and be inserted a second time.
  */
 export function alignReferences(
   edges: UnresolvedEdge[],
   candidates: ReferenceCandidate[],
-): { edgeId: string; semanticScholarId: string }[] {
+  alreadyClaimed: Iterable<string> = [],
+): ReferenceAlignment {
   const normalized = candidates.flatMap((candidate) => {
     const title = normalizeForAlignment(candidate.title)
     return title ? [{ title, paperId: candidate.paperId }] : []
@@ -85,14 +111,34 @@ export function alignReferences(
     exact.set(title, exact.has(title) ? null : paperId)
   }
 
-  return edges.flatMap((edge) => {
+  const byId = new Map(
+    candidates.map((candidate) => [candidate.paperId, candidate]),
+  )
+  const claimed = new Set(alreadyClaimed)
+
+  const matched = edges.flatMap((edge) => {
     const title = normalizeForAlignment(edge.title)
     if (!title) {
       return []
     }
     const paperId = exact.get(title) ?? containedMatch(title, normalized)
-    return paperId ? [{ edgeId: edge.edgeId, semanticScholarId: paperId }] : []
+    const paper = paperId ? byId.get(paperId) : undefined
+    // One paper per edge and one edge per paper: two parsed entries that both
+    // look like the same reference must not both claim it, or the second
+    // collides with `unique (citing_article_id, semantic_scholar_id)`.
+    if (!paper || claimed.has(paper.paperId)) {
+      return []
+    }
+    claimed.add(paper.paperId)
+    return [{ edgeId: edge.edgeId, paper }]
   })
+
+  return {
+    matched,
+    unclaimed: candidates.filter(
+      (candidate) => !claimed.has(candidate.paperId),
+    ),
+  }
 }
 
 /**

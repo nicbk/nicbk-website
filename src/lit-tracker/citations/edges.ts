@@ -139,6 +139,26 @@ function toDraft(entry: BibliographyEntry): EdgeDraft[] {
   ]
 }
 
+/** An edge Semantic Scholar resolved, and the record it resolved to. */
+export interface ResolvedEdge {
+  edgeId: string
+  semanticScholarId: string
+  /**
+   * The paper as Semantic Scholar holds it, when that record is available.
+   *
+   * Written over what GROBID parsed, because for a reference Semantic Scholar
+   * resolved its record really is the better one: a canonical title where
+   * GROBID kept a year prefix or a trailing venue, and a year where GROBID
+   * often has none. What is lost is the printed form of a reference that was
+   * matched wrongly — which #11's article-edit is the correction path for.
+   */
+  paper?: {
+    title: string | null
+    authors: { name?: string }[] | null
+    year: number | null
+  }
+}
+
 /**
  * Attaches Semantic Scholar ids to this article's edges, resolving each against
  * the user's collection as it goes.
@@ -153,7 +173,7 @@ function toDraft(entry: BibliographyEntry): EdgeDraft[] {
 export async function applyResolvedEdges(
   tx: DatabaseTransaction,
   citing: { articleId: string; userId: string },
-  resolved: { edgeId: string; semanticScholarId: string }[],
+  resolved: ResolvedEdge[],
 ): Promise<void> {
   const claimed = new Set<string>()
   const byArticle = await articlesBySemanticScholarId(
@@ -162,7 +182,7 @@ export async function applyResolvedEdges(
     resolved.map((entry) => entry.semanticScholarId),
   )
 
-  for (const { edgeId, semanticScholarId } of resolved) {
+  for (const { edgeId, semanticScholarId, paper } of resolved) {
     if (claimed.has(semanticScholarId)) {
       continue
     }
@@ -187,10 +207,102 @@ export async function applyResolvedEdges(
               citedArticleId: sql`coalesce(${citationEdges.citedArticleId}, ${citedArticleId}::uuid)`,
             }
           : {}),
+        ...metadataOf(paper),
         updatedAt: new Date(),
       })
       .where(eq(citationEdges.id, edgeId))
   }
+}
+
+/**
+ * The columns to take from a Semantic Scholar record, skipping whatever it does
+ * not hold — an absent year must not erase the one the document printed.
+ */
+function metadataOf(paper: ResolvedEdge['paper']): Partial<{
+  title: string
+  authors: Author[]
+  publicationYear: number
+}> {
+  if (!paper) {
+    return {}
+  }
+  const title = paper.title?.trim()
+  const authors = (paper.authors ?? []).flatMap((author) => {
+    const name = author.name?.trim()
+    return name ? [{ name }] : []
+  })
+  return {
+    ...(title ? { title } : {}),
+    ...(authors.length > 0 ? { authors } : {}),
+    ...(typeof paper.year === 'number' ? { publicationYear: paper.year } : {}),
+  }
+}
+
+/**
+ * Adds edges for references Semantic Scholar knows and the PDF's own parse did
+ * not produce.
+ *
+ * The larger half of the coverage gap. GROBID drops a reference it cannot
+ * segment and garbles others past matching — *Attention Is All You Need* cites
+ * *Layer Normalization* and GROBID emitted no title for it at all — while
+ * Semantic Scholar's list has them, resolved. Since a reference the citing
+ * paper genuinely made is a real edge whoever managed to read it, these are
+ * inserted as edges of their own.
+ *
+ * `onConflictDoNothing` guards the one case the caller cannot fully exclude: a
+ * paper already claimed by an edge this run did not look at.
+ */
+export async function addReferenceEdges(
+  tx: DatabaseTransaction,
+  citing: { articleId: string; userId: string },
+  references: {
+    paperId: string
+    title: string | null
+    authors: { name?: string }[] | null
+    year: number | null
+  }[],
+): Promise<number> {
+  const usable = references.flatMap((reference) => {
+    const metadata = metadataOf(reference)
+    // A reference with no title renders as a blank line and can never be
+    // corrected into anything — the same rule the parsed entries follow.
+    return metadata.title
+      ? [{ paperId: reference.paperId, ...metadata, title: metadata.title }]
+      : []
+  })
+  if (usable.length === 0) {
+    return 0
+  }
+
+  const ids = await generateIds(tx, usable.length)
+  const byArticle = await articlesBySemanticScholarId(
+    tx,
+    citing.userId,
+    usable.map((reference) => reference.paperId),
+  )
+
+  const inserted = await tx
+    .insert(citationEdges)
+    .values(
+      usable.map((reference, index) => {
+        const cited = byArticle.get(reference.paperId)
+        return {
+          id: ids[index] as string,
+          userId: citing.userId,
+          citingArticleId: citing.articleId,
+          // Direction one, for an edge that never existed until now.
+          citedArticleId: cited && cited !== citing.articleId ? cited : null,
+          title: reference.title,
+          authors: reference.authors ?? [],
+          publicationYear: reference.publicationYear ?? null,
+          semanticScholarId: reference.paperId,
+        }
+      }),
+    )
+    .onConflictDoNothing()
+    .returning({ id: citationEdges.id })
+
+  return inserted.length
 }
 
 /**

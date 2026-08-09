@@ -166,7 +166,15 @@ interface Stub {
   match?: SemanticScholarPaper | null
   unavailable?: boolean
   /** Semantic Scholar's own reference list, keyed by the citing paper's id. */
-  references?: Record<string, { paperId: string; title: string | null }[]>
+  references?: Record<
+    string,
+    {
+      paperId: string
+      title: string | null
+      authors?: { name?: string }[] | null
+      year?: number | null
+    }[]
+  >
 }
 
 function servicesWith(metadata: ExtractedMetadata, stub: Stub = {}) {
@@ -196,7 +204,11 @@ function servicesWith(metadata: ExtractedMetadata, stub: Stub = {}) {
       if (stub.unavailable) {
         throw new SemanticScholarUnavailableError('429 after backoff')
       }
-      return stub.references?.[paperId] ?? []
+      return (stub.references?.[paperId] ?? []).map((reference) => ({
+        authors: null,
+        year: null,
+        ...reference,
+      }))
     },
   }
 }
@@ -439,6 +451,117 @@ describe('references that printed no identifier', () => {
     })
   })
 
+  it('adds edges for references the PDF parse never produced', async () => {
+    // The larger half of the gap. GROBID drops a reference it cannot segment —
+    // *Attention Is All You Need* cites *Layer Normalization* and no title was
+    // emitted for it at all — and the citation the author really made would
+    // otherwise be missing from the graph entirely.
+    const articleId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        bibliography: [reference('The One Reference GROBID Read', 'Hopper')],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [
+            { paperId: 's2-read', title: 'The One Reference GROBID Read' },
+            {
+              paperId: 's2-dropped',
+              title: 'A Reference GROBID Dropped Entirely',
+              year: 2016,
+              authors: [{ name: 'Jimmy Lei Ba' }],
+            },
+          ],
+        },
+      },
+    )
+
+    const edges = await edgesOf(articleId)
+    expect(edges).toHaveLength(2)
+    expect(edges[0]).toMatchObject({
+      title: 'A Reference GROBID Dropped Entirely',
+      semantic_scholar_id: 's2-dropped',
+      publication_year: 2016,
+      authors: [{ name: 'Jimmy Lei Ba' }],
+    })
+  })
+
+  it('graduates an added edge against an article already in the collection', async () => {
+    const citedId = await uploadAndSettle(
+      'cited.pdf',
+      extraction({
+        title: 'A Paper The Citing PDF Parse Missed',
+        identifiers: { doi: '10.1/cited', arxivId: null, pubmedId: null },
+      }),
+      { papers: { 'DOI:10.1/cited': paper({ paperId: 's2-cited' }) } },
+    )
+
+    const citingId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        title: 'The Citing Paper',
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        // GROBID produced nothing for this reference at all.
+        bibliography: [],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [
+            {
+              paperId: 's2-cited',
+              title: 'A Paper The Citing PDF Parse Missed',
+            },
+          ],
+        },
+      },
+    )
+
+    expect((await edgesOf(citingId))[0]).toMatchObject({
+      semantic_scholar_id: 's2-cited',
+      cited_article_id: citedId,
+    })
+  })
+
+  it('prefers the Semantic Scholar record over what GROBID printed', async () => {
+    // For a reference Semantic Scholar resolved, its record really is the
+    // better one: GROBID keeps year prefixes and trailing venues on titles.
+    const articleId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        bibliography: [
+          reference(
+            '2018a. Deep contextualized word representations',
+            'Peters',
+          ),
+        ],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [
+            {
+              paperId: 's2-elmo',
+              title: 'Deep Contextualized Word Representations',
+              year: 2018,
+            },
+          ],
+        },
+      },
+    )
+
+    const edges = await edgesOf(articleId)
+    expect(edges).toHaveLength(1)
+    expect(edges[0]).toMatchObject({
+      title: 'Deep Contextualized Word Representations',
+      semantic_scholar_id: 's2-elmo',
+      publication_year: 2018,
+    })
+  })
+
   it('leaves an entry the reference list does not cover as a placeholder', async () => {
     const articleId = await uploadAndSettle(
       'citing.pdf',
@@ -454,9 +577,14 @@ describe('references that printed no identifier', () => {
       },
     )
 
-    // Still a row, still renderable from its own columns.
-    expect((await edgesOf(articleId))[0]).toMatchObject({
-      title: 'Something Nobody Recorded',
+    // Still a row, still renderable from its own columns — sitting beside the
+    // reference Semantic Scholar did know, which is now an edge of its own.
+    const edges = await edgesOf(articleId)
+    expect(edges.map((edge) => edge['title'])).toEqual([
+      'A Different Paper',
+      'Something Nobody Recorded',
+    ])
+    expect(edges[1]).toMatchObject({
       semantic_scholar_id: null,
       cited_article_id: null,
     })

@@ -59,6 +59,7 @@ const PAPER: SemanticScholarPaper = {
 interface Recorded {
   articleUpdate: Record<string, unknown> | undefined
   edgeUpdates: Record<string, unknown>[]
+  edgesInserted: Record<string, unknown>[][]
   sent: { queue: string; job: unknown }[]
   lookedUp: string[][]
   titleQueries: string[]
@@ -94,6 +95,22 @@ function fakeDatabase(article: typeof ARTICLE | undefined): DatabaseHandle {
       }),
     }),
     select: () => ({ from: () => ({ where: async () => [] }) }),
+    // Edges added from Semantic Scholar's own reference list.
+    insert: () => ({
+      values: (rows: Record<string, unknown>[]) => ({
+        onConflictDoNothing: () => ({
+          returning: async () => {
+            recorded.edgesInserted.push(rows)
+            return rows
+          },
+        }),
+      }),
+    }),
+    execute: async () => ({
+      rows: Array.from({ length: 20 }, (_entry, index) => ({
+        id: `01930000-0000-7000-8000-0000000000${String(index).padStart(2, '0')}`,
+      })),
+    }),
   }
 
   const db = {
@@ -116,7 +133,12 @@ function fakeServices(
     papers?: Map<string, SemanticScholarPaper>
     lookup?: () => Promise<Map<string, SemanticScholarPaper>>
     match?: () => Promise<SemanticScholarPaper | null>
-    references?: { paperId: string; title: string | null }[]
+    references?: {
+      paperId: string
+      title: string | null
+      authors?: { name?: string }[] | null
+      year?: number | null
+    }[]
     referencesFail?: boolean
   } = {},
 ): ExtractionServices {
@@ -153,7 +175,11 @@ function fakeServices(
       if (options.referencesFail) {
         throw new SemanticScholarUnavailableError('503')
       }
-      return options.references ?? []
+      return (options.references ?? []).map((reference) => ({
+        authors: null,
+        year: null,
+        ...reference,
+      }))
     },
   }
 }
@@ -162,6 +188,7 @@ beforeEach(() => {
   recorded = {
     articleUpdate: undefined,
     edgeUpdates: [],
+    edgesInserted: [],
     sent: [],
     lookedUp: [],
     titleQueries: [],
@@ -263,27 +290,64 @@ describe('a successful enrichment', () => {
     expect(recorded.referenceListsFetched).toHaveLength(1)
   })
 
-  it('does not ask for a reference list it has no use for', async () => {
-    // Every edge already carries the identifier its own document printed.
+  it('reads the reference list even when every parsed edge already resolved', async () => {
+    // Because the list is not only a source of identifiers — it is a source of
+    // *references*. GROBID drops what it cannot segment, so a bibliography can
+    // be fully resolved and still be missing entries the paper really cited.
     unresolvedEdges = []
 
-    await runEnrichStage(JOB, fakeServices())
+    await runEnrichStage(
+      JOB,
+      fakeServices({
+        references: [
+          { paperId: 'p-missed', title: 'A Reference GROBID Dropped' },
+        ],
+      }),
+    )
 
-    expect(recorded.referenceListsFetched).toEqual([])
+    expect(recorded.referenceListsFetched).toEqual([PAPER.paperId])
+    expect(recorded.edgesInserted.flat()).toEqual([
+      expect.objectContaining({
+        semanticScholarId: 'p-missed',
+        title: 'A Reference GROBID Dropped',
+        citingArticleId: JOB.articleId,
+      }),
+    ])
   })
 
-  it('keeps the enrichment when the reference list cannot be read', async () => {
-    // By this point the article is enriched and its printed identifiers are
-    // resolved. Throwing all of that away to retry because one supplementary
-    // request failed would trade a good outcome for a worse one.
+  it('does not add an edge for a reference an existing edge already names', async () => {
+    // The printed-identifier edges are resolved before the list is read, so
+    // without excluding them the same paper would be inserted a second time and
+    // collide with `unique (citing_article_id, semantic_scholar_id)`.
+    unresolvedEdges = []
+
+    await runEnrichStage(
+      JOB,
+      fakeServices({
+        papers: new Map([
+          ['DOI:10.1/first', { ...PAPER, paperId: 'already-cited' }],
+        ]),
+        references: [{ paperId: 'already-cited', title: 'Already An Edge' }],
+      }),
+    )
+
+    expect(recorded.edgesInserted.flat()).toEqual([])
+  })
+
+  it('retries rather than settling for a graph the reference list would have filled', async () => {
+    // Observed on BERT with four uploads running at once: one 429 on this call
+    // leaves the graph 13% full instead of 96%, permanently, because nothing
+    // would ever revisit it. Retrying is cheap — the article update is
+    // idempotent and the inserts are `on conflict do nothing` — and if the
+    // retries run out the dead-letter handler still finalizes the upload.
     unresolvedEdges = [{ id: 'edge-no-id', title: 'Some Reference' }]
 
-    await runEnrichStage(JOB, fakeServices({ referencesFail: true }))
+    await expect(
+      runEnrichStage(JOB, fakeServices({ referencesFail: true })),
+    ).rejects.toBeInstanceOf(SemanticScholarUnavailableError)
 
-    expect(recorded.articleUpdate).toMatchObject({
-      extractionStatus: 'enriched',
-    })
-    expect(recorded.sent[0]?.queue).toBe('lit-tracker.finalize')
+    expect(recorded.articleUpdate).toBeUndefined()
+    expect(recorded.sent).toEqual([])
   })
 
   it('does not look for a reference list when the paper itself is unknown', async () => {

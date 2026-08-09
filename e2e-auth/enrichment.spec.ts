@@ -9,6 +9,7 @@ import {
   signedInUserId,
 } from './support/articles'
 import {
+  canonicalTitleFor,
   REFERENCE_LIST_ONLY_TITLE,
   STUB_VENUE,
   STUB_YEAR,
@@ -152,13 +153,16 @@ test.describe('enrichment, end to end', () => {
     // all; its id came from Semantic Scholar's own reference list for the
     // citing paper, which is how a machine-learning bibliography gets resolved.
     const edges = await citationEdgesOf(userId)
-    expect(edges.map((edge) => edge.title)).toEqual([
-      'A Reference Semantic Scholar Knows',
-      REFERENCE_LIST_ONLY_TITLE,
-    ])
-    expect(edges[0]?.semantic_scholar_id).toBe('s2-a-reference')
-    expect(edges[1]?.semantic_scholar_id).toBe(
+    expect(edges.map((edge) => edge.semantic_scholar_id).sort()).toEqual([
+      's2-a-reference',
       's2-known-only-to-the-reference-list',
+    ])
+
+    // And the resolved one is stored under Semantic Scholar's title rather than
+    // the one the document printed — GROBID keeps year prefixes and trailing
+    // venues, and for a reference the API resolved its record is the better one.
+    expect(edges.map((edge) => edge.title)).toContain(
+      canonicalTitleFor('a-reference'),
     )
   })
 

@@ -169,10 +169,27 @@ reference list for the citing paper — one request, every entry carrying a
 therefore arrives at the graduation rule already carrying an ID, so the
 ID-first path does the work and the loose fallback stays where it was.
 
-Measured on the same four papers, references resolving to a Semantic Scholar
-paper: 13% → 96% (BERT), 38% → 97% (*Attention*), 28% → 93%
-(*Convolutional Sequence to Sequence Learning*), 95% → 100% (PLOS ONE). *BERT*
-now graduates against *Attention Is All You Need*.
+### An edge no longer has to come from the PDF's own parse
+
+This *is* a departure from "one row per bibliography entry parsed from a citing
+article's PDF" at the top of this document, taken deliberately. Semantic
+Scholar's list is bigger than GROBID's parse — 63 entries against 54 for BERT —
+because GROBID drops what it cannot segment. *Attention Is All You Need* cites
+*Layer Normalization*, GROBID emitted no title for it, and that citation
+existed nowhere in the graph. A reference the citing paper genuinely made is a
+real edge whoever managed to read it, so for a paper Semantic Scholar knows,
+its reference list is a source of edges alongside the parse, and its record is
+what those edges store.
+
+The parse is still what covers everything Semantic Scholar does not know —
+datasets, technical reports, and papers it has never indexed — which is why it
+is not simply replaced.
+
+Measured on real papers, references resolving to a Semantic Scholar paper:
+13% → 97% (BERT), 38% → 98% (*Attention*), 28% → 94% (*Convolutional Sequence
+to Sequence Learning*). Uploaded together, they link to each other in the graph.
+What remains unresolved is references Semantic Scholar could not resolve either,
+plus entries that are not papers at all.
 
 Title matching is used there and not here because the candidate sets are
 different in kind. Graduation compares against an entire collection, where a

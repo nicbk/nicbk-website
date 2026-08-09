@@ -2,6 +2,7 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import { fromDrizzle } from 'pg-boss'
 import { articles, citationEdges } from '~/db/schema'
 import {
+  addReferenceEdges,
   applyResolvedEdges,
   graduateEdgesCiting,
 } from '~/lit-tracker/citations/edges'
@@ -9,6 +10,7 @@ import { isSameWork } from '~/lit-tracker/citations/matching'
 import type { SemanticScholarPaper } from '~/lit-tracker/enrichment/client'
 import type { MatchKind } from '~/lit-tracker/enrichment/metadata'
 import { enrichmentFrom } from '~/lit-tracker/enrichment/metadata'
+import type { ReferenceAlignment } from '~/lit-tracker/enrichment/reference-list'
 import { alignReferences } from '~/lit-tracker/enrichment/reference-list'
 import type { EnrichJob, FinalizeJob } from '~/lit-tracker/jobs/queue'
 import { FINALIZE_QUEUE } from '~/lit-tracker/jobs/queue'
@@ -69,7 +71,17 @@ export async function runEnrichStage(
   const resolvedEdges = job.edgeLookups.flatMap((lookup) => {
     const paper = papers.get(lookup.key)
     return paper
-      ? [{ edgeId: lookup.edgeId, semanticScholarId: paper.paperId }]
+      ? [
+          {
+            edgeId: lookup.edgeId,
+            semanticScholarId: paper.paperId,
+            paper: {
+              title: paper.title,
+              authors: paper.authors,
+              year: paper.year,
+            },
+          },
+        ]
       : []
   })
 
@@ -78,14 +90,19 @@ export async function runEnrichStage(
   // conference proceeding and no identifier at all. Semantic Scholar's own
   // reference list for this paper has them already resolved, so one request
   // turns a graph that was 13% full into one that is 96% full.
-  const alignedEdges = matched
+  const fromReferenceList = matched
     ? await alignAgainstReferenceList(
         job,
         matched.paper.paperId,
         resolvedEdges,
         services,
       )
-    : []
+    : { matched: [], unclaimed: [] }
+  const alignedEdges = fromReferenceList.matched.map((entry) => ({
+    edgeId: entry.edgeId,
+    semanticScholarId: entry.paper.paperId,
+    paper: entry.paper,
+  }))
 
   await services.database.db.transaction(async (tx) => {
     if (matched) {
@@ -124,6 +141,15 @@ export async function runEnrichStage(
       [...resolvedEdges, ...alignedEdges],
     )
 
+    // And the references Semantic Scholar knows that the PDF's own parse never
+    // produced — GROBID drops what it cannot segment, which on real papers is
+    // the larger half of the gap.
+    await addReferenceEdges(
+      tx,
+      { articleId: job.articleId, userId: job.userId },
+      fromReferenceList.unclaimed,
+    )
+
     const finalize: FinalizeJob = { uploadJobId: job.uploadJobId }
     await services.queue.send(FINALIZE_QUEUE, finalize, {
       db: fromDrizzle(tx, sql),
@@ -158,17 +184,25 @@ export async function runExhaustedEnrichStage(
  * these are, by definition, the ones it has nothing to say about. They were
  * written by the extract stage, so the rows are already there.
  *
- * A failure to fetch the list is deliberately **not** propagated. By this point
- * the article is enriched and its printed identifiers are resolved; giving all
- * of that up and retrying the whole stage because one supplementary request
- * failed would be trading a good outcome for a worse one.
+ * A failure to fetch the list **is** propagated, so pg-boss retries the whole
+ * stage. That was not the original choice: while this call only supplied a few
+ * extra identifiers, swallowing a failure and keeping the rest was the better
+ * trade. It stopped being so once the list became the main source of edges —
+ * a single 429 then leaves the graph 13% full instead of 96%, permanently,
+ * with nothing that would ever revisit it. Observed exactly that way, on BERT,
+ * with four uploads running at once.
+ *
+ * Retrying is cheap and safe: the article update is idempotent, edge ids are
+ * assigned by id, and the inserts are `on conflict do nothing`. And it stays
+ * within the decided rule — if the retries run out, the dead-letter handler
+ * finalizes the upload and the article settles for `grobid_only`.
  */
 async function alignAgainstReferenceList(
   job: EnrichJob,
   paperId: string,
-  alreadyResolved: { edgeId: string }[],
+  alreadyResolved: { edgeId: string; semanticScholarId: string }[],
   services: ExtractionServices,
-): Promise<{ edgeId: string; semanticScholarId: string }[]> {
+): Promise<ReferenceAlignment> {
   const resolved = new Set(alreadyResolved.map((edge) => edge.edgeId))
   const unresolved = (
     await services.database.db
@@ -182,23 +216,14 @@ async function alignAgainstReferenceList(
       )
   ).filter((edge) => !resolved.has(edge.id))
 
-  if (unresolved.length === 0) {
-    return []
-  }
-
-  try {
-    const candidates = await services.fetchReferences(paperId)
-    return alignReferences(
-      unresolved.map((edge) => ({ edgeId: edge.id, title: edge.title })),
-      candidates,
-    )
-  } catch (error) {
-    console.warn(
-      `Could not read Semantic Scholar's reference list for ${paperId}; leaving ${unresolved.length} edge(s) unresolved.`,
-      error instanceof Error ? error.message : error,
-    )
-    return []
-  }
+  const candidates = await services.fetchReferences(paperId)
+  return alignReferences(
+    unresolved.map((edge) => ({ edgeId: edge.id, title: edge.title })),
+    candidates,
+    // Papers an edge already claimed from an identifier the document itself
+    // printed. Without this they would look unclaimed and be inserted twice.
+    alreadyResolved.map((edge) => edge.semanticScholarId),
+  )
 }
 
 /** The article's own Semantic Scholar record, if one can be found. */

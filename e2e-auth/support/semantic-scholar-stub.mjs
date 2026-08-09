@@ -168,13 +168,24 @@ function paperFor(id) {
   }
   return {
     paperId: `s2-${slug}`,
-    title: slug,
+    // Deliberately not the title the uploaded document printed: where Semantic
+    // Scholar resolved a reference its record is the one that gets stored, and
+    // a stub echoing GROBID's title back would hide that.
+    title: canonicalTitleFor(slug),
     abstract: null,
     year: STUB_YEAR,
     venue: STUB_VENUE,
     externalIds: { DOI: id.replace(/^DOI:/, '') },
     authors: [],
   }
+}
+
+/** "a-reference" -> "A Reference": a plausible canonical title from a slug. */
+export function canonicalTitleFor(slug) {
+  return slug
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
 }
 
 function json(response, body) {

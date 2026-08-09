@@ -88,18 +88,39 @@ resolved reference list for the uploaded paper, **one** extra request, every
 entry carrying a `paperId`, matched onto GROBID's parsed entries locally by
 title (`enrichment/reference-list.ts`).
 
-Measured on the same real papers, references resolved to a paper:
+The list is used two ways, and the second matters as much as the first:
 
-| citing paper | before | after |
+1. **Identifiers for entries GROBID parsed** — matched on by title.
+2. **Edges for references GROBID never produced at all.** Its list is simply
+   bigger than the parse (63 entries vs 54 for BERT), because GROBID drops what
+   it cannot segment. *Attention Is All You Need* cites *Layer Normalization*
+   and GROBID emitted no title for it; that citation existed nowhere in the
+   graph until these were added.
+
+Where Semantic Scholar resolved a reference, **its record is what gets stored** —
+a canonical title where GROBID kept a year prefix or a trailing venue, plus the
+year and authors GROBID often lacks.
+
+Measured on real papers, references resolved to a paper:
+
+| citing paper | identifiers only | + reference list |
 |---|---|---|
-| *BERT* | 7/54 (13%) | **52/54 (96%)** |
-| *Attention Is All You Need* | 15/39 (38%) | **38/39 (97%)** |
-| *Convolutional Sequence to Sequence Learning* | 13/46 (28%) | **43/46 (93%)** |
-| PLOS ONE article | 39/41 (95%) | **41/41 (100%)** |
+| *BERT* | 7/54 (13%) | **59/61 (97%)** |
+| *Attention Is All You Need* | 15/39 (38%) | **39/40 (98%)** |
+| *Convolutional Sequence to Sequence Learning* | 13/46 (28%) | **50/53 (94%)** |
+| *Layer Normalization* | — | **32/32 (100%)** |
 
-*BERT* now graduates against *Attention Is All You Need* in the real
-collection. **The graduation rule was not loosened** — the identifiers simply
-exist before it runs, so the strict ID-first path does the work.
+With all four in one collection the graph is genuinely connected: *BERT* →
+*Attention*, *Attention* → *Layer Normalization* and → *ConvS2S*, *ConvS2S* →
+*Layer Normalization*. **The graduation rule was not loosened** — the
+identifiers simply exist before it runs, so the strict ID-first path does the
+work.
+
+The six remaining unresolved edges are the ceiling rather than a shortfall:
+three are references Semantic Scholar's own list could not resolve either, and
+three are things no citation graph can link — a dataset ("English gigaword.
+Linguistic Data Consortium") and two references GROBID merged with their
+neighbours.
 
 Title matching is used for the alignment and *not* for graduation because the
 candidate sets differ in kind: graduation compares against a whole collection,
@@ -156,6 +177,25 @@ signed-in e2e suite went from 9.1 minutes to 4.0.
   are #8 and #10. The e2e specs prove the live round-trip in the browser and
   assert the enrichment in the database, with the reason written where the
   helper is defined.
+
+## A trade that had to be reversed
+
+The reference-list fetch was first written to swallow its own failure: the
+article was already enriched, so giving that up over one supplementary request
+looked like the worse deal. It stopped being so the moment the list became the
+*main* source of edges. Observed directly, with four uploads running at once: a
+single 429 left BERT's graph 13% full instead of 97%, permanently, because
+nothing would ever revisit it.
+
+It now propagates, so pg-boss retries the stage. That is cheap and safe — the
+article update is idempotent, edge ids are assigned by id, and the added edges
+insert `on conflict do nothing` — and it stays inside the decided rule, because
+exhausted retries still finalize the upload as `grobid_only`.
+
+The general shape, worth carrying: **how a failure should be handled depends on
+how much the call is carrying.** A best-effort swallow is right for a garnish
+and wrong for the main course, and the same line of code was both within one
+afternoon.
 
 ## A gap this tier caught
 

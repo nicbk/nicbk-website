@@ -30,17 +30,34 @@
 }
 
 /*
+ * The title and the menu share the top row, with the menu pinned to the corner
+ * the decided design puts it in. `align-items: start` keeps the trigger level
+ * with the title's first line rather than centred against a two-line title.
+ */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+/*
  * Every text line is bounded, and what does not fit is elided rather than
  * allowed to grow the card. This is what lets the grid be uniform: a paper with
  * a six-line title and one with a three-word title occupy the same box, and the
- * elided text is still reachable — each of these carries a `title` attribute, so
- * hovering shows the whole of it.
+ * elided text is still reachable — each of these is a tooltip trigger, so the
+ * whole string is one hover or one focus away.
  *
  * `-webkit-line-clamp` is the multi-line form and is unprefixed nowhere yet;
  * `line-clamp` is written beside it so this stops being a prefixed property on
  * its own the moment browsers ship the standard name.
  */
 .title {
+  /* Takes the row's spare width and yields it back when the menu needs its own
+     — without the zero minimum, a long unbroken title would push the trigger
+     off the card. */
+  flex: 1;
+  min-width: 0;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -69,10 +86,8 @@
  * causes (article-card.tsx explains the ordering).
  *
  * It sits directly under the authors rather than being pushed to the foot of the
- * card. Pinned to the bottom, a two-line entry beside a four-line one shows a
- * gap through its middle, which reads as a rendering fault rather than as
- * alignment — and the grid already guarantees the cards are the same size, so
- * there is nothing left for the pinning to buy.
+ * card — the chips are what occupy the foot now, and a gap through the middle of
+ * a short card reads as a rendering fault rather than as alignment.
  */
 .meta {
   overflow: hidden;
@@ -98,5 +113,37 @@
 
   .meta {
     padding-block-start: var(--space-2xs);
+  }
+}
+
+/*
+ * The full text of an elided line.
+ *
+ * Wider than the card it belongs to, because that is the entire point — a
+ * tooltip constrained to the truncated element's width would show the same
+ * truncation again — but capped so a long title stays a readable measure rather
+ * than one line across the window.
+ */
+.tooltip {
+  max-width: min(28rem, calc(100vw - 2 * var(--space-md)));
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight);
+  /* The string may hold a DOI or a URL with nothing to break at. */
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tooltip {
+    transition: opacity var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .tooltip[data-starting-style],
+  .tooltip[data-ending-style] {
+    opacity: 0;
   }
 }

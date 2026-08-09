@@ -1,0 +1,135 @@
+/*
+ * The card's three-dot menu.
+ *
+ * The trigger sits in the card's corner and is the only interactive thing on a
+ * card, so it is deliberately quiet at rest — the grid should read as a grid of
+ * papers, not a grid of buttons — and fully visible on hover and on focus. It is
+ * never hidden until hover: a control that appears only under a pointer does not
+ * exist for anyone navigating by keyboard or touch.
+ */
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: var(--space-2xs);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  line-height: 0;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .trigger:hover {
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+}
+
+/* While the menu is open the trigger stays lit, so it is obvious which card the
+   popup belongs to when several are on screen. */
+.trigger[data-popup-open] {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.triggerIcon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/* Base UI puts its own outline on the positioner; the popup below carries the
+   visible edge, so this one is removed rather than doubled. */
+.positioner {
+  outline: none;
+}
+
+.popup {
+  min-width: 12rem;
+  /* A reader with many tags gets a scrolling list rather than a popup taller
+     than the window. */
+  max-height: min(20rem, calc(100dvh - 4rem));
+  overflow-y: auto;
+  padding: var(--space-2xs) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+.groupLabel {
+  padding: var(--space-2xs) var(--space-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * One row per choice. The two-column grid keeps every label on the same
+ * vertical line whether or not its row is currently ticked — with the indicator
+ * in the flow, labels would shift sideways as tags are toggled.
+ */
+.item {
+  display: grid;
+  grid-template-columns: 1rem 1fr;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-2xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+
+/*
+ * `data-highlighted` is the menu's own cursor — it follows both the pointer and
+ * the arrow keys, which is why it is styled instead of `:hover` and
+ * `:focus-visible` separately. Background rather than color alone, so the
+ * highlighted row is distinguishable without relying on hue.
+ */
+.item[data-highlighted] {
+  background-color: var(--color-bg);
+}
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  color: var(--color-accent);
+}
+
+.indicatorIcon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.itemLabel {
+  /* Tag names are user-supplied and can be a single long run. */
+  overflow-wrap: anywhere;
+}
+
+.separator {
+  height: 1px;
+  margin: var(--space-2xs) 0;
+  background-color: var(--color-border);
+}

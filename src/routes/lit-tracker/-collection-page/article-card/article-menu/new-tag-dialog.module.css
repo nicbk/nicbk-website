@@ -1,0 +1,161 @@
+/*
+ * The tag-naming dialog.
+ *
+ * Mirrors the upload modal's chrome — same scrim, same centered card, same flat
+ * actions — because they are the same kind of surface one click apart, and a
+ * separately-invented second dialog look would read as an inconsistency rather
+ * than as a distinction.
+ */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+  background-color: rgb(0 0 0 / 40%);
+}
+
+:global(:root[data-theme="dark"]) .backdrop {
+  background-color: rgb(0 0 0 / 60%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop {
+    transition: opacity var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .backdrop[data-starting-style],
+  .backdrop[data-ending-style] {
+    opacity: 0;
+  }
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  /* Narrower than the upload modal: this holds one short field, and a wide box
+     around it would read as a bigger decision than it is. */
+  width: 22rem;
+  max-width: calc(100vw - 2 * var(--space-lg));
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  /* `scale` rather than folded into `transform`, which already carries the
+     centering translation. */
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  /* The article's title is arbitrary text and often long. */
+  overflow-wrap: anywhere;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  /* `font: inherit` rather than a size: form controls do not inherit the
+     document's font family, and the site is monospace throughout. */
+  font: inherit;
+}
+
+.input:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-2xs);
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.secondary {
+  border-color: transparent;
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) {
+  .primary:hover:not(:disabled),
+  .secondary:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/*
+ * A native `:disabled` here, unlike the upload modal's Base UI button: this is
+ * a plain `<button type="submit">`, so the attribute is really set and the
+ * control is really out of the tab order. Nothing is lost by that — the field
+ * beside it says what to do, and the button becomes live as soon as it is true.
+ */
+.primary:disabled {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .primary,
+  .secondary,
+  .input {
+    transition:
+      color var(--motion-duration-fast) var(--motion-ease),
+      border-color var(--motion-duration-fast) var(--motion-ease);
+  }
+}

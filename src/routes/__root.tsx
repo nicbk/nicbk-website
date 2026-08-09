@@ -9,6 +9,7 @@ import { ErrorPage } from '~/routes/-shared/components/error-page/error-page'
 import { NotFoundPage } from '~/routes/-shared/components/not-found-page/not-found-page'
 import { SiteShell } from '~/routes/-shared/components/site-shell/site-shell'
 import { SkipLink } from '~/routes/-shared/components/skip-link/skip-link'
+import { Toaster } from '~/routes/-shared/components/toast/toaster'
 import globalsCssUrl from '~/styles/globals.css?url'
 import { themeInitScript } from '~/theme'
 import styles from './__root.module.css'
@@ -80,7 +81,15 @@ function RootDocument({ children }: RootDocumentProps) {
       </head>
       <body className={styles.body}>
         <SkipLink />
-        {children}
+        {/*
+          Wraps the whole document rather than the one sub-app that raises
+          toasts today. The provider is what `useErrorToast` reads, so mounting
+          it here is what makes "an error with no form to attach to" a site-wide
+          affordance instead of a lit-tracker one — and it means the next
+          surface that needs it imports a hook rather than also moving a mount.
+          With nothing raised it renders an empty portal.
+        */}
+        <Toaster>{children}</Toaster>
         <Scripts />
       </body>
     </html>

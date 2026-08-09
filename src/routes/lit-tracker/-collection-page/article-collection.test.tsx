@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import type { ComponentProps } from 'react'
+import { describe, expect, it, vi } from 'vitest'
 import { TRACKER_LOADING_MESSAGE } from '../-components/tracker-loading/tracker-loading'
 import type { CollectionArticle } from './article-collection'
 import {
@@ -22,6 +23,7 @@ const ARTICLES: CollectionArticle[] = [
     authors: [{ name: 'Ashish Vaswani' }, { name: 'Noam Shazeer' }],
     publicationYear: 2017,
     venue: 'Advances in Neural Information Processing Systems',
+    status: 'reading',
   },
   {
     id: '2',
@@ -29,26 +31,63 @@ const ARTICLES: CollectionArticle[] = [
     authors: [{ name: 'Claude Shannon' }],
     publicationYear: 1948,
     venue: 'Bell System Technical Journal',
+    status: 'read',
   },
 ]
 
+/** The collection with everything it needs, so a test names only its subject. */
+function renderCollection(
+  overrides: Partial<ComponentProps<typeof ArticleCollection>>,
+) {
+  return render(
+    <ArticleCollection
+      articles={[]}
+      state="ready"
+      allTags={[]}
+      tagsByArticle={new Map()}
+      onSetStatus={vi.fn()}
+      onToggleTag={vi.fn()}
+      onCreateTag={vi.fn()}
+      {...overrides}
+    />,
+  )
+}
+
 describe('ArticleCollection', () => {
   it('renders one card per article', () => {
-    render(<ArticleCollection articles={ARTICLES} state="ready" />)
+    renderCollection({ articles: ARTICLES })
 
     const cells = within(
       screen.getByRole('list', { name: 'Articles' }),
     ).getAllByRole('listitem')
 
-    expect(cells).toHaveLength(2)
+    // One list item per card, plus the chips inside each — so the cards are
+    // picked out by the grid list they are the direct children of.
     expect(cells[0]).toHaveTextContent('Attention Is All You Need')
     expect(cells[0]).toHaveTextContent('Ashish Vaswani, Noam Shazeer')
-    expect(cells[1]).toHaveTextContent('A Mathematical Theory of Communication')
-    expect(cells[1]).toHaveTextContent('Claude Shannon')
+    expect(screen.getAllByRole('article')).toHaveLength(2)
+    expect(
+      screen.getByText('A Mathematical Theory of Communication'),
+    ).toBeInTheDocument()
+  })
+
+  it('gives each card only its own tags', () => {
+    // The join is done above this component, so what it has to get right is
+    // handing the right list to the right card — the mistake that would
+    // otherwise show every tag on every card.
+    renderCollection({
+      articles: ARTICLES,
+      allTags: [{ id: 'tag-1', name: 'attention' }],
+      tagsByArticle: new Map([['1', [{ id: 'tag-1', name: 'attention' }]]]),
+    })
+
+    const [first, second] = screen.getAllByRole('article')
+    expect(first).toHaveTextContent('attention')
+    expect(second).not.toHaveTextContent('attention')
   })
 
   it('shows plain inline text when the collection is empty', () => {
-    render(<ArticleCollection articles={[]} state="ready" />)
+    renderCollection({ articles: [] })
 
     expect(screen.getByText(EMPTY_COLLECTION_MESSAGE)).toBeInTheDocument()
     expect(screen.queryByRole('list')).toBeNull()
@@ -59,7 +98,7 @@ describe('ArticleCollection', () => {
     // has not arrived and an account with nothing in it are the same empty
     // array, and saying "no articles yet" during the first sync is a lie that
     // looks exactly like data loss.
-    render(<ArticleCollection articles={[]} state="syncing" />)
+    renderCollection({ articles: [], state: 'syncing' })
 
     expect(screen.getByRole('status')).toHaveTextContent(
       TRACKER_LOADING_MESSAGE,
@@ -68,7 +107,7 @@ describe('ArticleCollection', () => {
   })
 
   it('announces a failed query instead of rendering it as an empty collection', () => {
-    render(<ArticleCollection articles={[]} state="error" />)
+    renderCollection({ articles: [], state: 'error' })
 
     expect(screen.getByRole('alert')).toHaveTextContent(
       COLLECTION_ERROR_MESSAGE,

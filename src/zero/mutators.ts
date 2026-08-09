@@ -1,7 +1,10 @@
 import type { Transaction } from '@rocicorp/zero'
 import { defineMutator, defineMutators } from '@rocicorp/zero'
 import { z } from 'zod'
-import { ARTICLE_STATUSES } from '~/db/schema/lit-tracker'
+// From the domain module, not from `db/schema` which re-exports it: this file
+// runs in the browser too, and the schema module pulls in Drizzle's Postgres
+// dialect.
+import { ARTICLE_STATUSES } from '~/lit-tracker/article-status'
 import {
   requireOwnedArticle,
   requireOwnedTag,

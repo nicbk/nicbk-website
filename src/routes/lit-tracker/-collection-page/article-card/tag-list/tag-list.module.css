@@ -1,0 +1,67 @@
+/*
+ * The chips at the foot of a card.
+ *
+ * They wrap onto as many lines as they need — a paper with eight tags is not
+ * unusual and truncating the list would hide exactly the thing the reader
+ * applied. The card's own height is uniform across the grid, so a long tag list
+ * is the one thing that can push a card's content past its box; the card scrolls
+ * nothing and clips nothing, so this is where a very heavily tagged paper shows
+ * as a fuller cell.
+ */
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* Sits against the card's foot regardless of how short the text above is,
+     which is what keeps the chip rows of neighbouring cards on one line. */
+  margin-block-start: auto;
+  padding-block-start: var(--space-xs);
+}
+
+.chip,
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  max-width: 100%;
+  padding: 0 var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  /* A tag name is arbitrary text; a long one wraps inside its chip rather than
+     widening the card past its grid cell. */
+  overflow-wrap: anywhere;
+}
+
+/*
+ * The status chip differs by icon first and by weight second — never by color
+ * alone. In grayscale it is still the one with a glyph in front of it.
+ */
+.statusChip {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
+
+.statusIcon {
+  flex-shrink: 0;
+  width: 0.85em;
+  height: 0.85em;
+}
+
+/* Announced but not drawn — the clipped-rect idiom rather than `display: none`,
+   which would take it out of the accessibility tree too. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

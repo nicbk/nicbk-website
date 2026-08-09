@@ -1,35 +1,60 @@
 import type { QueryResultDetails } from '@rocicorp/zero'
 import { useQuery } from '@rocicorp/zero/react'
+import { useMemo } from 'react'
 import { queries } from '~/zero/queries'
 import { CollectionToolbar } from '../-components/collection-toolbar/collection-toolbar'
 import type { CollectionState } from './article-collection'
 import { ArticleCollection } from './article-collection'
+import { tagsByArticle } from './article-tags'
+import { useCollectionMutations } from './use-collection-mutations'
 import styles from './collection-page.module.css'
 
 /**
  * The Lit Tracker's home surface, and the first place on this site where data
  * arrives by sync rather than by request.
  *
- * `articles.mine` is the query task 1 defined and authorized; nothing about
- * which rows come back is decided here. Calling it returns a request naming the
- * query and its arguments, which zero-cache resolves by asking
- * `/api/zero/query` for the ZQL — so this component names *what* it wants and
- * the server decides what that means for this session. A row inserted into
- * Postgres by anything at all, including a background job, reaches this list
- * the same way (research/system-architecture/reactivity-propagation.md).
+ * Nothing about *which* rows come back is decided here. Calling a query returns
+ * a request naming it, which zero-cache resolves by asking `/api/zero/query` for
+ * the ZQL — so this component names what it wants and the server decides what
+ * that means for this session. A row inserted into Postgres by anything at all,
+ * including a background job or another of this reader's open windows, reaches
+ * this list the same way
+ * (research/system-architecture/reactivity-propagation.md).
  *
- * The query is built inline on every render rather than memoized: Zero keys its
+ * Queries are built inline on every render rather than memoized: Zero keys its
  * materialized views by query hash, so the identical request resolves to the
  * identical view.
  *
+ * **This is also where writes start.** `useCollectionMutations` is called once
+ * here and its results are bound per card, so every component below this one
+ * takes callbacks and knows nothing about Zero — which is what keeps the card,
+ * the menu, and the chips assertable without a client.
+ *
  * The surface is filling in one task at a time: #7 gave it the toolbar and a
- * plain list, and #8's first task made the list a card grid. Still absent —
- * tags and the card menu, the filter rail, and search — are #8's remaining
- * three, each of which changes what this page renders without changing how it
- * asks for it.
+ * plain list, #8's first task made that a card grid, and its second added tags,
+ * reading status, and the card menu. Still absent — the filter rail and search —
+ * are #8's last two, each of which changes what this page renders without
+ * changing how it asks for it.
  */
 export function CollectionPage() {
   const [articles, details] = useQuery(queries.articles.mine())
+  // Two more synced lists, each authorized by its own `/query` entry rather
+  // than reached through the articles query's relationships. The tag list is
+  // wanted whole — a card's menu offers every tag the reader has, not only the
+  // ones already on that card — so it is a query in its own right, and the join
+  // rows come alongside it.
+  const [tags] = useQuery(queries.tags.mine())
+  const [appliedTags] = useQuery(queries.articleTags.mine())
+
+  const mutations = useCollectionMutations()
+
+  // Rebuilt when either list changes rather than on every render: this walks
+  // the whole join table, and the grid re-renders for reasons that have nothing
+  // to do with tags.
+  const tagsForArticle = useMemo(
+    () => tagsByArticle(appliedTags, tags),
+    [appliedTags, tags],
+  )
 
   return (
     <div className={styles.page}>
@@ -51,7 +76,22 @@ export function CollectionPage() {
           while the first sync is in flight would make the page look broken. */}
       <CollectionToolbar />
 
-      <ArticleCollection articles={articles} state={collectionState(details)} />
+      <ArticleCollection
+        articles={articles}
+        state={collectionState(details)}
+        allTags={tags}
+        tagsByArticle={tagsForArticle}
+        // The card knows which article it is; the mutations take that as an
+        // argument. Binding here rather than handing the whole mutations object
+        // down keeps every component below this one free of Zero.
+        onSetStatus={mutations.setStatus}
+        onToggleTag={(articleId, tagId, applied) =>
+          applied
+            ? mutations.applyTag(articleId, tagId)
+            : mutations.removeTag(articleId, tagId)
+        }
+        onCreateTag={mutations.createAndApplyTag}
+      />
     </div>
   )
 }

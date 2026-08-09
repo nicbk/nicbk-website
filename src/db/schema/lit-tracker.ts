@@ -9,6 +9,7 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core'
+import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { user } from './identity'
 
 /**
@@ -41,17 +42,12 @@ export interface Author {
 }
 
 /**
- * Where the reader has got to, in reading order.
- *
- * A value list rather than a bare union type, because two consumers need the
- * values at runtime and would otherwise each keep their own copy: the mutator
- * that validates an incoming status, and the card's status control that offers
- * the three choices. The order is the order they are offered in.
+ * Where the reader has got to. Defined away from this file — see
+ * `src/lit-tracker/article-status.ts` for why — and re-exported here so the
+ * schema still reads as the description of its own columns.
  */
-export const ARTICLE_STATUSES = ['pending', 'reading', 'read'] as const
-
-/** Where the reader has got to. Mutually exclusive by construction. */
-export type ArticleStatus = (typeof ARTICLE_STATUSES)[number]
+export { ARTICLE_STATUSES } from '~/lit-tracker/article-status'
+export type { ArticleStatus }
 
 /**
  * How much metadata the pipeline managed to attach.

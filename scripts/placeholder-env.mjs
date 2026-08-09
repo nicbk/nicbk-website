@@ -17,9 +17,11 @@
  * anything: a tool that appears to need real credentials is a tool that belongs
  * in a tier which provisions them.
  *
- * Plain `.mjs` (with a sibling `.d.mts` for the TypeScript importers) because
- * the schema generator is a standalone script run by `node`, with no build step
- * and no TypeScript loader.
+ * Plain `.mjs` because the schema generator is a standalone script run by
+ * `node`, with no build step and no TypeScript loader. Its TypeScript importers
+ * read the shape below by inference (`allowJs` in tsconfig.json); a sibling
+ * `.d.mts` used to restate it, and was deleted once that was a second copy of
+ * this object's keys rather than the only way to see them.
  */
 export const placeholderEnv = {
   DATABASE_URL: 'postgres://placeholder:placeholder@localhost:5432/unused',

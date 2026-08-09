@@ -35,6 +35,25 @@ TanStack Start package (per
   now compile errors instead of silently-`undefined` lookups. Bracket
   notation and dropping the flag were both rejected as weakening a decided
   convention.
+- **Addendum (2026-08-09): what `tsc` is pointed at, and `allowJs`.**
+  Strictness settings only bind the files the compiler is given, and
+  `tsconfig.json`'s `include` had never listed `e2e/`, `e2e-auth/`, or the
+  Playwright configs — so the entire end-to-end suite, the tier whose whole
+  job is catching what the other tiers cannot, was itself unchecked. A
+  Playwright spec could name a symbol that did not exist and nothing said so
+  until a browser ran it, which is how a missing import surfaced during
+  `article-upload-and-extraction`. Those four entries are now included, so
+  `npm run typecheck` — already a CI gate — covers them. Doing that required
+  a second decision: the suite imports a few plain-JavaScript `.mjs` modules
+  (shared port/URL constants and the stubbed upstream APIs), which are `.mjs`
+  because the signed-in-suite launcher runs them under bare `node` with no
+  build step. **`allowJs` is enabled** (with `checkJs` left off) so those
+  imports are typed by inference from the modules themselves. The alternative,
+  a hand-written `.d.mts` beside each, was rejected as a second copy of every
+  signature with nothing keeping it honest — the one such file that existed
+  (`scripts/placeholder-env.d.mts`) was deleted in the same change, and it had
+  already drifted to the point of asserting that this project does not enable
+  `allowJs`.
 
 **`type` vs. `interface`:** `interface` for object shapes and component
 props (better extensibility via declaration merging, cleaner editor

@@ -49,13 +49,22 @@ documented and no record-replay tooling is warranted.
   and are absent from the publication Zero reads. Worth asserting once, here,
   where they first exist.
 
-## End-to-end (Playwright, GROBID mocked via the mock-server container)
+## End-to-end (Playwright, GROBID mocked by pointing `GROBID_URL` at a stub)
 
-GROBID is mocked in e2e by pointing `GROBID_URL` at a WireMock/MockServer
-container in the compose stack — a **config swap, not an interception
-library** — because these calls originate server-side in a different container
-from the test runner. The accepted consequence is stated plainly: **e2e never
-exercises the real GROBID.**
+GROBID is mocked in e2e by pointing `GROBID_URL` at a stub — a **config swap,
+not an interception library**. The accepted consequence is stated plainly:
+**e2e never exercises the real GROBID.**
+
+**Revision (2026-08-08):** the stub is a small HTTP server the tier's launcher
+starts (`e2e-auth/support/grobid-stub.mjs`), not the WireMock/MockServer
+container this originally named. The container exists for calls originating in
+a *separate* container from the test runner; the signed-in tier's app server is
+a local process Playwright starts, so that constraint does not apply. The
+mechanism — configuration, not interception — is unchanged. Each uploaded file
+carries its own directive for the stub, which is what lets one submission
+contain a document that extracts and one that cannot. Recorded as a dated
+revision in
+[mocking-external-services.md](../../../../research/testing-qa/mocking-external-services.md).
 
 - **Full round-trip, no reload:** submitting a fixture PDF closes the modal, a
   job row appears, and then — without any navigation or refresh — the row

@@ -55,6 +55,7 @@ const validEnvironment = {
   GARAGE_ACCESS_KEY_ID: `GK${'a'.repeat(24)}`,
   GARAGE_SECRET_ACCESS_KEY: 'f'.repeat(64),
   GARAGE_BUCKET: 'nicbk-website',
+  GROBID_URL: 'http://grobid:8070',
 }
 
 describe('the application environment schema', () => {
@@ -78,6 +79,7 @@ describe('the application environment schema', () => {
     'GARAGE_ACCESS_KEY_ID',
     'GARAGE_SECRET_ACCESS_KEY',
     'GARAGE_BUCKET',
+    'GROBID_URL',
   ])('refuses to start without %s', (variable) => {
     const incomplete: Record<string, string> = { ...validEnvironment }
     delete incomplete[variable]
@@ -137,13 +139,13 @@ describe('the application environment schema', () => {
     ).toThrowError(/GARAGE_ACCESS_KEY_ID/)
   })
 
-  it('rejects a Garage endpoint that is not an HTTP URL', () => {
+  it.each([
+    'GARAGE_ENDPOINT',
+    'GROBID_URL',
+  ])('rejects a %s that is not an HTTP URL', (variable) => {
     expect(() =>
-      parseEnv(envSchema, {
-        ...validEnvironment,
-        GARAGE_ENDPOINT: 'garage:3900',
-      }),
-    ).toThrowError(/GARAGE_ENDPOINT/)
+      parseEnv(envSchema, { ...validEnvironment, [variable]: 'host:8070' }),
+    ).toThrowError(new RegExp(variable))
   })
 
   it('keeps every variable server-only', () => {

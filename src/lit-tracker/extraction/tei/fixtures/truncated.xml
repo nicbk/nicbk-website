@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  A response cut off mid-document — a connection dropped between GROBID and the
+  worker, or a proxy that gave up. fast-xml-parser is lenient enough to return a
+  partial tree for this, which is why the parser validates before it parses:
+  without that, a truncated response would arrive as an article with mysteriously
+  missing metadata rather than as a failure.
+-->
+<TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0">
+	<teiHeader xml:lang="en">
+		<fileDesc>
+			<titleStmt>
+				<title level="a" type="main">A Document That Never Finished

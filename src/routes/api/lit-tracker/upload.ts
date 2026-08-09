@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getSession } from '~/auth/auth'
 import { db, pool } from '~/db/client'
-import { getQueue } from '~/lit-tracker/upload/queue'
+import { getQueue } from '~/lit-tracker/jobs/queue'
 import { respondToUpload } from '~/lit-tracker/upload/upload-endpoint'
 
 /**

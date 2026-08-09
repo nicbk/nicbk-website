@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  An arXiv preprint — the common case for this collection, and the one that
+  exercises every "legitimately absent" field at once: no venue, no DOI, and a
+  reference section GROBID found no entries in.
+
+  Its author list also carries the two degenerate `<author>` shapes real output
+  contains: a `<persName>` with a surname and no forename, and an author GROBID
+  could not segment at all, left as the element's own raw text.
+-->
+<TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+	<teiHeader xml:lang="en">
+		<fileDesc>
+			<titleStmt>
+				<title level="a" type="main">Incremental View Maintenance on the Client</title>
+			</titleStmt>
+			<publicationStmt>
+				<publisher/>
+				<availability status="unknown">
+					<licence/>
+				</availability>
+				<date type="published" when="2023-06-19">19 Jun 2023</date>
+			</publicationStmt>
+			<sourceDesc>
+				<biblStruct status="extracted">
+					<analytic>
+						<author>
+							<persName><forename type="first">Wei</forename><surname>Zhang</surname></persName>
+						</author>
+						<author>
+							<persName><surname>Okonkwo</surname></persName>
+						</author>
+						<author>the Sync Working Group</author>
+						<title level="a" type="main">Incremental View Maintenance on the Client</title>
+					</analytic>
+					<monogr>
+						<imprint>
+							<date type="published" when="2023">2023</date>
+						</imprint>
+					</monogr>
+					<idno type="arXiv">arXiv:2306.11122v2[cs.DB]</idno>
+				</biblStruct>
+			</sourceDesc>
+		</fileDesc>
+		<profileDesc>
+			<abstract>
+<div xmlns="http://www.tei-c.org/ns/1.0"><p>We describe an incremental view maintenance algorithm that runs entirely in the browser against a replicated subset of the primary database.</p></div>
+			</abstract>
+		</profileDesc>
+	</teiHeader>
+	<text xml:lang="en">
+		<body>
+			<div xmlns="http://www.tei-c.org/ns/1.0"><head n="1">Introduction</head><p>Maintaining a view incrementally is cheaper than recomputing it.</p></div>
+		</body>
+		<back>
+			<div type="references">
+				<listBibl/>
+			</div>
+		</back>
+	</text>
+</TEI>

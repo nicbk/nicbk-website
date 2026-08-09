@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The mirror of no-authors.xml: authors, an abstract and a year, but an empty
+  `<titleStmt>`. GROBID emits this for a PDF whose first page is a cover sheet,
+  where the authors are recoverable and the title is not.
+-->
+<TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<teiHeader xml:lang="en">
+		<fileDesc>
+			<titleStmt/>
+			<publicationStmt>
+				<publisher/>
+				<availability status="unknown">
+					<licence/>
+				</availability>
+			</publicationStmt>
+			<sourceDesc>
+				<biblStruct status="extracted">
+					<analytic>
+						<author>
+							<persName><forename type="first">Hélène</forename><surname>Marchand</surname></persName>
+						</author>
+					</analytic>
+					<monogr>
+						<imprint>
+							<date type="published" when="2020">2020</date>
+						</imprint>
+					</monogr>
+				</biblStruct>
+			</sourceDesc>
+		</fileDesc>
+		<profileDesc>
+			<abstract>
+<div xmlns="http://www.tei-c.org/ns/1.0"><p>A short report on cover sheets and the metadata they hide.</p></div>
+			</abstract>
+		</profileDesc>
+	</teiHeader>
+	<text xml:lang="en">
+		<body>
+			<div xmlns="http://www.tei-c.org/ns/1.0"><p>The cover sheet is the enemy of the extractor.</p></div>
+		</body>
+	</text>
+</TEI>

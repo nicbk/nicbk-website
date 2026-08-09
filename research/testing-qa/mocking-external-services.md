@@ -116,6 +116,37 @@ If Better Auth later ships a `tokenEndpoint` override, the preload can be
 replaced by a config swap and the mechanism returns to what this file
 originally described.
 
+### Revision (2026-08-08, at implementation time): GROBID's stub is a process, not a container
+
+Building the extraction pipeline
+(`features/article-upload-and-extraction/tasks/grobid-extraction-pipeline`)
+kept the substance of the decision above and changed only its packaging.
+**The mechanism is exactly the one this file specifies** — `GROBID_URL` is
+pointed at a stub, a config swap rather than an interception library, and
+the accepted coverage gap ("e2e never exercises the real GROBID") stands
+unchanged. What is not a container is the stub itself
+(`e2e-auth/support/grobid-stub.mjs`, started by the tier's launcher).
+
+The container was chosen for calls originating in a *separate* container
+from the test runner. In the signed-in tier the app server is a local
+process Playwright starts — the same reason the Google token stub is
+in-process — so that constraint does not apply, and a container would add an
+image pull to every run for a few hundred bytes of XML.
+
+One premise above did weaken and is worth naming: the "~4 GB RAM footprint"
+describes `grobid:0.9.1-full`, and the stack runs `0.9.1-crf` (~510 MB,
+CPU-only), which starts in well under a minute. Mocking still holds on the
+other two grounds — non-deterministic extraction output, and a real GROBID
+call taking around fifteen seconds per paper — but it is no longer the
+resource argument it was written as.
+
+One thing worth carrying: the stub reads its instruction out of **the
+uploaded file itself** (a `% grobid-stub {...}` directive line), rather than
+holding state a test sets beforehand. That is what lets one submission
+contain a document that extracts and one that cannot — the case a per-job
+pipeline is most likely to get wrong — and it keeps the stub stateless
+between requests.
+
 ### Fixtures: hand-curated, no record-once-replay tooling
 
 GROBID's TEI-XML output format is stable and documented, and GROBID's own

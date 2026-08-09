@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  A document GROBID read a title out of but no authors — what a scanned or
+  heavily-formatted PDF typically produces. This is the fixture behind the
+  decided "couldn't find authors" failure reason.
+-->
+<TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<teiHeader xml:lang="en">
+		<fileDesc>
+			<titleStmt>
+				<title level="a" type="main">Notes Toward a Theory of Filing</title>
+			</titleStmt>
+			<publicationStmt>
+				<publisher/>
+				<availability status="unknown">
+					<licence/>
+				</availability>
+			</publicationStmt>
+			<sourceDesc>
+				<biblStruct status="extracted">
+					<analytic>
+						<title level="a" type="main">Notes Toward a Theory of Filing</title>
+					</analytic>
+					<monogr>
+						<imprint/>
+					</monogr>
+				</biblStruct>
+			</sourceDesc>
+		</fileDesc>
+		<profileDesc>
+			<abstract/>
+		</profileDesc>
+	</teiHeader>
+	<text xml:lang="en">
+		<body>
+			<div xmlns="http://www.tei-c.org/ns/1.0"><p>Every filing system is a theory of what will be looked for.</p></div>
+		</body>
+		<back>
+			<div type="references">
+				<listBibl/>
+			</div>
+		</back>
+	</text>
+</TEI>

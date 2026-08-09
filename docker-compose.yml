@@ -4,9 +4,8 @@
 # `docker compose up` locally auto-merges the override for dev/HMR.
 # See research/devops-deployment/containerization-and-build.md.
 #
-# Later features add their services (Garage, GROBID) as siblings under
-# `services:`, attached to `app-internal`; the CI runner gets its own separate
-# network (research/devops-deployment/ci-pipeline.md).
+# Every service is attached to `app-internal`; the CI runner gets its own
+# separate network (research/devops-deployment/ci-pipeline.md).
 # The app server and the migration step run the same image: the migrator is a
 # bundled script baked into it (see the Dockerfile), so there is one image to
 # build, push, and keep in step with the schema it migrates.
@@ -100,6 +99,12 @@ services:
       # its absence one request at a time.
       garage-init:
         condition: service_completed_successfully
+      # Started, not healthy: the extraction worker runs inside this process and
+      # retries a GROBID that is still loading its models, so waiting minutes
+      # for that would delay serving pages for no benefit. The dependency is
+      # declared so `up app` brings the service it needs.
+      grobid:
+        condition: service_started
     restart: unless-stopped
     networks:
       - app-internal
@@ -235,6 +240,39 @@ services:
         condition: service_healthy
     # Re-running is a no-op: the script checks each step before doing it.
     restart: "no"
+    networks:
+      - app-internal
+
+  grobid:
+    # Turns an uploaded PDF into structured TEI-XML
+    # (research/technologies/pdf-metadata-extraction.md). Long-lived rather than
+    # one-shot: it loads its models at startup and then answers one blocking
+    # HTTP call per PDF, which is why the app wraps it in a job queue rather
+    # than calling it from a request
+    # (research/system-architecture/background-jobs.md).
+    #
+    # The `-crf` image, deliberately: ~510 MB against `-full`'s ~14.8 GB, and
+    # CPU-only. It costs a few F1 points on citation parsing and leaves header
+    # extraction — the title, authors, abstract, year and DOI this task
+    # actually reads — essentially unaffected. Moving to `0.9.1-full` is a
+    # one-line change if that ever stops being true.
+    #
+    # Nothing is published to the host in production. GROBID has no
+    # authentication of its own, so being unaddressable from outside
+    # `app-internal` is the whole of its access control.
+    image: grobid/grobid:0.9.1-crf
+    healthcheck:
+      # GROBID's own liveness endpoint. Only informational — nothing gates on
+      # it, because the worker retries a service that is not up yet — but a
+      # loading GROBID and a broken one look identical in `docker compose ps`
+      # without it.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8070/api/isalive || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      # Model loading, before the first request is answered.
+      start_period: 120s
+    restart: unless-stopped
     networks:
       - app-internal
 

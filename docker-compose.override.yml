@@ -37,6 +37,13 @@ services:
       - .:/app
       - /app/node_modules
 
+  grobid:
+    # Published locally for the same reason Garage is: a server started with
+    # `npm run dev` outside Docker reaches the same extraction service the
+    # containerized app uses. Never published in production.
+    ports:
+      - "8070:8070"
+
   app:
     build:
       target: dev

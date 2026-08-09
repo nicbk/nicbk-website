@@ -1,5 +1,5 @@
 import type { DatabaseHandle } from '~/db/create-database'
-import type { JobQueue } from './queue'
+import type { JobQueue } from '~/lit-tracker/jobs/queue'
 import { storeUpload } from './store-upload'
 import type { CandidateFile, UploadRejection } from './validation'
 import {

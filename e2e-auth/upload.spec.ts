@@ -2,9 +2,8 @@ import { randomUUID } from 'node:crypto'
 import type { Page } from '@playwright/test'
 import { expect, test, toggleThemeTo } from '../e2e/fixtures'
 import {
+  clearUploadsOf,
   closeArticleConnection,
-  deleteUploadJobsOf,
-  failUploadJobsOf,
   signedInUserId,
 } from './support/articles'
 import { signInAndLandOn } from './support/sign-in'
@@ -18,10 +17,14 @@ import { signInAndLandOn } from './support/sign-in'
  * accepted; the row the popup lists comes from Postgres through zero-cache, so
  * these tests fail if the write happened but the reactive path did not.
  *
- * Nothing resolves a job yet — the extract stage is task 4 — so an uploaded
- * file stays in `processing`. Each test clears its own rows on the way out,
- * because that state would otherwise leak into the next one through the status
- * indicator.
+ * **This file is about a job appearing, not about it resolving.** Since task 4
+ * the extraction worker really does drain the queue, so a row that would once
+ * have sat in `processing` for the rest of the run now disappears a second
+ * later — which would make every count below a race. So the PDFs here tell the
+ * stubbed GROBID it has no capacity (see e2e-auth/support/grobid-stub.mjs): the
+ * job is retried with the production backoff, which outlives any test, and the
+ * row stays put for a genuine reason. Resolution is extraction.spec.ts's
+ * subject.
  *
  * Runs before user-settings.spec.ts alphabetically, which matters: that file
  * deletes the shared account on its way out.
@@ -29,12 +32,21 @@ import { signInAndLandOn } from './support/sign-in'
 
 const TRACKER = '/lit-tracker'
 
-/** A minimal file that really is a PDF — the server checks the magic bytes. */
-function pdfFile(name: string) {
+/**
+ * A minimal file that really is a PDF — the server checks the magic bytes —
+ * carrying an instruction for the stubbed extraction service.
+ *
+ * `overloaded` by default here: these tests need the job to still exist when
+ * they look at it, and a service with no capacity is the honest way to arrange
+ * that. See e2e-auth/support/grobid-stub.mjs for the directive's format.
+ */
+function pdfFile(name: string, instruction: object = { fail: 'overloaded' }) {
   return {
     name,
     mimeType: 'application/pdf',
-    buffer: Buffer.from(`%PDF-1.7\n% ${randomUUID()}\n%%EOF\n`),
+    buffer: Buffer.from(
+      `%PDF-1.7\n% ${randomUUID()}\n% grobid-stub ${JSON.stringify(instruction)}\n%%EOF\n`,
+    ),
   }
 }
 
@@ -69,11 +81,11 @@ test.afterAll(async () => {
 test.describe('uploading PDFs', () => {
   test.beforeEach(async ({ page }) => {
     await signInAndLandOn(page, TRACKER)
-    await deleteUploadJobsOf(await signedInUserId(page))
+    await clearUploadsOf(await signedInUserId(page))
   })
 
   test.afterEach(async ({ page }) => {
-    await deleteUploadJobsOf(await signedInUserId(page))
+    await clearUploadsOf(await signedInUserId(page))
   })
 
   test('stores a PDF and shows its job live, with no reload', async ({
@@ -142,11 +154,11 @@ test.describe('uploading PDFs', () => {
 test.describe('the upload status indicator', () => {
   test.beforeEach(async ({ page }) => {
     await signInAndLandOn(page, TRACKER)
-    await deleteUploadJobsOf(await signedInUserId(page))
+    await clearUploadsOf(await signedInUserId(page))
   })
 
   test.afterEach(async ({ page }) => {
-    await deleteUploadJobsOf(await signedInUserId(page))
+    await clearUploadsOf(await signedInUserId(page))
   })
 
   test('rests as a checkmark that is not a control', async ({ page }) => {
@@ -179,22 +191,24 @@ test.describe('the upload status indicator', () => {
     page,
   }) => {
     const picker = await openUploadModal(page)
-    await picker.setInputFiles(pdfFile('unreadable.pdf'))
+    // A document the stubbed GROBID answers for exactly as the real one does
+    // for a file it cannot read. Task 3 wrote this row with psql because
+    // nothing resolved a job then; the real pipeline does it now.
+    await picker.setInputFiles(
+      pdfFile('unreadable.pdf', { fail: 'unreadable' }),
+    )
     await submit(page)
     await expect(page.getByLabel(/PDFs/i)).toBeHidden()
-
-    // Task 4's pipeline is what will really do this; writing the row directly
-    // exercises the state the component renders, and it arrives by sync exactly
-    // as the real one will.
-    await failUploadJobsOf(await signedInUserId(page), "couldn't find authors")
 
     const warning = page.getByRole('button', {
       name: 'Some uploads need attention',
     })
-    await expect(warning).toBeVisible()
+    // No reload and no interaction: the worker's write arrives by sync, from
+    // another part of the process entirely.
+    await expect(warning).toBeVisible({ timeout: 30_000 })
 
     await warning.click()
-    await expect(jobRows(page).first()).toContainText("couldn't find authors")
+    await expect(jobRows(page).first()).toContainText("couldn't read this PDF")
     await expect(jobRows(page).first()).toContainText('unreadable.pdf')
   })
 })
@@ -202,11 +216,11 @@ test.describe('the upload status indicator', () => {
 test.describe('upload surfaces across themes and widths', () => {
   test.beforeEach(async ({ page }) => {
     await signInAndLandOn(page, TRACKER)
-    await deleteUploadJobsOf(await signedInUserId(page))
+    await clearUploadsOf(await signedInUserId(page))
   })
 
   test.afterEach(async ({ page }) => {
-    await deleteUploadJobsOf(await signedInUserId(page))
+    await clearUploadsOf(await signedInUserId(page))
   })
 
   for (const width of [320, 768, 1440]) {

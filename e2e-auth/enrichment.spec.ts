@@ -8,7 +8,11 @@ import {
   enrichmentOfArticle,
   signedInUserId,
 } from './support/articles'
-import { STUB_VENUE, STUB_YEAR } from './support/semantic-scholar-stub.mjs'
+import {
+  REFERENCE_LIST_ONLY_TITLE,
+  STUB_VENUE,
+  STUB_YEAR,
+} from './support/semantic-scholar-stub.mjs'
 import { signInAndLandOn } from './support/sign-in'
 
 /**
@@ -143,15 +147,19 @@ test.describe('enrichment, end to end', () => {
       })
     }).toPass({ timeout: RESOLVES_IN })
 
-    // Both references became edges — the resolvable one carrying its paper id,
-    // the other a placeholder that is still a row.
+    // Both references became edges, and — the part that makes the graph
+    // usable — *both* carry a paper id. The second printed no identifier at
+    // all; its id came from Semantic Scholar's own reference list for the
+    // citing paper, which is how a machine-learning bibliography gets resolved.
     const edges = await citationEdgesOf(userId)
     expect(edges.map((edge) => edge.title)).toEqual([
       'A Reference Semantic Scholar Knows',
-      'A Reference With No Identifier',
+      REFERENCE_LIST_ONLY_TITLE,
     ])
     expect(edges[0]?.semantic_scholar_id).toBe('s2-a-reference')
-    expect(edges[1]?.semantic_scholar_id).toBeNull()
+    expect(edges[1]?.semantic_scholar_id).toBe(
+      's2-known-only-to-the-reference-list',
+    )
   })
 
   test('still completes the upload when Semantic Scholar is down', async ({

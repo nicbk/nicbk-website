@@ -107,6 +107,13 @@ Added beyond this list, because the implementation created the risk:
   from, and an off-by-one there points every citation edge at a plausible wrong
   paper. Covered in `enrichment/client.test.ts`, including a `null` in the
   middle of a response.
+- **Reference-list alignment** (`enrichment/reference-list.test.ts`): the
+  specific ways GROBID mangles a printed title — a kept year prefix, a trailing
+  archive name, a leading author fragment, a lost hyphen, a truncation — each
+  taken from real output, plus the ambiguity and short-overlap cases it must
+  refuse. This is what takes the citation graph from 13% to 96% full on a
+  machine-learning paper, so its false-positive guards matter as much as its
+  hits.
 - **The rate limiter's own behaviour** (`enrichment/throttle.test.ts`):
   serialization, adaptive spacing, and that a rejection is waited out **once**
   rather than twice — the bug that made a single failed enrichment take over

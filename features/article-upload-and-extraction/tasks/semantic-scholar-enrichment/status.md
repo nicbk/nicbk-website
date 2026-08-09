@@ -28,6 +28,10 @@
 - **`SEMANTIC_SCHOLAR_URL`** (required) and **`SEMANTIC_SCHOLAR_API_KEY`**
   (optional), plus an in-process Semantic Scholar stub for the signed-in e2e
   tier.
+- **`enrichment/reference-list.ts`** — the piece that actually fills the graph:
+  aligning GROBID's parsed bibliography with Semantic Scholar's own reference
+  list for the same paper, so references that printed no identifier still
+  resolve. See the measurements below.
 
 ## What the real services actually did
 
@@ -69,18 +73,45 @@ Semantic Scholar returns **null** for `ARXIV:1706.03762v7` and resolves
 `arXiv:1706.03762v7[cs.CL]` — so normalizing it is load-bearing, not tidying.
 Verified against the live API.
 
-### A GROBID-only edge can never match an enriched article
+### The graph only fills in because Semantic Scholar's own reference list is used
 
-The decided rule is ID-first with a title fallback **only when neither side
-has an ID**. Real consequence, found in the browser: *BERT* cites *Attention Is
-All You Need*, both are in the collection, and the edge does **not** graduate —
-BERT's reference list names it as a NeurIPS paper with no arXiv id, so the edge
-has no ID while the article has one, and the fallback correctly declines.
+Originally this task resolved an edge only from an identifier the citing paper
+printed. That is enough for biomedical bibliographies and almost useless for
+machine-learning ones, which cite proceedings by name: 47 of BERT's 54
+references carry no identifier of any kind. Worse, the decided matching rule
+declines when only one side has an ID — so *BERT* citing *Attention Is All You
+Need*, with both papers in the collection, did **not** graduate.
 
-This is the rule working as specified, not a defect, and the false-positive
-risk it avoids is real. But it means the graph fills in best where
-bibliographies print identifiers (biomedical) and worst where they do not (ML
-proceedings). The cheap improvement is recorded under "Deferred" below.
+The user rejected that as insufficient, and rightly: ML proceedings are the
+main use case. The fix is `GET /paper/{id}/references` — Semantic Scholar's own
+resolved reference list for the uploaded paper, **one** extra request, every
+entry carrying a `paperId`, matched onto GROBID's parsed entries locally by
+title (`enrichment/reference-list.ts`).
+
+Measured on the same real papers, references resolved to a paper:
+
+| citing paper | before | after |
+|---|---|---|
+| *BERT* | 7/54 (13%) | **52/54 (96%)** |
+| *Attention Is All You Need* | 15/39 (38%) | **38/39 (97%)** |
+| *Convolutional Sequence to Sequence Learning* | 13/46 (28%) | **43/46 (93%)** |
+| PLOS ONE article | 39/41 (95%) | **41/41 (100%)** |
+
+*BERT* now graduates against *Attention Is All You Need* in the real
+collection. **The graduation rule was not loosened** — the identifiers simply
+exist before it runs, so the strict ID-first path does the work.
+
+Title matching is used for the alignment and *not* for graduation because the
+candidate sets differ in kind: graduation compares against a whole collection,
+alignment against the ~50 papers this exact paper cited. That closed set is
+what pays for a normalization tolerant enough to absorb GROBID keeping a year
+prefix ("2018a. Deep contextualized word representations"), a trailing archive
+name ("… in Linear Time. arXiv") or an author fragment. All four containment
+matches in the sample were inspected by hand and were correct.
+
+What remains is GROBID mis-parsing — a reference merged with its neighbour, a
+title truncated past recognition — which #11's article-edit is the escape hatch
+for.
 
 ### Semantic Scholar throttles by load, not by quota
 
@@ -126,20 +157,32 @@ signed-in e2e suite went from 9.1 minutes to 4.0.
   assert the enrichment in the database, with the reason written where the
   helper is defined.
 
-## Deferred
+## A gap this tier caught
 
-- **`GET /paper/{id}/references`** would give Semantic Scholar's own resolved
-  reference list for the uploaded paper in **one** extra request, and could
-  supply IDs to the identifier-less entries by matching titles locally — the
-  case above where *BERT* fails to reach *Attention*. Raised during research
-  and left out of this task by agreement. Worth reconsidering when #10 makes
-  the gaps visible.
+The e2e Semantic Scholar stub first returned the reference list as a bare
+array; the real endpoint wraps it in `{ "data": [ { "citedPaper": … } ] }`. The
+client parsed nothing, every edge stayed unresolved, and **every unit and
+integration test still passed** — because they stub the client's own return
+type rather than its wire format. Only the signed-in e2e tier, which speaks
+HTTP to a separate stub, could see it. Worth remembering the next time that
+tier looks like duplicated coverage.
+
+Separately: `e2e/` and `e2e-auth/` are **not** in `tsconfig.json`'s `include`,
+so `tsc --noEmit` never typechecks the Playwright specs. A missing import in a
+spec surfaced only at runtime during this task. Pre-existing, not fixed here.
 
 ## Log
 
 - 2026-08-01 — Task defined during the feature spec. Fifth of five. Populating
   `citation_edges` here rather than deferring to #10 was a user decision at
   spec time.
+- 2026-08-09 — Reference-list alignment added after the user judged
+  identifier-only resolution insufficient for machine-learning proceedings,
+  which are the collection's main case. Coverage across three real ML papers
+  went from 13/38/28% to 96/97/93%, and *BERT* now graduates against
+  *Attention Is All You Need*. The enrich retry policy was trimmed to two
+  retries in the same change, since the extra request lengthened the window a
+  row spends reading "in progress".
 - 2026-08-09 — Researched the API against the live service (batch limits, the
   404 on an unmatched title, the missing rate-limit headers, the arXiv version
   suffix), agreed the four open design questions with the user, and

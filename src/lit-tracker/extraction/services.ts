@@ -1,6 +1,7 @@
 import type { DatabaseHandle } from '~/db/create-database'
 import type { SemanticScholarPaper } from '~/lit-tracker/enrichment/client'
 import { createSemanticScholarClient } from '~/lit-tracker/enrichment/client'
+import type { ReferenceCandidate } from '~/lit-tracker/enrichment/reference-list'
 import type { JobQueue } from '~/lit-tracker/jobs/queue'
 import { getArticlePdf } from '~/storage/pdf-storage'
 import { requestTei } from './grobid'
@@ -32,6 +33,11 @@ export interface ExtractionServices {
   lookupPapers: (keys: string[]) => Promise<Map<string, SemanticScholarPaper>>
   /** The last resort for a paper carrying no identifier at all. */
   matchPaperByTitle: (title: string) => Promise<SemanticScholarPaper | null>
+  /**
+   * Semantic Scholar's own reference list for a paper — where the identifiers
+   * for references that printed none come from.
+   */
+  fetchReferences: (paperId: string) => Promise<ReferenceCandidate[]>
 }
 
 /**
@@ -58,5 +64,6 @@ export function productionServices(
     extractMetadata: async (pdf) => parseTei(await requestTei(pdf)),
     lookupPapers: semanticScholar.lookupPapers,
     matchPaperByTitle: semanticScholar.matchByTitle,
+    fetchReferences: semanticScholar.fetchReferences,
   }
 }

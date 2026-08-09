@@ -165,6 +165,8 @@ interface Stub {
   papers?: Record<string, SemanticScholarPaper>
   match?: SemanticScholarPaper | null
   unavailable?: boolean
+  /** Semantic Scholar's own reference list, keyed by the citing paper's id. */
+  references?: Record<string, { paperId: string; title: string | null }[]>
 }
 
 function servicesWith(metadata: ExtractedMetadata, stub: Stub = {}) {
@@ -189,6 +191,12 @@ function servicesWith(metadata: ExtractedMetadata, stub: Stub = {}) {
         throw new SemanticScholarUnavailableError('429 after backoff')
       }
       return stub.match ?? null
+    },
+    fetchReferences: async (paperId: string) => {
+      if (stub.unavailable) {
+        throw new SemanticScholarUnavailableError('429 after backoff')
+      }
+      return stub.references?.[paperId] ?? []
     },
   }
 }
@@ -356,6 +364,100 @@ describe('a successful enrichment', () => {
       title: 'A Reference With No Identifier',
       publication_year: 2019,
       authors: [{ name: 'Someone Hopper', family: 'Hopper' }],
+      cited_article_id: null,
+    })
+  })
+})
+
+describe('references that printed no identifier', () => {
+  it('resolves them from the citing paper own reference list', async () => {
+    // The case a machine-learning bibliography is mostly made of: the document
+    // names a proceedings paper and no DOI or arXiv id. The identifier can only
+    // come from Semantic Scholar's own record of what this paper cited.
+    const articleId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        bibliography: [reference('A Reference Named Only By Title', 'Hopper')],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [
+            {
+              paperId: 's2-by-title',
+              title: 'A Reference Named Only By Title',
+            },
+          ],
+        },
+      },
+    )
+
+    expect((await edgesOf(articleId))[0]).toMatchObject({
+      semantic_scholar_id: 's2-by-title',
+    })
+  })
+
+  it('graduates one against an article the printed reference could never reach', async () => {
+    // The end-to-end point of the whole mechanism. Without the reference list,
+    // this edge has no id while the cited article has one, so the decided
+    // matching rule declines and the two never connect — even with both papers
+    // sitting in the same collection.
+    const citedId = await uploadAndSettle(
+      'cited.pdf',
+      extraction({
+        title: 'A Reference Named Only By Title',
+        identifiers: { doi: '10.1/cited', arxivId: null, pubmedId: null },
+      }),
+      { papers: { 'DOI:10.1/cited': paper({ paperId: 's2-by-title' }) } },
+    )
+
+    const citingId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        title: 'The Citing Paper',
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        // No identifier on the reference itself.
+        bibliography: [reference('A Reference Named Only By Title', 'Hopper')],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [
+            {
+              paperId: 's2-by-title',
+              title: 'A Reference Named Only By Title',
+            },
+          ],
+        },
+      },
+    )
+
+    expect((await edgesOf(citingId))[0]).toMatchObject({
+      semantic_scholar_id: 's2-by-title',
+      cited_article_id: citedId,
+    })
+  })
+
+  it('leaves an entry the reference list does not cover as a placeholder', async () => {
+    const articleId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        bibliography: [reference('Something Nobody Recorded', 'Hopper')],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [{ paperId: 's2-other', title: 'A Different Paper' }],
+        },
+      },
+    )
+
+    // Still a row, still renderable from its own columns.
+    expect((await edgesOf(articleId))[0]).toMatchObject({
+      title: 'Something Nobody Recorded',
+      semantic_scholar_id: null,
       cited_article_id: null,
     })
   })

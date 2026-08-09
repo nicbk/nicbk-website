@@ -147,33 +147,45 @@ The schema above was built exactly as specified and the matching rule was
 implemented exactly as written. Two things are worth recording, because both
 are invisible until real papers go through it.
 
-### The asymmetric case is more common than it sounds
+### The rule is sound, but it needed the IDs to exist
 
-"Only fall back when *neither* side has an ID" was chosen to keep the
-false-positive risk near zero, and it does. But an *enriched* article always
-has an ID, so it can only ever be matched by an edge that also has one — and
-whether an edge has one depends entirely on whether the citing paper printed an
-identifier for that reference.
+"Only fall back when *neither* side has an ID" keeps the false-positive risk
+near zero, and it does. But an *enriched* article always has an ID, so it can
+only ever be matched by an edge that also has one — and whether an edge has one
+depends entirely on whether the citing paper printed an identifier for that
+reference. Most do not: a machine-learning bibliography cites proceedings by
+name.
 
-Observed directly: *BERT* cites *Attention Is All You Need*, both are in the
-collection, and the edge does not graduate. BERT's reference list names it as a
-NeurIPS paper with no arXiv id, so the edge has no ID and the article does. The
-rule declines, correctly by its own terms.
+Observed directly, before the fix below: *BERT* cites *Attention Is All You
+Need*, both were in the collection, and the edge did not graduate. The rule
+declined correctly by its own terms, and the graph was 13% full for BERT and
+95% full for a PLOS ONE article whose bibliography printed DOIs throughout.
 
-The practical shape of this: the graph fills in well where bibliographies print
-identifiers and poorly where they do not. Across four real papers, references
-resolved to a Semantic Scholar paper 39/41 of the time for a PLOS ONE article
-(DOIs and PubMed ids throughout) and 7/54 for BERT.
+**The rule was not changed.** What changed is that the IDs now exist before it
+runs. `GET /paper/{id}/references` returns Semantic Scholar's own resolved
+reference list for the citing paper — one request, every entry carrying a
+`paperId` — and those are matched onto the parsed entries locally by title
+(`src/lit-tracker/enrichment/reference-list.ts`). An identifier-less edge
+therefore arrives at the graduation rule already carrying an ID, so the
+ID-first path does the work and the loose fallback stays where it was.
 
-This is not proposed as a change to the rule — the reasoning for it stands, and
-loosening it is exactly the fuzzy matching it was chosen over. The cheap
-improvement, deferred by agreement, is `GET /paper/{id}/references`: Semantic
-Scholar's own resolved reference list for the citing paper, one extra request,
-matched to the parsed entries locally by normalized title. That gives the
-identifier-less edges an ID *before* the rule runs, so the ID-first path does
-the work instead of the fallback. Worth revisiting when
-[citation-graph.md (component)](../ui-ux/pages/lit-tracker/components/citation-graph.md)
-makes the gaps visible.
+Measured on the same four papers, references resolving to a Semantic Scholar
+paper: 13% → 96% (BERT), 38% → 97% (*Attention*), 28% → 93%
+(*Convolutional Sequence to Sequence Learning*), 95% → 100% (PLOS ONE). *BERT*
+now graduates against *Attention Is All You Need*.
+
+Title matching is used there and not here because the candidate sets are
+different in kind. Graduation compares against an entire collection, where a
+false positive links two unrelated papers forever. Reference alignment compares
+against **the ~50 papers this exact paper cited**, both sides describing the
+same reference — which is what pays for a normalization tolerant enough to
+absorb GROBID keeping a year prefix or a trailing venue on a title. The two
+must not be merged.
+
+What remains unresolved is GROBID mis-parsing rather than anything this layer
+can reach: a reference merged with its neighbour, or a title truncated past
+recognition. [article-edit.md](../ui-ux/pages/lit-tracker/components/article-edit.md)
+is the escape hatch for those.
 
 ### The surname is compared, not the whole name
 

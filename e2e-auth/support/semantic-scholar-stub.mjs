@@ -29,6 +29,11 @@ import { createServer } from 'node:http'
  * keeps a test's intent in the test, exactly as the GROBID stub's directive
  * does — and it is what lets one run contain both an enriched upload and a
  * degraded one.
+ *
+ * `GET /paper/{id}/references` is served too, because it is the call that
+ * actually fills the citation graph: it hands back an identifier for a
+ * reference that printed none, which is what most of a machine-learning
+ * bibliography looks like.
  */
 
 /** Papers the stub knows about, by the shape of their identifier. */
@@ -49,6 +54,10 @@ export function startSemanticScholarStub(port) {
     }
     if (url.pathname.endsWith('/paper/search/match')) {
       answerMatch(response, url.searchParams.get('query') ?? '')
+      return
+    }
+    if (url.pathname.endsWith('/references')) {
+      answerReferences(response, url.pathname)
       return
     }
     response.writeHead(404).end()
@@ -115,6 +124,42 @@ function answerMatch(response, query) {
   response.writeHead(404, { 'content-type': 'application/json' })
   response.end(JSON.stringify({ error: 'Title match not found' }))
 }
+
+/**
+ * The citing paper's own reference list.
+ *
+ * The stub answers with one entry whose title is fixed below, so a test can
+ * upload a reference that carries **no identifier at all** and still watch it
+ * resolve — which is the whole point of this call, and the case a printed
+ * machine-learning bibliography is mostly made of.
+ */
+function answerReferences(response, pathname) {
+  if (UNAVAILABLE.test(pathname)) {
+    response.writeHead(503, { 'content-type': 'application/json' })
+    response.end(JSON.stringify({ message: 'Service Unavailable' }))
+    return
+  }
+  // Wrapped in `data`, and each entry wrapped again in `citedPaper` — the
+  // real endpoint's shape, and worth reproducing exactly. A bare array here
+  // parsed to nothing and left every edge unresolved while every unit test
+  // still passed, which is the failure this tier exists to catch.
+  json(response, {
+    data: [
+      {
+        citedPaper: {
+          paperId: 's2-known-only-to-the-reference-list',
+          title: REFERENCE_LIST_ONLY_TITLE,
+        },
+      },
+    ],
+  })
+}
+
+/**
+ * A reference the uploaded document identifies by title alone. Its id can only
+ * come from the citing paper's reference list.
+ */
+export const REFERENCE_LIST_ONLY_TITLE = 'A Reference With No Identifier'
 
 function paperFor(id) {
   const slug = id.match(KNOWN)?.groups?.slug

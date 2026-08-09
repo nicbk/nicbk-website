@@ -1,6 +1,7 @@
 import { env } from '~/env'
 import type { PaperIdentifiers } from '~/lit-tracker/extraction/tei'
 import { SemanticScholarUnavailableError } from './failure'
+import type { ReferenceCandidate } from './reference-list'
 import type { Throttle } from './throttle'
 import { createThrottle } from './throttle'
 
@@ -15,10 +16,14 @@ import { createThrottle } from './throttle'
  *   bibliography needs. Resolving forty references one at a time is the obvious
  *   implementation and the wrong one: it is forty times the requests against an
  *   API that throttles a burst of twelve.
+ * - **`fetchReferences`** then asks Semantic Scholar for its *own* reference
+ *   list for the uploaded paper. This is what makes the citation graph
+ *   actually fill in: most printed references carry no identifier — 47 of
+ *   BERT's 54 — and this returns all of them already resolved, in one request.
  * - **`matchByTitle`** is the fallback for a paper carrying no identifier at
  *   all, and runs at most once per upload.
  *
- * So an upload costs one request, or two. Everything goes through the shared
+ * So an upload costs two requests, or three. Everything goes through the shared
  * throttle in `throttle.ts`.
  *
  * ## Failure is always transient here
@@ -45,6 +50,21 @@ export interface SemanticScholarPaper {
 /** The fields worth asking for; every one of them fills a column. */
 const FIELDS = 'paperId,title,abstract,year,venue,externalIds,authors'
 
+/**
+ * A reference list is only ever read for its ids, matched onto GROBID's
+ * entries by title. Everything else about those papers is already stored on the
+ * edge, from the citing document itself.
+ */
+const REFERENCE_FIELDS = 'title'
+
+/**
+ * The API's maximum page size for a reference list.
+ *
+ * One request covers any real paper — the largest bibliography in this
+ * collection is 63 entries — so nothing pages beyond the first.
+ */
+const MAX_REFERENCES = 1_000
+
 /** The API's own cap on one batch request. */
 const MAX_BATCH_IDS = 500
 
@@ -67,6 +87,15 @@ export interface SemanticScholarClient {
   lookupPapers: (keys: string[]) => Promise<Map<string, SemanticScholarPaper>>
   /** The closest title match, or `null` when the API reports none. */
   matchByTitle: (title: string) => Promise<SemanticScholarPaper | null>
+  /**
+   * Semantic Scholar's own resolved reference list for a paper.
+   *
+   * The single most valuable request this client makes. Most references in a
+   * printed bibliography carry no identifier at all — 47 of BERT's 54 — and
+   * this is where the identifiers for them come from, already resolved, in one
+   * request. See `reference-list.ts` for how they are matched back on.
+   */
+  fetchReferences: (paperId: string) => Promise<ReferenceCandidate[]>
 }
 
 /**
@@ -181,6 +210,42 @@ export function createSemanticScholarClient(
       const body = (await readJson(response)) as { data?: unknown }
       const first = Array.isArray(body.data) ? body.data[0] : undefined
       return isPaper(first) ? first : null
+    },
+
+    async fetchReferences(paperId) {
+      const query = new URLSearchParams({
+        fields: REFERENCE_FIELDS,
+        limit: String(MAX_REFERENCES),
+      })
+      const response = await send(
+        `/paper/${encodeURIComponent(paperId)}/references?${query}`,
+        { method: 'GET' },
+      )
+      // A paper Semantic Scholar holds no reference list for is not an error;
+      // its edges simply keep whatever identifiers the document printed.
+      if (response.status === 404) {
+        await response.text().catch(() => '')
+        return []
+      }
+      if (!response.ok) {
+        throw new SemanticScholarUnavailableError(
+          `reference list returned ${response.status}`,
+        )
+      }
+
+      const body = (await readJson(response)) as { data?: unknown }
+      if (!Array.isArray(body.data)) {
+        return []
+      }
+      // Each entry wraps the cited paper, and `citedPaper` is null for a
+      // reference the API could not resolve either — which is exactly the case
+      // this is trying to fill, so those are dropped rather than counted.
+      return body.data.flatMap((entry) => {
+        const cited = (entry as { citedPaper?: unknown }).citedPaper
+        return isPaper(cited)
+          ? [{ paperId: cited.paperId, title: cited.title }]
+          : []
+      })
     },
   }
 }

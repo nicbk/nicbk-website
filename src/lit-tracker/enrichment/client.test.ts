@@ -199,6 +199,52 @@ describe('matching a paper by title', () => {
   })
 })
 
+describe('reading a paper own reference list', () => {
+  it('unwraps the cited papers, dropping ones the API could not resolve', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse({
+          data: [
+            { citedPaper: { paperId: 'p-a', title: 'First Reference' } },
+            // The API could not resolve this one either — which is exactly the
+            // gap this call exists to fill, so it contributes nothing.
+            { citedPaper: null },
+            { citedPaper: { paperId: 'p-b', title: 'Second Reference' } },
+          ],
+        }),
+      ),
+    )
+
+    expect(await client().fetchReferences('paper-1')).toEqual([
+      { paperId: 'p-a', title: 'First Reference' },
+      { paperId: 'p-b', title: 'Second Reference' },
+    ])
+  })
+
+  it('asks for the whole list in one request', async () => {
+    const fetchMock = vi.fn(async (_url: string, _init: RequestInit) =>
+      jsonResponse({ data: [] }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await client().fetchReferences('paper-1')
+
+    // 1000 is the API's own page cap and far past any real bibliography, so
+    // nothing here ever pages.
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('limit=1000')
+  })
+
+  it('treats an unknown paper as having no reference list', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ error: 'Paper not found' }, 404)),
+    )
+
+    await expect(client().fetchReferences('nope')).resolves.toEqual([])
+  })
+})
+
 describe('the API key', () => {
   it('is omitted when none is configured', async () => {
     // The site runs unauthenticated by default, and the variable is optional

@@ -202,6 +202,9 @@ function fakeServices(options: {
     matchPaperByTitle: async () => {
       throw new Error('the extract stage must not call Semantic Scholar')
     },
+    fetchReferences: async () => {
+      throw new Error('the extract stage must not call Semantic Scholar')
+    },
   }
 }
 

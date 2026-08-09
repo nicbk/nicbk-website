@@ -62,9 +62,13 @@ interface Recorded {
   sent: { queue: string; job: unknown }[]
   lookedUp: string[][]
   titleQueries: string[]
+  referenceListsFetched: string[]
 }
 
 let recorded: Recorded
+
+/** Edges the extract stage wrote that carry no identifier of their own. */
+let unresolvedEdges: { id: string; title: string }[] = []
 
 function fakeDatabase(article: typeof ARTICLE | undefined): DatabaseHandle {
   const tx = {
@@ -96,6 +100,9 @@ function fakeDatabase(article: typeof ARTICLE | undefined): DatabaseHandle {
     query: {
       articles: { findFirst: async () => article },
     },
+    // The unresolved edges are read outside the transaction, before the
+    // reference list is fetched.
+    select: () => ({ from: () => ({ where: async () => unresolvedEdges }) }),
     transaction: async (run: (tx: unknown) => Promise<void>) => {
       await run(tx)
     },
@@ -109,6 +116,8 @@ function fakeServices(
     papers?: Map<string, SemanticScholarPaper>
     lookup?: () => Promise<Map<string, SemanticScholarPaper>>
     match?: () => Promise<SemanticScholarPaper | null>
+    references?: { paperId: string; title: string | null }[]
+    referencesFail?: boolean
   } = {},
 ): ExtractionServices {
   return {
@@ -139,6 +148,13 @@ function fakeServices(
         recorded.titleQueries.push(title)
         return null
       }),
+    fetchReferences: async (paperId: string) => {
+      recorded.referenceListsFetched.push(paperId)
+      if (options.referencesFail) {
+        throw new SemanticScholarUnavailableError('503')
+      }
+      return options.references ?? []
+    },
   }
 }
 
@@ -149,7 +165,9 @@ beforeEach(() => {
     sent: [],
     lookedUp: [],
     titleQueries: [],
+    referenceListsFetched: [],
   }
+  unresolvedEdges = []
 })
 
 describe('a successful enrichment', () => {
@@ -200,6 +218,81 @@ describe('a successful enrichment', () => {
     expect(recorded.edgeUpdates).toEqual([
       expect.objectContaining({ semanticScholarId: 'first-paper' }),
     ])
+  })
+
+  it('fills in the references the document identified for itself', async () => {
+    // The step that makes the graph usable at all for machine-learning papers:
+    // 47 of BERT's 54 printed references carry no identifier, and Semantic
+    // Scholar's own reference list has every one of them already resolved.
+    unresolvedEdges = [
+      {
+        id: 'edge-no-id',
+        title: '2018a. Deep contextualized word representations',
+      },
+    ]
+
+    await runEnrichStage(
+      JOB,
+      fakeServices({
+        references: [
+          {
+            paperId: 'p-elmo',
+            title: 'Deep Contextualized Word Representations',
+          },
+        ],
+      }),
+    )
+
+    expect(recorded.referenceListsFetched).toEqual([PAPER.paperId])
+    expect(recorded.edgeUpdates).toContainEqual(
+      expect.objectContaining({ semanticScholarId: 'p-elmo' }),
+    )
+  })
+
+  it('costs one extra request, not one per reference', async () => {
+    unresolvedEdges = [
+      { id: 'a', title: 'One' },
+      { id: 'b', title: 'Two' },
+      { id: 'c', title: 'Three' },
+    ]
+
+    await runEnrichStage(JOB, fakeServices())
+
+    // A request per unresolved reference is the obvious implementation and
+    // would be forty of them against an API that throttles a burst of twelve.
+    expect(recorded.referenceListsFetched).toHaveLength(1)
+  })
+
+  it('does not ask for a reference list it has no use for', async () => {
+    // Every edge already carries the identifier its own document printed.
+    unresolvedEdges = []
+
+    await runEnrichStage(JOB, fakeServices())
+
+    expect(recorded.referenceListsFetched).toEqual([])
+  })
+
+  it('keeps the enrichment when the reference list cannot be read', async () => {
+    // By this point the article is enriched and its printed identifiers are
+    // resolved. Throwing all of that away to retry because one supplementary
+    // request failed would trade a good outcome for a worse one.
+    unresolvedEdges = [{ id: 'edge-no-id', title: 'Some Reference' }]
+
+    await runEnrichStage(JOB, fakeServices({ referencesFail: true }))
+
+    expect(recorded.articleUpdate).toMatchObject({
+      extractionStatus: 'enriched',
+    })
+    expect(recorded.sent[0]?.queue).toBe('lit-tracker.finalize')
+  })
+
+  it('does not look for a reference list when the paper itself is unknown', async () => {
+    unresolvedEdges = [{ id: 'edge-no-id', title: 'Some Reference' }]
+
+    // Nothing resolved the article, so there is no reference list to ask for.
+    await runEnrichStage(JOB, fakeServices({ papers: new Map() }))
+
+    expect(recorded.referenceListsFetched).toEqual([])
   })
 
   it('hands the upload on to finalize', async () => {

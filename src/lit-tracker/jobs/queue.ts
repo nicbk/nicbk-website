@@ -131,13 +131,14 @@ const EXTRACT_RETRY_POLICY = {
  * that outlives that, and waiting it out is not free: the upload's row stays in
  * the status popup for as long as this runs, still reading as in progress.
  *
- * Roughly seventy seconds of waiting, then the article settles for
- * `grobid_only`. That is a documented success state — a complete, readable
- * article — so trading a longer window of "still working on it" for a slightly
+ * Three attempts, each of which is itself three requests through the limiter,
+ * spread over about half a minute of waiting — then the article settles for
+ * `grobid_only`. That is a documented success state, a complete and readable
+ * article, so trading a longer window of "still working on it" for a slightly
  * better chance of a venue field is the wrong way round.
  */
 const ENRICH_RETRY_POLICY = {
-  retryLimit: 3,
+  retryLimit: 2,
   retryDelay: 10,
   retryBackoff: true,
   deadLetter: ENRICH_DEAD_LETTER_QUEUE,

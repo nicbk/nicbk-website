@@ -88,34 +88,19 @@ export async function deleteArticlesOf(userId: string): Promise<void> {
 }
 
 /**
- * Removes every upload job owned by `userId`.
+ * Removes everything an upload leaves behind: the article and the job row.
  *
- * Nothing resolves these yet — the extract stage is task 4 — so a submitted
- * upload's row stays in `processing` for the rest of the run unless a spec
- * clears it. That would leak the status indicator's state into whatever ran
- * next.
+ * Both, because since task 4 the extraction worker resolves jobs for real — a
+ * finished upload leaves an article in the collection and a failed one leaves
+ * an article *and* a warning row. Either would leak into the next spec, through
+ * the list or through the status indicator.
+ *
+ * Articles first: `upload_jobs.article_id` cascades, so this also takes the
+ * rows of anything that got as far as an article.
  */
-export async function deleteUploadJobsOf(userId: string): Promise<void> {
+export async function clearUploadsOf(userId: string): Promise<void> {
+  await connection().query('delete from articles where user_id = $1', [userId])
   await connection().query('delete from upload_jobs where user_id = $1', [
     userId,
   ])
-}
-
-/**
- * Marks a user's processing jobs as failed, with a reason.
- *
- * The pipeline that would really do this is task 4's, so the warning state is
- * unreachable through the UI in this task. Writing the row directly is the same
- * stand-in `insertArticle` is: it exercises the state the component renders,
- * and it arrives by sync exactly as the real one will.
- */
-export async function failUploadJobsOf(
-  userId: string,
-  reason: string,
-): Promise<void> {
-  await connection().query(
-    `update upload_jobs set status = 'failed', failure_reason = $2
-     where user_id = $1 and status = 'processing'`,
-    [userId, reason],
-  )
 }

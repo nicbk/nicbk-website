@@ -46,8 +46,10 @@ let garage: TestGarage
 let database: DatabaseHandle
 
 /** The modules under test, imported once the environment is pointed at the containers. */
-let startQueue: typeof import('./queue').startQueue
-let queue: Awaited<ReturnType<typeof import('./queue').startQueue>>
+let startQueue: typeof import('~/lit-tracker/jobs/queue').startQueue
+let queue: Awaited<
+  ReturnType<typeof import('~/lit-tracker/jobs/queue').startQueue>
+>
 let storeUpload: typeof import('./store-upload').storeUpload
 let putArticlePdf: typeof import('~/storage/pdf-storage').putArticlePdf
 let getArticlePdf: typeof import('~/storage/pdf-storage').getArticlePdf
@@ -74,7 +76,7 @@ beforeAll(async () => {
   putArticlePdf = storage.putArticlePdf
   getArticlePdf = storage.getArticlePdf
   PdfOwnershipError = storage.PdfOwnershipError
-  startQueue = (await import('./queue')).startQueue
+  startQueue = (await import('~/lit-tracker/jobs/queue')).startQueue
   storeUpload = (await import('./store-upload')).storeUpload
 }, 300_000)
 

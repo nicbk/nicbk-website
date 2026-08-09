@@ -35,4 +35,5 @@ export const placeholderEnv = {
   GARAGE_ACCESS_KEY_ID: 'GK000000000000000000000000',
   GARAGE_SECRET_ACCESS_KEY: 'placeholder-garage-secret-access-key',
   GARAGE_BUCKET: 'unused',
+  GROBID_URL: 'http://localhost:8070',
 }

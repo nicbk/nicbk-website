@@ -69,3 +69,11 @@ export const GARAGE_ENDPOINT = `http://localhost:${GARAGE_HOST_PORT}`
 export const GARAGE_ACCESS_KEY_ID = `GK${'2'.repeat(24)}`
 export const GARAGE_SECRET_ACCESS_KEY = 'b'.repeat(64)
 export const GARAGE_BUCKET = 'auth-e2e'
+
+/**
+ * The stubbed GROBID (support/grobid-stub.mjs), run in the launcher process
+ * rather than as a container. Not 8070, so this can run beside a Compose stack.
+ */
+export const GROBID_STUB_PORT = 8071
+
+export const GROBID_URL = `http://localhost:${GROBID_STUB_PORT}`

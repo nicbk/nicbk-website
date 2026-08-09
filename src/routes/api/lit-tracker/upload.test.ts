@@ -20,7 +20,7 @@ const db = vi.hoisted(() => ({ transaction: vi.fn() }))
 const pool = vi.hoisted(() => ({ end: vi.fn() }))
 
 vi.mock('~/lit-tracker/upload/upload-endpoint', () => ({ respondToUpload }))
-vi.mock('~/lit-tracker/upload/queue', () => ({ getQueue }))
+vi.mock('~/lit-tracker/jobs/queue', () => ({ getQueue }))
 vi.mock('~/auth/auth', () => ({ getSession }))
 vi.mock('~/db/client', () => ({ db, pool }))
 

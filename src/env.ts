@@ -97,6 +97,17 @@ export const envSchema = z.object({
 
   /** The single bucket every uploaded PDF lands in; users are separated by key prefix. */
   GARAGE_BUCKET: z.string().min(1),
+
+  /**
+   * Where the extraction worker reaches GROBID's REST API — the `grobid`
+   * service inside the Compose stack, or the port docker-compose.override.yml
+   * publishes when the server runs on the host.
+   *
+   * Server-only, and never reachable from a browser: GROBID has no
+   * authentication of its own, so the only thing keeping it private is that
+   * nothing outside `app-internal` can address it.
+   */
+  GROBID_URL: z.url({ protocol: /^https?$/ }),
 })
 
 export type Env = z.infer<typeof envSchema>

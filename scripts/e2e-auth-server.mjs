@@ -10,7 +10,7 @@
  * ran against a hand-built schema could pass while the migrations that actually
  * ship are broken.
  *
- * Six things happen here before the server starts:
+ * Seven things happen here before the server starts:
  *   1. a private Docker network, so the containers can address each other,
  *   2. a throwaway Postgres container (the image production runs) with logical
  *      replication turned on, which is what Zero subscribes to,
@@ -21,7 +21,9 @@
  *   5. a Garage container, bootstrapped through the same module the Compose job
  *      uses, so an upload has somewhere real to land,
  *   6. the stubbed Google token endpoint preloaded into the server process
- *      (see e2e-auth/support/google-token-endpoint-stub.mjs).
+ *      (see e2e-auth/support/google-token-endpoint-stub.mjs),
+ *   7. a stubbed GROBID on its own port, which the app is simply pointed at —
+ *      a config swap rather than a patch (see e2e-auth/support/grobid-stub.mjs).
  *
  * Runs on its own ports so it can coexist with a dev server, the ordinary e2e
  * suite on 3000, or a local Compose stack's zero-cache on 4848.
@@ -31,6 +33,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { PostgreSqlContainer } from '@testcontainers/postgresql'
 import { GenericContainer, Network, Wait } from 'testcontainers'
+import { startGrobidStub } from '../e2e-auth/support/grobid-stub.mjs'
 import {
   AUTH_E2E_BASE_URL,
   AUTH_E2E_PORT,
@@ -40,6 +43,8 @@ import {
   GARAGE_ENDPOINT,
   GARAGE_HOST_PORT,
   GARAGE_SECRET_ACCESS_KEY,
+  GROBID_STUB_PORT,
+  GROBID_URL,
   INTERNAL_DATABASE_URL,
   POSTGRES_DB,
   POSTGRES_HOST_PORT,
@@ -174,6 +179,9 @@ const appEnv = {
   GARAGE_ACCESS_KEY_ID,
   GARAGE_SECRET_ACCESS_KEY,
   GARAGE_BUCKET,
+  // The stubbed extraction service, started below. Pointing at it is the whole
+  // of the mocking here — nothing in the app is patched.
+  GROBID_URL,
   // Where the browser dials zero-cache. Vite inlines this into the client
   // bundle at build time, which is why that port is fixed. No proxy is
   // involved: cookies are keyed by host and ignore the port, so the session
@@ -279,6 +287,11 @@ await bootstrapGarage({
   bucket: GARAGE_BUCKET,
 })
 
+// In this process rather than a container: the extraction worker runs inside
+// the app server, which runs on the host in this tier, so there is nothing for
+// a container to be closer to. See e2e-auth/support/grobid-stub.mjs.
+const grobidStub = await startGrobidStub(GROBID_STUB_PORT)
+
 // Locally the dev server keeps the edit-run loop short; in CI the built
 // production server is what gets exercised, matching playwright.config.ts.
 if (isCi) {
@@ -309,6 +322,7 @@ async function shutDown(code) {
   // Testcontainers' reaper would eventually collect these anyway; this just
   // makes a clean run leave nothing behind immediately. Order matters only in
   // that zero-cache holds a replication slot on the database.
+  await grobidStub.close().catch(() => {})
   await zeroCache.stop().catch(() => {})
   await garage.stop().catch(() => {})
   await container.stop().catch(() => {})

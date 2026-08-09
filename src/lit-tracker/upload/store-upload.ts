@@ -2,10 +2,10 @@ import { sql } from 'drizzle-orm'
 import { fromDrizzle } from 'pg-boss'
 import type { DatabaseHandle } from '~/db/create-database'
 import { uploadJobs } from '~/db/schema'
+import type { ExtractJob, JobQueue } from '~/lit-tracker/jobs/queue'
+import { EXTRACT_QUEUE } from '~/lit-tracker/jobs/queue'
 import { pdfObjectKey } from '~/storage/object-key'
 import { putArticlePdf } from '~/storage/pdf-storage'
-import type { ExtractJob, JobQueue } from './queue'
-import { EXTRACT_QUEUE } from './queue'
 
 /**
  * Stores one validated PDF and records the work of extracting it.

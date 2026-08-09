@@ -21,6 +21,9 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // Only the environment placeholders, not the unit tier's DOM setup: these
+    // tests reach modules that validate configuration at import time.
+    setupFiles: ['./vitest.integration.setup.ts'],
     include: ['src/**/*.integration.test.ts'],
     // One container is shared across the file's tests, which restore a
     // snapshot between them — concurrent files would race over that database.

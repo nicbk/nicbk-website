@@ -26,6 +26,10 @@ COPY . .
 # image, so both put the bundled migrator at the same path — outside /app,
 # where the dev bind mount can't hide it (see scripts/bundle-migrator.mjs).
 RUN node scripts/bundle-migrator.mjs
+# The Garage bootstrap needs no bundling — it imports nothing outside its own
+# pair of files — but goes to the same absolute path for the same reason:
+# outside /app, where the dev bind mount cannot hide it.
+COPY scripts/garage-init.mjs scripts/garage-bootstrap.mjs /usr/local/lib/
 ENV MIGRATIONS_DIR=/app/src/db/migrations
 EXPOSE 3000
 # --host: bind beyond localhost so Docker's port mapping can reach the
@@ -55,6 +59,9 @@ COPY --from=build /app/.output ./.output
 # SQL it applies, for the Compose `pre_start` step.
 COPY --from=build /usr/local/lib/migrate.mjs /usr/local/lib/migrate.mjs
 COPY --from=build /app/src/db/migrations ./src/db/migrations
+# The Garage bootstrap job runs from this image too (see docker-compose.yml).
+COPY --from=build /app/scripts/garage-init.mjs /usr/local/lib/garage-init.mjs
+COPY --from=build /app/scripts/garage-bootstrap.mjs /usr/local/lib/garage-bootstrap.mjs
 ENV MIGRATIONS_DIR=/app/src/db/migrations
 USER node
 EXPOSE 3000

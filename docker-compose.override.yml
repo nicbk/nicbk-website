@@ -20,6 +20,23 @@ services:
       - .:/app
       - /app/node_modules
 
+  garage:
+    # Published locally so a server started with `npm run dev` outside Docker —
+    # and the integration tests' storage round-trip — reach the same store the
+    # containerized app uses. Never published in production, where the app is
+    # the only client and reaches it over the internal network.
+    ports:
+      - "3900:3900"
+
+  garage-init:
+    # Same one-shot bootstrap from the dev image; the script sits at the same
+    # absolute path in both stages.
+    build:
+      target: dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+
   app:
     build:
       target: dev

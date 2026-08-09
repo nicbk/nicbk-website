@@ -1,0 +1,44 @@
+# Garage configuration — the blob store holding uploaded PDFs
+# (research/technologies/blob-storage.md chose Garage over SeaweedFS).
+#
+# Mounted read-only into the `garage` service. Everything secret is supplied
+# through the environment instead of being written here, so this file is safe
+# to commit: GARAGE_RPC_SECRET and GARAGE_ADMIN_TOKEN override the `rpc_secret`
+# and `admin_token` settings they would otherwise hold.
+
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+
+# SQLite rather than the default LMDB. LMDB sizes its map to the filesystem and
+# is awkward inside a container volume; SQLite is the engine Garage's own
+# single-node documentation uses and needs no tuning at this scale.
+db_engine = "sqlite"
+
+# One node, so one copy. Garage refuses to start with a replication factor it
+# cannot satisfy, and there is nothing to replicate to — durability here comes
+# from the host's backups (research/devops-deployment/backup-and-disaster-recovery.md),
+# not from Garage.
+replication_factor = 1
+
+# Cluster RPC. Other nodes would use rpc_public_addr to reach this one; with a
+# single node its only consumer is the bootstrap job, which administers the
+# cluster over the network rather than from inside the container — the image is
+# `scratch` plus one static binary, so there is no shell in it to run commands
+# through.
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "garage:3901"
+
+[s3_api]
+# Arbitrary but fixed: S3 request signatures cover the region, so the app's
+# client must name the same string. See src/storage/s3-client.ts.
+s3_region = "garage"
+api_bind_addr = "[::]:3900"
+# Path-style addressing only — the app never uses virtual-hosted bucket URLs,
+# which would need a wildcard DNS entry per bucket.
+root_domain = ".s3.garage.internal"
+
+[admin]
+# The bootstrap job's only interface: assigning the cluster layout, importing
+# the app's access key, and creating the bucket. Never published to the host —
+# it is reachable on the internal Compose network alone.
+api_bind_addr = "[::]:3903"

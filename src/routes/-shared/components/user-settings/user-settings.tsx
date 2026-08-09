@@ -97,14 +97,16 @@ export function UserSettings({
       <Dialog.Portal>
         <Dialog.Backdrop className={styles.backdrop} />
         <Dialog.Popup className={styles.popup}>
-          {/* Inside the popup, as Base UI requires for modal dialogs, so touch
-              screen readers have a way out that isn't the Escape key. */}
-          <Dialog.Close className={styles.close} aria-label="Close settings">
-            <X className={styles.closeIcon} aria-hidden="true" />
-          </Dialog.Close>
-
-          {/* Names the dialog for assistive tech, and is its visible heading. */}
-          <Dialog.Title className={styles.title}>account</Dialog.Title>
+          {/* Title and dismiss share one row rather than stacking. The dismiss
+              stays inside the popup, as Base UI requires for modal dialogs, so
+              touch screen readers have a way out that isn't the Escape key. */}
+          <div className={styles.header}>
+            {/* Names the dialog for assistive tech, and is its visible heading. */}
+            <Dialog.Title className={styles.title}>account</Dialog.Title>
+            <Dialog.Close className={styles.close} aria-label="Close settings">
+              <X className={styles.closeIcon} aria-hidden="true" />
+            </Dialog.Close>
+          </div>
 
           <p className={styles.identity}>
             <span className={styles.identityLabel}>signed in as</span>

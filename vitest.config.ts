@@ -51,15 +51,17 @@ export default defineConfig({
       include: ['src/**'],
       // Measures hand-written source only. The route tree and the identity
       // schema are generated (and guarded by their own drift checks), the
-      // migrations folder is SQL plus Drizzle's bookkeeping, and the
-      // Testcontainers helpers are scaffolding for the integration tier, which
-      // this ratchet doesn't measure.
+      // migrations folder is SQL plus Drizzle's bookkeeping, and every
+      // `test-support` folder is Testcontainers scaffolding for the integration
+      // tier, which this ratchet doesn't measure. That last pattern is a glob
+      // rather than one path because the scaffolding now lives beside whatever
+      // it starts — a database helper under db/, a Garage helper under storage/.
       exclude: [
         'src/routeTree.gen.ts',
         'src/db/schema/identity.ts',
         'src/zero/schema.gen.ts',
         'src/db/migrations/**',
-        'src/db/test-support/**',
+        'src/**/test-support/**',
       ],
       // json-summary feeds the ratchet comparison; html is the CI artifact.
       reporter: ['text', 'json-summary', 'html'],

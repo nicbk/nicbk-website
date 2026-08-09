@@ -30,7 +30,7 @@ close a parent when its sub-issues close, per the 2026-08-01 revision in
 |---|---|---|---|---|
 | `zero-sync-foundation` | **Merged** ([#67](https://github.com/nicbk/nicbk-website/issues/67)) | [#73](https://github.com/nicbk/nicbk-website/pull/73) | passed | approved |
 | `lit-tracker-shell` | **Merged** ([#68](https://github.com/nicbk/nicbk-website/issues/68)) | [#74](https://github.com/nicbk/nicbk-website/pull/74) | passed | approved |
-| `pdf-upload-and-storage` | Not started ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | — | — | — |
+| `pdf-upload-and-storage` | In review ([#69](https://github.com/nicbk/nicbk-website/issues/69)) | [#76](https://github.com/nicbk/nicbk-website/pull/76) | — | awaiting |
 | `grobid-extraction-pipeline` | Not started ([#70](https://github.com/nicbk/nicbk-website/issues/70)) | — | — | — |
 | `semantic-scholar-enrichment` | Not started ([#71](https://github.com/nicbk/nicbk-website/issues/71)) | — | — | — |
 
@@ -164,3 +164,19 @@ against stubbed GROBID and Semantic Scholar.
   is not guaranteed to be in the squash, so a branch's tip should be compared
   against `main` after merging rather than assumed present. Next: task 3,
   `pdf-upload-and-storage`.
+- 2026-08-08 — **Task 3 (`pdf-upload-and-storage`) implemented.** Garage is in
+  the Compose stack behind a one-shot bootstrap job, PDFs stream through a
+  proxied endpoint into `lit-tracker/{user_id}/{id}/source.pdf`, and the "+"
+  button, upload modal, and three-state status indicator are live on the
+  collection page. Verified against the real stack: two PDFs submitted in one
+  action came back byte-identical from Garage, and marking a job failed with
+  `psql` turned the indicator red on an open page with no interaction — the same
+  write-origin task 4's handler will have. The user asked directly why the
+  upload is not a Zero mutation; the answer is recorded in the
+  [task status](./tasks/pdf-upload-and-storage/status.md) and in
+  `upload-endpoint.ts`, and it is a permanent split rather than a temporary one:
+  **bytes in over REST, state out over Zero.** Two findings worth carrying —
+  pg-boss now ships an official `fromDrizzle` adapter, so the transactional
+  enqueue is supported rather than hand-rolled; and Zero drops sync for a
+  *hidden* document, so multi-client checks need a second window, not a second
+  tab.

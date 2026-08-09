@@ -67,6 +67,36 @@ export const envSchema = z.object({
    */
   ZERO_QUERY_API_KEY: z.string().min(32),
   ZERO_MUTATE_API_KEY: z.string().min(32),
+
+  /**
+   * Where the app reaches Garage's S3 API — the `garage` service inside the
+   * Compose stack, or the port docker-compose.override.yml publishes when the
+   * server runs on the host.
+   *
+   * Server-only, and unlike zero-cache's address there is no argument for
+   * exposing it: the browser never talks to Garage. Every PDF read and write is
+   * proxied through this app server so file access is authorized in the same
+   * place as every other piece of user data
+   * (research/security-privacy/pdf-and-annotation-data-protection.md).
+   */
+  GARAGE_ENDPOINT: z.url({ protocol: /^https?$/ }),
+
+  /**
+   * The app's Garage credentials.
+   *
+   * Garage fixes the shape of an access key ID — the literal prefix `GK`
+   * followed by hex — and rejects anything else at import time. Validating the
+   * shape here turns a placeholder or a truncated paste into a startup error
+   * naming the variable, rather than an `InvalidAccessKeyId` on the first
+   * upload, long after the misconfiguration.
+   */
+  GARAGE_ACCESS_KEY_ID: z.string().regex(/^GK[0-9a-f]+$/, {
+    message: 'must be a Garage access key ID: "GK" followed by hex',
+  }),
+  GARAGE_SECRET_ACCESS_KEY: z.string().min(32),
+
+  /** The single bucket every uploaded PDF lands in; users are separated by key prefix. */
+  GARAGE_BUCKET: z.string().min(1),
 })
 
 export type Env = z.infer<typeof envSchema>

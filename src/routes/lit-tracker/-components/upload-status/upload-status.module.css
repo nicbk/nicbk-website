@@ -1,0 +1,199 @@
+/*
+ * The upload indicator and its job-list popup.
+ *
+ * The three states are distinguished by shape and by an accessible name, not
+ * by color: a checkmark, a spinner, and a warning triangle read differently in
+ * grayscale, which is what WCAG 1.4.1 asks for. Color is confirmation, never
+ * the signal.
+ */
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .indicator:hover {
+    border-color: var(--color-accent);
+  }
+}
+
+/*
+ * The resting checkmark. Same box as the button beside it so the row does not
+ * shift when the state changes, but no border and no pointer — it is
+ * deliberately not a control.
+ */
+.synced {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xs);
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+}
+
+.icon,
+.iconFailed,
+.iconSpinning {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.iconFailed {
+  color: var(--color-error);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .iconSpinning {
+    animation: spin 1.2s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Visually hidden but announced — the clipped-rect idiom, not `display: none`,
+   which would remove it from the accessibility tree as well. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tooltip {
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  /* Wide enough for a filename, capped so it never reaches a phone's edges. */
+  width: 22rem;
+  max-width: calc(100vw - 2 * var(--space-md));
+  /* Several failed uploads must not push the popup past the viewport. */
+  max-height: min(24rem, calc(100dvh - 6rem));
+  overflow-y: auto;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+.popupTitle {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.jobs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.job {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  font-size: var(--font-size-sm);
+}
+
+/* User-supplied and often long, with no spaces to break at. */
+.filename,
+.filenameFailed {
+  overflow-wrap: anywhere;
+}
+
+.filenameFailed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  color: var(--color-error);
+}
+
+.jobIcon {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+}
+
+.jobState,
+.reason {
+  color: var(--color-text-muted);
+}
+
+/*
+ * An indeterminate progress bar: a track with a segment travelling across it.
+ * With reduced motion preferred it stays a static filled track rather than
+ * disappearing, so the row still reads as "something is happening".
+ */
+.progress {
+  position: relative;
+  display: block;
+  height: 2px;
+  overflow: hidden;
+  background-color: var(--color-border);
+}
+
+.progress::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  width: 40%;
+  background-color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .progress::after {
+    animation: slide 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}

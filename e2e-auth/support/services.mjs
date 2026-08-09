@@ -52,3 +52,20 @@ export const DATABASE_URL = `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@lo
 export const POSTGRES_NETWORK_ALIAS = 'db'
 
 export const INTERNAL_DATABASE_URL = `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_NETWORK_ALIAS}:5432/${POSTGRES_DB}`
+
+/**
+ * Garage's S3 API, published so the app server — which runs on the host in this
+ * tier — can reach it. Not 3900, so this can run beside a Compose stack.
+ */
+export const GARAGE_HOST_PORT = 3901
+
+export const GARAGE_ENDPOINT = `http://localhost:${GARAGE_HOST_PORT}`
+
+/**
+ * Fixed Garage credentials, for the same reason the Postgres ones are fixed.
+ * The key id must be `GK` followed by hex — Garage rejects any other shape, and
+ * so does src/env.ts.
+ */
+export const GARAGE_ACCESS_KEY_ID = `GK${'2'.repeat(24)}`
+export const GARAGE_SECRET_ACCESS_KEY = 'b'.repeat(64)
+export const GARAGE_BUCKET = 'auth-e2e'

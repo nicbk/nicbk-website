@@ -103,6 +103,22 @@ describe('UserSettings', () => {
     })
   })
 
+  it('puts the title and the dismiss control on one row, title first', async () => {
+    // They used to stack, which spent a whole row of the card's height on a
+    // control that says nothing. Title first so it anchors the corner and the
+    // reading order starts with what the dialog *is*.
+    renderSettings()
+    await openSettings()
+
+    const title = screen.getByRole('heading', { name: 'account' })
+    const close = screen.getByRole('button', { name: 'Close settings' })
+
+    expect(title.parentElement).toBe(close.parentElement)
+    expect(
+      title.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
   it('closes from its own dismiss control, for a pointer or a touch reader', async () => {
     renderSettings()
     await openSettings()

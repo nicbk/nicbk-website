@@ -1,12 +1,15 @@
-import { Menu } from '@base-ui/react/menu'
-import { Check, MoreHorizontal } from 'lucide-react'
-import { useState } from 'react'
+import { Checkbox } from '@base-ui/react/checkbox'
+import { Popover } from '@base-ui/react/popover'
+import { Toggle } from '@base-ui/react/toggle'
+import { ToggleGroup } from '@base-ui/react/toggle-group'
+import { Check, MoreHorizontal, Plus } from 'lucide-react'
+import type { KeyboardEvent } from 'react'
+import { useId, useState } from 'react'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
 import {
   ARTICLE_STATUS_LABELS,
   ARTICLE_STATUSES,
 } from '~/lit-tracker/article-status'
-import { NewTagDialog } from './new-tag-dialog'
 import styles from './article-menu.module.css'
 
 /** A tag as this menu needs it: something to name and something to identify. */
@@ -29,26 +32,27 @@ interface ArticleMenuProps {
 }
 
 /**
- * The card's three-dot menu: where reading status is set and tags are applied.
+ * The card's three-dot control: where reading status is set and tags are
+ * applied.
  *
  * The decided entry point for editing an article
  * (research/ui-ux/pages/lit-tracker/components/article-edit.md), which is why
- * this is a menu and not a bespoke panel — #11 adds "edit…" and "delete…" to
- * *this* rather than building a second control beside it.
+ * everything lands here — #11 adds "edit…" and "delete…" to *this* rather than
+ * building a second control beside it.
  *
- * **Why the parts are what they are.** The task's plan proposed a `ToggleGroup`
- * for status and a `Combobox` for tag entry, placed inside the menu. Both were
- * replaced during implementation, for one reason: a menu's children are
- * `menuitem`s, and putting a toolbar or a textbox inside one breaks the role
- * contract that makes the whole thing keyboard-navigable in the first place.
- * Base UI has menu-native equivalents that carry the same semantics —
- * `RadioGroup`/`RadioItem` for a mutually-exclusive choice, `CheckboxItem` for
- * a toggle — and they say what a toggle group and a combobox would only have
- * looked like. Creating a tag needs a text field, which no menu can host, so
- * it uses Base UI's own documented menu-opens-a-dialog pattern.
+ * **Why a popover rather than a menu.** It was a `Menu` first, built from
+ * `RadioItem`s and `CheckboxItem`s, and that was the right shape until a reader
+ * with a real number of tags used it. Three things broke at once, and all three
+ * are the same problem: a menu is one flat list of items, so it scrolls as one.
+ * Scrolling to a tag scrolled the reading status out of view; "new tag" sat past
+ * the end of the tag list, so making one meant scrolling to the bottom first;
+ * and there was nowhere to put a filter field, because a `menu` role's children
+ * are `menuitem`s and a textbox among them breaks the keyboard model that makes
+ * a menu a menu. A popover has no such contract, so the three regions below can
+ * behave differently — and only one of them scrolls.
  *
- * Nothing here writes. Every branch calls a prop, which is what lets the menu's
- * behaviour be asserted without a Zero client anywhere near it.
+ * Nothing here writes. Every branch calls a prop, which is what lets this be
+ * asserted without a Zero client anywhere near it.
  */
 export function ArticleMenu({
   articleTitle,
@@ -59,122 +63,224 @@ export function ArticleMenu({
   onToggleTag,
   onCreateTag,
 }: ArticleMenuProps) {
-  const [isNamingTag, setIsNamingTag] = useState(false)
+  const [query, setQuery] = useState('')
+  const statusLabelId = useId()
+  const filterId = useId()
+
+  const trimmed = query.trim()
+  const matching = matchingTags(allTags, trimmed)
+  const exact = exactMatch(allTags, trimmed)
+  /** Only when the reader has typed something that is not already a tag. */
+  const creatable = trimmed !== '' && exact === undefined
 
   /**
-   * What a typed tag name means, which is the reason there is no separate
-   * "manage tags" screen: a name the reader already has **applies that tag**,
-   * and one they do not **creates it**. Typing "attention" twice must not leave
-   * two tags called "attention".
-   *
-   * Matched case-insensitively, because "Attention" and "attention" are the same
-   * label to the person typing them. The existing tag keeps its own spelling —
-   * the reader is picking it, not renaming it.
+   * What Enter in the filter field means, which is the whole reason there is no
+   * separate "manage tags" screen: a name the reader already has **applies that
+   * tag**, and one they do not **creates it**. Typing "attention" twice must not
+   * leave two tags called "attention", so the exact match wins over creating.
    */
-  function submitTagName(name: string) {
-    const existing = allTags.find(
-      (tag) => tag.name.toLowerCase() === name.toLowerCase(),
-    )
-    if (existing) {
-      onToggleTag(existing.id, true)
+  function submitQuery(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== 'Enter' || trimmed === '') {
       return
     }
-    onCreateTag(name)
+    // The field sits inside a popover; without this, Enter would also reach any
+    // form the card is ever placed in.
+    event.preventDefault()
+
+    if (exact) {
+      onToggleTag(exact.id, true)
+    } else {
+      onCreateTag(trimmed)
+    }
+    setQuery('')
+  }
+
+  function create() {
+    onCreateTag(trimmed)
+    setQuery('')
   }
 
   return (
-    <>
-      <Menu.Root>
-        <Menu.Trigger
-          className={styles.trigger}
-          aria-label={`Options for ${articleTitle}`}
-        >
-          <MoreHorizontal className={styles.triggerIcon} aria-hidden="true" />
-        </Menu.Trigger>
+    <Popover.Root>
+      <Popover.Trigger
+        className={styles.trigger}
+        aria-label={`Options for ${articleTitle}`}
+      >
+        <MoreHorizontal className={styles.triggerIcon} aria-hidden="true" />
+      </Popover.Trigger>
 
-        <Menu.Portal>
-          <Menu.Positioner
-            className={styles.positioner}
-            sideOffset={4}
-            align="end"
-          >
-            <Menu.Popup className={styles.popup}>
-              {/*
-                Radio, not checkbox: the three statuses are one column's value,
-                so choosing one clears the previous with no second write and no
-                constraint enforcing it. `closeOnClick` defaults to false on
-                these items, which is what lets a reader set a status and go on
-                to pick tags without reopening the menu.
-              */}
-              <Menu.RadioGroup
-                value={status}
-                onValueChange={(next) => onSetStatus(next as ArticleStatus)}
+      <Popover.Portal>
+        <Popover.Positioner
+          className={styles.positioner}
+          sideOffset={4}
+          align="end"
+        >
+          <Popover.Popup className={styles.popup}>
+            {/*
+              Region one: never scrolls, because a reader hunting through tags
+              should not lose sight of what the article's status is.
+
+              Single-select by construction — `ToggleGroup` is single unless told
+              otherwise — which mirrors the column underneath: one value, so
+              choosing one clears the previous with no second write and no
+              constraint enforcing it.
+            */}
+            <div className={styles.section}>
+              <p className={styles.sectionLabel} id={statusLabelId}>
+                reading status
+              </p>
+              <ToggleGroup
+                className={styles.statusGroup}
+                aria-labelledby={statusLabelId}
+                value={[status]}
+                onValueChange={(next) => {
+                  const [chosen] = next
+                  // An empty array means the reader pressed the status that was
+                  // already set. Reading status cannot be *unset* — every
+                  // article has one — so that is a no-op rather than a write.
+                  if (chosen !== undefined) {
+                    onSetStatus(chosen as ArticleStatus)
+                  }
+                }}
               >
-                <Menu.GroupLabel className={styles.groupLabel}>
-                  reading status
-                </Menu.GroupLabel>
                 {ARTICLE_STATUSES.map((option) => (
-                  <Menu.RadioItem
+                  <Toggle
                     key={option}
                     value={option}
-                    className={styles.item}
+                    className={styles.statusOption}
                   >
-                    <Menu.RadioItemIndicator className={styles.indicator}>
-                      <Check className={styles.indicatorIcon} />
-                    </Menu.RadioItemIndicator>
-                    <span className={styles.itemLabel}>
-                      {ARTICLE_STATUS_LABELS[option]}
-                    </span>
-                  </Menu.RadioItem>
+                    {ARTICLE_STATUS_LABELS[option]}
+                  </Toggle>
                 ))}
-              </Menu.RadioGroup>
+              </ToggleGroup>
+            </div>
 
-              <Menu.Separator className={styles.separator} />
+            <div className={styles.separator} />
 
-              <Menu.Group>
-                <Menu.GroupLabel className={styles.groupLabel}>
-                  tags
-                </Menu.GroupLabel>
+            <div className={styles.section}>
+              <label className={styles.sectionLabel} htmlFor={filterId}>
+                tags
+              </label>
+              {/*
+                Region two: also fixed. It is both the filter and the way a tag
+                is created, so it has to stay reachable however long the list
+                below it grows.
+              */}
+              <input
+                id={filterId}
+                className={styles.filter}
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={submitQuery}
+                placeholder="filter or add…"
+                autoComplete="off"
+                // Tag names are labels, not prose — "seq2seq" is not a typo,
+                // and a red squiggle under one suggests it is.
+                spellCheck={false}
+                maxLength={MAX_TAG_NAME_LENGTH}
+              />
 
-                {allTags.map((tag) => (
-                  <Menu.CheckboxItem
-                    key={tag.id}
-                    checked={appliedTagIds.has(tag.id)}
-                    onCheckedChange={(applied) => onToggleTag(tag.id, applied)}
-                    className={styles.item}
-                  >
-                    <Menu.CheckboxItemIndicator className={styles.indicator}>
-                      <Check className={styles.indicatorIcon} />
-                    </Menu.CheckboxItemIndicator>
-                    <span className={styles.itemLabel}>{tag.name}</span>
-                  </Menu.CheckboxItem>
-                ))}
+              {/* Region three, and the only one that scrolls. */}
+              {matching.length > 0 && (
+                // Named apart from the "tags" label above, which belongs to the
+                // filter field: two things called "tags" one line apart is
+                // ambiguous to anyone listening rather than looking.
+                <ul className={styles.tagList} aria-label="matching tags">
+                  {matching.map((tag) => (
+                    <li key={tag.id}>
+                      {/*
+                        The whole row *is* the checkbox, rather than a `<label>`
+                        wrapped around one. Base UI renders a checkbox as a
+                        `<button role="checkbox">`, and a label does not name a
+                        button — so wrapping it produced a control whose
+                        accessible name came from nowhere reliable. As the
+                        control itself, its own text is its name, and the entire
+                        row is the hit target.
+                      */}
+                      <Checkbox.Root
+                        className={styles.tagOption}
+                        checked={appliedTagIds.has(tag.id)}
+                        onCheckedChange={(applied) =>
+                          onToggleTag(tag.id, applied)
+                        }
+                      >
+                        <span className={styles.checkbox} aria-hidden="true">
+                          <Checkbox.Indicator className={styles.checkIcon}>
+                            <Check />
+                          </Checkbox.Indicator>
+                        </span>
+                        <span className={styles.tagName}>{tag.name}</span>
+                      </Checkbox.Root>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-                {/*
-                  Opens the naming dialog rather than doing anything itself. The
-                  menu closes as it goes — that is `Menu.Item`'s default and the
-                  right one here, because focus is about to move into a text
-                  field somewhere else entirely.
-                */}
-                <Menu.Item
-                  className={styles.item}
-                  onClick={() => setIsNamingTag(true)}
+              {/*
+                Outside the scrolling list on purpose: creating a tag was the
+                last item of the tag list once, and with thirty tags that meant
+                scrolling to the bottom to reach it. It shows only when what was
+                typed is not already a tag, so it never competes with the match
+                the reader was looking for.
+              */}
+              {creatable && (
+                <button
+                  type="button"
+                  className={styles.create}
+                  onClick={create}
                 >
-                  <span className={styles.indicator} aria-hidden="true" />
-                  <span className={styles.itemLabel}>new tag…</span>
-                </Menu.Item>
-              </Menu.Group>
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
+                  <Plus className={styles.createIcon} aria-hidden="true" />
+                  <span className={styles.tagName}>create “{trimmed}”</span>
+                </button>
+              )}
 
-      <NewTagDialog
-        open={isNamingTag}
-        onOpenChange={setIsNamingTag}
-        articleTitle={articleTitle}
-        onSubmit={submitTagName}
-      />
-    </>
+              {matching.length === 0 && !creatable && (
+                <p className={styles.empty}>{EMPTY_TAGS_MESSAGE}</p>
+              )}
+            </div>
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   )
+}
+
+/** The longest tag name the mutator will accept — kept in step with its schema. */
+const MAX_TAG_NAME_LENGTH = 64
+
+/** Shown when the reader has no tags at all and has typed nothing. */
+export const EMPTY_TAGS_MESSAGE = 'no tags yet. type a name to make one.'
+
+/**
+ * The tags worth showing for what has been typed.
+ *
+ * Substring rather than prefix matching, and case-insensitively: a reader who
+ * types "attn" is looking for the tag they half-remember, not completing a
+ * known string from the left.
+ */
+function matchingTags(
+  tags: readonly CollectionTag[],
+  query: string,
+): readonly CollectionTag[] {
+  if (query === '') {
+    return tags
+  }
+  const needle = query.toLowerCase()
+  return tags.filter((tag) => tag.name.toLowerCase().includes(needle))
+}
+
+/**
+ * The tag whose name *is* what was typed, if there is one.
+ *
+ * Case-insensitive, because "Attention" and "attention" are the same label to
+ * the person typing them. The existing tag keeps its own spelling — the reader
+ * is picking it, not renaming it.
+ */
+function exactMatch(
+  tags: readonly CollectionTag[],
+  query: string,
+): CollectionTag | undefined {
+  const needle = query.toLowerCase()
+  return tags.find((tag) => tag.name.toLowerCase() === needle)
 }

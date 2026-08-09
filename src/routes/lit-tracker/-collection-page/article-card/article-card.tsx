@@ -5,7 +5,7 @@ import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { formatAuthors } from '../authors'
 import type { CollectionTag } from './article-menu/article-menu'
 import { ArticleMenu } from './article-menu/article-menu'
-import { TagList } from './tag-list/tag-list'
+import { CardFooter } from './card-footer/card-footer'
 import styles from './article-card.module.css'
 
 /**
@@ -106,7 +106,7 @@ export function ArticleCard({
         </ElidedText>
       )}
 
-      <TagList status={status} tags={tags} />
+      <CardFooter status={status} tags={tags} />
     </article>
   )
 }

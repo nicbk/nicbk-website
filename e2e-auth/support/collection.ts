@@ -19,7 +19,18 @@ export function cards(page: Page): Locator {
   return page.getByRole('list', { name: 'Articles' }).locator('> li')
 }
 
-/** The chip row of one card: its reading status, then its tags. */
+/**
+ * The tag chips of one card.
+ *
+ * Tags only. Reading status shares the card's foot with them but is not one of
+ * them — it is an icon with an accessible name, deliberately quieter than a
+ * chip so it does not out-shout the title. Ask for it with `statusOf`.
+ */
 export function chipsOf(card: Locator): Locator {
-  return card.getByRole('list', { name: 'status and tags' }).locator('> li')
+  return card.getByRole('list', { name: 'tags' }).locator('> li')
+}
+
+/** The reading-status icon of one card, named `status: pending` and so on. */
+export function statusOf(card: Locator): Locator {
+  return card.getByRole('img')
 }

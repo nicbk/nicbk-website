@@ -1,13 +1,19 @@
 /*
- * The card's three-dot menu.
+ * The card's three-dot control and the popover it opens.
  *
+ * The layout here is the whole point of the component: three regions, and only
+ * the middle one scrolls. A reader with thirty tags should be able to hunt
+ * through them without the reading status leaving the screen and without having
+ * to reach the bottom of the list to make a new tag.
+ */
+
+/*
  * The trigger sits in the card's corner and is the only interactive thing on a
  * card, so it is deliberately quiet at rest — the grid should read as a grid of
  * papers, not a grid of buttons — and fully visible on hover and on focus. It is
  * never hidden until hover: a control that appears only under a pointer does not
  * exist for anyone navigating by keyboard or touch.
  */
-
 .trigger {
   display: inline-flex;
   align-items: center;
@@ -30,8 +36,8 @@
   }
 }
 
-/* While the menu is open the trigger stays lit, so it is obvious which card the
-   popup belongs to when several are on screen. */
+/* While the popover is open the trigger stays lit, so it is obvious which card
+   it belongs to when several are on screen. */
 .trigger[data-popup-open] {
   border-color: var(--color-border);
   color: var(--color-text);
@@ -49,12 +55,13 @@
 }
 
 .popup {
-  min-width: 12rem;
-  /* A reader with many tags gets a scrolling list rather than a popup taller
-     than the window. */
-  max-height: min(20rem, calc(100dvh - 4rem));
-  overflow-y: auto;
-  padding: var(--space-2xs) 0;
+  display: flex;
+  flex-direction: column;
+  /* Wide enough for a real tag name, capped so it never reaches a phone's
+     edges. */
+  width: 16rem;
+  max-width: calc(100vw - 2 * var(--space-md));
+  padding: var(--space-sm) 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-bg-surface);
@@ -77,69 +84,187 @@
   }
 }
 
-.groupLabel {
-  padding: var(--space-2xs) var(--space-sm);
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  /* Padding lives on the sections rather than the popup, so the scrolling list
+     below can run to the popup's own edges as it scrolls. */
+  padding: 0 var(--space-sm);
+}
+
+.sectionLabel {
+  margin: 0;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
 
 /*
- * One row per choice. The two-column grid keeps every label on the same
- * vertical line whether or not its row is currently ticked — with the indicator
- * in the flow, labels would shift sideways as tags are toggled.
+ * The three statuses, as one row. Equal columns so the row does not shift as
+ * the selection moves — the pressed state adds weight, and ragged widths would
+ * make that read as the control resizing.
  */
-.item {
+.statusGroup {
   display: grid;
-  grid-template-columns: 1rem 1fr;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-2xs) var(--space-sm);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xs);
+}
+
+.statusOption {
+  padding: var(--space-2xs) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font: inherit;
   font-size: var(--font-size-sm);
   cursor: pointer;
-  user-select: none;
-  outline: none;
 }
 
 /*
- * `data-highlighted` is the menu's own cursor — it follows both the pointer and
- * the arrow keys, which is why it is styled instead of `:hover` and
- * `:focus-visible` separately. Background rather than color alone, so the
- * highlighted row is distinguishable without relying on hue.
+ * The pressed status. Distinguished by border *and* weight as well as color, so
+ * which one is set survives grayscale (WCAG 1.4.1).
  */
-.item[data-highlighted] {
-  background-color: var(--color-bg);
+.statusOption[data-pressed] {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
 }
 
-/*
- * Both tracks are named explicitly, and that is load-bearing rather than
- * tidiness. Base UI unmounts an indicator that is not currently ticked, so an
- * unticked row has exactly one child — which grid auto-places into the *first*
- * column, the 1rem one. The label then wraps inside a 16px box, one character
- * per line. It looks like a font bug and is a placement bug; Base UI's own
- * example pins the columns for the same reason.
- */
-.indicator {
-  grid-column: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1rem;
-  color: var(--color-accent);
-}
-
-.indicatorIcon {
-  width: 0.9rem;
-  height: 0.9rem;
-}
-
-.itemLabel {
-  grid-column: 2;
-  /* Tag names are user-supplied and can be a single long run. */
-  overflow-wrap: anywhere;
+@media (hover: hover) {
+  .statusOption:hover {
+    color: var(--color-text);
+  }
 }
 
 .separator {
   height: 1px;
-  margin: var(--space-2xs) 0;
+  margin: var(--space-sm) 0;
   background-color: var(--color-border);
+}
+
+.filter {
+  width: 100%;
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  /* `font: inherit` rather than a size: form controls do not inherit the
+     document's font family, and the site is monospace throughout. */
+  font: inherit;
+  font-size: var(--font-size-sm);
+}
+
+.filter:focus-visible {
+  border-color: var(--color-accent);
+}
+
+/*
+ * The one scroll container in the popup.
+ *
+ * Capped in `rem` rather than as a fraction of the popup, so the list is the
+ * same height whether the reader has four tags or forty — and `overscroll-behavior`
+ * so reaching its end does not start scrolling the collection behind it.
+ */
+.tagList {
+  max-height: 11rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: var(--space-2xs) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * The whole row is the control, so it is styled as one: full width, no button
+ * chrome, and the hit target is the row rather than a 16px box at its start.
+ */
+.tagOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  padding: var(--space-2xs) 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .tagOption:hover {
+    color: var(--color-accent);
+  }
+}
+
+/* The box itself is decoration — `aria-hidden`, because the row it sits in is
+   already announced as a checkbox with its own state. */
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-accent);
+}
+
+.tagOption[data-checked] .checkbox {
+  border-color: var(--color-accent);
+}
+
+.checkIcon {
+  display: inline-flex;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.checkIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Tag names are user-supplied and can be a single long run. */
+.tagName {
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Pinned below the scrolling list rather than inside it: making a tag used to
+ * be the list's last item, which with thirty tags meant scrolling to the bottom
+ * to reach it.
+ */
+.create {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  margin-block-start: var(--space-2xs);
+  padding: var(--space-2xs) 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.createIcon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+}
+
+.empty {
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }

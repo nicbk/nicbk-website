@@ -123,35 +123,55 @@ describe('ArticleCard', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows this article’s tags, with its reading status among them', () => {
+  it('shows this article’s tags, and its status as an icon beside them', () => {
     renderCard({
       article: articleWith({ status: 'reading' }),
       tags: [ATTENTION_TAG, SURVEY_TAG],
     })
 
-    const chips = screen.getAllByRole('listitem')
-    expect(chips.map((chip) => chip.textContent)).toEqual([
-      'status: reading',
-      'attention',
-      'survey',
-    ])
+    expect(
+      screen.getAllByRole('listitem').map((chip) => chip.textContent),
+    ).toEqual(['attention', 'survey'])
+    // Status is deliberately not a chip: it is an icon with a name, so it reads
+    // as secondary to the title rather than competing with it.
+    expect(screen.getByRole('img')).toHaveAccessibleName('status: reading')
   })
 
-  it('shows a status chip even for an article with no tags at all', () => {
+  it('shows the status even on an article with no tags at all', () => {
     // `pending` is the commonest state on this page — every freshly uploaded
     // paper is one — so it is the one that must not be the invisible one.
     renderCard({ tags: [] })
 
-    expect(screen.getByText(/status:/)).toBeInTheDocument()
+    expect(screen.getByRole('img')).toHaveAccessibleName('status: pending')
+    // And no empty tag row, which would be a tab stop leading nowhere.
+    expect(screen.queryByRole('list', { name: 'tags' })).toBeNull()
   })
 
   it('treats a missing status as pending', () => {
     // Zero types a defaulted column as optional even though Postgres never
-    // stores null there. The card must not render a chip with nothing in it.
+    // stores null there. The card must not render an icon meaning nothing.
     renderCard({ article: articleWith({ status: null }) })
 
-    const [chip] = screen.getAllByRole('listitem')
-    expect(chip?.textContent).toBe('status: pending')
+    expect(screen.getByRole('img')).toHaveAccessibleName('status: pending')
+  })
+
+  it('names the status in a tooltip for a reader who can see the icon', async () => {
+    // The icon carries its meaning in an `aria-label`, which a screen reader
+    // reads and a sighted reader cannot. The tooltip is the other half of that:
+    // the text exists nowhere on the page until the pointer arrives, which is
+    // why this counts one occurrence rather than a second copy of rendered text.
+    const user = userEvent.setup()
+    renderCard({ article: articleWith({ status: 'read' }) })
+    expect(screen.queryAllByText('status: read')).toHaveLength(0)
+
+    await user.hover(screen.getByRole('img'))
+
+    await waitFor(
+      () => {
+        expect(screen.getAllByText('status: read')).toHaveLength(1)
+      },
+      { timeout: 3000 },
+    )
   })
 
   it('reveals the full text of an elided line on hover', async () => {
@@ -192,12 +212,12 @@ describe('ArticleCard', () => {
 
     await user.click(screen.getByRole('button', { name: /Options for/ }))
 
-    const menu = await screen.findByRole('menu')
+    const popup = await screen.findByRole('dialog')
     expect(
-      within(menu).getByRole('menuitemcheckbox', { name: 'attention' }),
+      within(popup).getByRole('checkbox', { name: /attention/ }),
     ).toBeChecked()
     expect(
-      within(menu).getByRole('menuitemcheckbox', { name: 'survey' }),
+      within(popup).getByRole('checkbox', { name: /survey/ }),
     ).not.toBeChecked()
   })
 

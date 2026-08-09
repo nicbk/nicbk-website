@@ -11,7 +11,7 @@ import {
   tagArticleWith,
   tagsOf,
 } from './support/articles'
-import { cards, chipsOf } from './support/collection'
+import { cards, chipsOf, statusOf } from './support/collection'
 import { signInAndLandOn } from './support/sign-in'
 
 /**
@@ -57,14 +57,50 @@ function menuTrigger(page: Page): Locator {
 
 async function openMenu(page: Page): Promise<Locator> {
   await menuTrigger(page).click()
-  const menu = page.getByRole('menu')
-  await expect(menu).toBeVisible()
-  return menu
+  const popup = page.getByRole('dialog')
+  await expect(popup).toBeVisible()
+  return popup
 }
 
-/** The chips on the one card — status first, then tags. */
+/**
+ * The field that both filters the tag list and creates a tag.
+ *
+ * By role rather than by label alone: Playwright matches an accessible name by
+ * substring, so `getByLabel('tags')` also resolves the "matching tags" list
+ * beside it.
+ */
+function tagField(page: Page): Locator {
+  return page.getByRole('dialog').getByRole('textbox', { name: 'tags' })
+}
+
+/**
+ * Tabs forward until `target` has focus, or gives up loudly.
+ *
+ * Asserts that a control is *reachable* by keyboard without pinning which
+ * keystroke reaches it — the popover's initial focus target belongs to Base UI,
+ * and a test that hard-codes it fails on an upgrade that changed nothing this
+ * feature cares about.
+ */
+async function tabTo(page: Page, target: Locator): Promise<void> {
+  for (let step = 0; step < 10; step += 1) {
+    if (
+      await target.evaluate((element) => element === document.activeElement)
+    ) {
+      return
+    }
+    await page.keyboard.press('Tab')
+  }
+  await expect(target).toBeFocused()
+}
+
+/** The tag chips on the one card. */
 function chips(page: Page): Locator {
   return chipsOf(cards(page).first())
+}
+
+/** That card's reading-status icon, whose name is what it means. */
+function status(page: Page): Locator {
+  return statusOf(cards(page).first())
 }
 
 /**
@@ -112,10 +148,9 @@ test.describe('tags and reading status', () => {
   }) => {
     const userId = await oneArticle(page)
 
-    const menu = await openMenu(page)
-    await menu.getByRole('menuitem', { name: 'new tag…' }).click()
-    await page.getByLabel('tag name').fill('transformers')
-    await page.getByRole('button', { name: 'add' }).click()
+    await openMenu(page)
+    await tagField(page).fill('transformers')
+    await tagField(page).press('Enter')
 
     // On the card first — this is the optimistic half.
     await expect(chips(page).filter({ hasText: 'transformers' })).toHaveCount(1)
@@ -135,10 +170,10 @@ test.describe('tags and reading status', () => {
     const userId = await oneArticle(page)
     await insertTag(userId, 'survey')
 
-    const menu = await openMenu(page)
-    await menu.getByRole('menuitem', { name: 'new tag…' }).click()
-    await page.getByLabel('tag name').fill('survey')
-    await page.getByRole('button', { name: 'add' }).click()
+    await openMenu(page)
+    // An existing name applies that tag rather than making a second of it.
+    await tagField(page).fill('survey')
+    await tagField(page).press('Enter')
 
     await expect(chips(page).filter({ hasText: 'survey' })).toHaveCount(1)
     await expect
@@ -153,7 +188,7 @@ test.describe('tags and reading status', () => {
     await insertTag(userId, 'survey')
 
     const menu = await openMenu(page)
-    const item = menu.getByRole('menuitemcheckbox', { name: 'survey' })
+    const item = menu.getByRole('checkbox', { name: /survey/ })
     await item.click()
     await expect
       .poll(() => tagsOf(userId))
@@ -174,21 +209,21 @@ test.describe('tags and reading status', () => {
     page,
   }) => {
     const userId = await oneArticle(page)
-    await expect(chips(page).first()).toHaveText(/pending/)
+    await expect(status(page)).toHaveAccessibleName('status: pending')
 
     const menu = await openMenu(page)
-    await menu.getByRole('menuitemradio', { name: 'reading' }).click()
-    await expect(chips(page).first()).toHaveText(/reading/)
+    await menu.getByRole('button', { name: 'reading' }).click()
+    await expect(status(page)).toHaveAccessibleName('status: reading')
     await expect.poll(() => statusOfArticle(userId, PAPER)).toBe('reading')
 
     // `exact`, because Playwright matches an accessible name by substring and
     // "read" is a prefix of "reading" — without it this resolves to two items.
-    await menu.getByRole('menuitemradio', { name: 'read', exact: true }).click()
+    await menu.getByRole('button', { name: 'read', exact: true }).click()
 
-    // One chip, not two: mutual exclusivity is the column being single-valued,
-    // and there is no second write clearing the old value.
-    await expect(chips(page).first()).toHaveText('status: read')
-    await expect(chips(page)).toHaveCount(1)
+    // One status, not two: mutual exclusivity is the column being
+    // single-valued, and there is no second write clearing the old value.
+    await expect(status(page)).toHaveAccessibleName('status: read')
+    await expect(status(page)).toHaveCount(1)
     await expect.poll(() => statusOfArticle(userId, PAPER)).toBe('read')
   })
 
@@ -209,10 +244,9 @@ test.describe('tags and reading status', () => {
       await watching.goto(TRACKER)
       await expect(cards(watching)).toHaveCount(1)
 
-      const menu = await openMenu(page)
-      await menu.getByRole('menuitem', { name: 'new tag…' }).click()
-      await page.getByLabel('tag name').fill('live')
-      await page.getByRole('button', { name: 'add' }).click()
+      await openMenu(page)
+      await tagField(page).fill('live')
+      await tagField(page).press('Enter')
 
       // Nothing reloads the second window. The tag arrives because the write
       // reached Postgres and replicated back out.
@@ -237,12 +271,13 @@ test.describe('tags and reading status', () => {
     const watching = await watcher.newPage()
     try {
       await watching.goto(TRACKER)
-      await expect(chips(watching).first()).toHaveText(/pending/)
+      const watched = statusOf(cards(watching).first())
+      await expect(watched).toHaveAccessibleName('status: pending')
 
       const menu = await openMenu(page)
-      await menu.getByRole('menuitemradio', { name: 'reading' }).click()
+      await menu.getByRole('button', { name: 'reading' }).click()
 
-      await expect(chips(watching).first()).toHaveText(/reading/)
+      await expect(watched).toHaveAccessibleName('status: reading')
     } finally {
       await watcher.close()
     }
@@ -257,25 +292,31 @@ test.describe('tags and reading status', () => {
     const trigger = menuTrigger(page)
     await trigger.focus()
     await page.keyboard.press('Enter')
-    await expect(page.getByRole('menu')).toBeVisible()
+    const popup = page.getByRole('dialog')
+    await expect(popup).toBeVisible()
 
-    // Opening with Enter already highlights the first item — the status group
-    // leads — so this walks *from* there rather than assuming focus is still on
-    // the trigger. Arrow keys move the menu's own cursor, which is the whole
-    // reason the statuses are `menuitemradio`s rather than a toolbar wedged
-    // into a popup.
-    await expect(
-      page.getByRole('menuitemradio', { name: 'pending' }),
-    ).toBeFocused()
-    await page.keyboard.press('ArrowDown')
-    await expect(
-      page.getByRole('menuitemradio', { name: 'reading' }),
-    ).toBeFocused()
+    // Reachability rather than a specific tab ordinal: where a popover puts
+    // focus on open is Base UI's business and may reasonably change, while
+    // "every control in here can be reached by tabbing" is this feature's.
+    await tabTo(page, popup.getByRole('button', { name: 'pending' }))
+    // Within the group it is arrow keys, not Tab — that is what a `ToggleGroup`
+    // buys over three loose buttons, and why the statuses are one.
+    await page.keyboard.press('ArrowRight')
+    await expect(popup.getByRole('button', { name: 'reading' })).toBeFocused()
     await page.keyboard.press('Enter')
     await expect.poll(() => statusOfArticle(userId, PAPER)).toBe('reading')
 
+    // And the tag field is reachable too, so creating a tag never needs a
+    // pointer either.
+    await tabTo(page, tagField(page))
+    await page.keyboard.type('keyboard-made')
+    await page.keyboard.press('Enter')
+    await expect
+      .poll(() => tagsOf(userId).then((tags) => tags.map((tag) => tag.name)))
+      .toContain('keyboard-made')
+
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('menu')).toBeHidden()
+    await expect(popup).toBeHidden()
     // Back where it started, rather than at the top of the document — which
     // would mean tabbing through the whole grid again.
     await expect(trigger).toBeFocused()
@@ -289,6 +330,89 @@ test.describe('tags and reading status', () => {
     await cards(page).first().getByRole('heading').hover()
 
     await expect(page.getByText(PAPER, { exact: true })).toHaveCount(2)
+  })
+
+  test('keeps the status and the tag field in view while the tag list scrolls', async ({
+    page,
+  }) => {
+    // The three problems that turned this control from a menu into a popover,
+    // all of which only appear once a reader has a real number of tags: a menu
+    // is one list and scrolls as one, so hunting for a tag scrolled the reading
+    // status away, and the way to make a new tag sat past the end of the list.
+    const userId = await oneArticle(page)
+    for (const name of MANY_TAGS) {
+      await insertTag(userId, name)
+    }
+
+    const popup = await openMenu(page)
+    const status = popup.getByRole('button', { name: 'pending' })
+    const list = popup.getByRole('list', { name: 'matching tags' })
+    await expect(list.getByRole('checkbox')).toHaveCount(MANY_TAGS.length)
+
+    // The popup scales in, so a box measured immediately is a frame of the
+    // animation rather than a resting position — and comparing two frames of a
+    // transition is how this test was flaky before.
+    await page.waitForTimeout(300)
+
+    const before = await status.boundingBox()
+    await list.evaluate((element) => {
+      element.scrollTop = element.scrollHeight
+    })
+
+    // The list really did scroll…
+    expect(await list.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+      0,
+    )
+    // …and nothing else moved with it.
+    expect(await status.boundingBox()).toEqual(before)
+    await expect(status).toBeVisible()
+    await expect(tagField(page)).toBeVisible()
+    // The popup itself never scrolls — only the list inside it does.
+    expect(
+      await popup.evaluate(
+        (element) => element.scrollHeight - element.clientHeight,
+      ),
+    ).toBe(0)
+  })
+
+  test('offers to create a tag without scrolling past the list to find it', async ({
+    page,
+  }) => {
+    const userId = await oneArticle(page)
+    for (const name of MANY_TAGS) {
+      await insertTag(userId, name)
+    }
+
+    const popup = await openMenu(page)
+    await tagField(page).fill('brand-new')
+
+    // Typing a name nothing matches empties the list, so the create control is
+    // in view by construction rather than by luck.
+    const create = popup.getByRole('button', { name: /create/ })
+    await expect(create).toBeVisible()
+    await create.click()
+
+    await expect
+      .poll(() => tagsOf(userId).then((tags) => tags.map((tag) => tag.name)))
+      .toContain('brand-new')
+  })
+
+  test('filters a long tag list down to what was typed', async ({ page }) => {
+    const userId = await oneArticle(page)
+    for (const name of MANY_TAGS) {
+      await insertTag(userId, name)
+    }
+
+    const popup = await openMenu(page)
+    const list = popup.getByRole('list', { name: 'matching tags' })
+    await expect(list.getByRole('checkbox')).toHaveCount(MANY_TAGS.length)
+
+    await tagField(page).fill('seq')
+
+    // Substring, not prefix: `seq2seq` matches, and so would anything else
+    // carrying those letters anywhere.
+    await expect(list.getByRole('checkbox')).toHaveCount(1)
+    await expect(list.getByRole('checkbox', { name: /seq2seq/ })).toBeVisible()
   })
 
   test('keeps every card the same size when one carries more tags than fit', async ({
@@ -307,7 +431,7 @@ test.describe('tags and reading status', () => {
     await tagArticleWith(userId, articleId, MANY_TAGS)
 
     const tagged = cards(page).filter({ hasText: PAPER })
-    await expect(chipsOf(tagged)).toHaveCount(MANY_TAGS.length + 1)
+    await expect(chipsOf(tagged)).toHaveCount(MANY_TAGS.length)
 
     const measured = await page.evaluate(
       ([title]) => {
@@ -358,10 +482,8 @@ test.describe('tags and reading status', () => {
     }
     await tagArticleWith(userId, articleId, MANY_TAGS)
 
-    const row = cards(page)
-      .first()
-      .getByRole('list', { name: 'status and tags' })
-    await expect(chips(page)).toHaveCount(MANY_TAGS.length + 1)
+    const row = cards(page).first().getByRole('list', { name: 'tags' })
+    await expect(chips(page)).toHaveCount(MANY_TAGS.length)
 
     await row.focus()
     await expect(row).toBeFocused()
@@ -428,7 +550,7 @@ test.describe('tags and reading status', () => {
       }
       await tagArticleWith(userId, articleId, MANY_TAGS)
       await toggleThemeTo(page, theme)
-      await expect(chips(page)).toHaveCount(MANY_TAGS.length + 1)
+      await expect(chips(page)).toHaveCount(MANY_TAGS.length)
 
       await expectNoA11yViolations()
     })

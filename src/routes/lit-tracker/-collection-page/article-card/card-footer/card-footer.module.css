@@ -1,0 +1,129 @@
+/*
+ * The foot of a card: tags on the left, reading status on the right.
+ *
+ * One row, and it never becomes two. The grid gives every row the height of its
+ * tallest card (`grid-auto-rows: 1fr` in collection-page.module.css), so a
+ * second line here would make every card in the row taller — including the ones
+ * with no tags at all. The tags scroll sideways instead; the status stays put.
+ */
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  /* Sits against the card's foot regardless of how short the text above is,
+     which is what keeps neighbouring cards' rows on one line. */
+  margin-block-start: auto;
+  padding-block-start: var(--space-xs);
+}
+
+/*
+ * The scrolling half.
+ *
+ * `min-width: 0` is what lets it actually overflow: a flex item's automatic
+ * minimum is its content's, which for a row of chips is all of them — without
+ * it the row would widen the card rather than scroll.
+ */
+.tagList {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2xs);
+  overflow-x: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /*
+   * No scrollbar. A visible one would eat a few pixels of every card's height —
+   * including the cards with one tag, which never scroll — and the grid's equal
+   * rows would then be equal-but-shorter for no visible reason.
+   *
+   * Both properties are needed: `scrollbar-width` is the standard and Firefox
+   * honours it; WebKit and Blink still need the pseudo-element. Hiding a
+   * scrollbar hides an affordance, which is why the region is focusable below.
+   */
+  scrollbar-width: none;
+  /*
+   * The hidden scrollbar's replacement affordance: the trailing edge fades, so
+   * a row with more tags than fit looks cut off rather than merely ending. It
+   * is anchored to the container, not the content, so it stays at the right
+   * edge as the row scrolls.
+   *
+   * Applied unconditionally because "is this scrolling?" is not a thing CSS can
+   * ask. On a row that fits, the last chip ends before the fade begins and
+   * nothing is dimmed.
+   */
+  mask-image: linear-gradient(
+    to right,
+    black calc(100% - var(--space-md)),
+    transparent
+  );
+}
+
+.tagList::-webkit-scrollbar {
+  display: none;
+}
+
+.tagList:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  /* Chips keep their own width and their text stays on one line: this row
+     scrolls rather than reflowing, so a squashed chip would just be unreadable
+     rather than usefully smaller. */
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/*
+ * The status. Bigger than the text around it because it is the only thing
+ * carrying its meaning — there is no word beside it — but muted, and with no
+ * border or fill, so it stays behind the title in the card's hierarchy rather
+ * than in front of it.
+ *
+ * `margin-inline-start: auto` puts it at the trailing edge even on a card with
+ * no tags at all, where there is no list to push it there.
+ */
+.status {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  color: var(--color-text-muted);
+}
+
+.statusIcon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.tooltip {
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tooltip {
+    transition: opacity var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .tooltip[data-starting-style],
+  .tooltip[data-ending-style] {
+    opacity: 0;
+  }
+}

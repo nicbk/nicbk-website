@@ -67,6 +67,43 @@ research-over-recall. Two findings change the plan:
   `mustGetMutator(registry, name).fn({args, tx, ctx})`, and Base UI 1.6.0 ships
   `menu`, `toggle-group`, `combobox`, `tooltip`, and `toast`.
 
+## What the card control became, and why
+
+The three-dot control was a Base UI **`Menu`** first, built from `RadioItem`s
+and `CheckboxItem`s. That was the right shape for the plan's brief — the plan
+had proposed a `ToggleGroup` and a `Combobox` *inside* a menu, which a `menu`
+role cannot host, since its children are `menuitem`s and a textbox among them
+breaks the keyboard model that makes a menu a menu.
+
+It stopped being the right shape the moment a reader had a real number of tags.
+Three problems, raised by the user, all the same problem underneath — **a menu
+is one flat list, so it scrolls as one**:
+
+1. Scrolling to a tag scrolled the reading status out of view.
+2. "new tag…" sat past the end of the tag list, so making one meant scrolling to
+   the bottom first.
+3. There was nowhere to put a filter, which is what a list of thirty tags needs.
+
+It is now a **`Popover`** holding three regions that behave differently: a
+`ToggleGroup` for status that never scrolls, a filter field that never scrolls
+and doubles as the way a tag is created, and the tag list — the only thing in
+the popup that scrolls at all. The separate naming dialog is gone: typing a name
+and pressing Enter applies it if it exists and creates it if it does not, which
+is the same rule as before with one fewer surface.
+
+## The card's foot, and how loud status should be
+
+Also user-raised: as a chip, reading status read *louder than the title* — an
+outlined box with a word in it, under a title that is only text. It is now an
+icon at the trailing edge, tags scrolling to its left, with a tooltip naming it
+for a reader who can see it and an `aria-label` for one who cannot. The decided
+model — status renders "as a tag", filterable beside real tags — survives where
+it matters; what changed is its weight on the card.
+
+The tag row gained a fade at its trailing edge in the same pass. It is the
+replacement affordance for the scrollbar that is deliberately hidden: without
+it, a row with more tags than fit simply looks like a row that ends.
+
 ## What was found in the browser
 
 Five things the automated tiers could not have caught, all fixed:

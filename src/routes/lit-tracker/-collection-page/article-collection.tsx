@@ -1,14 +1,14 @@
-import type { Author } from '~/db/schema/lit-tracker'
 import { TrackerLoading } from '../-components/tracker-loading/tracker-loading'
-import { formatAuthors } from './authors'
+import type { CollectionArticle } from './article-card/article-card'
+import { ArticleCard } from './article-card/article-card'
 import styles from './collection-page.module.css'
 
-/** The article fields this surface shows — deliberately not the whole row. */
-export interface CollectionArticle {
-  id: string
-  title: string
-  authors: readonly Author[]
-}
+/**
+ * Defined next to the card that consumes it — it describes the fields *a card
+ * shows* — and re-exported here because this component is what callers hand
+ * rows to.
+ */
+export type { CollectionArticle } from './article-card/article-card'
 
 /**
  * Whether the collection is known yet.
@@ -33,16 +33,18 @@ export const COLLECTION_ERROR_MESSAGE =
   'your collection could not be loaded. it will reappear once the connection recovers.'
 
 /**
- * The article collection, as a plain list of titles and authors.
+ * The article collection, as a grid of cards.
  *
  * Presentational on purpose: it takes rows and a state rather than running the
  * query itself, so it can be rendered — and asserted — without a Zero client.
  * `CollectionPage` next door is the half that talks to Zero.
  *
- * Deliberately minimal, and deliberately not throwaway. #8 replaces this list
- * with the card grid and builds the tag sidebar and live search around it; the
- * author formatting, the empty-state wording, and the syncing/ready/error split
- * all survive that. What #8 changes is how a row is drawn, not what a row is.
+ * This component predates the card: #7 shipped it as a plain list of titles and
+ * authors, and #8's first task replaced only how a row is drawn. The
+ * syncing/ready/error split, the empty-state wording, and the author formatting
+ * are unchanged, which is what "upgraded, not replaced" meant in practice.
+ * Still to come here: tags on the card and its three-dot menu (task 2), and the
+ * filtering that decides which rows arrive at all (tasks 3 and 4).
  */
 export function ArticleCollection({ articles, state }: ArticleCollectionProps) {
   if (state === 'error') {
@@ -70,13 +72,13 @@ export function ArticleCollection({ articles, state }: ArticleCollectionProps) {
   }
 
   return (
-    <ul className={styles.list} aria-label="Articles">
+    <ul className={styles.grid} aria-label="Articles">
       {articles.map((article) => (
-        <li key={article.id} className={styles.entry}>
-          <span className={styles.entryTitle}>{article.title}</span>
-          <span className={styles.authors}>
-            {formatAuthors(article.authors)}
-          </span>
+        // The containment lives on the grid cell rather than on the card, so the
+        // card measures the space it was *given* rather than the space it
+        // happens to occupy — a container cannot query itself.
+        <li key={article.id} className={styles.cell}>
+          <ArticleCard article={article} />
         </li>
       ))}
     </ul>

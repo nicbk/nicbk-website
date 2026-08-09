@@ -1,0 +1,102 @@
+/*
+ * The article card.
+ *
+ * Everything responsive here is a **container query**, not a media query. The
+ * decided design system names the article card as its example of a component
+ * that must adapt to whichever container it is placed in
+ * (research/ui-ux/design-system.md) — the main grid today, a narrower panel
+ * whenever a later feature reuses it. The page-level breakpoints belong to the
+ * grid around it, in collection-page.module.css, which is also where the
+ * containment is declared: a container query needs an ancestor to query.
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  /* Fills the grid cell it was given, which the grid has already made the same
+     size as every other cell. */
+  height: 100%;
+  /* Same reason as the cell around it: the card is a flex item, and its own
+     minimum would otherwise be that of its widest unwrappable line. */
+  min-width: 0;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  /* A title is arbitrary text and can carry an unbroken run — a DOI, a URL, a
+     German compound. It wraps rather than widening the card past its cell. */
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Every text line is bounded, and what does not fit is elided rather than
+ * allowed to grow the card. This is what lets the grid be uniform: a paper with
+ * a six-line title and one with a three-word title occupy the same box, and the
+ * elided text is still reachable — each of these carries a `title` attribute, so
+ * hovering shows the whole of it.
+ *
+ * `-webkit-line-clamp` is the multi-line form and is unprefixed nowhere yet;
+ * `line-clamp` is written beside it so this stops being a prefixed property on
+ * its own the moment browsers ship the standard name.
+ */
+.title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+}
+
+.authors {
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  /* One line: an author list is a single run of names, so there is no second
+     line worth showing half of. */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/*
+ * When and where the paper appeared: one line, elided like the authors above it.
+ * The year leads so that it survives the truncation a long venue name always
+ * causes (article-card.tsx explains the ordering).
+ *
+ * It sits directly under the authors rather than being pushed to the foot of the
+ * card. Pinned to the bottom, a two-line entry beside a four-line one shows a
+ * gap through its middle, which reads as a rendering fault rather than as
+ * alignment — and the grid already guarantees the cards are the same size, so
+ * there is nothing left for the pinning to buy.
+ */
+.meta {
+  overflow: hidden;
+  margin: 0;
+  padding-block-start: var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/*
+ * In a container too narrow for comfortable padding — a sidebar, a split pane —
+ * the card gives its text back the space its frame was taking. This is what the
+ * container query buys over a media query: the same card is placed in the main
+ * grid at 20rem and could be placed in a rail at 13rem, and it is the space it
+ * was *given* that decides, not the width of the window.
+ */
+@container (max-width: 15rem) {
+  .card {
+    padding: var(--space-sm);
+  }
+
+  .meta {
+    padding-block-start: var(--space-2xs);
+  }
+}

@@ -16,6 +16,8 @@ without a Zero client, the way `ArticleCollection`'s existing tests do.
 - **A sparse article** — no venue, no year — renders neither, and produces no
   empty label, stray separator, or dangling punctuation. This is the case a
   preprint actually is, so it is not a hypothetical.
+- **Every line carries its full text as a `title`**, since every line is
+  clamped — that attribute is the only place an elided title is readable from.
 - **The card is not a link**: no anchor, no `role="link"`, no click handler.
 - **The collection renders one card per article**, as a list, with the article's
   id as the key.
@@ -32,6 +34,10 @@ without a Zero client, the way `ArticleCollection`'s existing tests do.
 - **Layout across widths**: the grid shows multiple columns at a wide width and
   a single column at a narrow one, with no horizontal overflow at any of narrow,
   mid, or wide.
+- **Uniform cells**: two articles with wildly different amounts of text produce
+  cards of identical width and height, and the longer title is demonstrably
+  clipped rather than fitting by luck — without that second assertion the equal
+  heights prove nothing.
 - **Both themes** are correct, with no flash of the wrong theme.
 - **The upload flow still works.** The "+" button and status indicator are
   directly above the surface this task rewrites; #7's existing e2e coverage of

@@ -51,6 +51,10 @@ const validEnvironment = {
   GOOGLE_CLIENT_SECRET: 'client-secret',
   ZERO_QUERY_API_KEY: 'q'.repeat(48),
   ZERO_MUTATE_API_KEY: 'm'.repeat(48),
+  GARAGE_ENDPOINT: 'http://garage:3900',
+  GARAGE_ACCESS_KEY_ID: `GK${'a'.repeat(24)}`,
+  GARAGE_SECRET_ACCESS_KEY: 'f'.repeat(64),
+  GARAGE_BUCKET: 'nicbk-website',
 }
 
 describe('the application environment schema', () => {
@@ -70,6 +74,10 @@ describe('the application environment schema', () => {
     'GOOGLE_CLIENT_SECRET',
     'ZERO_QUERY_API_KEY',
     'ZERO_MUTATE_API_KEY',
+    'GARAGE_ENDPOINT',
+    'GARAGE_ACCESS_KEY_ID',
+    'GARAGE_SECRET_ACCESS_KEY',
+    'GARAGE_BUCKET',
   ])('refuses to start without %s', (variable) => {
     const incomplete: Record<string, string> = { ...validEnvironment }
     delete incomplete[variable]
@@ -111,6 +119,31 @@ describe('the application environment schema', () => {
     expect(() =>
       parseEnv(envSchema, { ...validEnvironment, [variable]: 'short' }),
     ).toThrowError(new RegExp(variable))
+  })
+
+  it.each([
+    ['a placeholder', 'changeme'],
+    ['a key with no GK prefix', 'a'.repeat(26)],
+    ['a key with non-hex characters', 'GKzzzzzzzzzzzzzzzzzzzzzzzz'],
+  ])('rejects a Garage access key ID that is %s', (_case, value) => {
+    // Garage fixes this shape and refuses anything else at import time, so
+    // catching it here turns a bad paste into a named startup error rather than
+    // an InvalidAccessKeyId on the first upload.
+    expect(() =>
+      parseEnv(envSchema, {
+        ...validEnvironment,
+        GARAGE_ACCESS_KEY_ID: value,
+      }),
+    ).toThrowError(/GARAGE_ACCESS_KEY_ID/)
+  })
+
+  it('rejects a Garage endpoint that is not an HTTP URL', () => {
+    expect(() =>
+      parseEnv(envSchema, {
+        ...validEnvironment,
+        GARAGE_ENDPOINT: 'garage:3900',
+      }),
+    ).toThrowError(/GARAGE_ENDPOINT/)
   })
 
   it('keeps every variable server-only', () => {

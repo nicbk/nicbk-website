@@ -20,6 +20,7 @@ import { Route as personalSiteBlogIndexRouteImport } from './routes/(personal-si
 import { Route as personalSitehomeIndexRouteImport } from './routes/(personal-site)/(home)/index'
 import { Route as ApiZeroQueryRouteImport } from './routes/api/zero/query'
 import { Route as ApiZeroMutateRouteImport } from './routes/api/zero/mutate'
+import { Route as ApiLitTrackerUploadRouteImport } from './routes/api/lit-tracker/upload'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog/$slug'
 
@@ -78,6 +79,11 @@ const ApiZeroMutateRoute = ApiZeroMutateRouteImport.update({
   path: '/api/zero/mutate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLitTrackerUploadRoute = ApiLitTrackerUploadRouteImport.update({
+  id: '/api/lit-tracker/upload',
+  path: '/api/lit-tracker/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/lit-tracker/': typeof LitTrackerIndexRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/lit-tracker/upload': typeof ApiLitTrackerUploadRoute
   '/api/zero/mutate': typeof ApiZeroMutateRoute
   '/api/zero/query': typeof ApiZeroQueryRoute
   '/': typeof personalSitehomeIndexRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/lit-tracker': typeof LitTrackerIndexRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/lit-tracker/upload': typeof ApiLitTrackerUploadRoute
   '/api/zero/mutate': typeof ApiZeroMutateRoute
   '/api/zero/query': typeof ApiZeroQueryRoute
   '/': typeof personalSitehomeIndexRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/lit-tracker/': typeof LitTrackerIndexRoute
   '/(personal-site)/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/lit-tracker/upload': typeof ApiLitTrackerUploadRoute
   '/api/zero/mutate': typeof ApiZeroMutateRoute
   '/api/zero/query': typeof ApiZeroQueryRoute
   '/(personal-site)/(home)/': typeof personalSitehomeIndexRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/lit-tracker/'
     | '/blog/$slug'
     | '/api/auth/$'
+    | '/api/lit-tracker/upload'
     | '/api/zero/mutate'
     | '/api/zero/query'
     | '/'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/lit-tracker'
     | '/blog/$slug'
     | '/api/auth/$'
+    | '/api/lit-tracker/upload'
     | '/api/zero/mutate'
     | '/api/zero/query'
     | '/'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/lit-tracker/'
     | '/(personal-site)/blog/$slug'
     | '/api/auth/$'
+    | '/api/lit-tracker/upload'
     | '/api/zero/mutate'
     | '/api/zero/query'
     | '/(personal-site)/(home)/'
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   SignInRouteRoute: typeof SignInRouteRoute
   ErrorProbeRoute: typeof ErrorProbeRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiLitTrackerUploadRoute: typeof ApiLitTrackerUploadRoute
   ApiZeroMutateRoute: typeof ApiZeroMutateRoute
   ApiZeroQueryRoute: typeof ApiZeroQueryRoute
 }
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiZeroMutateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/lit-tracker/upload': {
+      id: '/api/lit-tracker/upload'
+      path: '/api/lit-tracker/upload'
+      fullPath: '/api/lit-tracker/upload'
+      preLoaderRoute: typeof ApiLitTrackerUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -320,6 +340,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRouteRoute: SignInRouteRoute,
   ErrorProbeRoute: ErrorProbeRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiLitTrackerUploadRoute: ApiLitTrackerUploadRoute,
   ApiZeroMutateRoute: ApiZeroMutateRoute,
   ApiZeroQueryRoute: ApiZeroQueryRoute,
 }

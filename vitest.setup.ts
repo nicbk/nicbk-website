@@ -12,6 +12,12 @@ const placeholderEnv: Record<string, string> = {
   GOOGLE_CLIENT_SECRET: 'unit-test-placeholder-client-secret',
   ZERO_QUERY_API_KEY: 'unit-test-placeholder-zero-query-api-key',
   ZERO_MUTATE_API_KEY: 'unit-test-placeholder-zero-mutate-api-key',
+  GARAGE_ENDPOINT: 'http://localhost:3900',
+  // Shaped like a real Garage key ID because src/env.ts validates the shape;
+  // the hex is otherwise meaningless, and nothing in the unit tier connects.
+  GARAGE_ACCESS_KEY_ID: 'GK000000000000000000000000',
+  GARAGE_SECRET_ACCESS_KEY: 'unit-test-placeholder-garage-secret-key',
+  GARAGE_BUCKET: 'unit-tests',
 }
 for (const [name, value] of Object.entries(placeholderEnv)) {
   process.env[name] ??= value

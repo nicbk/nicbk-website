@@ -1,0 +1,215 @@
+/*
+ * The "+" trigger and the picker modal it opens.
+ *
+ * The modal chrome deliberately mirrors the site's user-settings modal — same
+ * scrim, same centered card, same flat action button — because they are the
+ * same kind of surface and a second, separately-invented modal look would be a
+ * visible inconsistency between two dialogs one click apart.
+ */
+
+/*
+ * An icon-only control on the toolbar row. Sized in `em` so it tracks the
+ * toolbar's own font size rather than fixing a pixel box that stops matching
+ * the row beside it.
+ */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .trigger:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .trigger {
+    transition:
+      color var(--motion-duration-fast) var(--motion-ease),
+      border-color var(--motion-duration-fast) var(--motion-ease);
+  }
+}
+
+.triggerIcon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+  background-color: rgb(0 0 0 / 40%);
+}
+
+:global(:root[data-theme="dark"]) .backdrop {
+  background-color: rgb(0 0 0 / 60%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop {
+    transition: opacity var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .backdrop[data-starting-style],
+  .backdrop[data-ending-style] {
+    opacity: 0;
+  }
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 26rem;
+  max-width: calc(100vw - 2 * var(--space-lg));
+  max-height: calc(100dvh - 2 * var(--space-lg));
+  overflow-y: auto;
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  /* Scaled via `scale` rather than folded into `transform`, which is already
+     carrying the centering translation. */
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+.close {
+  align-self: flex-start;
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .close:hover {
+    color: var(--color-text);
+  }
+}
+
+.closeIcon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.pickerLabel {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * The native file input, restyled only as far as it can be portably: browsers
+ * render the button part with a vendor pseudo-element, so the reachable part
+ * here is the box around it. Left native on purpose — a hand-rolled picker
+ * would have to reimplement multi-select, keyboard operation, and the platform
+ * file dialog, all of which this already does correctly.
+ */
+.picker {
+  min-width: 0;
+  max-width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.errors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * Inline failure text, matching the site's existing error treatment: the error
+ * token plus a rule down the edge, so the state is never carried by color
+ * alone (WCAG 1.4.1).
+ */
+.error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-sm);
+  border-left: 2px solid var(--color-error);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  /* Filenames are user-supplied and unbreakable at spaces. */
+  overflow-wrap: anywhere;
+}
+
+.errorFile {
+  font-weight: var(--font-weight-bold);
+}
+
+.submit {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .submit:hover:not([data-disabled]) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/* `data-disabled` rather than `:disabled`: the button stays focusable while
+   inert (`focusableWhenDisabled`), so the attribute is never set. */
+.submit[data-disabled] {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .submit {
+    transition:
+      color var(--motion-duration-fast) var(--motion-ease),
+      border-color var(--motion-duration-fast) var(--motion-ease);
+  }
+}

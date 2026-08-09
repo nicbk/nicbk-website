@@ -24,6 +24,7 @@
     "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && lefthook install || echo 'lefthook install skipped (not a git checkout, e.g. a Docker build)'"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1106.0",
     "@base-ui/react": "^1.6.0",
     "@better-auth/drizzle-adapter": "^1.6.25",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -36,6 +37,7 @@
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.23.0",
     "pg": "^8.22.0",
+    "pg-boss": "^12.27.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "rehype-pretty-code": "^0.14.4",

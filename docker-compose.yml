@@ -95,6 +95,11 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      # An upload that reached a store with no layout would fail at the first
+      # write, so the app waits for the bucket to exist rather than discovering
+      # its absence one request at a time.
+      garage-init:
+        condition: service_completed_successfully
     restart: unless-stopped
     networks:
       - app-internal
@@ -177,9 +182,67 @@ services:
     networks:
       - app-internal
 
+  garage:
+    # The blob store holding uploaded PDFs (research/technologies/blob-storage.md).
+    # Single node: durability comes from the host's backups, not from Garage.
+    #
+    # Nothing here is published to the host in production — the app reaches it
+    # over the internal network, and every PDF read and write is proxied through
+    # the app server's own authorization, never a presigned URL
+    # (research/security-privacy/pdf-and-annotation-data-protection.md).
+    image: dxflrs/garage:v2.3.0
+    environment:
+      # Overriding the config file's own settings, so no secret is committed.
+      # The RPC secret authenticates cluster members; with one node it protects
+      # the port from anything else on the network.
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?set GARAGE_RPC_SECRET in .env}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?set GARAGE_ADMIN_TOKEN in .env}
+    volumes:
+      - ./docker/garage.toml:/etc/garage.toml:ro
+      # Metadata and data on separate volumes because they have different
+      # backup characteristics: the metadata is small and changes constantly,
+      # the data is large and append-mostly.
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    healthcheck:
+      # Garage's own liveness endpoint, unauthenticated by design. `up` alone
+      # would let the bootstrap job start before the listeners are open.
+      test: ["CMD", "/garage", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - app-internal
+
+  garage-init:
+    # Makes the store usable, then exits — a fresh Garage node has no cluster
+    # layout and answers no S3 request until one is applied. Runs from the app
+    # image for the same reason the migrator does: one image to build and pin,
+    # and the script needs nothing but `fetch`. See scripts/garage-init.mjs for
+    # why this speaks HTTP rather than running the `garage` CLI.
+    <<: *app-image
+    command: ["node", "/usr/local/lib/garage-init.mjs"]
+    environment:
+      GARAGE_ADMIN_URL: http://garage:3903
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?set GARAGE_ADMIN_TOKEN in .env}
+      GARAGE_ACCESS_KEY_ID: ${GARAGE_ACCESS_KEY_ID:?set GARAGE_ACCESS_KEY_ID in .env}
+      GARAGE_SECRET_ACCESS_KEY: ${GARAGE_SECRET_ACCESS_KEY:?set GARAGE_SECRET_ACCESS_KEY in .env}
+      GARAGE_BUCKET: ${GARAGE_BUCKET:?set GARAGE_BUCKET in .env}
+    depends_on:
+      garage:
+        condition: service_healthy
+    # Re-running is a no-op: the script checks each step before doing it.
+    restart: "no"
+    networks:
+      - app-internal
+
 volumes:
   db-data:
   zero-replica:
+  garage-meta:
+  garage-data:
 
 networks:
   app-internal:

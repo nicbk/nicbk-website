@@ -1,6 +1,7 @@
 import type { QueryResultDetails } from '@rocicorp/zero'
 import { useQuery } from '@rocicorp/zero/react'
 import { queries } from '~/zero/queries'
+import { CollectionToolbar } from '../-components/collection-toolbar/collection-toolbar'
 import type { CollectionState } from './article-collection'
 import { ArticleCollection } from './article-collection'
 import styles from './collection-page.module.css'
@@ -21,9 +22,9 @@ import styles from './collection-page.module.css'
  * materialized views by query hash, so the identical request resolves to the
  * identical view.
  *
- * This is the minimal surface — no search, no tags, no filter sidebar, no "+"
- * button, no infinite scroll. The upload flow arrives in task 3 and the full
- * collection view is #8; both build on this page rather than replacing it.
+ * This is still a minimal surface — no search, no tags, no filter sidebar, no
+ * infinite scroll. Task 3 added the toolbar above the list; the full collection
+ * view is #8, which builds on this page rather than replacing it.
  */
 export function CollectionPage() {
   const [articles, details] = useQuery(queries.articles.mine())
@@ -33,6 +34,11 @@ export function CollectionPage() {
       {/* The page's single visible <h1> and the route-change focus-handoff
           target (src/focus-handoff.ts). */}
       <h1 className={styles.title}>collection</h1>
+
+      {/* Above the collection and outside its loading states: uploading does
+          not depend on the article query having landed, and hiding the "+"
+          while the first sync is in flight would make the page look broken. */}
+      <CollectionToolbar />
 
       <ArticleCollection articles={articles} state={collectionState(details)} />
     </>

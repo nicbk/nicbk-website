@@ -27,3 +27,21 @@ sub-apps) links into.
 
 Uses the [site header](./header.md) as the underlying page context it's
 triggered from (the modal itself has no separate header).
+
+## Revision — 2026-08-08: the dialog header is one row
+
+The mockup stacks the dismiss control and the title: `×` alone on the card's
+first line, the heading beneath it. **Modals on this site put the two on one
+row instead** — title leading, dismiss trailing.
+
+Decided by the user during #7's task 3, on the grounds that a control alone on
+the first line spends a whole row of the card's height saying nothing. Title
+first so it anchors the card's top-left corner and the reading order starts with
+what the dialog *is* rather than with what closes it.
+
+This is a **site-wide** rule, not a lit-tracker one: it applies to this modal
+and to the Lit Tracker's upload modal
+([../../lit-tracker/components/upload-flow.md](../../lit-tracker/components/upload-flow.md)),
+and any dialog added later should match. It is one of the places where the
+mockup is a rough reference rather than literal spec — see
+[../../index.md](../../index.md)'s mockups note.

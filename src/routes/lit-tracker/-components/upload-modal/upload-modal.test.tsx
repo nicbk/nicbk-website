@@ -47,6 +47,21 @@ describe('UploadModal', () => {
     expect(input).toHaveAttribute('accept', 'application/pdf')
   })
 
+  it('puts the title and the dismiss control on one row, title first', async () => {
+    // Matches the account modal: the two share the card's first row rather than
+    // stacking, so a small dialog does not spend a row of height on a control
+    // that says nothing.
+    await open()
+
+    const title = screen.getByRole('heading', { name: 'add articles' })
+    const close = screen.getByRole('button', { name: 'Close' })
+
+    expect(title.parentElement).toBe(close.parentElement)
+    expect(
+      title.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
   it('submits every selected file in one action', async () => {
     const user = await open()
 

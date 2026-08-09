@@ -102,9 +102,21 @@
   }
 }
 
+/*
+ * Title and dismiss on one row. The dismiss is the trailing item so the title
+ * anchors the card's top-left corner and the eye lands on what the dialog is
+ * before what closes it.
+ */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
 .close {
-  align-self: flex-start;
   display: inline-flex;
+  flex-shrink: 0;
   padding: 0;
   border: none;
   background: none;

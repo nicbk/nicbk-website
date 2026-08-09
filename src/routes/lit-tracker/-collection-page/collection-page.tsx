@@ -30,9 +30,18 @@ export function CollectionPage() {
   const [articles, details] = useQuery(queries.articles.mine())
 
   return (
-    <>
-      {/* The page's single visible <h1> and the route-change focus-handoff
-          target (src/focus-handoff.ts). */}
+    <div className={styles.page}>
+      {/*
+        The page's <h1> and the route-change focus-handoff target
+        (src/focus-handoff.ts), deliberately not drawn.
+
+        The decided layout has no page title: the main panel opens with the
+        search row, and the header already says "Literature Tracker". A visible
+        "collection" heading was an addition, and it pushed the toolbar and the
+        articles into three separately-aligned bands. Clipped rather than
+        removed, because the landmark structure and the focus handoff both need
+        a heading to exist.
+      */}
       <h1 className={styles.title}>collection</h1>
 
       {/* Above the collection and outside its loading states: uploading does
@@ -41,7 +50,7 @@ export function CollectionPage() {
       <CollectionToolbar />
 
       <ArticleCollection articles={articles} state={collectionState(details)} />
-    </>
+    </div>
   )
 }
 

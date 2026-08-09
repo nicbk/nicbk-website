@@ -66,11 +66,15 @@ export function UploadModal() {
       <Dialog.Portal>
         <Dialog.Backdrop className={styles.backdrop} />
         <Dialog.Popup className={styles.popup}>
-          <Dialog.Close className={styles.close} aria-label="Close">
-            <X className={styles.closeIcon} aria-hidden="true" />
-          </Dialog.Close>
-
-          <Dialog.Title className={styles.title}>add articles</Dialog.Title>
+          {/* Title and dismiss share one row rather than stacking — the card is
+              small, and a control alone on the first line costs a whole row of
+              height to say nothing. */}
+          <div className={styles.header}>
+            <Dialog.Title className={styles.title}>add articles</Dialog.Title>
+            <Dialog.Close className={styles.close} aria-label="Close">
+              <X className={styles.closeIcon} aria-hidden="true" />
+            </Dialog.Close>
+          </div>
 
           <label className={styles.pickerLabel} htmlFor={inputId}>
             PDFs — up to {MAX_FILES_PER_SUBMISSION} at once

@@ -72,11 +72,23 @@
   it as `GK` followed by hex and rejects anything else at import time; checking
   here turns a placeholder or a truncated paste into a named startup error rather
   than an `InvalidAccessKeyId` on someone's first upload.
-- **The toolbar's controls sit at the row's end for now.** The decided layout
-  puts them beside the search bar, and search is #8 — so until it lands they are
-  at the edge rather than floating in the middle of an empty row. **#8 moves them
-  back beside the field**, agreed with the user; that is a change to
-  `collection-toolbar.module.css`, not to its structure.
+- **The collection page has no visible title, and one content column.** Corrected
+  by the user in review: the first attempt drew a large "collection" heading,
+  with the controls right-aligned beneath it and the articles left-aligned
+  beneath that — three separately-aligned bands. Re-reading the mockup settled
+  it: its main panel opens with the search row and the cards follow directly,
+  with no page title at all. The `<h1>` is now clipped rather than removed (it
+  names the page for assistive technology and is the focus-handoff target), and
+  the toolbar **reserves the search slot**, so the controls sit against the
+  search bar's trailing edge and share both edges with the list below. #8 fills
+  the slot rather than moving anything. Recorded in
+  [collection-view.md](../../../../research/ui-ux/pages/lit-tracker/pages/collection-view.md).
+- **Dialog headers are one row, site-wide.** Also the user's call, and it
+  deviates from the popup mockup, which stacks the dismiss control above the
+  title. A control alone on a card's first line spends a row of height saying
+  nothing. Applied to the shared user-settings modal as well as this task's
+  upload modal, and recorded as a site-wide rule in
+  [user-settings.md](../../../../research/ui-ux/pages/site-wide/components/user-settings.md).
 - **The synced checkmark is `role="img"` with a label, not a live region.** What
   it conveys is a standing fact, not an event, and a `role="status"` here both
   announced itself unprompted and collided with the collection's own loading

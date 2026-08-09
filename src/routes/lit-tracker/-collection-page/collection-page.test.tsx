@@ -39,7 +39,11 @@ describe('CollectionPage', () => {
     )
   })
 
-  it('renders one main heading, for structure and focus handoff', () => {
+  it('keeps one main heading, for structure and focus handoff', () => {
+    // The decided layout draws no page title — the panel opens with the
+    // toolbar row — but the heading still has to exist: it names the page for
+    // assistive technology and is what the route-change focus handoff moves
+    // to. It is clipped in CSS rather than removed, so this stays true.
     useQuery.mockReturnValue([[], { type: 'complete' }])
     render(<CollectionPage />)
 

@@ -83,11 +83,24 @@
   }
 }
 
-/* The dismiss control sits in the top-left corner of the card, as in the
-   mockup, with the title beneath it rather than beside it. */
+/*
+ * Title and dismiss share the card's first row.
+ *
+ * The mockup stacks them — dismiss alone on one line, title beneath — which
+ * spends a whole row of height on a control that says nothing. Changed at the
+ * user's request (2026-08-08), with the dismiss trailing so the title anchors
+ * the corner and the eye lands on what the dialog *is* before what closes it.
+ */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
 .close {
-  align-self: flex-start;
   display: inline-flex;
+  flex-shrink: 0;
   padding: 0;
   border: none;
   background: none;

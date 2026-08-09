@@ -43,3 +43,20 @@ card grid, with search and tag-based filtering. Rough look/feel from
   patterns" default (no illustration).
 
 Uses the [lit-tracker header](../components/header.md).
+
+## Revision — 2026-08-08: no visible page title, and one content column
+
+Two clarifications made while building #7's task 3, after the first attempt
+drew a large "collection" heading above the controls and the list.
+
+- **The main panel has no visible page title.** The mockup's panel opens with
+  the search row and the cards follow directly; the app name in the
+  [header](../components/header.md) already says where you are. The `<h1>` still
+  exists in the markup — it names the page for assistive technology and is the
+  route-change focus-handoff target — but it is visually clipped.
+- **The search row, the "+" button, the status indicator, and the cards share
+  one content column.** The row reserves the search bar's slot even before
+  search exists, so the controls sit against its trailing edge and the whole
+  row lines up with the collection beneath it. Three separately-aligned
+  bands — a centred title, right-hand controls, a left-aligned list — was the
+  problem this fixes.

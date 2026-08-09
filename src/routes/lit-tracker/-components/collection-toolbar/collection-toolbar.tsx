@@ -7,18 +7,16 @@ import styles from './collection-toolbar.module.css'
 /**
  * The row above the collection: the "+" button and the upload-status indicator.
  *
- * ## The empty space on the left is #8's
+ * ## The empty slot on the left is #8's
  *
  * The decided layout puts a search bar here, with these two controls beside it
- * (research/ui-ux/pages/lit-tracker/pages/collection-view.md, and the mockup's
- * centered search field). Search filters the synced Zero cache and belongs with
- * the full collection view, so it is #8's — and until it lands the controls sit
- * at the end of the row rather than floating in the middle of an empty one.
+ * (research/ui-ux/pages/lit-tracker/pages/collection-view.md, and the mockup,
+ * whose main panel opens with the search row). Search filters the synced Zero
+ * cache and belongs with the full collection view, so it is #8's.
  *
- * **When #8 adds the search bar, these move back beside it.** Agreed with the
- * user when this row was designed: the controls belong next to the search
- * field, not pinned to the far edge. That is a change to this file's CSS, not
- * to its structure.
+ * The slot is **reserved rather than collapsed**, so the controls already sit
+ * against the search bar's trailing edge. #8 fills the slot; it does not move
+ * these.
  *
  * ## Why the jobs query lives here
  *
@@ -36,6 +34,8 @@ export function CollectionToolbar() {
     // Not a <nav> or a <toolbar>: two unrelated controls, one of which opens a
     // dialog. A toolbar role would promise arrow-key navigation between them.
     <div className={styles.toolbar}>
+      {/* Holds the row's width open for #8's search input. */}
+      <div className={styles.searchSlot} />
       <div className={styles.controls}>
         <UploadModal />
         <UploadStatus jobs={jobs} />

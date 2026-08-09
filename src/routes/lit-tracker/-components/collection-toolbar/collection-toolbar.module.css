@@ -1,25 +1,33 @@
 /*
- * The collection's control row.
+ * The collection's control row — the panel's first row, as in the mockup.
  *
- * One flex row with the controls grouped at its end. The empty space to their
- * left is where #8's search bar goes; when it does, `.controls` stops being
- * pushed to the edge and sits beside the field instead — which is a change to
- * `justify-content` here, not to the markup.
+ * The row reserves the **search slot** now rather than leaving the controls at
+ * the panel's far edge. Two reasons: the controls sit where they will
+ * permanently sit, so #8 fills the slot instead of moving them; and it keeps
+ * them within the same content column as the articles below, rather than
+ * stranded in a corner a thousand pixels from anything they act on.
  */
 .toolbar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
 }
 
 /*
- * The two controls stay together as a unit, so they remain adjacent when the
- * search bar arrives between them and the row's start.
+ * Where #8's search input goes. It holds the row's width open today so the
+ * controls are already positioned against the search bar's trailing edge —
+ * which is the arrangement the decided layout asks for.
  */
+.searchSlot {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The two controls stay together as a unit, whatever grows to their left. */
 .controls {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+  flex-shrink: 0;
 }

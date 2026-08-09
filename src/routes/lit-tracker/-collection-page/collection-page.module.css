@@ -3,14 +3,39 @@
  * nothing here sets a height, scrolls, or insets itself — the panel does all
  * three, and a second scroll container would nest one inside the other.
  *
- * #8 replaces .list/.entry with the card grid and adds the sidebar and search
- * around them; the title and the notice states stay.
+ * #8 replaces .list/.entry with the card grid and fills the toolbar's search
+ * slot; the column and the notice states stay.
+ */
+
+/*
+ * One content column for everything in the panel, so the toolbar's controls and
+ * the articles beneath them share an edge instead of each finding their own.
+ * Capped and centred because the panel is as wide as the window: a row of
+ * controls stretched across 1500px reads as two unrelated corners.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
+}
+
+/*
+ * Clipped, not removed: the decided layout draws no page title, but the heading
+ * still names the page for assistive technology and is what the route-change
+ * focus handoff moves to. `display: none` would take it out of the
+ * accessibility tree along with the pixels.
  */
 .title {
-  margin: 0 0 var(--space-lg);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-tight);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* The empty state and the error message: plain inline text, no illustration,

@@ -5,7 +5,7 @@
 - Branch: `article-upload-and-extraction/semantic-scholar-enrichment`.
 - Sub-issue: [#71](https://github.com/nicbk/nicbk-website/issues/71)
   (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)).
-- PR: — (open on push)
+- PR: [#78](https://github.com/nicbk/nicbk-website/pull/78)
 
 ## What was built
 

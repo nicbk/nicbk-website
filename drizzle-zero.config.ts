@@ -41,6 +41,18 @@ export default drizzleZeroConfig(drizzleSchema, {
       createdAt: true,
       updatedAt: true,
     },
+    tags: {
+      id: true,
+      userId: true,
+      name: true,
+      createdAt: true,
+    },
+    articleTags: {
+      id: true,
+      articleId: true,
+      tagId: true,
+      createdAt: true,
+    },
     citationEdges: {
       id: true,
       userId: true,

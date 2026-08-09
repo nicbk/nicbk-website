@@ -20,6 +20,12 @@ What this task's tests must cover, within the feature's overall requirements
 - **"No articles match" versus "no articles yet"** are chosen correctly: the
   first only when filters are active, the second only when the collection is
   genuinely empty, and **neither** while the collection is still syncing.
+- **The delete confirmation is not skippable**: activating a tag's delete control
+  asks first and calls nothing; confirming reports the tag id; cancelling and
+  Escape both report nothing. Asserted against an injected callback — that a
+  confirmed delete actually deletes is task 2's integration suite.
+- **The confirmation names what is at stake**: the tag, and how many articles
+  carry it.
 
 ## End-to-end (Playwright, signed-in suite)
 
@@ -28,6 +34,10 @@ What this task's tests must cover, within the feature's overall requirements
 - **The narrowed view survives a reload**, because it is in the URL, and the
   back button steps back through the selections.
 - **Deselecting restores** the full collection.
+- **Deleting a tag from the rail** asks for confirmation, and on confirming
+  removes the tag from the rail *and* from every card carrying it, live and with
+  no reload — the criterion moved here from task 2. Dismissing the confirmation
+  leaves the tag exactly where it was.
 - **A filter combination matching nothing** shows the "no articles match" text
   and no cards.
 - **The rail relocates** below the content at a narrow width and sits beside it

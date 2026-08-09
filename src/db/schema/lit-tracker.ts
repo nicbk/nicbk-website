@@ -9,6 +9,7 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core'
+import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { user } from './identity'
 
 /**
@@ -40,8 +41,13 @@ export interface Author {
   family?: string
 }
 
-/** Where the reader has got to. Mutually exclusive by construction. */
-export type ArticleStatus = 'pending' | 'reading' | 'read'
+/**
+ * Where the reader has got to. Defined away from this file — see
+ * `src/lit-tracker/article-status.ts` for why — and re-exported here so the
+ * schema still reads as the description of its own columns.
+ */
+export { ARTICLE_STATUSES } from '~/lit-tracker/article-status'
+export type { ArticleStatus }
 
 /**
  * How much metadata the pipeline managed to attach.
@@ -170,6 +176,94 @@ export const uploadJobs = pgTable(
 )
 
 /**
+ * A label the user made up, applied to any number of their own articles.
+ *
+ * Written to the letter of research/data-modeling/tags-and-reading-status.md.
+ * The thing most worth knowing about this table is what is *not* in it:
+ * **reading status is not a tag.** `pending`/`reading`/`read` are values of
+ * `articles.status`, and the collection view synthesizes three chips that render
+ * identically to real tags. There are no seeded rows here, no `kind` column, and
+ * no trigger protecting built-ins — mutual exclusivity comes free from a
+ * single-valued column instead of from a partial unique index. The schema doc
+ * records the rejected alternative and why.
+ *
+ * Tags are per-user. There is no shared or cross-user tag anywhere in the
+ * specs, which is why `user_id` is on this table and not inferred through the
+ * articles a tag happens to be applied to: a tag exists whether or not anything
+ * currently carries it.
+ */
+export const tags = pgTable(
+  'tags',
+  {
+    /**
+     * Client-generated UUIDv7. These are the first rows on the site created
+     * from the browser rather than by a job handler, so this convention finally
+     * has a real consumer (zero-schema-conventions.md).
+     */
+    id: uuid('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    /** As the user typed it. Shown verbatim on the card and in the filter rail. */
+    name: text('name').notNull(),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  // No `updated_at`: nothing updates a tag. The decided model has create and
+  // delete only — renaming is not specified anywhere, so it is not offered.
+  (table) => [index('tags_user_id_idx').on(table.userId)],
+)
+
+/**
+ * One tag applied to one article.
+ *
+ * Plain many-to-many join, with the `unique (article_id, tag_id)` the schema doc
+ * specifies. That constraint is what makes "apply a tag" idempotent at the
+ * database rather than in a check the client could race — which matters more
+ * here than usual, because Zero rebases an optimistic mutation repeatedly as
+ * authoritative changes arrive, so the same attach genuinely does run more than
+ * once.
+ *
+ * No `user_id` of its own, unlike every other table here. Both ends already
+ * belong to exactly one user and cascade from them, so a third copy of the owner
+ * would be a denormalization with nothing to gain and a way to disagree.
+ * Authorization still checks ownership — it reads it through the article and the
+ * tag, which is the only place it is true.
+ */
+export const articleTags = pgTable(
+  'article_tags',
+  {
+    /** Client-generated UUIDv7, as above. */
+    id: uuid('id').primaryKey(),
+    articleId: uuid('article_id')
+      .notNull()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique('article_tags_article_id_tag_id_key').on(
+      table.articleId,
+      table.tagId,
+    ),
+    // The unique constraint above already indexes `(article_id, tag_id)`, which
+    // serves every lookup starting from an article. This is the other
+    // direction — "which articles carry this tag", and the scan Postgres does
+    // to cascade a tag deletion, neither of which a leading-column index helps.
+    // Postgres does not index a foreign key on its own.
+    index('article_tags_tag_id_idx').on(table.tagId),
+  ],
+)
+
+/**
  * One bibliography entry parsed from a citing article's PDF — the citation
  * graph, stored as edges.
  *
@@ -252,6 +346,8 @@ export const articlesRelations = relations(articles, ({ one, many }) => ({
     references: [user.id],
   }),
   uploadJobs: many(uploadJobs),
+  /** The join rows, not the tags — `article_tags` is a table in its own right. */
+  articleTags: many(articleTags),
   /** This article's own bibliography. */
   references: many(citationEdges, { relationName: 'citingArticle' }),
   /** The bibliography entries of other articles that point at this one. */
@@ -277,6 +373,25 @@ export const citationEdgesRelations = relations(citationEdges, ({ one }) => ({
     fields: [citationEdges.citedArticleId],
     references: [articles.id],
     relationName: 'citedArticle',
+  }),
+}))
+
+export const tagsRelations = relations(tags, ({ one, many }) => ({
+  owner: one(user, {
+    fields: [tags.userId],
+    references: [user.id],
+  }),
+  articleTags: many(articleTags),
+}))
+
+export const articleTagsRelations = relations(articleTags, ({ one }) => ({
+  article: one(articles, {
+    fields: [articleTags.articleId],
+    references: [articles.id],
+  }),
+  tag: one(tags, {
+    fields: [articleTags.tagId],
+    references: [tags.id],
   }),
 }))
 

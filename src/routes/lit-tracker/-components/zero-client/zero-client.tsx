@@ -2,6 +2,7 @@ import { ZeroProvider } from '@rocicorp/zero/react'
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { zeroCacheUrl } from '~/zero/cache-url'
+import { mutators } from '~/zero/mutators'
 import { schema } from '~/zero/schema.gen'
 
 interface ZeroClientProps {
@@ -29,6 +30,14 @@ interface ZeroClientProps {
  * storage per account and pin a client group to one user — zero-cache compares
  * it against the id `/query` returns and refuses the connection if they differ.
  * Passing the guard's session id is what makes those agree.
+ *
+ * **`mutators` is the same registry the server runs**, and that is the point
+ * rather than a convenience: this copy applies a write to the local store
+ * immediately, so a tag appears on the card before the round trip. It is not a
+ * permission check and cannot be — `ctx` here is whatever this client says it
+ * is. The authoritative run happens at `/api/zero/mutate` under a context
+ * derived from the session, and it is allowed to disagree; when it does, Zero
+ * rolls the local write back and `useCollectionMutations` says so.
  */
 export function ZeroClient({ userId, children }: ZeroClientProps) {
   // ZeroProvider re-creates its Zero instance whenever any option's *value*
@@ -42,6 +51,7 @@ export function ZeroClient({ userId, children }: ZeroClientProps) {
       cacheURL={zeroCacheUrl()}
       userID={userId}
       context={context}
+      mutators={mutators}
     >
       {children}
     </ZeroProvider>

@@ -1,0 +1,119 @@
+/*
+ * Toast notifications.
+ *
+ * Base UI's own example stacks its toasts by absolute-positioning each one and
+ * deriving a transform from `--toast-index`, so a collapsed pile fans out on
+ * hover. That is deliberately not done here: this site shows at most a handful
+ * of short failure messages and never a stream of them, and a plain flow
+ * column is legible with no transform arithmetic and no chance of the stack
+ * mis-measuring. The index variables remain available if a later surface ever
+ * needs the fanned presentation.
+ */
+
+/*
+ * Bottom-right on a wide window, and the full width of a narrow one — a fixed
+ * 22rem panel would hang off the side of a phone.
+ *
+ * `pointer-events: none` on the viewport with the toasts opting back in: the
+ * viewport spans a strip of the window even when empty, and without this it
+ * would swallow clicks on whatever is beneath it.
+ */
+.viewport {
+  position: fixed;
+  z-index: 100;
+  inset-block-end: var(--space-md);
+  inset-inline: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  pointer-events: none;
+}
+
+@media (min-width: 32rem) {
+  .viewport {
+    inset-inline-start: auto;
+    width: 22rem;
+  }
+}
+
+.toast {
+  pointer-events: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  /* The one place color carries meaning here, and it is redundant with the
+     title's wording rather than the only signal — the message says what
+     happened in words (WCAG 1.4.1). */
+  border-inline-start: 2px solid var(--color-error);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+}
+
+/*
+ * Past the provider's limit, a toast stays mounted and inert rather than being
+ * removed, so it has to be hidden explicitly or it would sit in the column
+ * taking up space while being unreachable.
+ */
+.toast[data-limited] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    transition:
+      opacity var(--motion-duration-base) var(--motion-ease),
+      translate var(--motion-duration-base) var(--motion-ease);
+  }
+
+  .toast[data-starting-style],
+  .toast[data-ending-style] {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  /* A flex item's automatic minimum is its content's, and a server message is
+     arbitrary text that may hold an unbroken run. */
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.close {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .close:hover {
+    color: var(--color-text);
+  }
+}

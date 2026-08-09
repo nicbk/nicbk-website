@@ -28,6 +28,21 @@ filter list the mockup shows.
   page-level structural shift driven by a media query.
 - **Distinguishes "no articles match" from "no articles yet."** They are
   different facts and the reader can act on only one of them.
+- **Deletes a tag, from the rail, behind a confirmation** — moved here from task
+  2 (user-decided 2026-08-09; see that task's status.md). Deleting a tag is a
+  list operation, and the rail is the only surface that lists every tag; the card
+  menu deliberately keeps "remove from this article" away from "delete
+  everywhere", which would otherwise sit one row apart. The `tags.delete` mutator
+  it calls is already built, authorized, and integration-tested by task 2.
+
+  **The confirmation is required, not optional.** A small `×` in a list of
+  toggles is easy to hit by accident, and the write is not undoable. It is a
+  dialog rather than a native `confirm()` — the same rule `article-edit.md` sets
+  for deleting an article — and it names the tag and how many articles carry it,
+  so the reader is told the size of what they are about to lose. It is
+  deliberately *lighter* than the delete-account confirmation, which makes you
+  transcribe your own email: that is proportionate to destroying an account and
+  disproportionate to a label that can be recreated in seconds.
 
 ## Why after tags and before search
 
@@ -53,7 +68,8 @@ but not a keyboard one, so a tapped toggle does not keep a ring that reads as
 
 - **Search** — task 4, which composes with what this builds.
 - **Infinite scroll** — also task 4.
-- **Creating or deleting tags.** That is task 2's card menu; this task only
-  reads the tag list.
+- **Creating tags, or applying them to an article.** That is task 2's card menu.
+  Deleting one is here, per the note above — creating and applying are per-article
+  acts and belong where the article is; deleting is not.
 - **Per-tag counts.** Nothing decided asks for them, and the schema doc
   specifically checked that no surface requires them.

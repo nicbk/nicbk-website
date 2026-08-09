@@ -60,9 +60,14 @@ This is where the task's real weight is.
   the card.
 - **Status round-trip**: setting a status updates the card live and clears the
   previous one.
-- **Tag deletion** removes it from every card carrying it, live.
+- **Reuse-on-apply**: applying an existing tag to a second card reuses that tag
+  rather than creating a second one with the same name.
 - **The menu is keyboard-operable** end to end: reachable by Tab, opened by
   Enter, navigated by arrow keys, closed by Escape with focus restored.
+
+Tag *deletion* is deliberately absent from this list: its trigger moved to task
+3's filter rail (user-decided 2026-08-09). The mutator behind it is covered in
+full by the integration suite here.
 - **Both themes and all three widths**, with the menu open — a popup that
   overflows its container at one width is exactly what this catches.
 

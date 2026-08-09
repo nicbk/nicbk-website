@@ -1,6 +1,9 @@
+import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { TrackerLoading } from '../-components/tracker-loading/tracker-loading'
 import type { CollectionArticle } from './article-card/article-card'
 import { ArticleCard } from './article-card/article-card'
+import type { CollectionTag } from './article-card/article-menu/article-menu'
+import { NO_TAGS } from './article-tags'
 import styles from './collection-page.module.css'
 
 /**
@@ -23,6 +26,18 @@ export type CollectionState = 'syncing' | 'ready' | 'error'
 interface ArticleCollectionProps {
   articles: readonly CollectionArticle[]
   state: CollectionState
+  /** Every tag the reader has, for each card's menu. */
+  allTags: readonly CollectionTag[]
+  /** Which tags each article carries, keyed by article id. */
+  tagsByArticle: ReadonlyMap<string, readonly CollectionTag[]>
+  /**
+   * The three writes a card can make. Taken as callbacks rather than as a
+   * mutations object so this component — and every card under it — stays
+   * assertable with plain spies and no Zero client.
+   */
+  onSetStatus: (articleId: string, status: ArticleStatus) => void
+  onToggleTag: (articleId: string, tagId: string, applied: boolean) => void
+  onCreateTag: (articleId: string, name: string) => void
 }
 
 /** Shown once the collection is known to be empty. */
@@ -46,7 +61,15 @@ export const COLLECTION_ERROR_MESSAGE =
  * Still to come here: tags on the card and its three-dot menu (task 2), and the
  * filtering that decides which rows arrive at all (tasks 3 and 4).
  */
-export function ArticleCollection({ articles, state }: ArticleCollectionProps) {
+export function ArticleCollection({
+  articles,
+  state,
+  allTags,
+  tagsByArticle,
+  onSetStatus,
+  onToggleTag,
+  onCreateTag,
+}: ArticleCollectionProps) {
   if (state === 'error') {
     // The decided pattern for an error outside a form context is a dismissible
     // toast (research/ui-ux/design-system.md), and no toast component exists on
@@ -78,7 +101,16 @@ export function ArticleCollection({ articles, state }: ArticleCollectionProps) {
         // card measures the space it was *given* rather than the space it
         // happens to occupy — a container cannot query itself.
         <li key={article.id} className={styles.cell}>
-          <ArticleCard article={article} />
+          <ArticleCard
+            article={article}
+            tags={tagsByArticle.get(article.id) ?? NO_TAGS}
+            allTags={allTags}
+            onSetStatus={(status) => onSetStatus(article.id, status)}
+            onToggleTag={(tagId, applied) =>
+              onToggleTag(article.id, tagId, applied)
+            }
+            onCreateTag={(name) => onCreateTag(article.id, name)}
+          />
         </li>
       ))}
     </ul>

@@ -6,6 +6,7 @@ import {
   closeArticleConnection,
   signedInUserId,
 } from './support/articles'
+import { cards } from './support/collection'
 import { signInAndLandOn } from './support/sign-in'
 
 /**
@@ -51,9 +52,12 @@ function pdfFile(name: string, instruction: object) {
   }
 }
 
-function articleEntries(page: Page) {
-  return page.getByRole('list', { name: 'Articles' }).getByRole('listitem')
-}
+/**
+ * The article rows — the shared locator, under this spec's own name. It is
+ * scoped to the grid's direct children: since #8's second task a card's tag
+ * chips are a nested list, so a bare `listitem` count reads high and silently.
+ */
+const articleEntries = cards
 
 function jobRows(page: Page) {
   return page.getByRole('list', { name: 'Uploads' }).getByRole('listitem')

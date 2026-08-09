@@ -1,12 +1,14 @@
 # Status: Article Cards
 
-**State:** In progress. First of four.
+**State:** **Merged** (2026-08-09). First of four.
 
-- Branch: `collection-view/article-cards`.
+- Branch: `collection-view/article-cards` (merged and deleted).
 - Sub-issue: [#82](https://github.com/nicbk/nicbk-website/issues/82)
-  (parent [#81](https://github.com/nicbk/nicbk-website/issues/81)),
-  self-assigned.
-- PR: none yet.
+  (parent [#81](https://github.com/nicbk/nicbk-website/issues/81)), closed by the
+  PR's `Closes #82`.
+- PR: [#86](https://github.com/nicbk/nicbk-website/pull/86) — CI green on all
+  five jobs; merged tip verified against `main` afterwards, per the standing
+  rule that a squash-merge can silently drop a commit pushed near the click.
 
 ## Notes carried into implementation
 
@@ -38,9 +40,12 @@ rather than about this task.
   three-word title beside a three-line one produced visibly different cells.
   Fixed with equal-width tracks, `grid-auto-rows: 1fr`, and text clamped to a
   fixed number of lines — with the full string on a `title` attribute so nothing
-  is lost. A native tooltip rather than the component library's is deliberate:
-  Base UI's trigger is focusable, and it would put three tab stops on every card
-  in a collection whose cards are not otherwise interactive at all.
+  is lost. A native tooltip rather than the component library's was deliberate
+  *here*: Base UI's trigger is focusable, and it would have put three tab stops
+  on every card in a collection whose cards were not otherwise interactive at
+  all. **Superseded in task 2** (user-decided, 2026-08-09), which makes the card
+  interactive anyway and moves these lines onto Base UI's `Tooltip` — the tab
+  stops it adds are no longer additional to nothing.
 - **A capped, centred content column left the grid floating** with a wide gutter
   against the sidebar and another against the window. It fills the panel now, so
   the shell's padding is the only inset and every gap on the page is one

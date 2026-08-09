@@ -43,6 +43,8 @@ const CONTEXT_B: ZeroContext = { id: USER_B }
 /** Fixed ids so a test can name one user's row while asking as the other. */
 const ARTICLE_A = '0199a1b2-c3d4-7e5f-8a9b-000000000a01'
 const ARTICLE_B = '0199a1b2-c3d4-7e5f-8a9b-000000000b01'
+const TAG_A = '0199a1b2-c3d4-7e5f-8a9b-000000000a02'
+const TAG_B = '0199a1b2-c3d4-7e5f-8a9b-000000000b02'
 
 let testDatabase: TestDatabase
 let database: DatabaseHandle
@@ -98,6 +100,30 @@ async function createArticle(
   })
 }
 
+async function createTag(
+  id: string,
+  userId: string,
+  name = `tag-${id.slice(-4)}`,
+): Promise<void> {
+  await database.db.insert(drizzleSchema.tags).values({ id, userId, name })
+}
+
+/**
+ * Applies a tag to an article, writing the join row directly.
+ *
+ * The join row's own id is incidental — nothing reads one back by id — so it
+ * comes from a counter rather than from another pair of named constants.
+ */
+let nextArticleTagId = 0
+async function applyTag(articleId: string, tagId: string): Promise<void> {
+  nextArticleTagId += 1
+  await database.db.insert(drizzleSchema.articleTags).values({
+    id: `0199a1b2-c3d4-7e5f-8a9b-${String(nextArticleTagId).padStart(12, '0')}`,
+    articleId,
+    tagId,
+  })
+}
+
 /** Returns the new job's id, which is also the future article's id. */
 async function createUploadJob(userId: string): Promise<string> {
   const [row] = await database.db
@@ -136,7 +162,7 @@ async function runAs<Args>(
  */
 const unscopedArticles = zql.articles
 
-/** Both users, each with one article and one upload job. */
+/** Both users, each with one article, one upload job, and one applied tag. */
 async function seedTwoUsers(): Promise<void> {
   await createUser(USER_A)
   await createUser(USER_B)
@@ -144,6 +170,10 @@ async function seedTwoUsers(): Promise<void> {
   await createArticle(ARTICLE_B, USER_B)
   await createUploadJob(USER_A)
   await createUploadJob(USER_B)
+  await createTag(TAG_A, USER_A)
+  await createTag(TAG_B, USER_B)
+  await applyTag(ARTICLE_A, TAG_A)
+  await applyTag(ARTICLE_B, TAG_B)
 }
 
 describe('the committed migrations', () => {
@@ -155,16 +185,66 @@ describe('the committed migrations', () => {
     expect(rows).toHaveLength(1)
   })
 
-  it('create the indexes both tables are queried through', async () => {
+  it('create the indexes these tables are queried through', async () => {
     const { rows } = await database.pool.query<{ indexname: string }>(
       `select indexname from pg_indexes
-       where tablename in ('articles', 'upload_jobs')`,
+       where tablename in ('articles', 'upload_jobs', 'tags', 'article_tags')`,
     )
     const names = rows.map((row) => row.indexname)
 
     expect(names).toContain('articles_authors_search_trgm_idx')
     expect(names).toContain('articles_user_id_idx')
     expect(names).toContain('upload_jobs_user_id_idx')
+    expect(names).toContain('tags_user_id_idx')
+    // The other direction of the join. Postgres indexes the unique constraint's
+    // `(article_id, tag_id)` for free but not the trailing column on its own.
+    expect(names).toContain('article_tags_tag_id_idx')
+  })
+
+  it('constrain a tag to one application per article', async () => {
+    await createUser(USER_A)
+    await createArticle(ARTICLE_A, USER_A)
+    await createTag(TAG_A, USER_A)
+    await applyTag(ARTICLE_A, TAG_A)
+
+    // The backstop under the mutator's own idempotence check: two clients can
+    // attach the same tag at once and neither read will have seen the other.
+    await expect(applyTag(ARTICLE_A, TAG_A)).rejects.toThrow()
+  })
+
+  it('cascade every foreign key on the tag tables', async () => {
+    const { rows } = await database.pool.query<{
+      table_name: string
+      column_name: string
+      delete_rule: string
+    }>(
+      `select tc.table_name, kcu.column_name, rc.delete_rule
+       from information_schema.table_constraints tc
+       join information_schema.key_column_usage kcu
+         on kcu.constraint_name = tc.constraint_name
+       join information_schema.referential_constraints rc
+         on rc.constraint_name = tc.constraint_name
+       where tc.constraint_type = 'FOREIGN KEY'
+         and tc.table_name in ('tags', 'article_tags')
+       order by tc.table_name, kcu.column_name`,
+    )
+
+    // All three are ownership relationships, so all three cascade — the
+    // convention in zero-schema-conventions.md, asserted rather than assumed
+    // because a `no action` here would strand rows the app can never reach.
+    expect(rows).toEqual([
+      {
+        table_name: 'article_tags',
+        column_name: 'article_id',
+        delete_rule: 'CASCADE',
+      },
+      {
+        table_name: 'article_tags',
+        column_name: 'tag_id',
+        delete_rule: 'CASCADE',
+      },
+      { table_name: 'tags', column_name: 'user_id', delete_rule: 'CASCADE' },
+    ])
   })
 
   it('publish only the lit-tracker tables to the sync engine', async () => {
@@ -177,8 +257,10 @@ describe('the committed migrations', () => {
     )
 
     expect(rows.map((row) => row.tablename)).toEqual([
+      'article_tags',
       'articles',
       'citation_edges',
+      'tags',
       'upload_jobs',
     ])
   })
@@ -277,9 +359,33 @@ describe('cross-user isolation', () => {
     expect(forA[0]?.id).not.toBe(forB[0]?.id)
   })
 
+  it('returns only the requesting user’s tags', async () => {
+    const forA = await runAs(queries.tags.mine, CONTEXT_A, undefined)
+    const forB = await runAs(queries.tags.mine, CONTEXT_B, undefined)
+
+    expect(forA.map((row) => row.id)).toEqual([TAG_A])
+    expect(forB.map((row) => row.id)).toEqual([TAG_B])
+  })
+
+  it('returns only the requesting user’s applied tags', async () => {
+    // `article_tags` has no owner column of its own, so this query filters
+    // through the tag relationship. A new synced table is a new read surface
+    // and gets its own isolation test rather than riding on `articles.mine`.
+    const forA = await runAs(queries.articleTags.mine, CONTEXT_A, undefined)
+    const forB = await runAs(queries.articleTags.mine, CONTEXT_B, undefined)
+
+    expect(forA).toHaveLength(1)
+    expect(forB).toHaveLength(1)
+    expect(forA[0]?.id).not.toBe(forB[0]?.id)
+  })
+
   it('returns nothing when the request carries no session', async () => {
     expect(await runAs(queries.articles.mine, undefined, undefined)).toEqual([])
     expect(await runAs(queries.uploadJobs.mine, undefined, undefined)).toEqual(
+      [],
+    )
+    expect(await runAs(queries.tags.mine, undefined, undefined)).toEqual([])
+    expect(await runAs(queries.articleTags.mine, undefined, undefined)).toEqual(
       [],
     )
   })
@@ -312,19 +418,54 @@ describe('cross-user isolation', () => {
 describe('ownership cascades', () => {
   beforeEach(seedTwoUsers)
 
-  it('removes a deleted user’s articles and upload jobs', async () => {
+  it('removes a deleted user’s articles, upload jobs, and tags', async () => {
     // The first real coverage of the cascade convention: account deletion has
     // to take the user's data with it, and a database-level cascade fires
-    // however the row was deleted.
+    // however the row was deleted. `article_tags` has no `user_id` and so no
+    // cascade from the user directly — it goes two hops, through both ends.
     await database.db
       .delete(drizzleSchema.user)
       .where(eq(drizzleSchema.user.id, USER_A))
 
     const articles = await database.db.select().from(drizzleSchema.articles)
     const jobs = await database.db.select().from(drizzleSchema.uploadJobs)
+    const tags = await database.db.select().from(drizzleSchema.tags)
+    const applied = await database.db.select().from(drizzleSchema.articleTags)
 
     expect(articles.map((row) => row.id)).toEqual([ARTICLE_B])
     expect(jobs.map((row) => row.userId)).toEqual([USER_B])
+    expect(tags.map((row) => row.id)).toEqual([TAG_B])
+    expect(applied.map((row) => row.tagId)).toEqual([TAG_B])
+  })
+
+  it('removes a deleted tag’s applications, leaving the articles alone', async () => {
+    await database.db
+      .delete(drizzleSchema.tags)
+      .where(eq(drizzleSchema.tags.id, TAG_A))
+
+    const applied = await database.db.select().from(drizzleSchema.articleTags)
+    const articles = await database.db.select().from(drizzleSchema.articles)
+
+    // This cascade is what lets the delete-tag mutator be a single write: it
+    // does not have to find and remove the applications itself.
+    expect(applied.map((row) => row.tagId)).toEqual([TAG_B])
+    expect(articles.map((row) => row.id).sort()).toEqual(
+      [ARTICLE_A, ARTICLE_B].sort(),
+    )
+  })
+
+  it('removes a deleted article’s applications, leaving the tags alone', async () => {
+    await database.db
+      .delete(drizzleSchema.articles)
+      .where(eq(drizzleSchema.articles.id, ARTICLE_A))
+
+    const applied = await database.db.select().from(drizzleSchema.articleTags)
+    const tags = await database.db.select().from(drizzleSchema.tags)
+
+    // A tag outlives the articles it was applied to — it is a label the user
+    // made, not a property of one paper.
+    expect(applied.map((row) => row.articleId)).toEqual([ARTICLE_B])
+    expect(tags.map((row) => row.id).sort()).toEqual([TAG_A, TAG_B].sort())
   })
 
   it('removes a job when the article it tracks is deleted', async () => {
@@ -359,14 +500,19 @@ describe('ownership cascades', () => {
 })
 
 /**
- * There is deliberately no end-to-end `/mutate` test here. Pushing a mutation
- * writes to zero-cache's own `zero_0.clients` bookkeeping table before it looks
- * up the mutator, and that schema is created by zero-cache at startup, not by
- * this project's migrations — so a Testcontainers database migrated from the
- * committed SQL cannot serve one. What the endpoint decides on its own (a wrong
- * key is 403, a missing session is 401, and neither opens a transaction) is
- * covered in mutate-endpoint.test.ts, and the Compose walkthrough recorded in
- * the task's status.md exercises the live endpoint against the real zero-cache.
+ * There is deliberately no end-to-end `/mutate` *request* test here or in
+ * `mutators.integration.test.ts`. Pushing a mutation writes to zero-cache's own
+ * `zero_0.clients` bookkeeping table before it looks up the mutator, and that
+ * schema is created by zero-cache at startup, not by this project's migrations —
+ * so a Testcontainers database migrated from the committed SQL cannot serve one.
+ *
+ * The three layers that answer for it instead: what the endpoint decides on its
+ * own (a wrong key is 403, a missing session is 401, and neither opens a
+ * transaction) is `mutate-endpoint.test.ts`; what the mutators decide, run
+ * through the endpoint's exact dispatch call against real Postgres, is
+ * `mutators.integration.test.ts`; and the live path through a real zero-cache is
+ * the signed-in Playwright suite plus the Compose walkthrough in the task's
+ * status.md.
  */
 
 describe('updated_at', () => {

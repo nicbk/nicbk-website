@@ -1,4 +1,3 @@
-import type { Page } from '@playwright/test'
 import { expect, test, toggleThemeTo } from '../e2e/fixtures'
 import {
   closeArticleConnection,
@@ -6,6 +5,7 @@ import {
   insertArticle,
   signedInUserId,
 } from './support/articles'
+import { cards } from './support/collection'
 import { signInAndLandOn } from './support/sign-in'
 
 /**
@@ -29,15 +29,14 @@ const TRACKER = '/lit-tracker'
 const EMPTY_STATE = 'no articles yet.'
 
 /**
- * The article rows, scoped to their own list.
+ * The article rows — the shared locator, under this spec's own name.
  *
- * A bare `listitem` role would also match the header's path, which is a
- * one-item list of its own — so an unscoped count silently reads one too many,
- * or reads "1" on a page showing no articles at all.
+ * It has to be scoped twice over, which is why it is shared rather than written
+ * out here: the header's path is a one-item list of its own, and since task 2 a
+ * card's tag chips are a nested list inside the grid. Either would make a bare
+ * `listitem` count read high, silently.
  */
-function articleEntries(page: Page) {
-  return page.getByRole('list', { name: 'Articles' }).getByRole('listitem')
-}
+const articleEntries = cards
 
 test.afterAll(async () => {
   await closeArticleConnection()

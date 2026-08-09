@@ -53,6 +53,46 @@ export const queries = defineQueries({
     }),
   },
 
+  tags: {
+    /**
+     * Every tag the signed-in user has made, alphabetically.
+     *
+     * Sorted here rather than in the component because every surface that shows
+     * tags wants the same order — the card, the menu's tag list, and the filter
+     * rail — and a shared query is one place for that instead of three.
+     */
+    mine: defineQuery(({ ctx }) => {
+      if (!ctx) {
+        return zql.tags.limit(0)
+      }
+      return zql.tags.where('userId', ctx.id).orderBy('name', 'asc')
+    }),
+  },
+
+  articleTags: {
+    /**
+     * Which of the user's articles carry which of their tags.
+     *
+     * `article_tags` has no `userId` of its own — both ends already belong to
+     * exactly one user (`schema/lit-tracker.ts` explains why a third copy would
+     * be a liability) — so ownership is filtered **through the tag**, using the
+     * relationship the generated schema derives from the Drizzle one. Filtering
+     * through the article would be equally correct and equally sufficient; what
+     * would not be correct is returning the table unfiltered because it has no
+     * owner column of its own to filter on. That is the mistake this comment
+     * exists to prevent, and the read-isolation test is what proves it was
+     * avoided.
+     */
+    mine: defineQuery(({ ctx }) => {
+      if (!ctx) {
+        return zql.articleTags.limit(0)
+      }
+      return zql.articleTags.whereExists('tag', (tag) =>
+        tag.where('userId', ctx.id),
+      )
+    }),
+  },
+
   uploadJobs: {
     /**
      * The signed-in user's unresolved uploads, oldest first — what the upload

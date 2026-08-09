@@ -20,6 +20,19 @@ task satisfies.
 - When filters exclude everything, the page says **"no articles match"**,
   distinct from the empty-collection text.
 
+**Moved here from task 2 (user-decided 2026-08-09):**
+
+- A tag can be **deleted from the rail**, and doing so removes it from every card
+  carrying it — by `ON DELETE CASCADE`, not a second write. Deletion is a list
+  operation and the rail is the only surface listing every tag; the card menu
+  keeps "remove from this article" deliberately apart from it.
+- The delete is **behind a confirmation dialog** that names the tag and how many
+  articles carry it. A small control in a list of toggles is easy to hit by
+  mistake and the write is not undoable. A dialog, never a native `confirm()` —
+  the rule `article-edit.md` sets for deleting an article — but lighter than the
+  delete-account confirmation's type-your-email, which is proportionate to
+  destroying an account and not to a label that can be remade in seconds.
+
 **From "Cross-cutting quality":**
 
 - Every filter toggle exposes **`aria-pressed`**, is distinguishable by more

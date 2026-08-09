@@ -1,15 +1,15 @@
 # Status: Collection View
 
-**Feature state:** **Spec'd, awaiting review.** Four tasks, sequential, each
-gated by its own PR + CI + human review. Depends on
+**Feature state:** **In progress** — 1 of 4 tasks merged. Four tasks,
+sequential, each gated by its own PR + CI + human review. Depends on
 [`article-upload-and-extraction`](../article-upload-and-extraction/status.md)
 (#7, Complete) — it consumes that feature's Zero bring-up, `/query` and
 `/mutate` endpoints, `articles` table, `/lit-tracker` route group, app shell,
 sidebar rail, and collection toolbar, and gives **`/mutate` its first
 consumer**.
 
-Feature parent issue and task sub-issues: **not yet filed** — they are created
-once this spec is reviewed and merged, per
+Feature parent issue: [**#81**](https://github.com/nicbk/nicbk-website/issues/81),
+with one sub-issue per task, per
 [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md).
 The roadmap entry is **#8** in [../index.md](../index.md). When the feature
 completes, its parent issue **must be closed by hand** — GitHub does not close a
@@ -19,10 +19,17 @@ parent when its sub-issues close.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`article-cards`](./tasks/article-cards/status.md) | Not started | — | — | — |
-| [`tags-and-reading-status`](./tasks/tags-and-reading-status/status.md) | Not started | — | — | — |
-| [`collection-filters`](./tasks/collection-filters/status.md) | Not started | — | — | — |
-| [`collection-search`](./tasks/collection-search/status.md) | Not started | — | — | — |
+| [`article-cards`](./tasks/article-cards/status.md) ([#82](https://github.com/nicbk/nicbk-website/issues/82)) | **Merged** | [#86](https://github.com/nicbk/nicbk-website/pull/86) | Green | Merged 2026-08-09 |
+| [`tags-and-reading-status`](./tasks/tags-and-reading-status/status.md) ([#83](https://github.com/nicbk/nicbk-website/issues/83)) | In progress | — | — | — |
+| [`collection-filters`](./tasks/collection-filters/status.md) ([#84](https://github.com/nicbk/nicbk-website/issues/84)) | Not started | — | — | — |
+| [`collection-search`](./tasks/collection-search/status.md) ([#85](https://github.com/nicbk/nicbk-website/issues/85)) | Not started | — | — | — |
+
+One change landed outside this table: the Playwright suites were unchecked by
+`tsc`, a gap [research.md](./research.md) recorded for whichever task touched
+`e2e/` first. It was closed as its own chore PR,
+[#87](https://github.com/nicbk/nicbk-website/pull/87), rather than inside task 2
+— a build-config change plus eight unrelated fixes had no business sharing a
+diff with the write path's authorization.
 
 ## Definition of Done (feature)
 
@@ -91,3 +98,17 @@ present, to refuse a write it does not own.
   carries, and Base UI 1.6 ships the menu, toggle-group, combobox, and toast
   primitives this feature needs. Awaiting spec review, then GitHub issues and
   task 1.
+- 2026-08-09 — Spec reviewed and merged (PR #80); parent issue #81 and
+  sub-issues #82–#85 filed. **Task 1 merged** (PR #86). The browser pass on it
+  changed the decided presentation in three ways — a uniform grid, elided text
+  with the full string on hover, and a content column that fills the panel —
+  all recorded as a dated revision in `collection-view.md` rather than as local
+  fixes, since they are decisions about the page rather than about that task.
+- 2026-08-09 — **Task 2 started.** Its one open item and two smaller forks
+  settled with the user first: a rejected mutation surfaces through a **shared
+  toast** built on Base UI's `Toast` under `src/routes/-shared/components/` (the
+  pattern `design-system.md` already decided for an error with no form to attach
+  to); the card's elided lines **move from the native `title` attribute to Base
+  UI's `Tooltip`**, now that the card is interactive regardless; and the
+  Playwright typecheck gap went out as its own chore PR (#87) rather than into
+  this task's diff.

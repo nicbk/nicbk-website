@@ -441,10 +441,14 @@ describe('what Zero replicates', () => {
     // (research/system-architecture/background-jobs.md).
     expect(published.map((row) => row.schemaname)).not.toContain('pgboss')
     expect(published.map((row) => row.tablename).sort()).toEqual([
+      // Both added by #8's second task, in the migration that creates them:
+      // the card draws an article's tags and the filter rail will list them.
+      'article_tags',
       'articles',
       // Added by the migration that creates it, in the same commit — #10
       // traverses this table from the client.
       'citation_edges',
+      'tags',
       'upload_jobs',
     ])
   })

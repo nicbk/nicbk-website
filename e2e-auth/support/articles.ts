@@ -148,6 +148,89 @@ export async function deleteArticlesOf(userId: string): Promise<void> {
 }
 
 /**
+ * Removes every tag this user has, and with it every application by cascade.
+ *
+ * Separate from `deleteArticlesOf` because a tag outlives the articles it was
+ * applied to — clearing the collection does not clear the tag list, and a spec
+ * that assumed it did would find the previous spec's tags in its card menu.
+ */
+export async function deleteTagsOf(userId: string): Promise<void> {
+  await connection().query('delete from tags where user_id = $1', [userId])
+}
+
+/** One tag as stored, with how many articles carry it. */
+export interface StoredTag {
+  name: string
+  applied: number
+}
+
+/**
+ * This user's tags, read straight out of Postgres.
+ *
+ * The point of asking the database rather than the page: a tag on a card may be
+ * an optimistic local write that the server never accepted. Only this says the
+ * write actually landed.
+ */
+export async function tagsOf(userId: string): Promise<StoredTag[]> {
+  const { rows } = await connection().query<{ name: string; applied: string }>(
+    `select t.name, count(at.id) as applied
+       from tags t left join article_tags at on at.tag_id = t.id
+      where t.user_id = $1
+      group by t.name order by t.name`,
+    [userId],
+  )
+  return rows.map((row) => ({ name: row.name, applied: Number(row.applied) }))
+}
+
+/** Creates a tag directly, for a spec that needs one to already exist. */
+export async function insertTag(
+  userId: string,
+  name: string,
+): Promise<{ id: string; name: string }> {
+  const id = randomUUID()
+  await connection().query(
+    'insert into tags (id, user_id, name) values ($1, $2, $3)',
+    [id, userId, name],
+  )
+  return { id, name }
+}
+
+/**
+ * Creates several tags and applies all of them to one article.
+ *
+ * For the layout case a single tag cannot produce: a card carrying more tags
+ * than fit across it. Written straight to the database rather than through the
+ * menu because what is being set up is a *rendering* condition, and twelve trips
+ * through a popup would be twelve chances for the setup to fail for reasons the
+ * test is not about.
+ */
+export async function tagArticleWith(
+  userId: string,
+  articleId: string,
+  names: readonly string[],
+): Promise<void> {
+  for (const name of names) {
+    const { id } = await insertTag(userId, name)
+    await connection().query(
+      'insert into article_tags (id, article_id, tag_id) values ($1, $2, $3)',
+      [randomUUID(), articleId, id],
+    )
+  }
+}
+
+/** The reading status stored for the article with this title. */
+export async function statusOfArticle(
+  userId: string,
+  title: string,
+): Promise<string | undefined> {
+  const { rows } = await connection().query<{ status: string }>(
+    'select status from articles where user_id = $1 and title = $2',
+    [userId, title],
+  )
+  return rows[0]?.status
+}
+
+/**
  * Removes everything an upload leaves behind: the article and the job row.
  *
  * Both, because since task 4 the extraction worker resolves jobs for real — a

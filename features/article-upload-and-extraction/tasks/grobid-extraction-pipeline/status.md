@@ -1,37 +1,75 @@
 # Status: GROBID Extraction Pipeline
 
-**State:** Not started. Fourth of five; depends on `pdf-upload-and-storage`.
+**State:** In progress — planning settled with the user, nothing implemented
+yet. Fourth of five.
 
-- Branch: `article-upload-and-extraction/grobid-extraction-pipeline` (to be
-  created).
+- Branch: `article-upload-and-extraction/grobid-extraction-pipeline`.
 - Sub-issue: [#70](https://github.com/nicbk/nicbk-website/issues/70)
-  (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)),
-  unassigned — self-assign before starting.
-- PR: —
+  (parent [#66](https://github.com/nicbk/nicbk-website/issues/66)).
 
-## Notes carried into implementation
+## Decisions taken before implementation
 
-- **The article row is created on extract completion, success or failure.** Not
-  optional — a failed job must have an article for #11 to open. Fallbacks:
-  `title` → original filename, `authors` → `[]`.
-- **Two failure classes, handled differently.** Transient (timeout, 5xx) → left
-  to pg-boss's retry/backoff, never written as `'failed'`. Unparseable/corrupt
-  PDF → caught explicitly, terminal, not retried. Classify deliberately; both
-  mistakes are bad in opposite ways.
-- **Resolution is deletion, not a status value.** `upload_jobs` has no
-  `'completed'` — the finalize stage deletes the row. That is what makes the
-  popup hold only jobs needing attention.
-- **Run our own GROBID**, never the public demo server (rate-limited, and the
-  decided deployment model is self-hosted).
-- **e2e never exercises real GROBID** — that gap is accepted and stated, which
-  is exactly why the manual browser pass must use a real GROBID container and
-  real papers.
-- **Failure reasons are user-facing.** "couldn't find authors" is the decided
-  example; write reasons a human can act on, not exception text.
-- Re-verify pg-boss's current API and Drizzle adapter before writing code
-  (12.26.4 at spec time).
+- **GROBID runs the `-crf` image, not `-full`** — confirmed with the user
+  (2026-08-08). The two differ more than the feature's "~4 GB RAM" note
+  suggested: `0.9.1-full` is **~8 GB** on disk, wants ~4 GB resident and a GPU;
+  `0.9.1-crf` is **~500 MB**, CPU-only, and costs **2–5 F1 points on
+  citations/references** while header extraction (title, authors, abstract,
+  year, venue, DOI) — this task's headline — is essentially unaffected. The
+  accuracy that is given up lands in task 5's citation edges, where Semantic
+  Scholar enrichment canonicalises entries anyway. nicbk-tower already carries
+  Nextcloud, Collabora, Postgres, zero-cache, and Garage, which is what settled
+  it. **Moving to `-full` later is a one-line image change**, so this is
+  reversible if extraction quality disappoints in practice.
+- **Consolidation is off** (`consolidateHeader=0`, `consolidateCitations=0`).
+  Consolidation makes GROBID call **Crossref**, which
+  [pdf-metadata-extraction.md](../../../../research/technologies/pdf-metadata-extraction.md)
+  explicitly rejected for this collection: arXiv registers DOIs with DataCite,
+  so Crossref is a known dead zone here. Enrichment is Semantic Scholar's job in
+  task 5. `includeRawCitations=1` is on, for the bibliography.
+- **`fast-xml-parser`** (5.10.1) for TEI. Zero-dependency, and the parsing is the
+  largest and most testable surface in this task.
+- **e2e stubs GROBID with an in-process server, not a WireMock container.**
+  [testing.md](./testing.md) suggests WireMock/MockServer; the signed-in
+  launcher already stubs Google's token endpoint the same way, and pointing
+  `GROBID_URL` at a small local server is still the "config swap, not an
+  interception library" that doc asks for. No new image, and a spec can choose
+  the response per test.
 
-## Log
+## Findings that shape the implementation
 
-- 2026-08-01 — Task defined during the feature spec. Fourth of five; not yet
-  started.
+- **GROBID 0.9.1 is current**, not the 0.9.0 most sources list.
+- **Its status codes map onto the decided failure classification directly**,
+  which is better than the spec assumed — classification reads real semantics
+  rather than inferring from a timeout:
+  - `200` — success.
+  - **`204` — "no content could be extracted and structured" → terminal.** This
+    is the precise signal for the decided "genuinely unparseable PDF".
+  - `400` — malformed request. Terminal, but it means *this app* built a bad
+    request; it must not be reported to the user as a bad PDF.
+  - `500` — transient.
+  - `503` — thread pool exhausted; GROBID's own docs recommend retrying after
+    5–10s. Transient.
+- **The endpoint is `POST /api/processFulltextDocument`**, `multipart/form-data`
+  with the file under the field name **`input`**, on port **8070**.
+
+## Carried in from task 3
+
+- **pg-boss is already here.** Task 3 added it and enqueues `lit-tracker.extract`
+  jobs transactionally (`src/lit-tracker/upload/queue.ts`,
+  `store-upload.ts`). What this task adds is the **worker** that drains the
+  queue. [description.md](./description.md) says this task "adds pg-boss as the
+  job queue" — the same wording slip task 3's description had, and it needs the
+  same correction.
+- **The storage read path exists** (`getArticlePdf` in
+  `src/storage/pdf-storage.ts`), ownership-checked, and is integration-tested
+  against a real Garage. This task is its first real caller.
+- **Unit coverage is ratcheted and the integration tier does not count toward
+  it.** A task that is mostly job handlers will fight this, as task 3 did. The
+  answer that worked: unit-test the *decisions* — sequence, fallbacks,
+  terminal-vs-transient — with the infrastructure stubbed, and leave the
+  integration tier to prove they hold against real services.
+
+## Next
+
+Compose service and the TEI parser first: parsing is the largest surface and is
+pure, so it is where the tests concentrate.

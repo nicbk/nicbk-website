@@ -9,8 +9,14 @@ task satisfies.
 **From "Sync engine and services":**
 
 - **GROBID** exists as a long-lived Compose container on the same host,
-  exposing its synchronous REST API, pinned to a version tag. Its ~4 GB RAM
-  footprint is accepted.
+  exposing its synchronous REST API, pinned to a version tag.
+
+  **Revision (2026-08-08):** the "~4 GB RAM footprint is accepted" written here
+  described the `-full` image. The stack runs **`0.9.1-crf`** instead — ~500 MB
+  rather than ~8 GB, CPU-only, and materially lighter at runtime — confirmed
+  with the user. The cost is 2–5 F1 points on citations/references, which lands
+  in task 5 rather than here; see [status.md](./status.md) for the full
+  reasoning and why it is reversible.
 - `GROBID_URL` is declared in `src/env.ts`, documented in `.env.example`, and
   server-only.
 

@@ -4,9 +4,13 @@ Fourth of five. The task that makes an upload become an article.
 
 ## What this task does
 
-- **Adds pg-boss** as the job queue, consuming the jobs task 3 already enqueues
-  transactionally, and **adds GROBID** as a long-lived Compose container
-  exposing its synchronous REST API.
+- **Adds the pg-boss worker** that drains the queue, consuming the jobs task 3
+  already enqueues transactionally, and **adds GROBID** as a long-lived Compose
+  container exposing its synchronous REST API.
+
+  (An earlier draft said this task "adds pg-boss". It does not — task 3 added
+  it, along with the queue and the transactional send. What arrives here is the
+  handler on the other end.)
 - **Builds the extract stage**: fetch the PDF back from Garage through the app
   server's own proxied read path, POST it to GROBID's full-text endpoint, and
   parse the returned TEI-XML into title, authors (with structured

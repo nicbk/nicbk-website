@@ -1,0 +1,96 @@
+# Status: Article Detail and Reader
+
+**Feature state:** **Spec'd** — awaiting spec review, then GitHub issues and
+task 1. Five tasks, sequential, each gated by its own PR + CI + human review.
+Depends on [`collection-view`](../collection-view/status.md) (#8, Complete) for
+the card this page is reached from, the tag model its Tags tab presents, and the
+drawer its sidebar becomes; and on
+[`article-upload-and-extraction`](../article-upload-and-extraction/status.md)
+(#7, Complete) for the PDFs in Garage, `articles.notes`, and the app shell.
+
+Feature parent issue: filed at spec review, with one sub-issue per task, per
+[issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md).
+The roadmap entry is **#9** in [../index.md](../index.md). When the feature
+completes, its parent issue **must be closed by hand** — GitHub does not close a
+parent when its sub-issues close.
+
+## Task states
+
+| Task | State | PR | CI | Review |
+|---|---|---|---|---|
+| [`article-detail-shell`](./tasks/article-detail-shell/status.md) | Not started | — | — | — |
+| [`pdf-serving`](./tasks/pdf-serving/status.md) | Not started | — | — | — |
+| [`pdf-reader`](./tasks/pdf-reader/status.md) | Not started | — | — | — |
+| [`annotations`](./tasks/annotations/status.md) | Not started | — | — | — |
+| [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) | Not started | — | — | — |
+
+## Definition of Done (feature)
+
+All acceptance criteria in
+[constraints-and-behavior.md](./constraints-and-behavior.md) met and each task
+merged behind its own passing CI + human review. In short: a signed-in user
+clicks a card and lands on the paper; the PDF renders in the main area, served
+through this app server after an ownership check and never through a presigned
+URL; they highlight a passage and circle a figure, and both marks are on the
+paper in another open window and after a reload; the sidebar carries the
+article's tags and their own notes, and lists the marks with a click that jumps
+the reader to the right page. Underneath: `annotations` is a synced table whose
+every write goes through a Zero mutator authorized by the same server-derived
+context `/query` uses — proven, with another user's rows present, to refuse a
+write it does not own.
+
+## Notes carried into implementation
+
+- **The reader is the only real unknown, and task 3 must treat it as one.**
+  PDFium is WebAssembly and this site server-renders. EmbedPDF's docs say
+  nothing about SSR. Verify the mounting approach against the running app before
+  building on it; the `ClientOnly` + `React.lazy` pattern the Zero provider uses
+  is the fallback, not the assumption.
+- **Re-verify EmbedPDF's API against the installed version in task 4.** It moved
+  between the 2026-07-02 technology decision and this spec — document-scoped
+  hooks, page-index arguments, two new required peer plugins — and it shipped a
+  release the day before this was written.
+  [research.md](./research.md) records what changed and what did not.
+- **Only committed annotation events are persisted.** Otherwise a dragged ink
+  stroke writes a row per frame through an optimistic client, a websocket, and
+  Postgres.
+- **The PDF route returns the same response for "not yours" and "not there".**
+  Distinguishing them makes article ids enumerable. This is a security
+  requirement wearing the clothes of an error path.
+- **Reuse #8's menu, toggles, mutators, and drawer.** The Tags tab is a second
+  presentation of a working model, not a second model. A separately-populated
+  menu on this page is exactly the drift the duplication rule prevents.
+- **`articles.notes` already exists.** No migration for the Notes tab — one
+  mutator, one column that has been waiting since #7.
+- **New synced tables must extend the `zero_data` publication and
+  `drizzle-zero.config.ts` in the same migration**, then regenerate
+  `src/zero/schema.gen.ts`. The CI drift check catches the last step, not the
+  first two.
+- **Verify in a second window, not a second tab.** Zero drops sync for a hidden
+  document; a background tab looks exactly like broken sync and is not.
+- **Both Playwright tiers are suspended**, and with them every axe scan. This
+  feature's canvas is the least unit-testable artifact the project has produced,
+  so the browser pass is primary evidence and each task's status must record
+  what was exercised by hand.
+- **Watch the coverage ratchet in task 3.** A large client-only component drags
+  line coverage down; the fix is extracting its logic, not lowering the gate.
+- **Separated type imports**, as everywhere.
+
+## Log
+
+- 2026-08-09 — Feature spec'd, immediately after #8 completed and its parent
+  issue was closed. Scoping settled with the user beforehand: **five tasks**,
+  splitting PDF serving from the viewer so the ownership check is reviewed away
+  from WebAssembly mounting, and splitting the annotations list from annotation
+  persistence; and **Citations deferred to #10** rather than shipped here as a
+  bibliography list that #10 would rebuild — which also carries the Semantic
+  Scholar attribution to #10 with the data that triggers it. Undo/redo raised
+  and left out: EmbedPDF offers it, nothing decided asks for it, and annotations
+  are already individually deletable. Re-verified at spec time, per
+  research-over-recall: **EmbedPDF 2.15.0** (published 2026-08-08, with a 3.0
+  prerelease not being adopted), its annotation API now document-scoped with
+  page-index arguments and two new required peer plugins, and — the finding that
+  changed the design rather than the imports — **`onAnnotationEvent` carries a
+  `committed` flag** that persistence must gate on. The decided
+  `annotations-schema.md` needed no revision. Awaiting spec review, then GitHub
+  issues and task 1.

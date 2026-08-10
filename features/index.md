@@ -66,7 +66,7 @@ need them (see Phases 2–3).
 |---|---|---|---|---|
 | 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **Complete** (2026-08-09; all 5 tasks merged, #67 + #68 + #69 + #70 + #71) | #6 |
 | 8 | Collection view (card grid, tags, reading status, filtering, live search) | [`collection-view`](./collection-view/description.md) | **Complete** (2026-08-09; all 4 tasks merged, #86 + #88 + #90 + #92) | #7 |
-| 9 | Article detail + PDF reader + annotations | `article-detail-and-reader` | Not yet spec'd | #7 |
+| 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **Spec'd** (2026-08-09; 5 tasks, awaiting spec review) | #7, #8 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
 
@@ -76,7 +76,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 **just-in-time** rather than all at once — `app-shell-and-home` (complete),
 `about-page` (complete), `error-and-not-found` (complete), `blog` (complete),
 `projects-page` (complete), `authentication` (complete),
-`article-upload-and-extraction` (complete), and `collection-view` (complete) have
+`article-upload-and-extraction` (complete), `collection-view` (complete), and
+`article-detail-and-reader` (spec'd) have
 full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -89,9 +90,22 @@ surface (the reserved search slot, the empty sidebar rail, the plain article
 list) instead of starting from nothing, and it is the first consumer of the
 `/mutate` endpoint #7 shipped real but unexercised.
 
-#9–#11 stay one-liners for the same reason. #11 inherits the failure path #7
-deliberately leaves unresolvable, and extends the card menu #8 builds rather
+#9 was spec'd the same way, the day #8 merged — against the page #8 actually
+left rather than a forecast of it. That showed up concretely: its cards ship
+without links because this feature is their decided target, so #9 turns them
+into links rather than inventing a route to point at, and its Tags tab is a
+second view of #8's working tag model rather than a second model. Spec'ing it
+late also caught that **EmbedPDF's annotation API had moved** since the
+technology was chosen, including a `committed` flag on its change events that
+the persistence design has to gate on — a detail an up-front draft written in
+July would have got wrong.
+
+#10 and #11 stay one-liners for the same reason. #11 inherits the failure path
+#7 deliberately leaves unresolvable, and extends the card menu #8 builds rather
 than adding a second one; #10 inherits a populated citation graph plus a
 measured list of what is still wrong with it (see
 [#7's task status](./article-upload-and-extraction/tasks/semantic-scholar-enrichment/status.md)) —
-the graph's accuracy is deliberately #10's problem, not #7's.
+the graph's accuracy is deliberately #10's problem, not #7's. #10 also inherits
+the **Citations tab** #9 deliberately leaves unbuilt: the decided detail page
+has four sidebar tabs, #9 builds three, and the fourth arrives with the citation
+graph it opens rather than as a list #10 would rebuild.

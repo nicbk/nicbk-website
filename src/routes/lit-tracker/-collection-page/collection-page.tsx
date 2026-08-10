@@ -2,10 +2,12 @@ import type { QueryResultDetails } from '@rocicorp/zero'
 import { useQuery } from '@rocicorp/zero/react'
 import { useMemo } from 'react'
 import { queries } from '~/zero/queries'
+import { useCollectionFilters } from '../-collection-filters/use-collection-filters'
 import { CollectionToolbar } from '../-components/collection-toolbar/collection-toolbar'
 import type { CollectionState } from './article-collection'
 import { ArticleCollection } from './article-collection'
 import { tagsByArticle } from './article-tags'
+import { filterArticles } from './filter-articles'
 import { useCollectionMutations } from './use-collection-mutations'
 import styles from './collection-page.module.css'
 
@@ -47,6 +49,10 @@ export function CollectionPage() {
   const [appliedTags] = useQuery(queries.articleTags.mine())
 
   const mutations = useCollectionMutations()
+  // The same filter state the rail writes. Read from the URL rather than passed
+  // in, because the rail that sets it renders in the shell's sidebar and there
+  // is no prop path from there to here (see `use-collection-filters.ts`).
+  const filters = useCollectionFilters()
 
   // Rebuilt when either list changes rather than on every render: this walks
   // the whole join table, and the grid re-renders for reasons that have nothing
@@ -54,6 +60,16 @@ export function CollectionPage() {
   const tagsForArticle = useMemo(
     () => tagsByArticle(appliedTags, tags),
     [appliedTags, tags],
+  )
+
+  // Filtering happens here, over rows already synced, rather than by asking
+  // zero-cache for a narrower query. That is the decided model — search and
+  // filters run against the local cache so they are instant
+  // (research/ui-ux/pages/lit-tracker/pages/collection-view.md) — and it is also
+  // what lets a filter change be a plain re-render with no round trip.
+  const visible = useMemo(
+    () => filterArticles(articles, tagsForArticle, filters),
+    [articles, tagsForArticle, filters],
   )
 
   return (
@@ -77,8 +93,12 @@ export function CollectionPage() {
       <CollectionToolbar />
 
       <ArticleCollection
-        articles={articles}
+        articles={visible}
         state={collectionState(details)}
+        // What tells "nothing matches these filters" apart from "this account
+        // has no articles". The collection cannot work it out from an empty
+        // array — both cases are one.
+        filtered={filters.active}
         allTags={tags}
         tagsByArticle={tagsForArticle}
         // The card knows which article it is; the mutations take that as an

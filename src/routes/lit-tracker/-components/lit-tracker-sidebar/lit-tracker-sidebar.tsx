@@ -1,52 +1,34 @@
-import type { AvatarAccount } from '../account-avatar/account-avatar'
-import { AccountAvatar } from '../account-avatar/account-avatar'
+import type { ReactNode } from 'react'
 import styles from './lit-tracker-sidebar.module.css'
 
 interface LitTrackerSidebarProps {
-  /** The signed-in account, for the avatar at the foot of the rail. */
-  account: AvatarAccount
-  /** Called once the session ends, so the guarded page can leave. */
-  onSignedOut?: (() => void) | undefined
-  /** Called once the account is deleted. */
-  onDeleted?: (() => void) | undefined
+  /**
+   * The filter list. Absent before the first sync, and on narrow screens where
+   * the filters move into a drawer instead.
+   */
+  filters?: ReactNode
 }
 
 /**
  * The Lit Tracker's left rail: an independently scrolling panel beside the
- * content, with the account avatar pinned to its foot — the arrangement in
- * research/ui-ux/sample-mockups/literature-tracker-sample.png.
+ * content, holding the collection's filters.
  *
- * It is deliberately near-empty today. What fills the space above the avatar is
- * the tag and reading-status filter list, which belongs to #8
- * (research/ui-ux/pages/lit-tracker/pages/collection-view.md); this task builds
- * the rail so the app shell has both of its panels and the account control has
- * the home the design gives it. Because the rail sizes to its contents, that
- * reads today as a slim strip holding one control rather than as a wide empty
- * column — and it widens on its own when #8 puts filters in it, with no change
- * here.
+ * #7 built it near-empty and #8's third task filled it, exactly as planned:
+ * because the rail sizes to its contents, the filters widened it with no change
+ * to the shell around it.
  *
- * Not a `<nav>`: there is nothing to navigate in it yet, and naming an empty
- * landmark would announce a navigation region with no links in it. #8 marks up
- * the filter list it adds.
+ * **The account avatar used to be pinned to its foot** — that is where the
+ * sample mockup draws it — and it moved to the header at the user's request
+ * (2026-08-09), once the rail had a real tag list in it: one avatar alone under
+ * thirty tags reads as the last item of the list rather than as the account
+ * control, and the header is where the rest of the site keeps account-level
+ * controls. What is left here is one thing, which is why the rail no longer
+ * splits into two regions.
+ *
+ * Still not a `<nav>` itself: the filter list names its own landmark
+ * (`FilterRail`), and wrapping it in a second one would announce a navigation
+ * region inside a navigation region.
  */
-export function LitTrackerSidebar({
-  account,
-  onSignedOut,
-  onDeleted,
-}: LitTrackerSidebarProps) {
-  return (
-    <div className={styles.sidebar}>
-      {/* The filters #8 adds go here, above the account control, and scroll
-          independently of it. */}
-      <div className={styles.filters} />
-
-      <div className={styles.account}>
-        <AccountAvatar
-          account={account}
-          onSignedOut={onSignedOut}
-          onDeleted={onDeleted}
-        />
-      </div>
-    </div>
-  )
+export function LitTrackerSidebar({ filters }: LitTrackerSidebarProps) {
+  return <div className={styles.sidebar}>{filters}</div>
 }

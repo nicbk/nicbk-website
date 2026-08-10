@@ -29,6 +29,24 @@
   min-height: 0;
 }
 
+/*
+ * Below the breakpoint the rail takes itself out of the layout
+ * (lit-tracker-sidebar.module.css) and the content takes the whole width.
+ *
+ * The column list has to be restated, not merely left to collapse. A
+ * `display: none` element is not a grid item at all, so the content becomes the
+ * *first* item and auto-places into the first track — the `auto` one meant for
+ * the rail, which sizes to the content's own minimum — leaving the `1fr` track
+ * empty beside it. On a 500px window that drew the whole collection in a 212px
+ * column with 287px of nothing to its right. Found in the browser; the two
+ * stylesheets each looked right on their own.
+ */
+@media (max-width: 768px) {
+  .panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .main {
   min-height: 0;
   overflow-y: auto;

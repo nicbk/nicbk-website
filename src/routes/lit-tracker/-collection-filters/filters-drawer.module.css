@@ -1,0 +1,148 @@
+/*
+ * The narrow-screen half of the filters. Everything here is inert above the
+ * breakpoint — the rail is showing the same list beside the collection, and two
+ * ways to reach one thing at one width is one too many.
+ *
+ * 768px is the decided breakpoint for page-level structural shifts
+ * (research/ui-ux/design-system.md); the rail's own stylesheet stands the
+ * filters down at exactly the same width, so the two can never both be hidden
+ * or both be showing.
+ */
+.trigger {
+  display: none;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .trigger {
+    display: inline-flex;
+  }
+}
+
+@media (hover: hover) {
+  .trigger:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+.triggerIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* The same veil as every other modal surface on the site (see
+   user-settings.module.css for why it is not a palette token). Its opacity
+   tracks the swipe, so dragging the sheet down lightens the page behind it. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+  background-color: rgb(0 0 0 / 40%);
+  opacity: calc(1 - var(--drawer-swipe-progress));
+}
+
+:global(:root[data-theme="dark"]) .backdrop {
+  background-color: rgb(0 0 0 / 60%);
+}
+
+.backdrop[data-starting-style],
+.backdrop[data-ending-style] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop {
+    transition: opacity var(--motion-duration-base) var(--motion-ease);
+  }
+
+  /* While a finger is on it the sheet must track the finger exactly, so the
+     easing that makes an animation pleasant has to be off. */
+  .backdrop[data-swiping] {
+    transition-duration: 0ms;
+  }
+}
+
+/* Positions the sheet against the bottom edge of the viewport. */
+.viewport {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+}
+
+.popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* Tall enough for a real tag list, short enough that the collection stays
+     visible behind it — the sheet is a filter over the page, not a page. Its
+     height is what the filters shrink to fit, so the sheet grows with a short
+     list and stops here with a long one. */
+  max-height: 70dvh;
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
+  border-top: 1px solid var(--color-border);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  outline: 0;
+  /* Not `auto`: the sheet must not scroll as one, or finding a tag would carry
+     the reading statuses and the find field off the top with it. The tag list
+     inside does the scrolling (filter-groups.module.css). */
+  overflow: hidden;
+  touch-action: auto;
+  transform: translateY(var(--drawer-swipe-movement-y));
+}
+
+.popup[data-starting-style],
+.popup[data-ending-style] {
+  transform: translateY(100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transition: transform var(--motion-duration-base) var(--motion-ease);
+    will-change: transform;
+  }
+
+  .popup[data-swiping] {
+    transition-duration: 0ms;
+  }
+}
+
+/* The swipe affordance: a short bar centred above the content, the shape a
+   dismissible sheet is expected to carry. */
+.grip {
+  width: 2rem;
+  height: 0.25rem;
+  margin: 0 auto var(--space-sm);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-border);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  /* Passes the sheet's bounded height down to the filters, whose tag list is
+     what shrinks and scrolls. */
+  min-height: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}

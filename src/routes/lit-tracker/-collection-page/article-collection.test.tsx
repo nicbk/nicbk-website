@@ -43,6 +43,7 @@ function renderCollection(
     <ArticleCollection
       articles={[]}
       state="ready"
+      filtered={false}
       allTags={[]}
       tagsByArticle={new Map()}
       onSetStatus={vi.fn()}

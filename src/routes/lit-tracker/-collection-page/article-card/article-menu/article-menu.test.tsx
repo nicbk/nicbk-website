@@ -171,7 +171,9 @@ describe('ArticleMenu', () => {
 
       await user.type(screen.getByLabelText('tags'), 'seq')
 
-      expect(listedTags()).toEqual(['seq2seq'])
+      // `attention` stays because this article carries it — see the pinning
+      // test below. What "seq" narrowed away is `survey`.
+      expect(listedTags()).toEqual(['attention', 'seq2seq'])
     })
 
     it('ignores case', async () => {
@@ -181,7 +183,21 @@ describe('ArticleMenu', () => {
       await open(user)
       await user.type(screen.getByLabelText('tags'), 'SURV')
 
-      expect(listedTags()).toEqual(['survey'])
+      expect(listedTags()).toEqual(['attention', 'survey'])
+    })
+
+    it('keeps a tag this article carries listed, whatever is typed', async () => {
+      // The ticked boxes are how the reader knows what the article already
+      // has. Searching for one more tag must not make the others look as
+      // though they came off — and un-ticking one would otherwise mean
+      // clearing the field first to find it again.
+      const user = userEvent.setup()
+      renderMenu()
+
+      await open(user)
+      await user.type(screen.getByLabelText('tags'), 'seq')
+
+      expect(screen.getByRole('checkbox', { name: 'attention' })).toBeChecked()
     })
 
     it('offers to create what was typed when it matches no tag', async () => {
@@ -191,7 +207,8 @@ describe('ArticleMenu', () => {
       await open(user)
       await user.type(screen.getByLabelText('tags'), 'transformers')
 
-      expect(listedTags()).toEqual([])
+      // Only the applied tag is left; nothing matched what was typed.
+      expect(listedTags()).toEqual(['attention'])
       expect(
         screen.getByRole('button', { name: /create .transformers./ }),
       ).toBeInTheDocument()
@@ -208,7 +225,7 @@ describe('ArticleMenu', () => {
       await user.type(screen.getByLabelText('tags'), 'survey')
 
       expect(screen.queryByRole('button', { name: /create/ })).toBeNull()
-      expect(listedTags()).toEqual(['survey'])
+      expect(listedTags()).toEqual(['attention', 'survey'])
     })
 
     it('does not offer to create a name that differs only in case', async () => {

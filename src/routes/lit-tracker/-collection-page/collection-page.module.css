@@ -42,6 +42,22 @@
   white-space: nowrap;
 }
 
+/*
+ * The result count. Clipped by the same rule as the heading above, and for the
+ * same reason: it exists to be announced when filtering changes what is showing,
+ * and the count is already obvious to anyone who can see the grid.
+ */
+.count {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* The empty state and the error message: plain inline text, no illustration,
    per the design system's reactive-feedback default. */
 .notice {

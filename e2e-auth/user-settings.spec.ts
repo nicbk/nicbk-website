@@ -10,8 +10,8 @@ import { sessionCookie, signInAndLandOn } from './support/sign-in'
  * The user-settings modal against a real server: a real session from a real
  * sign-in, a real log-out, and a real account deletion.
  *
- * It is opened from the avatar at the foot of the Lit-Tracker's sidebar, which
- * is the modal's only trigger anywhere on the site. Until that page existed the
+ * It is opened from the avatar in the Lit-Tracker's header, which is the modal's
+ * only trigger anywhere on the site. Until that page existed the
  * modal was mounted on a test-only `/user-settings-probe` route instead; that
  * route was deleted when this one replaced it, so what is exercised here is now
  * the real thing on a real page rather than a stand-in beside it.

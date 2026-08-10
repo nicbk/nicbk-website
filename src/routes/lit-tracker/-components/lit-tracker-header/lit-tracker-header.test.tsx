@@ -20,9 +20,19 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }))
 
+const ACCOUNT = {
+  name: 'Nicolás Kennedy',
+  email: 'nicbk@example.com',
+  image: null,
+}
+
+function renderHeader() {
+  return render(<LitTrackerHeader account={ACCOUNT} />)
+}
+
 describe('LitTrackerHeader', () => {
   it('sends the app name to the tracker root', () => {
-    render(<LitTrackerHeader />)
+    renderHeader()
     expect(
       screen.getByRole('link', { name: 'Literature Tracker' }),
     ).toHaveAttribute('href', '/lit-tracker')
@@ -32,7 +42,7 @@ describe('LitTrackerHeader', () => {
     // The two links are not the same destination: `nicbk_home` is the root of
     // the path — the site this sub-application is hosted on — while the app
     // name is the tracker's own home.
-    render(<LitTrackerHeader />)
+    renderHeader()
     const path = screen.getByRole('navigation', { name: 'Breadcrumb' })
 
     expect(path).toHaveTextContent('↳/nicbk_home')
@@ -45,14 +55,16 @@ describe('LitTrackerHeader', () => {
   })
 
   it('names the site owner, not whoever is signed in', () => {
-    // `nicbk` is literal for every account — the header takes no account at
-    // all, which is what makes that impossible to get wrong.
-    render(<LitTrackerHeader />)
+    // `nicbk` is literal for every account, even though the header now knows
+    // who is signed in: the path names the site this sub-application is hosted
+    // on, and reading it as a per-reader handle is the natural misreading.
+    renderHeader()
     expect(screen.getByRole('link', { name: 'nicbk_home' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Nicolás/ })).toBeNull()
   })
 
-  it('groups the path and the theme toggle on the right, app name on the left', () => {
-    render(<LitTrackerHeader />)
+  it('orders the right-hand group: path, account, then theme toggle', () => {
+    renderHeader()
     const header = screen.getByRole('banner')
 
     expect(header.children[0]).toBe(
@@ -61,17 +73,15 @@ describe('LitTrackerHeader', () => {
     expect(header.children[1]).toBe(
       screen.getByRole('navigation', { name: 'Breadcrumb' }),
     )
+    // The account control sits between the path and the toggle — moved here
+    // from the foot of the sidebar at the user's request (2026-08-09).
+    expect(header.children[2]).toBe(
+      screen.getByRole('button', { name: 'Account settings' }),
+    )
     // Without the toggle here the tracker would be the one place on the site
     // with no way to change theme, since it does not use the site-wide header.
     expect(header.lastElementChild).toBe(
       screen.getByRole('button', { name: 'Toggle theme' }),
     )
-  })
-
-  it('carries no account control — that lives in the sidebar', () => {
-    render(<LitTrackerHeader />)
-    expect(
-      screen.queryByRole('button', { name: 'Account settings' }),
-    ).toBeNull()
   })
 })

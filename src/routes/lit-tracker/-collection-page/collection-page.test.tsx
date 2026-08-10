@@ -1,8 +1,11 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '~/routes/-shared/components/toast/toaster'
 import { TRACKER_LOADING_MESSAGE } from '../-components/tracker-loading/tracker-loading'
-import { EMPTY_COLLECTION_MESSAGE } from './article-collection'
+import {
+  EMPTY_COLLECTION_MESSAGE,
+  NO_MATCHES_MESSAGE,
+} from './article-collection'
 
 /**
  * The half of the collection surface that talks to Zero: which queries it asks
@@ -26,6 +29,19 @@ vi.mock('@rocicorp/zero/react', () => ({
   useZero: () => ({ mutate }),
 }))
 
+/**
+ * The filter state the page reads. It lives in the `/lit-tracker` route's search
+ * params, so the router is stubbed with a value a test can set — which is also
+ * the only way to say "this URL is filtered" without mounting a router.
+ */
+const search = vi.hoisted(() => ({ current: {} as Record<string, unknown> }))
+vi.mock('@tanstack/react-router', () => ({
+  getRouteApi: () => ({
+    useSearch: () => search.current,
+    useNavigate: () => vi.fn(),
+  }),
+}))
+
 const { CollectionPage } = await import('./collection-page')
 
 const ARTICLE = {
@@ -34,6 +50,18 @@ const ARTICLE = {
   authors: [{ name: 'Ashish Vaswani' }],
   status: 'pending',
 }
+
+/** A second article, so a filter has something to exclude. */
+const OTHER_ARTICLE = {
+  id: '2',
+  title: 'Deep Residual Learning',
+  authors: [{ name: 'Kaiming He' }],
+  status: 'read',
+}
+
+beforeEach(() => {
+  search.current = {}
+})
 
 /**
  * The page runs three queries. They are answered by name rather than by call
@@ -131,5 +159,27 @@ describe('CollectionPage', () => {
     expect(screen.getByRole('article')).toHaveTextContent(
       'Attention Is All You Need',
     )
+  })
+
+  it('draws only the articles the URL’s filters allow', () => {
+    search.current = { status: 'read' }
+    answerQueries({ 'articles.mine': [ARTICLE, OTHER_ARTICLE] })
+    renderPage()
+
+    const cards = screen.getAllByRole('article')
+    expect(cards).toHaveLength(1)
+    expect(cards[0]).toHaveTextContent('Deep Residual Learning')
+  })
+
+  it('says nothing matches, rather than that the collection is empty', () => {
+    // The distinction the reader acts on: one invites deselecting a filter, the
+    // other invites an upload. Both are an empty array by the time the
+    // collection draws them, so only the page knows which it is.
+    search.current = { tags: ['nonexistent'] }
+    answerQueries({ 'articles.mine': [ARTICLE] })
+    renderPage()
+
+    expect(screen.getByText(NO_MATCHES_MESSAGE)).toBeInTheDocument()
+    expect(screen.queryByText(EMPTY_COLLECTION_MESSAGE)).toBeNull()
   })
 })

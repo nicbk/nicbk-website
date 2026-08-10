@@ -1,12 +1,29 @@
 # Status: Tags and Reading Status
 
-**State:** Implemented, awaiting review. Second of four.
+**State:** Merged 2026-08-09. Second of four.
 
-- Branch: `collection-view/tags-and-reading-status`, from `main` at `afc316e`.
+- Branch: `collection-view/tags-and-reading-status`, from `main` at `afc316e`
+  (deleted after merge).
 - Sub-issue: [#83](https://github.com/nicbk/nicbk-website/issues/83)
-  (parent [#81](https://github.com/nicbk/nicbk-website/issues/81)),
-  self-assigned.
-- PR: opened once every tier is green locally.
+  (parent [#81](https://github.com/nicbk/nicbk-website/issues/81)), closed by
+  the merge.
+- PR: [#88](https://github.com/nicbk/nicbk-website/pull/88), merged with all
+  five CI checks green — 52 files, +6047/−242.
+
+## Changed since, by the task after this one
+
+Task 3 revisited two of this task's surfaces rather than leaving them to drift:
+
+- **The card menu's tag list now keeps applied tags visible while filtering**
+  (user-decided 2026-08-09). Typing to find one tag used to hide the ones
+  already on the article, which made the ticked boxes stop being a reliable
+  answer to "what does this paper carry?" and put an un-tick behind clearing the
+  field first. The filter rail does the same with selected tags, and both call
+  the same `matchingTags` helper, now shared in `src/lit-tracker/tag-matching.ts`
+  rather than kept privately here.
+- **The three-dot trigger highlights in the accent colour instead of growing a
+  border** on hover and while open (user-decided 2026-08-09) — a border inside
+  an already-outlined card read as a second frame around the corner.
 
 All four tiers pass locally: 683 unit, 92 integration (including the 27 that
 run the five mutators against real Postgres under two users' contexts), 61

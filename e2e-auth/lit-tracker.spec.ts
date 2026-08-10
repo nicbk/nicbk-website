@@ -100,7 +100,7 @@ test.describe('lit-tracker shell', () => {
     await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible()
   })
 
-  test('puts the account control in the sidebar and the theme toggle in the header', async ({
+  test('puts the account control and the theme toggle in the header, in that order', async ({
     page,
   }) => {
     await signInAndLandOn(page, TRACKER)
@@ -109,12 +109,13 @@ test.describe('lit-tracker shell', () => {
     const account = page.getByRole('button', { name: 'Account settings' })
     const toggle = page.getByRole('button', { name: 'Toggle theme' })
 
-    // The account control belongs at the foot of the sidebar, per the sample
-    // mockup — not in the header, and not inside the scrolling content.
-    await expect(account).toBeVisible()
+    // The account control lives in the header, between the path and the theme
+    // toggle. It sat at the foot of the sidebar until 2026-08-09 — where the
+    // sample mockup draws it — and moved once that rail filled with tags, since
+    // one avatar under thirty of them reads as the last item of the list.
     await expect(
       header.getByRole('button', { name: 'Account settings' }),
-    ).toHaveCount(0)
+    ).toHaveCount(1)
     await expect(
       page.locator('main').getByRole('button', { name: 'Account settings' }),
     ).toHaveCount(0)
@@ -126,14 +127,11 @@ test.describe('lit-tracker shell', () => {
       header.getByRole('button', { name: 'Toggle theme' }),
     ).toHaveCount(1)
 
-    // It sits below the content's top edge — i.e. it really is in the rail,
-    // not floating in the header row.
+    // Account first, toggle last — the order the header spec sets out, and one
+    // that only a rendered row can confirm.
     const accountBox = await account.boundingBox()
-    const headerBox = await header.boundingBox()
-    expect(accountBox?.y ?? 0).toBeGreaterThan(
-      (headerBox?.y ?? 0) + (headerBox?.height ?? 0),
-    )
-    await expect(toggle).toBeVisible()
+    const toggleBox = await toggle.boundingBox()
+    expect(accountBox?.x ?? 0).toBeLessThan(toggleBox?.x ?? 0)
   })
 
   test('shows the empty state once the collection is known to be empty', async ({

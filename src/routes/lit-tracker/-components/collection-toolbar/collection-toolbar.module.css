@@ -24,10 +24,18 @@
   min-width: 0;
 }
 
-/* The two controls stay together as a unit, whatever grows to their left. */
+/*
+ * The controls stay together as a unit, whatever grows to their left.
+ *
+ * `stretch`, not `center`: they come from three different components with three
+ * different contents — a labelled button, an icon button, an indicator — and
+ * each sized itself to what it held, so the bordered ones ended up visibly
+ * different heights sitting side by side. Stretching makes the row decide, which
+ * is the only place that can see all three.
+ */
 .controls {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-xs);
   flex-shrink: 0;
 }

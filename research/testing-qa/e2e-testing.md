@@ -221,6 +221,44 @@ by the in-process token stub, which makes it a ready-made channel for "which
 account is signing in" — the natural next step, left out of this change on
 purpose.
 
+## Addendum (2026-08-09): both tiers are suspended in CI while #8–#11 are built
+
+Decided with the user immediately after the `storageState` change above, and for
+the reason that change did not go far enough to fix: **e2e is too slow to sit on
+the critical path of a feature that is still changing shape.**
+
+The signed-in tier is ~4.5 minutes after the setup-project fix, the ordinary
+suite about a minute, and the two together were adding roughly fifteen minutes to
+every PR once build and browser install are counted. The user's words, while #85
+was in progress: *"end to end tests taking too long, hampering iteration speed —
+we'll add and perform the end-to-end tests after the literature tracker project
+is built out with the features we want."*
+
+**What is suspended:** the `e2e` and `e2e-auth` jobs in
+[../../.github/workflows/ci.yml](../../.github/workflows/ci.yml), each by a
+single `if: false` with a comment pointing here. Nothing else in either job
+changed, so restoring them is deleting one line apiece. Per-PR gating is now
+Biome, typecheck, the drift checks, the unit tier, the coverage ratchet, and the
+integration tier — all of which run in a couple of minutes.
+
+**What is not suspended:** the specs themselves. They stay committed and still
+run on demand (`npm run test:e2e:prod`, `npm run test:e2e:auth`), and the tier
+was green when this was decided.
+
+**What replaces the coverage in the meantime:** the unit tier, which is where
+most of this project's assertions already live, plus the browser verification
+[AGENTS.md](../../AGENTS.md) requires of every visual feature. That is the honest
+accounting: manual verification catches layout and interaction faults — it caught
+eight of them in #84 alone — but it does not protect against regression, so the
+window between now and turning these back on is a window in which a regression
+can land unnoticed. It is a deliberate trade of safety for speed, not an
+improvement.
+
+**When to revisit:** once the Lit Tracker's features are built out — #8's four
+tasks are done at that point, and #9–#11 are where the remaining shape-changing
+work is. The natural moment is a single pass that turns both jobs back on, runs
+them, and fixes whatever drifted, rather than a task at a time.
+
 ## Sources
 
 - Playwright vs. Cypress 2026 market-share/adoption and benchmark

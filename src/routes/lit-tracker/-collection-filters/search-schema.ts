@@ -48,6 +48,20 @@ const tagsSchema = z
   .catch(undefined)
 
 export const collectionSearchSchema = z.object({
+  /**
+   * The search text, matched against title, authors, tags, and reading status.
+   *
+   * `q` rather than `query`, matching the blog's parameter exactly: the two
+   * search bars are one component and one interaction, and there is no reason a
+   * reader should find two different spellings of the same idea in two URLs on
+   * one site.
+   *
+   * The URL carries the *settled* text, mirrored on a debounce — the visible
+   * grid filters from local state on every keystroke and never waits on this
+   * (see `use-collection-search.ts`). What this param is for is sharing and
+   * reloading a searched view, not driving it.
+   */
+  q: z.string().optional().catch(undefined),
   /** Tags the article must all carry (AND-composed) to remain in the grid. */
   tags: tagsSchema,
   /**

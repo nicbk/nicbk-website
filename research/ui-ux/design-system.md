@@ -195,3 +195,64 @@ consistent with the design philosophy's low-friction/avoid-overcomplicating
 guidance. Phosphor Icons (6 weights) was also viable and MIT-licensed, but
 the extra weight options are a per-usage styling decision Lucide avoids
 entirely.
+
+### Scrolling: no visible scrollbars, and no overscroll bounce — Decided 2026-08-09
+
+Site-wide, in `src/styles/globals.css`:
+
+- **Scrollbars are hidden** (`scrollbar-width: none` plus
+  `::-webkit-scrollbar { display: none }` on every element). Scrolling itself is
+  untouched — wheel, trackpad, keyboard, and touch all work, and scroll regions
+  stay keyboard-reachable.
+- **`overscroll-behavior: none`** on every element, so a scroll that reaches the
+  end of a container stops there: no chaining into whatever is behind it, and no
+  rubber-band overshoot.
+
+Reasoning: this site is built from bounded panels that scroll themselves — the
+lit-tracker shell alone has the main panel, the filter rail's tag list, the card
+menu's tag list, and every card's tag strip. On a platform that reserves a
+permanent scrollbar gutter (Windows by default, macOS with "show scroll bars:
+always"), that is four or five gutters visible at once, none of them content. And
+the rubber-band each of those panels plays at its end reads as the panel coming
+loose rather than as feedback, since the thing bouncing is a box in the middle of
+a fixed layout rather than the page itself.
+
+Global rather than per-container because it is the same answer every time: a site
+where some regions draw a scrollbar and others do not looks like a bug in the
+ones that do. The card's tag strip had already made both calls locally for a
+narrower reason; this generalizes them and the local declarations were removed.
+
+**The cost, accepted rather than overlooked:** a scrollbar is an affordance as
+well as furniture, and hiding it removes the only passive signal that a region
+continues below the fold. Where that signal is load-bearing, the region owes the
+reader another one — the card's tag strip fades its trailing edge and is
+focusable; the filter rail's list is long enough that its cut-off last row says
+the same thing. A new scroll region should be checked against that question
+rather than assumed fine.
+
+### Stacking order: sticky page furniture takes no `z-index` — Decided 2026-08-09
+
+A sticky element that only needs to sit above the content it scrolls over —
+the lit-tracker's collection toolbar, and any row like it — **must not set
+`z-index`**. Being positioned is already enough: positioned elements paint after
+in-flow content.
+
+Reasoning: Base UI renders every popup, menu, dialog, and backdrop through a
+portal at the end of the document, with no `z-index` of its own. A `z-index: 1`
+on page furniture therefore beats *all of them*, whatever their DOM order — and
+the failure is quiet and specific rather than obvious: menus open underneath the
+row, and a modal's backdrop dims the entire page except that one strip, which
+then sits at full brightness above the dimmed everything else. Found exactly that
+way, on the collection toolbar, the day it became sticky.
+
+Where furniture genuinely does need to outrank positioned content — not the
+common case — the portal layer has to be lifted above it deliberately rather
+than left to `auto`. That work has not been needed yet.
+
+The site's few existing `z-index` values are unchanged. Two are *meant* to sit
+above the portal layer: the skip link (10), which must outrank anything it skips
+past, and the toast viewport (100), which must stay visible over the dialog whose
+action provoked the error. The personal site's header carries a `1` from before
+this decision; it is left alone because nothing on those pages portals a popup
+beneath it, but it is the next place this bug would appear and the first thing to
+check if one ever does.

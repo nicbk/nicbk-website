@@ -35,7 +35,11 @@ export interface CollectionFilterControls {
    * emptied where the card's cannot.
    */
   toggleStatus: (status: ArticleStatus) => void
-  /** Drop every filter at once. */
+  /**
+   * Drop every filter at once — including the search text, which is the same
+   * search object even though a different hook writes it. "Clear" that left
+   * something narrowing the collection would not be one.
+   */
   clear: () => void
 }
 
@@ -44,12 +48,22 @@ export interface CollectionFilterControls {
  * URL — a plain `/lit-tracker` stays `/lit-tracker`, not
  * `/lit-tracker?tags=%5B%5D`. The omitted keys read back as `undefined`
  * (normalized to empty by the hook), so state is unchanged.
+ *
+ * **The search text is carried through, not rebuilt.** It belongs to the same
+ * search object but to a different hook (`use-collection-search.ts`), and this
+ * function replaces the whole object — so a `q` this hook did not think about
+ * would be erased by the next tag toggle, silently un-searching the collection
+ * mid-interaction.
  */
 function cleanSearch(next: {
+  q: string | undefined
   tags: readonly string[]
   status: ArticleStatus | undefined
 }): CollectionSearch {
   const cleaned: CollectionSearch = {}
+  if (next.q !== undefined && next.q.trim() !== '') {
+    cleaned.q = next.q
+  }
   if (next.tags.length > 0) {
     cleaned.tags = [...next.tags]
   }
@@ -94,7 +108,11 @@ export function useCollectionFilters(): CollectionFilterControls {
           const nextTags = current.includes(name)
             ? current.filter((existing) => existing !== name)
             : [...current, name]
-          return cleanSearch({ tags: nextTags, status: prev.status })
+          return cleanSearch({
+            q: prev.q,
+            tags: nextTags,
+            status: prev.status,
+          })
         },
       })
     },
@@ -106,6 +124,7 @@ export function useCollectionFilters(): CollectionFilterControls {
       navigate({
         search: (prev) =>
           cleanSearch({
+            q: prev.q,
             tags: (prev.tags ?? []).filter((existing) => existing !== name),
             status: prev.status,
           }),
@@ -123,6 +142,7 @@ export function useCollectionFilters(): CollectionFilterControls {
       navigate({
         search: (prev) =>
           cleanSearch({
+            q: prev.q,
             tags: prev.tags ?? [],
             status: prev.status === next ? undefined : next,
           }),

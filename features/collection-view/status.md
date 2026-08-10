@@ -1,6 +1,7 @@
 # Status: Collection View
 
-**Feature state:** **In progress** — 1 of 4 tasks merged. Four tasks,
+**Feature state:** **In progress** — 3 of 4 tasks merged, the fourth
+implemented and awaiting review. Four tasks,
 sequential, each gated by its own PR + CI + human review. Depends on
 [`article-upload-and-extraction`](../article-upload-and-extraction/status.md)
 (#7, Complete) — it consumes that feature's Zero bring-up, `/query` and
@@ -21,8 +22,8 @@ parent when its sub-issues close.
 |---|---|---|---|---|
 | [`article-cards`](./tasks/article-cards/status.md) ([#82](https://github.com/nicbk/nicbk-website/issues/82)) | **Merged** | [#86](https://github.com/nicbk/nicbk-website/pull/86) | Green | Merged 2026-08-09 |
 | [`tags-and-reading-status`](./tasks/tags-and-reading-status/status.md) ([#83](https://github.com/nicbk/nicbk-website/issues/83)) | **Merged** | [#88](https://github.com/nicbk/nicbk-website/pull/88) | Green | Merged 2026-08-09 |
-| [`collection-filters`](./tasks/collection-filters/status.md) ([#84](https://github.com/nicbk/nicbk-website/issues/84)) | In progress | — | — | — |
-| [`collection-search`](./tasks/collection-search/status.md) ([#85](https://github.com/nicbk/nicbk-website/issues/85)) | Not started | — | — | — |
+| [`collection-filters`](./tasks/collection-filters/status.md) ([#84](https://github.com/nicbk/nicbk-website/issues/84)) | **Merged** | [#90](https://github.com/nicbk/nicbk-website/pull/90) | Green | Merged 2026-08-09 |
+| [`collection-search`](./tasks/collection-search/status.md) ([#85](https://github.com/nicbk/nicbk-website/issues/85)) | Implemented | — | — | — |
 
 One change landed outside this table: the Playwright suites were unchecked by
 `tsc`, a gap [research.md](./research.md) recorded for whichever task touched
@@ -34,12 +35,20 @@ diff with the write path's authorization. Task 2 also produced a docs-only PR,
 "Design UI that is simple and pleasant to use" section after a run of
 clunky-interface corrections.
 
-**Queued next, and for the same reason:** the signed-in e2e tier takes about ten
-minutes, because all 88 of its tests drive a full OAuth round trip before they
-start. Task 3 measured it and agreed with the user (2026-08-09) to fix it —
-`storageState` reuse, then per-worker accounts — as **its own chore PR once task
-3 merges**, not folded into a feature branch. See
-[task 3's status](./tasks/collection-filters/status.md).
+That e2e work went out the same way: the signed-in tier was taking about ten
+minutes because all 88 of its tests drove a full OAuth round trip before
+starting, and [#91](https://github.com/nicbk/nicbk-website/pull/91) replaced that
+with a single `storageState` sign-in — measured at 5.7 minutes down to 4.5.
+
+**It did not go far enough, and during task 4 the user suspended both e2e jobs in
+CI** until the Lit Tracker is built out: fifteen minutes per PR on surfaces whose
+shape changes every task is the slowest feedback loop in the project applied at
+its least useful moment. Per-PR gating is now Biome, typecheck, the drift checks,
+the unit tier, the coverage ratchet, and integration. The specs stay committed
+and run on demand. Reasoning and restore instructions:
+[e2e-testing.md](../../research/testing-qa/e2e-testing.md) (2026-08-09
+addendum) — note that this also suspends every axe scan, since all of them live
+inside Playwright tests.
 
 ## Definition of Done (feature)
 
@@ -114,6 +123,19 @@ present, to refuse a write it does not own.
   with the full string on hover, and a content column that fills the panel —
   all recorded as a dated revision in `collection-view.md` rather than as local
   fixes, since they are decisions about the page rather than about that task.
+- 2026-08-09 — **Task 4 implemented**, finishing the feature's build. The search
+  bar fills the slot #7 reserved, the grid reveals a batch at a time, and the
+  toolbar's cluster is centred and sticky — the last of those raised after
+  scrolling the real page, since infinite scroll had put the search bar and the
+  "+" out of reach of anyone deep in a collection. Also this task, and larger
+  than it: **the two e2e jobs are suspended in CI** at the user's direction, so
+  every PR from here until the tracker is built out gates on the unit tier, the
+  drift checks, and the integration tier alone.
+- 2026-08-09 — **Task 3 merged** (PR #90), and the e2e speed-up it queued merged
+  behind it (PR #91). Task 3's browser pass changed three decided things — the
+  rail becomes a drawer below the breakpoint, the account avatar returns to the
+  header, and deleting a tag is a mode rather than a control per row — each
+  recorded as a dated revision in the research docs that own them.
 - 2026-08-09 — **Task 2 started.** Its one open item and two smaller forks
   settled with the user first: a rejected mutation surfaces through a **shared
   toast** built on Base UI's `Toast` under `src/routes/-shared/components/` (the

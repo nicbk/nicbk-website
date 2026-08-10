@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '~/routes/-shared/components/toast/toaster'
 import { TRACKER_LOADING_MESSAGE } from '../-components/tracker-loading/tracker-loading'
 import {
@@ -35,10 +35,16 @@ vi.mock('@rocicorp/zero/react', () => ({
  * the only way to say "this URL is filtered" without mounting a router.
  */
 const search = vi.hoisted(() => ({ current: {} as Record<string, unknown> }))
+/**
+ * One stable spy for every `useNavigate()` on the page, so a test can assert
+ * that typing did *not* navigate — which is the whole claim about the search
+ * field being instant.
+ */
+const navigate = vi.hoisted(() => vi.fn())
 vi.mock('@tanstack/react-router', () => ({
   getRouteApi: () => ({
     useSearch: () => search.current,
-    useNavigate: () => vi.fn(),
+    useNavigate: () => navigate,
   }),
 }))
 
@@ -61,6 +67,13 @@ const OTHER_ARTICLE = {
 
 beforeEach(() => {
   search.current = {}
+  navigate.mockClear()
+})
+
+afterEach(() => {
+  // The search tests below run on fake timers to step over the URL mirror's
+  // debounce; left installed they would freeze every test after them.
+  vi.useRealTimers()
 })
 
 /**
@@ -181,5 +194,101 @@ describe('CollectionPage', () => {
 
     expect(screen.getByText(NO_MATCHES_MESSAGE)).toBeInTheDocument()
     expect(screen.queryByText(EMPTY_COLLECTION_MESSAGE)).toBeNull()
+  })
+
+  describe('the search bar', () => {
+    it('narrows the grid on the keystroke, before any navigation', () => {
+      // The claim this task rests on: the rows are already on the client, so
+      // filtering is a re-render and never waits on the router. A grid that
+      // updated only once the URL had settled would lag every keystroke by the
+      // mirror's debounce.
+      vi.useFakeTimers()
+      answerQueries({ 'articles.mine': [ARTICLE, OTHER_ARTICLE] })
+      renderPage()
+
+      fireEvent.change(screen.getByRole('searchbox'), {
+        target: { value: 'residual' },
+      })
+
+      const cards = screen.getAllByRole('article')
+      expect(cards).toHaveLength(1)
+      expect(cards[0]).toHaveTextContent('Deep Residual Learning')
+      expect(navigate).not.toHaveBeenCalled()
+    })
+
+    it('mirrors the settled query to the URL, keeping the other filters', () => {
+      vi.useFakeTimers()
+      search.current = { tags: ['rlhf'] }
+      answerQueries({ 'articles.mine': [ARTICLE, OTHER_ARTICLE] })
+      renderPage()
+
+      fireEvent.change(screen.getByRole('searchbox'), {
+        target: { value: 'residual' },
+      })
+      act(() => {
+        vi.advanceTimersByTime(250)
+      })
+
+      expect(navigate).toHaveBeenCalledTimes(1)
+      // The updater is given the previous search and must return the whole
+      // object: a query that dropped the rail's tags would un-filter the
+      // collection behind the reader's back, mid-sentence.
+      const [{ search: updater }] = navigate.mock.calls[0] as [
+        { search: (prev: Record<string, unknown>) => Record<string, unknown> },
+      ]
+      expect(updater({ tags: ['rlhf'] })).toEqual({
+        q: 'residual',
+        tags: ['rlhf'],
+      })
+    })
+
+    it('leaves no key in the URL once the query is emptied again', () => {
+      vi.useFakeTimers()
+      search.current = { q: 'residual' }
+      answerQueries({ 'articles.mine': [ARTICLE, OTHER_ARTICLE] })
+      renderPage()
+
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: '' } })
+      act(() => {
+        vi.advanceTimersByTime(250)
+      })
+
+      const [{ search: updater }] = navigate.mock.calls[0] as [
+        { search: (prev: Record<string, unknown>) => Record<string, unknown> },
+      ]
+      expect(updater({ q: 'residual' })).toEqual({})
+    })
+
+    it('adopts a query that arrives in the URL, from a link or the back button', () => {
+      search.current = { q: 'residual' }
+      answerQueries({ 'articles.mine': [ARTICLE, OTHER_ARTICLE] })
+      renderPage()
+
+      expect(screen.getByRole('searchbox')).toHaveValue('residual')
+      expect(screen.getAllByRole('article')).toHaveLength(1)
+    })
+
+    it('says nothing matches for a query that excludes everything', () => {
+      // Same distinction as the tags case above, reached the other way: a
+      // reader who has typed something is filtering, even though
+      // `filters.active` — which only knows about tags and status — is false.
+      search.current = { q: 'photosynthesis' }
+      answerQueries({ 'articles.mine': [ARTICLE] })
+      renderPage()
+
+      expect(screen.getByText(NO_MATCHES_MESSAGE)).toBeInTheDocument()
+      expect(screen.queryByText(EMPTY_COLLECTION_MESSAGE)).toBeNull()
+    })
+
+    it('intersects the query with the rail’s filters rather than replacing them', () => {
+      // `read` alone keeps the second article; a query that matches only the
+      // first must leave nothing, not reopen what the rail excluded.
+      search.current = { status: 'read', q: 'attention' }
+      answerQueries({ 'articles.mine': [ARTICLE, OTHER_ARTICLE] })
+      renderPage()
+
+      expect(screen.queryAllByRole('article')).toHaveLength(0)
+      expect(screen.getByText(NO_MATCHES_MESSAGE)).toBeInTheDocument()
+    })
   })
 })

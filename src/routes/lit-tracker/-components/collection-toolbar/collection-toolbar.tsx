@@ -1,4 +1,5 @@
 import { useQuery } from '@rocicorp/zero/react'
+import { SearchInput } from '~/routes/-shared/components/search-input/search-input'
 import { queries } from '~/zero/queries'
 import { FiltersDrawer } from '../../-collection-filters/filters-drawer'
 import { UploadModal } from '../upload-modal/upload-modal'
@@ -6,18 +7,39 @@ import { UploadStatus } from '../upload-status/upload-status'
 import styles from './collection-toolbar.module.css'
 
 /**
- * The row above the collection: the "+" button and the upload-status indicator.
+ * The search field's accessible name. Exported because the e2e and unit tiers
+ * both find the input by it, and a label a test hard-codes is a label that
+ * changes without the test noticing.
+ */
+export const SEARCH_LABEL = 'Search articles'
+
+interface CollectionToolbarProps {
+  /** The live search text. Controlled: `CollectionPage` owns it. */
+  query: string
+  /** Called with the new text on every keystroke — no debounce here. */
+  onQueryChange: (query: string) => void
+}
+
+/**
+ * The row above the collection: the search bar, and the controls beside it.
  *
- * ## The empty slot on the left is #8's
+ * ## The search bar is the row
  *
- * The decided layout puts a search bar here, with these two controls beside it
- * (research/ui-ux/pages/lit-tracker/pages/collection-view.md, and the mockup,
- * whose main panel opens with the search row). Search filters the synced Zero
- * cache and belongs with the full collection view, so it is #8's.
+ * The decided layout opens the main panel with a search row and hangs the "+"
+ * off its trailing edge (research/ui-ux/pages/lit-tracker/pages/collection-view.md,
+ * and the mockup). #7 reserved the slot rather than collapsing it, so the
+ * controls have been sitting where they belong since before there was anything
+ * to sit beside; this task fills it, which moves nothing.
  *
- * The slot is **reserved rather than collapsed**, so the controls already sit
- * against the search bar's trailing edge. #8 fills the slot; it does not move
- * these.
+ * The input is **`SearchInput`, the same component the blog list uses**. The
+ * decided specs describe the two search bars in terms of each other — the blog's
+ * cites the tracker's style and the tracker's cites the blog's sidebar — which
+ * is a long way of saying they are one control, and reimplementing it here would
+ * be where the two drift apart.
+ *
+ * Controlled from above rather than holding the text itself: the page filters
+ * the grid from the same value, and the moment two components each keep a copy
+ * is the moment the grid can show something the input does not say.
  *
  * ## Why the jobs query lives here
  *
@@ -28,7 +50,10 @@ import styles from './collection-toolbar.module.css'
  * unresolved uploads, oldest first, and they arrive by sync, so an upload
  * submitted in another tab shows up here too.
  */
-export function CollectionToolbar() {
+export function CollectionToolbar({
+  query,
+  onQueryChange,
+}: CollectionToolbarProps) {
   const [jobs] = useQuery(queries.uploadJobs.mine())
 
   return (
@@ -36,8 +61,16 @@ export function CollectionToolbar() {
     // open a dialog. A toolbar role would promise arrow-key navigation between
     // them.
     <div className={styles.toolbar}>
-      {/* Holds the row's width open for #8's search input. */}
-      <div className={styles.searchSlot} />
+      <SearchInput
+        className={styles.search}
+        value={query}
+        onValueChange={onQueryChange}
+        label={SEARCH_LABEL}
+        // Lowercase where the label is not: the accessible name is read as a
+        // sentence, while the placeholder sits among "filters" and the rail's
+        // "find a tag" and would be the one capitalized string on the page.
+        placeholder="search articles…"
+      />
       <div className={styles.controls}>
         {/*
           Only rendered as a control below the responsive breakpoint — above it

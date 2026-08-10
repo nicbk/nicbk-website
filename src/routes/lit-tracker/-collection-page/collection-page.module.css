@@ -23,6 +23,19 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+
+  /*
+   * Gives the panel's top inset to the toolbar, which is sticky and needs it.
+   *
+   * A sticky element cannot be positioned outside its containing block, and that
+   * containing block is this element — so with the panel's padding still in
+   * place the toolbar stuck 24px *below* the top of the scrollport and cards
+   * scrolled visibly through the strip above it. Pulling this element up to the
+   * scrollport's edge is what lets the toolbar reach it; the inset itself is not
+   * lost, it moved into the toolbar's own padding, where it scrolls with the row
+   * rather than under it.
+   */
+  margin-top: calc(-1 * var(--space-lg));
 }
 
 /*

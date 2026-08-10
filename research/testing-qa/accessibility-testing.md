@@ -63,6 +63,20 @@ needing a full page reload.
   file already made the tool/severity decisions in full; re-deciding them
   here would risk the two documents drifting out of sync over time.
 
+## Addendum (2026-08-09): the per-PR cadence is suspended with the e2e jobs
+
+"Cadence: same as the rest of e2e, every PR" above is unchanged as a decision,
+but the thing it rides on has been switched off for now: both e2e jobs are
+suspended in CI while the Lit Tracker is built out (see the 2026-08-09 addendum
+in [e2e-testing.md](./e2e-testing.md)). Every axe scan on this site lives inside
+a Playwright test, so **no accessibility scan currently runs on a PR**.
+
+Worth stating plainly rather than leaving to be inferred, because it is the
+consequence of that decision with the longest tail: contrast, target-size, and
+name-role-value regressions are exactly the class of fault that is invisible in
+review and cheap to introduce. The scans still run on demand and were green when
+this was written; they come back on with the jobs.
+
 ## Sources
 
 - [playwright.dev/docs/accessibility-testing](https://playwright.dev/docs/accessibility-testing) —

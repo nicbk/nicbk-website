@@ -40,6 +40,17 @@ async function openSettings(page: Page) {
 }
 
 test.describe('user settings modal', () => {
+  /*
+   * Opts out of the tier's shared session, and holds one of its own per test.
+   *
+   * Not an oversight and not a speed compromise: this file *ends* sessions. One
+   * test logs out and one deletes the account outright, so a session reused from
+   * a setup step would be dead for everything after — and the account behind it
+   * gone. Signing in per test is what makes those two safe to run at all, and it
+   * is why this file is deliberately the last one alphabetically.
+   */
+  test.use({ storageState: { cookies: [], origins: [] } })
+
   test('sends a signed-out visitor to sign in first', async ({ page }) => {
     await page.goto(TRACKER)
 

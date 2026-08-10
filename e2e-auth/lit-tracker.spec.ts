@@ -6,7 +6,7 @@ import {
   signedInUserId,
 } from './support/articles'
 import { cards } from './support/collection'
-import { signInAndLandOn } from './support/sign-in'
+import { landOn } from './support/sign-in'
 
 /**
  * The Lit Tracker shell against the real stack: the route guard on a page a
@@ -42,7 +42,14 @@ test.afterAll(async () => {
   await closeArticleConnection()
 })
 
-test.describe('lit-tracker shell', () => {
+/**
+ * The one test here that has to arrive *without* a session, so it opts out of
+ * the tier's shared one — the whole point is what the guard does to someone who
+ * has not signed in.
+ */
+test.describe('the route guard', () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
   test('sends a signed-out visitor to sign in, with no interstitial', async ({
     page,
   }) => {
@@ -63,11 +70,11 @@ test.describe('lit-tracker shell', () => {
     // redirects to.
     expect(responses).toEqual([TRACKER, '/sign-in'])
   })
+})
 
-  test('renders the tracker for a signed-in visitor returning from sign-in', async ({
-    page,
-  }) => {
-    await signInAndLandOn(page, TRACKER)
+test.describe('lit-tracker shell', () => {
+  test('renders the tracker for a signed-in visitor', async ({ page }) => {
+    await landOn(page, TRACKER)
 
     await expect(
       page.getByRole('link', { name: 'Literature Tracker' }),
@@ -80,7 +87,7 @@ test.describe('lit-tracker shell', () => {
   test('sends the header path to the personal site, and the app name to the tracker', async ({
     page,
   }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
 
     // Two links, two destinations. `nicbk_home` is the root of the path — the
     // site the tracker is hosted on — and is literal for every account.
@@ -103,7 +110,7 @@ test.describe('lit-tracker shell', () => {
   test('puts the account control and the theme toggle in the header, in that order', async ({
     page,
   }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
 
     const header = page.getByRole('banner')
     const account = page.getByRole('button', { name: 'Account settings' })
@@ -137,7 +144,7 @@ test.describe('lit-tracker shell', () => {
   test('shows the empty state once the collection is known to be empty', async ({
     page,
   }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     await deleteArticlesOf(await signedInUserId(page))
     await page.reload()
 
@@ -149,7 +156,7 @@ test.describe('lit-tracker shell', () => {
   test('a row inserted into Postgres appears without navigating or reloading', async ({
     page,
   }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     const userId = await signedInUserId(page)
     await deleteArticlesOf(userId)
     await page.reload()
@@ -182,7 +189,7 @@ test.describe('lit-tracker shell', () => {
   test('keeps the header fixed while the collection panel scrolls', async ({
     page,
   }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     const userId = await signedInUserId(page)
     await deleteArticlesOf(userId)
 
@@ -221,7 +228,7 @@ test.describe('lit-tracker shell', () => {
   test('fits narrow, mid, and wide viewports without sideways scrolling', async ({
     page,
   }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     const userId = await signedInUserId(page)
     await deleteArticlesOf(userId)
     // A title with no spaces to break at is the realistic worst case for a
@@ -254,7 +261,7 @@ test.describe('lit-tracker shell', () => {
     page,
   }) => {
     await page.emulateMedia({ colorScheme: 'light' })
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
 
     const header = page.getByRole('banner')
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
@@ -278,7 +285,7 @@ test.describe('lit-tracker shell', () => {
     expectNoA11yViolations,
   }) => {
     await page.emulateMedia({ colorScheme: 'light' })
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     const userId = await signedInUserId(page)
     await deleteArticlesOf(userId)
     await insertArticle(userId, {

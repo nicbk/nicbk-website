@@ -15,7 +15,7 @@ import {
   STUB_VENUE,
   STUB_YEAR,
 } from './support/semantic-scholar-stub.mjs'
-import { signInAndLandOn } from './support/sign-in'
+import { landOn } from './support/sign-in'
 
 /**
  * The last stage of the chain, in a browser: an upload that also gets enriched,
@@ -95,7 +95,7 @@ test.afterAll(async () => {
 
 test.describe('enrichment, end to end', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     await clearUploadsOf(await signedInUserId(page))
   })
 

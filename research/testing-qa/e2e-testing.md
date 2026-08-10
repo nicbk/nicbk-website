@@ -179,6 +179,48 @@ production build, drafts excluded, 62/62 green and stable across repeats.
 Keep `npm run test:e2e` for iterating on a single test, not for judging the
 suite.
 
+## Addendum (2026-08-09): the setup project was decided here and built late
+
+"Auth: storageState + a one-time login setup project" above is a *decision*, and
+the signed-in tier did not follow it. Every spec in `e2e-auth/` signed in for
+itself, so by the time the tier had 88 tests it was performing 88 full OAuth
+round trips — the "repeated login dance per test" this file rules out in so many
+words. Nobody chose that; it accumulated, one spec at a time, because the first
+spec written was `sign-in-flow.spec.ts`, for which signing in per test is
+correct.
+
+The cost, measured before the fix: `collection-cards.spec.ts` is five tests
+whose bodies are "insert a row, look at the card", and it took **56 seconds** —
+about eleven per test, almost none of it assertions. Each one paid for a guarded
+page, a redirect to `/sign-in`, an SSR render, hydration, a click, the stubbed
+consent screen, a callback, and a second redirect, before doing anything it was
+written to do.
+
+`auth.setup.ts` now signs in once and the browser project depends on it. Three
+places opt back out, and the reason is the same in all three — **they are about
+sessions rather than about pages**:
+
+- `sign-in-flow.spec.ts`, which drives the real round trip. Starting it signed in
+  would leave it asserting nothing.
+- `user-settings.spec.ts`, which logs out and deletes the account. A session
+  reused from the setup step would be dead for everything after it, and the
+  account behind it gone — which is also why that file is deliberately last
+  alphabetically.
+- The route-guard test in `lit-tracker.spec.ts`, which has to arrive with no
+  session because that is the whole assertion.
+
+Everything else navigates with `landOn`, which goes straight to the page and
+asserts it landed there — so a missing or dead shared session fails on the first
+line with an obvious cause, rather than as a pile of confusing assertion
+failures further down.
+
+**Still outstanding: `workers: 1`.** The stubbed Google has exactly one account
+(`support/google-stub.mjs`), so parallel workers would fight over it and over
+the one database. The authorization *code* is already chosen by the spec and read
+by the in-process token stub, which makes it a ready-made channel for "which
+account is signing in" — the natural next step, left out of this change on
+purpose.
+
 ## Sources
 
 - Playwright vs. Cypress 2026 market-share/adoption and benchmark

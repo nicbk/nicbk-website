@@ -21,6 +21,10 @@ generated/
 coverage/
 test-results/
 playwright-report/
+# The session the signed-in e2e tier signs in for once per run
+# (e2e-auth/support/session-state.ts). A real cookie for the stubbed account,
+# rewritten every run and never shared between them.
+e2e-auth/.auth/
 
 # OS / editor noise
 .DS_Store

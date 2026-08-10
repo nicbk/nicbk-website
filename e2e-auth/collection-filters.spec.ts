@@ -11,7 +11,7 @@ import {
   tagsOf,
 } from './support/articles'
 import { cards, chipsOf } from './support/collection'
-import { signInAndLandOn } from './support/sign-in'
+import { landOn } from './support/sign-in'
 
 /**
  * The filter rail against the real stack.
@@ -93,7 +93,7 @@ async function seededCollection(page: Page): Promise<{
   attentionId: string
   resnetId: string
 }> {
-  await signInAndLandOn(page, TRACKER)
+  await landOn(page, TRACKER)
   const userId = await signedInUserId(page)
   await deleteArticlesOf(userId)
   await deleteTagsOf(userId)

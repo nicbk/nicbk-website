@@ -1,4 +1,5 @@
 import { Tooltip } from '@base-ui/react/tooltip'
+import { Link } from '@tanstack/react-router'
 import type { ReactElement } from 'react'
 import type { Author } from '~/db/schema/lit-tracker'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
@@ -23,10 +24,18 @@ import styles from './article-card.module.css'
  * `ArticleCollection` next door owns the states, and `CollectionPage` above that
  * owns the query and the mutations.
  *
- * **Still not a link.** The decided click target is the article detail page,
- * which is #9 and does not exist yet. The card is now interactive in one place —
- * the menu in its corner — and nowhere else, so a reader who clicks the body of
- * a card gets nothing rather than something misleading.
+ * **The whole card is a link to the article**, which is the decided click target
+ * (research/ui-ux/pages/lit-tracker/pages/article-detail.md: "reached by
+ * clicking a card"). #8 shipped the card without one because #9's route did not
+ * exist; this is that route arriving.
+ *
+ * The link is on the **title**, stretched over the card by a positioned
+ * pseudo-element (article-card.module.css), rather than an anchor wrapped around
+ * everything. Wrapping would put a button and a scrollable tag row inside an
+ * `<a>` — invalid, and it breaks both of their keyboard models. Stretching keeps
+ * one tab stop per card, keeps middle-click and the browser's own context menu
+ * working, and leaves the menu and the tag row clickable because both paint
+ * above the stretched area.
  */
 
 /**
@@ -82,18 +91,34 @@ export function ArticleCard({
     <article className={styles.card}>
       <div className={styles.header}>
         <ElidedText text={title}>
-          <h2 className={styles.title}>{title}</h2>
+          <h2 className={styles.title}>
+            <Link
+              className={styles.titleLink}
+              to="/lit-tracker/$articleId"
+              params={{ articleId: article.id }}
+            >
+              {title}
+            </Link>
+          </h2>
         </ElidedText>
 
-        <ArticleMenu
-          articleTitle={title}
-          status={status}
-          allTags={allTags}
-          appliedTagIds={appliedTagIds}
-          onSetStatus={onSetStatus}
-          onToggleTag={onToggleTag}
-          onCreateTag={onCreateTag}
-        />
+        {/*
+          Positioned, which is the whole reason for the wrapper: the title's
+          stretched pseudo-element covers the card, and a positioned element
+          later in the tree paints above it. Without this the menu would be
+          under the link and every click on it would navigate instead.
+        */}
+        <div className={styles.menuSlot}>
+          <ArticleMenu
+            articleTitle={title}
+            status={status}
+            allTags={allTags}
+            appliedTagIds={appliedTagIds}
+            onSetStatus={onSetStatus}
+            onToggleTag={onToggleTag}
+            onCreateTag={onCreateTag}
+          />
+        </div>
       </div>
 
       <ElidedText text={authorLine}>

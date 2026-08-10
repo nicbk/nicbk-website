@@ -1,10 +1,44 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { UNKNOWN_AUTHORS } from '../authors'
 import type { CollectionArticle } from './article-card'
 import { ArticleCard } from './article-card'
+
+/**
+ * The card is a link to the detail page as of #9's first task, so the router has
+ * to answer for `Link`. A plain anchor is the right stub: what matters here is
+ * that the link exists, points at the right article, and does not swallow the
+ * menu's clicks — none of which needs a real router.
+ */
+vi.mock('@tanstack/react-router', async () => {
+  const { createElement } = await import('react')
+  return {
+    Link: ({
+      to,
+      params,
+      children,
+      ...rest
+    }: {
+      to: string
+      params?: Record<string, string>
+      children: ReactNode
+    }) =>
+      createElement(
+        'a',
+        {
+          ...rest,
+          href: Object.entries(params ?? {}).reduce(
+            (path, [key, value]) => path.replace(`$${key}`, value),
+            to,
+          ),
+        },
+        children,
+      ),
+  }
+})
 
 /**
  * The card against the shapes real articles actually take.
@@ -221,14 +255,27 @@ describe('ArticleCard', () => {
     ).not.toBeChecked()
   })
 
-  it('is not a link, and its only control is the menu', () => {
-    // #9 owns navigation to the article detail page. Until it exists, a card
-    // that looks clickable and does nothing is worse than one that plainly is
-    // not — so the corner menu is the only thing here to activate, and the tag
-    // chips are labels rather than a tab stop each.
+  it('links to the article, from the title', () => {
+    // #8 shipped the card deliberately un-linked because this route did not
+    // exist; #9's first task is that route arriving. The link is on the title
+    // and stretched over the card in CSS, so there is exactly one of it — a card
+    // whose every line was its own anchor would be one tab stop per line, in a
+    // grid of them.
+    const article = articleWith()
+    renderCard({ article })
+
+    const link = screen.getByRole('link', { name: article.title })
+    expect(link).toHaveAttribute('href', `/lit-tracker/${article.id}`)
+  })
+
+  it('keeps the menu as its only control, beside the link', () => {
+    // The tag chips are labels rather than a tab stop each, and the menu is
+    // still the one thing on a card to activate. What must not happen is the
+    // link swallowing it — see the stretched-link comments in
+    // article-card.module.css.
     renderCard({ tags: [ATTENTION_TAG, SURVEY_TAG] })
 
-    expect(screen.queryByRole('link')).toBeNull()
     expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(screen.getAllByRole('link')).toHaveLength(1)
   })
 })

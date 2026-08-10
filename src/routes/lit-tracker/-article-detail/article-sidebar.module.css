@@ -1,0 +1,74 @@
+/*
+ * The sidebar's tabs and the panel below them.
+ *
+ * Two tabs today, four by the end of #10 — so the row is built to take more
+ * without being redesigned: it wraps rather than scrolls, because four short
+ * words in a narrow column are a second line, not a horizontal scroller nobody
+ * would find.
+ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  /* Passes the rail's bounded height down to the panel, which is what scrolls. */
+  min-height: 0;
+  flex: 1;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  flex-shrink: 0;
+}
+
+/*
+ * A tab is quiet until it is the one showing. Underlined rather than boxed: the
+ * rail already sits inside the shell's own panel edge, and a row of bordered
+ * buttons inside a bordered column is two frames deep before any content.
+ */
+.tab {
+  padding: var(--space-2xs) var(--space-xs);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+/*
+ * The selected tab. Border *and* weight as well as color, so which one is
+ * showing survives grayscale (WCAG 1.4.1) — the same treatment the reading
+ * status toggles use, for the same reason.
+ */
+.tab[data-selected] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
+@media (hover: hover) {
+  .tab:hover {
+    color: var(--color-text);
+  }
+}
+
+/*
+ * The panel. It is what scrolls when its contents are taller than the rail —
+ * the tabs above it must stay reachable, which is the same "only one region
+ * scrolls" rule the tag controls follow internally.
+ *
+ * `overscroll-behavior-y` on the axis it scrolls and no other: the shorthand
+ * claims both axes and swallows gestures on the one it does not use
+ * (globals.css).
+ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+}

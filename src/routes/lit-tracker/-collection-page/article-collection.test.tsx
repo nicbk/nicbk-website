@@ -1,8 +1,42 @@
 import { act, render, screen, within } from '@testing-library/react'
-import type { ComponentProps } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TRACKER_LOADING_MESSAGE } from '../-components/tracker-loading/tracker-loading'
 import type { CollectionArticle } from './article-collection'
+
+/**
+ * The card is a link to the detail page as of #9's first task, so the router has
+ * to answer for `Link`. A plain anchor is the right stub: what matters here is
+ * that the link exists, points at the right article, and does not swallow the
+ * menu's clicks — none of which needs a real router.
+ */
+vi.mock('@tanstack/react-router', async () => {
+  const { createElement } = await import('react')
+  return {
+    Link: ({
+      to,
+      params,
+      children,
+      ...rest
+    }: {
+      to: string
+      params?: Record<string, string>
+      children: ReactNode
+    }) =>
+      createElement(
+        'a',
+        {
+          ...rest,
+          href: Object.entries(params ?? {}).reduce(
+            (path, [key, value]) => path.replace(`$${key}`, value),
+            to,
+          ),
+        },
+        children,
+      ),
+  }
+})
+
 import {
   ArticleCollection,
   COLLECTION_ERROR_MESSAGE,

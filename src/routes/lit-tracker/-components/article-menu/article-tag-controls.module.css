@@ -1,0 +1,201 @@
+/*
+ * Reading status and tags for one article: three regions, and only the last one
+ * scrolls.
+ *
+ * A reader with thirty tags should be able to hunt through them without the
+ * reading status leaving the screen and without having to reach the bottom of
+ * the list to make a new tag. That constraint was found inside the card's
+ * popover, but it is about the number of tags rather than about the popover —
+ * which is why these styles carry no width, no border, and no fill. The surface
+ * around them decides those: a bounded popup for the card
+ * (article-menu.module.css), a sidebar panel for the detail page.
+ */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  /* Padding lives on the sections rather than on the surface around them, so
+     the scrolling list below can run to that surface's own edges as it
+     scrolls. */
+  padding: 0 var(--space-sm);
+}
+
+.sectionLabel {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * The three statuses, as one row. Equal columns so the row does not shift as
+ * the selection moves — the pressed state adds weight, and ragged widths would
+ * make that read as the control resizing.
+ */
+.statusGroup {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xs);
+}
+
+.statusOption {
+  padding: var(--space-2xs) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+/*
+ * The pressed status. Distinguished by border *and* weight as well as color, so
+ * which one is set survives grayscale (WCAG 1.4.1).
+ */
+.statusOption[data-pressed] {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
+@media (hover: hover) {
+  .statusOption:hover {
+    color: var(--color-text);
+  }
+}
+
+.separator {
+  height: 1px;
+  margin: var(--space-sm) 0;
+  background-color: var(--color-border);
+}
+
+.filter {
+  width: 100%;
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  /* `font: inherit` rather than a size: form controls do not inherit the
+     document's font family, and the site is monospace throughout. */
+  font: inherit;
+  font-size: var(--font-size-sm);
+}
+
+.filter:focus-visible {
+  border-color: var(--color-accent);
+}
+
+/*
+ * The one scroll container in these controls.
+ *
+ * Capped in `rem` rather than as a fraction of its container, so the list is the
+ * same height whether the reader has four tags or forty, and whether it is in a
+ * popover or a sidebar. Reaching its end does
+ * not start scrolling the collection behind it, and does not overshoot — on the
+ * vertical axis only, the axis it scrolls (globals.css explains why the site
+ * cannot say this once and be done with it).
+ */
+.tagList {
+  max-height: 11rem;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+  margin: var(--space-2xs) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * The whole row is the control, so it is styled as one: full width, no button
+ * chrome, and the hit target is the row rather than a 16px box at its start.
+ */
+.tagOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  padding: var(--space-2xs) 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .tagOption:hover {
+    color: var(--color-accent);
+  }
+}
+
+/* The box itself is decoration — `aria-hidden`, because the row it sits in is
+   already announced as a checkbox with its own state. */
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-accent);
+}
+
+.tagOption[data-checked] .checkbox {
+  border-color: var(--color-accent);
+}
+
+.checkIcon {
+  display: inline-flex;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.checkIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Tag names are user-supplied and can be a single long run. */
+.tagName {
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Pinned below the scrolling list rather than inside it: making a tag used to
+ * be the list's last item, which with thirty tags meant scrolling to the bottom
+ * to reach it.
+ */
+.create {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  margin-block-start: var(--space-2xs);
+  padding: var(--space-2xs) 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.createIcon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+}
+
+.empty {
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

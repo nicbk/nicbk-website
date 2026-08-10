@@ -25,6 +25,15 @@
  * it the row would widen the card rather than scroll.
  */
 .tagList {
+  /*
+   * Positioned so it sits above the card title's stretched link, which covers
+   * the whole card (article-card.module.css). Without this the row would be
+   * under the link: scrolling it sideways would work, but every click on it
+   * would navigate, and the focusable region below would be unreachable by
+   * pointer. No `z-index` — tree order is enough, and a positive value would
+   * lift a tag row above every portalled popup on the page.
+   */
+  position: relative;
   flex: 1;
   min-width: 0;
   display: flex;

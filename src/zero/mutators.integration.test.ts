@@ -432,6 +432,82 @@ describe('articles.setStatus', () => {
   })
 })
 
+describe('articles.setNotes', () => {
+  it('writes notes on the caller’s own article', async () => {
+    await runAs('articles.setNotes', CONTEXT_A, {
+      id: ARTICLE_A,
+      notes: 'the one everything else cites',
+    })
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.notes).toBe('the one everything else cites')
+  })
+
+  it('replaces the whole value rather than appending', async () => {
+    // One textarea, one column. Last write wins, which is what makes this safe
+    // to re-run on rebase.
+    await runAs('articles.setNotes', CONTEXT_A, { id: ARTICLE_A, notes: 'a' })
+    await runAs('articles.setNotes', CONTEXT_A, { id: ARTICLE_A, notes: 'b' })
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.notes).toBe('b')
+  })
+
+  it('stores a cleared field as an empty string, not as null', async () => {
+    // Clearing notes is a thing a reader does, and it must not produce a second
+    // representation of "no notes" for the UI to have to tell apart.
+    await runAs('articles.setNotes', CONTEXT_A, {
+      id: ARTICLE_A,
+      notes: 'something',
+    })
+    await runAs('articles.setNotes', CONTEXT_A, { id: ARTICLE_A, notes: '' })
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.notes).toBe('')
+  })
+
+  it('keeps whitespace, unlike a tag name', async () => {
+    // Prose, mid-edit. Trimming would delete the newline the reader just typed
+    // every time the debounce fired.
+    await runAs('articles.setNotes', CONTEXT_A, {
+      id: ARTICLE_A,
+      notes: 'first line\n\nsecond paragraph  ',
+    })
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.notes).toBe('first line\n\nsecond paragraph  ')
+  })
+
+  it('refuses another user’s article and leaves its notes alone', async () => {
+    // The load-bearing one, and non-vacuous: B's article genuinely exists, so a
+    // handler that wrote nothing at all would still fail this.
+    await runAs('articles.setNotes', CONTEXT_B, {
+      id: ARTICLE_B,
+      notes: 'B wrote this',
+    })
+
+    await expect(
+      runAs('articles.setNotes', CONTEXT_A, {
+        id: ARTICLE_B,
+        notes: 'A should not be able to write this',
+      }),
+    ).rejects.toThrow()
+
+    const [victim] = await articleById(ARTICLE_B)
+    expect(victim?.notes).toBe('B wrote this')
+  })
+
+  it('touches no other article', async () => {
+    await runAs('articles.setNotes', CONTEXT_A, {
+      id: ARTICLE_A,
+      notes: 'mine',
+    })
+
+    const [other] = await articleById(ARTICLE_B)
+    expect(other?.notes).toBeNull()
+  })
+})
+
 describe('the registry', () => {
   it('throws on a mutator name it does not hold', async () => {
     // What stops an invented name from being a silent no-op. `/mutate` relies

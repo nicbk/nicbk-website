@@ -1,0 +1,48 @@
+/*
+ * The Notes tab: a label and a field that takes the rest of the panel.
+ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-height: 0;
+  flex: 1;
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * The field fills whatever height the sidebar has rather than being a fixed
+ * number of rows: this is a notebook, and a notebook that is four lines tall in
+ * a full-height column looks like a comment box.
+ *
+ * `resize: none` because the handle would drag against a panel that already
+ * bounds it — the field is as tall as the space, and there is no larger size to
+ * drag to.
+ */
+.field {
+  flex: 1;
+  min-height: 8rem;
+  padding: var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  /* `font: inherit` rather than a size: form controls do not inherit the
+     document's font family, and the site is monospace throughout. */
+  font: inherit;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  resize: none;
+}
+
+.field:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.field::placeholder {
+  color: var(--color-text-muted);
+}

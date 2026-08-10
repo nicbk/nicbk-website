@@ -1,5 +1,12 @@
-import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Outlet,
+  useMatch,
+  useNavigate,
+} from '@tanstack/react-router'
 import { requireAuth } from '~/auth/require-auth'
+import { ArticleRail } from './-article-detail/article-rail'
+import { SIDEBAR_LABEL } from './-article-detail/article-summary'
 import { FilterRail } from './-collection-filters/filter-rail'
 import { collectionSearchSchema } from './-collection-filters/search-schema'
 import { LitTrackerShell } from './-components/lit-tracker-shell/lit-tracker-shell'
@@ -48,6 +55,26 @@ function LitTrackerLayout() {
   const { auth } = Route.useRouteContext()
   const navigate = useNavigate()
 
+  /**
+   * Which page is showing, because **the rail's contents belong to the page and
+   * the rail is outside it**.
+   *
+   * The shell puts a panel beside the content and the decided layouts give each
+   * page its own thing to put there — the collection filters its list, the
+   * article page keeps its tags and notes. There is no prop path from a page to
+   * a panel rendered around it, so the choice is made here, at the only level
+   * that can see both. `shouldThrow: false` because this layout renders for
+   * every tracker route, most of which are not this one.
+   *
+   * This is the same place the collection's search params are validated, and for
+   * the same underlying reason: the rail is a sibling of the page, so anything
+   * the two share lives one level up.
+   */
+  const articleMatch = useMatch({
+    from: '/lit-tracker/$articleId',
+    shouldThrow: false,
+  })
+
   // Logging out or deleting the account leaves nothing signed in, and this page
   // requires a session — so leave for the public site rather than sit on a
   // guarded page whose session no longer exists.
@@ -62,7 +89,16 @@ function LitTrackerLayout() {
       // provider, which is where its queries need to run. Named here rather than
       // inside the shell so the shell stays chrome with no page-specific
       // contents compiled into it.
-      filters={<FilterRail label={FILTER_RAIL_LABEL} />}
+      filters={
+        articleMatch ? (
+          <ArticleRail
+            articleId={articleMatch.params.articleId}
+            label={SIDEBAR_LABEL}
+          />
+        ) : (
+          <FilterRail label={FILTER_RAIL_LABEL} />
+        )
+      }
     >
       <Outlet />
     </LitTrackerShell>

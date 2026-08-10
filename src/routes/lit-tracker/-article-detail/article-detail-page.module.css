@@ -1,0 +1,40 @@
+/*
+ * The article surface. Like the collection page, it sits inside
+ * LitTrackerShell's bounded panel, so nothing here sets a height or an inset —
+ * the panel does both.
+ *
+ * What is different from the collection: this page does **not** scroll as one.
+ * The summary stays put and the reader below it scrolls itself, because a
+ * document is the one kind of content where scrolling the page away from its own
+ * toolbar would be a defect rather than a preference. Task 3 puts the reader in
+ * the space `.body` holds open.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  /* Fills the panel exactly, so the reader below can take the remaining height
+     rather than growing the panel and putting a second scrollbar on it. */
+  height: 100%;
+  min-height: 0;
+}
+
+/* The three notices — syncing, missing, failed — all read as one short line in
+   the middle of an otherwise empty panel rather than as a page of their own. */
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  color: var(--color-text-muted);
+}
+
+/*
+ * "no such article" is an `<h1>` for the focus handoff, and must not be shouted.
+ * Sized as body text, because it is a sentence rather than a title.
+ */
+.missingHeading {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-normal);
+}

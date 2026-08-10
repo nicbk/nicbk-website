@@ -139,3 +139,29 @@ row's contents sit in it, and what happens to them when the page scrolls.
   behind the controls rather than disappearing under an opaque band. Each control
   keeps its own fill and border, which is what holds them legible against moving
   cards; what shows through is the gaps between them.
+
+### Amendment, same day: transparent is the row, not the controls
+
+The first build of the above read "no background" too broadly and the row came
+out unreadable, so the boundary is worth stating precisely: **the row is
+transparent; every control in it is opaque.**
+
+What went wrong was subtler than a missing fill. The search field *had* one — the
+surface tone, which is also the cards' fill. Against the page it looked filled;
+against a card scrolling underneath it, its fill and the card's were the same
+color and its border and the card's border were the same color, so the field
+dissolved into whatever happened to be behind it. The resting checkmark beside it
+had no fill at all and sat directly on card titles.
+
+So the controls take the **page background** rather than the surface tone — the
+one fill that is guaranteed to differ from the cards, and the same fill the "+"
+and the filters button already used. A card sliding under the row is cleanly
+interrupted by each control and continues in the gaps between them, which is the
+effect the revision above was describing. `SearchInput` gained a custom-property
+seam for this rather than being changed outright, because the blog's copy of the
+field has nothing scrolling beneath it and still wants the filled look.
+
+The general form: "transparent furniture" is a statement about the *spaces
+between* controls. Any control that floats over moving content needs a fill that
+differs from that content, and inheriting a token named for surfaces is exactly
+how it ends up matching the surfaces.

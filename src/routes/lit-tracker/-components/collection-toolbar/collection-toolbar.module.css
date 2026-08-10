@@ -32,9 +32,14 @@
    * page; every test still passed.
    *
    * **No background of its own**, so the collection is visibly passing behind it
-   * rather than disappearing under an opaque band. The controls stay legible
-   * because each carries its own fill and border; what shows through is the gaps
-   * between them. Decided this way with the user.
+   * rather than disappearing under an opaque band. What shows through is the
+   * gaps *between* the controls — each control is opaque in itself, and in the
+   * page's own background rather than the surface tone, so a card sliding under
+   * the row is cleanly interrupted by it. The first attempt left them in the
+   * surface tone, which is the cards' fill: over a card the search pill had
+   * nothing to separate it from what was behind it and read as transparent,
+   * which is the opposite of what "transparent row" was meant to mean.
+   * Transparent is the row; the controls are not.
    *
    * The inset above the row belongs to the row rather than to the panel — both
    * gaps are `padding` here, so they travel with it. `top` is that same inset,
@@ -81,6 +86,11 @@
   flex: 1;
   max-width: 32rem;
   min-width: 0;
+  /* The page's background rather than the field's default surface tone, which
+     is the cards' fill — see the row's comment above. Set through the seam
+     `SearchInput` exposes so the blog's field, which has nothing scrolling
+     under it, keeps the filled look it was designed with. */
+  --search-input-fill: var(--color-bg);
 }
 
 /*

@@ -198,15 +198,17 @@ entirely.
 
 ### Scrolling: no visible scrollbars, and no overscroll bounce — Decided 2026-08-09
 
-Site-wide, in `src/styles/globals.css`:
+Two rules, and — see the revision below — they are declared in two different
+places for a reason:
 
-- **Scrollbars are hidden** (`scrollbar-width: none` plus
-  `::-webkit-scrollbar { display: none }` on every element). Scrolling itself is
-  untouched — wheel, trackpad, keyboard, and touch all work, and scroll regions
-  stay keyboard-reachable.
-- **`overscroll-behavior: none`** on every element, so a scroll that reaches the
-  end of a container stops there: no chaining into whatever is behind it, and no
-  rubber-band overshoot.
+- **Scrollbars are hidden**, site-wide in `src/styles/globals.css`
+  (`scrollbar-width: none` plus `::-webkit-scrollbar { display: none }` on every
+  element). Scrolling itself is untouched — wheel, trackpad, keyboard, and touch
+  all work, and scroll regions stay keyboard-reachable.
+- **A scroll stops dead at the end of the container it is in**: no chaining into
+  whatever is behind it, and no rubber-band overshoot. Expressed as
+  `overscroll-behavior`, declared **on each real scroll container, on the axis
+  that container actually scrolls** — never globally.
 
 Reasoning: this site is built from bounded panels that scroll themselves — the
 lit-tracker shell alone has the main panel, the filter rail's tag list, the card
@@ -217,10 +219,38 @@ the rubber-band each of those panels plays at its end reads as the panel coming
 loose rather than as feedback, since the thing bouncing is a box in the middle of
 a fixed layout rather than the page itself.
 
-Global rather than per-container because it is the same answer every time: a site
+Hiding scrollbars *is* global, because it is the same answer every time: a site
 where some regions draw a scrollbar and others do not looks like a bug in the
-ones that do. The card's tag strip had already made both calls locally for a
-narrower reason; this generalizes them and the local declarations were removed.
+ones that do. The card's tag strip had already made that call locally for a
+narrower reason; this generalizes it and the local declaration was removed.
+
+#### Revision, same day: `overscroll-behavior` cannot be global
+
+The rule above first shipped as `* { overscroll-behavior: none }` beside the
+scrollbar rule. That broke scrolling across most of the site, and the mechanism
+is worth keeping because nothing about it is obvious from the property's name:
+
+**`overscroll-behavior` applies to every scroll container, and `overflow: hidden`
+makes an element a scroll container** — one the user can never scroll. The site
+is full of them: every card clips its corners, every tag chip clips its ellipsis,
+the avatar clips its image. Each became a container permanently at its scroll
+limit in both axes, so a wheel over one *was* an overscroll, and `none` refused
+to pass it to the panel behind. The collection scrolled only when the pointer
+happened to be in a gap between cards. The same trap catches genuine scrollers on
+their off axis: the card's tag strip scrolls horizontally, so a vertical wheel
+over it is at the limit too.
+
+So the rule is: **declare it on a real scroll container, and only on the axis
+that container scrolls** — `overscroll-behavior-y` for the collection panel and
+the two tag lists, `overscroll-behavior-x` for the card's tag strip, and
+`overscroll-behavior-y` on `<html>` for the document itself. The shorthand claims
+both axes and is the thing to avoid. `globals.css` carries the explanation at the
+point where the global rule would otherwise be written again.
+
+The generalizable form, since this is the second global rule in this section to
+be examined and only one survived: a property is safe to put on `*` when it
+affects how an element *looks*, and suspect when it affects how an element
+*behaves* — behaviour usually depends on what the element is, and `*` cannot ask.
 
 **The cost, accepted rather than overlooked:** a scrollbar is an affordance as
 well as furniture, and hiding it removes the only passive signal that a region

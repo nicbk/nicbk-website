@@ -1,7 +1,7 @@
 # Status: Collection View
 
-**Feature state:** **In progress** — 3 of 4 tasks merged, the fourth
-implemented and awaiting review. Four tasks,
+**Feature state:** **Complete** — all 4 tasks merged, parent issue #81 closed by
+hand. Four tasks,
 sequential, each gated by its own PR + CI + human review. Depends on
 [`article-upload-and-extraction`](../article-upload-and-extraction/status.md)
 (#7, Complete) — it consumes that feature's Zero bring-up, `/query` and
@@ -23,7 +23,7 @@ parent when its sub-issues close.
 | [`article-cards`](./tasks/article-cards/status.md) ([#82](https://github.com/nicbk/nicbk-website/issues/82)) | **Merged** | [#86](https://github.com/nicbk/nicbk-website/pull/86) | Green | Merged 2026-08-09 |
 | [`tags-and-reading-status`](./tasks/tags-and-reading-status/status.md) ([#83](https://github.com/nicbk/nicbk-website/issues/83)) | **Merged** | [#88](https://github.com/nicbk/nicbk-website/pull/88) | Green | Merged 2026-08-09 |
 | [`collection-filters`](./tasks/collection-filters/status.md) ([#84](https://github.com/nicbk/nicbk-website/issues/84)) | **Merged** | [#90](https://github.com/nicbk/nicbk-website/pull/90) | Green | Merged 2026-08-09 |
-| [`collection-search`](./tasks/collection-search/status.md) ([#85](https://github.com/nicbk/nicbk-website/issues/85)) | Implemented | — | — | — |
+| [`collection-search`](./tasks/collection-search/status.md) ([#85](https://github.com/nicbk/nicbk-website/issues/85)) | **Merged** | [#92](https://github.com/nicbk/nicbk-website/pull/92) | Green | Merged 2026-08-09 |
 
 One change landed outside this table: the Playwright suites were unchecked by
 `tsc`, a gap [research.md](./research.md) recorded for whichever task touched
@@ -102,6 +102,17 @@ present, to refuse a write it does not own.
 
 ## Log
 
+- 2026-08-09 — **Task 4 merged (PR #92) and the feature is complete**; parent
+  issue #81 closed by hand, per the lifecycle convention. Two faults the user
+  found afterwards went out as a follow-up PR, both from task 4's site-wide
+  rules and both worth naming because neither was visible to any test:
+  `overscroll-behavior: none` on `*` reached every `overflow: hidden` element —
+  each card, each chip — turning them into containers permanently at their scroll
+  limit that swallowed the wheel, so the collection scrolled only in the gaps
+  *between* cards; and "transparent toolbar" had been read as applying to the
+  controls too, leaving the search field in the same fill as the cards passing
+  under it, indistinguishable from them. Both recorded as decisions in
+  `design-system.md` and `collection-view.md` rather than as local patches.
 - 2026-08-09 — Feature spec'd, immediately after #7 completed and its parent
   issue was closed. Scoping settled with the user beforehand: **four tasks**,
   with the card first and the write path isolated in its own reviewable task;

@@ -39,6 +39,54 @@
   box-sizing: border-box;
 }
 
+/*
+ * No visible scrollbars, anywhere — the content scrolls, the furniture goes.
+ *
+ * Global rather than per-container because it is the same decision every time,
+ * and a site where some regions draw a scrollbar and others do not looks like a
+ * mistake in the ones that do. On a desktop platform that reserves a permanent
+ * gutter (the default on Windows, and on macOS when "show scroll bars: always"
+ * is set) that gutter is visible on every panel, list, and popup at once; the
+ * card footer had already hidden its own for a narrower version of this reason
+ * (card-footer.module.css) and this generalizes it.
+ *
+ * Both declarations are needed: `scrollbar-width` is the standard property and
+ * the only one Firefox implements, `::-webkit-scrollbar` is what Chromium and
+ * Safari honour. Neither disables scrolling — wheel, trackpad, keyboard, and
+ * touch are untouched, and the regions stay keyboard-scrollable.
+ *
+ * The cost, stated rather than glossed: a scrollbar is also an *affordance*,
+ * and hiding it removes the only passive hint that a region has more content
+ * below the fold. Where that hint is load-bearing, the region has to earn it
+ * back some other way — the card's tag strip fades its trailing edge, and the
+ * collection simply keeps growing as it is scrolled.
+ */
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Scrolling stops dead at the edge of whatever is scrolling.
+ *
+ * `none` rather than `contain`: both stop a scroll from chaining into the
+ * element behind, but `none` also suppresses the platform's overscroll
+ * affordance — the rubber-band overshoot macOS plays when a container is
+ * already at its end. In a layout built from bounded panels that each scroll
+ * themselves, that bounce reads as the panel coming loose rather than as
+ * feedback, and it is the one animation on the site nobody asked for.
+ *
+ * Global for the same reason as the rule above: every scroll container on the
+ * site wants the identical answer, and the alternative is remembering to repeat
+ * it on each new one.
+ */
+* {
+  overscroll-behavior: none;
+}
+
 /* Base link color — anchors appear anywhere (including MDX-authored prose, which
  * emits raw <a> no wrapper component owns), so the base color stays global. */
 a {

@@ -50,9 +50,10 @@
 .main {
   min-height: 0;
   overflow-y: auto;
-  /* Reaching the end of the list shouldn't start scrolling anything behind it,
-     or trigger pull-to-refresh mid-collection. */
-  overscroll-behavior: contain;
+  /* Reaching the end of the list neither scrolls anything behind it nor
+     triggers pull-to-refresh mid-collection: globals.css sets
+     `overscroll-behavior: none` on every scroll container, which also drops the
+     rubber-band overshoot this panel used to play at its end. */
   /* The page inset for everything the panel holds, defined once here so a page
      and the placeholder standing in for it start at the same spot and nothing
      shifts when one replaces the other. The inline value shrinks with the

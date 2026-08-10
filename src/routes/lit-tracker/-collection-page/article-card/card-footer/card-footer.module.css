@@ -35,15 +35,15 @@
   padding: 0;
   list-style: none;
   /*
-   * No scrollbar. A visible one would eat a few pixels of every card's height —
-   * including the cards with one tag, which never scroll — and the grid's equal
-   * rows would then be equal-but-shorter for no visible reason.
+   * No scrollbar — now inherited from the site-wide rule in globals.css rather
+   * than declared here. This row was the first place it mattered: a visible
+   * scrollbar would eat a few pixels of every card's height, including the cards
+   * with one tag that never scroll, and the grid's equal rows would then be
+   * equal-but-shorter for no visible reason.
    *
-   * Both properties are needed: `scrollbar-width` is the standard and Firefox
-   * honours it; WebKit and Blink still need the pseudo-element. Hiding a
-   * scrollbar hides an affordance, which is why the region is focusable below.
+   * Hiding a scrollbar hides an affordance, which is why this region is
+   * focusable (below) and why its trailing edge fades.
    */
-  scrollbar-width: none;
   /*
    * The hidden scrollbar's replacement affordance: the trailing edge fades, so
    * a row with more tags than fit looks cut off rather than merely ending. It
@@ -59,10 +59,6 @@
     black calc(100% - var(--space-md)),
     transparent
   );
-}
-
-.tagList::-webkit-scrollbar {
-  display: none;
 }
 
 .tagList:focus-visible {

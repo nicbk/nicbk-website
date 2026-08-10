@@ -45,10 +45,17 @@
    * the row's edge at the panel's true top edge, where it sits without ever
    * moving. The page cancels the panel's own top inset to make room
    * (collection-page.module.css).
+   *
+   * **No `z-index`.** It needs to sit above the cards and nothing else, and
+   * being positioned is already enough for that — positioned elements paint
+   * after in-flow content regardless. A `z-index: 1` here (the first draft) also
+   * lifted it above every portalled popup on the page, which render at the end
+   * of the document with no z-index of their own: menus and dialogs opened
+   * *underneath* the row, and the modal backdrop dimmed the whole page except
+   * this one strip of it.
    */
   position: sticky;
   top: calc(-1 * var(--space-lg));
-  z-index: 1;
   padding-block: var(--space-lg);
 }
 

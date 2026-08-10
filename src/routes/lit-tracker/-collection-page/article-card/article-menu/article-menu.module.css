@@ -171,13 +171,14 @@
  * The one scroll container in the popup.
  *
  * Capped in `rem` rather than as a fraction of the popup, so the list is the
- * same height whether the reader has four tags or forty — and `overscroll-behavior`
- * so reaching its end does not start scrolling the collection behind it.
+ * same height whether the reader has four tags or forty. Reaching its end does
+ * not start scrolling the collection behind it — that comes from the global
+ * `overscroll-behavior: none` in globals.css, which every scroll container on
+ * the site now inherits.
  */
 .tagList {
   max-height: 11rem;
   overflow-y: auto;
-  overscroll-behavior: contain;
   margin: var(--space-2xs) 0 0;
   padding: 0;
   list-style: none;

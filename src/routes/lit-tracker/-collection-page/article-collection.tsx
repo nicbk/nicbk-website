@@ -1,10 +1,10 @@
 import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { useDebouncedValue } from '~/routes/-shared/hooks/use-debounced-value'
 import { useIncrementalReveal } from '~/routes/-shared/hooks/use-incremental-reveal'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { TrackerLoading } from '../-components/tracker-loading/tracker-loading'
 import type { CollectionArticle } from './article-card/article-card'
 import { ArticleCard } from './article-card/article-card'
-import type { CollectionTag } from './article-card/article-menu/article-menu'
 import { NO_TAGS } from './article-tags'
 import styles from './collection-page.module.css'
 

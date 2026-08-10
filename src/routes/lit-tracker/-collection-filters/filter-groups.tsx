@@ -8,7 +8,7 @@ import {
 } from '~/lit-tracker/article-status'
 import { matchingTags } from '~/lit-tracker/tag-matching'
 import { TagToggle } from '~/routes/-shared/components/tag-toggle/tag-toggle'
-import type { CollectionTag } from '../-collection-page/article-card/article-menu/article-menu'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import styles from './filter-groups.module.css'
 
 /** Shown in place of the tag group when the reader has not made any tags. */

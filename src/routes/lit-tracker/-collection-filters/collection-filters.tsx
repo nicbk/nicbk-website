@@ -1,8 +1,8 @@
 import { useQuery } from '@rocicorp/zero/react'
 import { useMemo, useState } from 'react'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
+import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { queries } from '~/zero/queries'
-import type { CollectionTag } from '../-collection-page/article-card/article-menu/article-menu'
-import { useCollectionMutations } from '../-collection-page/use-collection-mutations'
 import { DeleteTagDialog } from './delete-tag-dialog'
 import { FilterGroups } from './filter-groups'
 import { tagArticleCounts } from './tag-article-counts'
@@ -32,7 +32,7 @@ export function CollectionFilters() {
   const [appliedTags] = useQuery(queries.articleTags.mine())
 
   const filters = useCollectionFilters()
-  const { deleteTag } = useCollectionMutations()
+  const { deleteTag } = useArticleMutations()
 
   /** The tag whose deletion has been asked for but not yet confirmed. */
   const [pendingDelete, setPendingDelete] = useState<CollectionTag | null>(null)

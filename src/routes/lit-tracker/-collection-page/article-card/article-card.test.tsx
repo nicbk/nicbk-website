@@ -1,10 +1,10 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { UNKNOWN_AUTHORS } from '../authors'
 import type { CollectionArticle } from './article-card'
 import { ArticleCard } from './article-card'
-import type { CollectionTag } from './article-menu/article-menu'
 
 /**
  * The card against the shapes real articles actually take.

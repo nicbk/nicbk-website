@@ -1,7 +1,7 @@
 import { AlertDialog } from '@base-ui/react/alert-dialog'
 import { Button } from '@base-ui/react/button'
 import { useRef } from 'react'
-import type { CollectionTag } from '../-collection-page/article-card/article-menu/article-menu'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import styles from './delete-tag-dialog.module.css'
 
 interface DeleteTagDialogProps {

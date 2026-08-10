@@ -21,7 +21,7 @@ export { MutationRefusedError } from './ownership'
  * permissions layer behind this file — every write-authorization decision on the
  * site's user-owned data. `queries.ts` is the mirror image of this for reads.
  *
- * Three properties hold across all five, and each is a rule rather than a
+ * Three properties hold across all six, and each is a rule rather than a
  * coincidence:
  *
  * - **The owner comes from `ctx`, never from arguments.** `ctx` is derived
@@ -40,7 +40,7 @@ export { MutationRefusedError } from './ownership'
  * A copy of each of these runs on the client, against its local data, to apply
  * the write optimistically. That copy is a convenience, not a control: it will
  * cheerfully apply a write the server then refuses, which is why the refusal has
- * somewhere to go (`useCollectionMutations` raises a toast) and why the
+ * somewhere to go (`useArticleMutations` raises a toast) and why the
  * authoritative answer is the one this file computes at `/api/zero/mutate`.
  */
 export const mutators = defineMutators({
@@ -171,6 +171,31 @@ export const mutators = defineMutators({
         await tx.mutate.articles.update({ id: args.id, status: args.status })
       },
     ),
+
+    /**
+     * Replace an article's free-text notes — the reader's own writing about the
+     * paper, distinct from the annotations anchored inside the PDF
+     * (research/ui-ux/pages/lit-tracker/pages/article-detail.md).
+     *
+     * **The whole value, not a patch.** One textarea is bound to one column, so
+     * last-write-wins is what a diff would compute anyway for a single editor,
+     * and a patch protocol would be machinery bought for a case this app does
+     * not have. It is also what makes this safe to re-run on rebase: writing the
+     * same string twice is writing it once.
+     *
+     * `notesSchema` allows the empty string deliberately. Clearing the field is
+     * a thing a reader does, and it must store as `''` rather than becoming
+     * `null` — one absent-notes representation, so nothing downstream has to
+     * decide whether the two mean different things.
+     */
+    setNotes: defineMutator(
+      z.object({ id: z.uuid(), notes: notesSchema() }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        await requireOwnedArticle(tx, session, args.id)
+        await tx.mutate.articles.update({ id: args.id, notes: args.notes })
+      },
+    ),
   },
 })
 
@@ -185,6 +210,22 @@ export const mutators = defineMutators({
  */
 function tagNameSchema() {
   return z.string().trim().min(1).max(64)
+}
+
+/**
+ * An article's notes as the user may submit them.
+ *
+ * **Not trimmed, unlike a tag name.** This is prose the reader is in the middle
+ * of writing: trimming would delete the newline they just pressed and move
+ * their cursor, every time the debounce fired. The empty string is valid — that
+ * is a cleared field, not an invalid one.
+ *
+ * The cap is generous because the column is `text` and this is the one place on
+ * the site meant to hold paragraphs; it exists so a paste of an entire paper
+ * cannot be pushed through sync as one row, not to constrain a real note.
+ */
+function notesSchema() {
+  return z.string().max(50_000)
 }
 
 /**

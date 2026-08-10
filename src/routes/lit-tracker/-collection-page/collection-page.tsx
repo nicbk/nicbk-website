@@ -1,6 +1,7 @@
 import type { QueryResultDetails } from '@rocicorp/zero'
 import { useQuery } from '@rocicorp/zero/react'
 import { useMemo } from 'react'
+import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { queries } from '~/zero/queries'
 import { useCollectionFilters } from '../-collection-filters/use-collection-filters'
 import { useCollectionSearch } from '../-collection-filters/use-collection-search'
@@ -9,7 +10,6 @@ import type { CollectionState } from './article-collection'
 import { ArticleCollection } from './article-collection'
 import { tagsByArticle } from './article-tags'
 import { filterArticles } from './filter-articles'
-import { useCollectionMutations } from './use-collection-mutations'
 import styles from './collection-page.module.css'
 
 /**
@@ -28,7 +28,7 @@ import styles from './collection-page.module.css'
  * materialized views by query hash, so the identical request resolves to the
  * identical view.
  *
- * **This is also where writes start.** `useCollectionMutations` is called once
+ * **This is also where writes start.** `useArticleMutations` is called once
  * here and its results are bound per card, so every component below this one
  * takes callbacks and knows nothing about Zero — which is what keeps the card,
  * the menu, and the chips assertable without a client.
@@ -50,7 +50,7 @@ export function CollectionPage() {
   const [tags] = useQuery(queries.tags.mine())
   const [appliedTags] = useQuery(queries.articleTags.mine())
 
-  const mutations = useCollectionMutations()
+  const mutations = useArticleMutations()
   // The same filter state the rail writes. Read from the URL rather than passed
   // in, because the rail that sets it renders in the shell's sidebar and there
   // is no prop path from there to here (see `use-collection-filters.ts`).

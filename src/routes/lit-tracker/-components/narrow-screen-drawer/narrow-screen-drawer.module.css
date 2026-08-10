@@ -1,12 +1,12 @@
 /*
- * The narrow-screen half of the filters. Everything here is inert above the
- * breakpoint — the rail is showing the same list beside the collection, and two
+ * The narrow-screen half of a side panel. Everything here is inert above the
+ * breakpoint — the rail is showing the same contents beside the page, and two
  * ways to reach one thing at one width is one too many.
  *
  * 768px is the decided breakpoint for page-level structural shifts
- * (research/ui-ux/design-system.md); the rail's own stylesheet stands the
- * filters down at exactly the same width, so the two can never both be hidden
- * or both be showing.
+ * (research/ui-ux/design-system.md); each rail's own stylesheet stands its
+ * contents down at exactly the same width, so a panel and its sheet can never
+ * both be hidden or both be showing.
  */
 .trigger {
   display: none;
@@ -86,10 +86,10 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  /* Tall enough for a real tag list, short enough that the collection stays
-     visible behind it — the sheet is a filter over the page, not a page. Its
-     height is what the filters shrink to fit, so the sheet grows with a short
-     list and stops here with a long one. */
+  /* Tall enough for a real tag list, short enough that the page stays visible
+     behind it — the sheet sits over the page rather than becoming one. Its
+     height is what the contents shrink to fit, so the sheet grows with a short
+     panel and stops here with a long one. */
   max-height: 70dvh;
   padding: var(--space-sm) var(--space-lg) var(--space-lg);
   border-top: 1px solid var(--color-border);
@@ -98,8 +98,9 @@
   color: var(--color-text);
   outline: 0;
   /* Not `auto`: the sheet must not scroll as one, or finding a tag would carry
-     the reading statuses and the find field off the top with it. The tag list
-     inside does the scrolling (filter-groups.module.css). */
+     the reading statuses and the find field off the top with it. Whatever list
+     the contents put inside does the scrolling — filter-groups.module.css for
+     the collection's filters, the tab panel for the detail page's sidebar. */
   overflow: hidden;
   touch-action: auto;
   transform: translateY(var(--drawer-swipe-movement-y));
@@ -135,7 +136,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  /* Passes the sheet's bounded height down to the filters, whose tag list is
+  /* Passes the sheet's bounded height down to the contents, whose own list is
      what shrinks and scrolls. */
   min-height: 0;
 }

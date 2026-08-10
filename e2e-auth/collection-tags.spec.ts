@@ -12,7 +12,7 @@ import {
   tagsOf,
 } from './support/articles'
 import { cards, chipsOf, statusOf } from './support/collection'
-import { signInAndLandOn } from './support/sign-in'
+import { landOn } from './support/sign-in'
 
 /**
  * Tagging and reading status against the real stack — and the site's **first
@@ -119,7 +119,7 @@ async function collectionOf(
   page: Page,
   titles: readonly string[],
 ): Promise<{ userId: string; ids: Record<string, string> }> {
-  await signInAndLandOn(page, TRACKER)
+  await landOn(page, TRACKER)
   const userId = await signedInUserId(page)
   await deleteArticlesOf(userId)
   await deleteTagsOf(userId)

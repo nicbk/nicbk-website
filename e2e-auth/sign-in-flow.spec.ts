@@ -14,6 +14,14 @@ import {
  */
 
 test.describe('Google sign-in flow', () => {
+  /*
+   * Opts out of the session the rest of the tier shares. This file is the one
+   * that drives the real round trip — arriving already signed in would make it
+   * assert nothing at all, which is exactly the failure mode a shared session
+   * invites.
+   */
+  test.use({ storageState: { cookies: [], origins: [] } })
+
   test('signs the user in and returns them to where they were headed', async ({
     page,
   }) => {

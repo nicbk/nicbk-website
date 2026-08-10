@@ -6,7 +6,7 @@ import {
   closeArticleConnection,
   signedInUserId,
 } from './support/articles'
-import { signInAndLandOn } from './support/sign-in'
+import { landOn } from './support/sign-in'
 
 /**
  * The upload flow against the real stack: a PDF chosen in a real file picker,
@@ -80,7 +80,7 @@ test.afterAll(async () => {
 
 test.describe('uploading PDFs', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     await clearUploadsOf(await signedInUserId(page))
   })
 
@@ -153,7 +153,7 @@ test.describe('uploading PDFs', () => {
 
 test.describe('the upload status indicator', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     await clearUploadsOf(await signedInUserId(page))
   })
 
@@ -215,7 +215,7 @@ test.describe('the upload status indicator', () => {
 
 test.describe('upload surfaces across themes and widths', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     await clearUploadsOf(await signedInUserId(page))
   })
 

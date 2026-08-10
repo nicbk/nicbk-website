@@ -7,7 +7,7 @@ import {
   signedInUserId,
 } from './support/articles'
 import { cards } from './support/collection'
-import { signInAndLandOn } from './support/sign-in'
+import { landOn } from './support/sign-in'
 
 /**
  * The collection as cards, against the real stack.
@@ -26,7 +26,7 @@ const TRACKER = '/lit-tracker'
 
 /** A signed-in page on the tracker with an empty collection to seed into. */
 async function emptyCollection(page: Page): Promise<string> {
-  await signInAndLandOn(page, TRACKER)
+  await landOn(page, TRACKER)
   const userId = await signedInUserId(page)
   await deleteArticlesOf(userId)
   return userId

@@ -82,11 +82,34 @@ export async function sessionCookie(page: Page): Promise<Cookie | undefined> {
 }
 
 /**
+ * Opens a guarded page with the session the tier already signed in for.
+ *
+ * What almost every spec here wants: it is *about* the page, not about getting
+ * to it. The cookie arrives with the browser context from `auth.setup.ts`
+ * (`storageState` in playwright.auth.config.ts), so this is one navigation
+ * rather than the seven-step OAuth round trip `signInAndLandOn` performs.
+ *
+ * Landing on the destination rather than at `/sign-in` is asserted, not
+ * assumed: if the shared session were missing or dead, the guard would bounce
+ * the page and every assertion after this would fail for a reason that had
+ * nothing to do with the test. This says so on the first line instead.
+ */
+export async function landOn(page: Page, destination: string): Promise<void> {
+  await page.goto(destination)
+  await expect(page).toHaveURL(destination)
+}
+
+/**
  * Signs in through the stubbed Google and lands on `destination`.
  *
  * Goes through the guard rather than straight to `/sign-in`: asking for a
  * protected page while signed out is how a reader actually arrives at sign-in,
- * so specs that just need a session get that whole path exercised for free.
+ * so the whole path gets exercised.
+ *
+ * Used by `auth.setup.ts` once per run, and by the specs that are themselves
+ * about sessions — `sign-in-flow.spec.ts` and `user-settings.spec.ts`, which
+ * log out and delete the account and so must hold one of their own. Everything
+ * else wants `landOn`.
  */
 export async function signInAndLandOn(
   page: Page,

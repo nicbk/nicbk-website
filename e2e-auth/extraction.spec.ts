@@ -7,7 +7,7 @@ import {
   signedInUserId,
 } from './support/articles'
 import { cards } from './support/collection'
-import { signInAndLandOn } from './support/sign-in'
+import { landOn } from './support/sign-in'
 
 /**
  * The whole chain, in a browser: a PDF picked in a real file picker becomes an
@@ -80,7 +80,7 @@ test.afterAll(async () => {
 
 test.describe('extraction, end to end', () => {
   test.beforeEach(async ({ page }) => {
-    await signInAndLandOn(page, TRACKER)
+    await landOn(page, TRACKER)
     await clearUploadsOf(await signedInUserId(page))
   })
 

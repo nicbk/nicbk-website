@@ -1,26 +1,78 @@
 /*
  * The collection's control row — the panel's first row, as in the mockup.
  *
- * The row reserves the **search slot** now rather than leaving the controls at
- * the panel's far edge. Two reasons: the controls sit where they will
- * permanently sit, so #8 fills the slot instead of moving them; and it keeps
- * them within the same content column as the articles below, rather than
- * stranded in a corner a thousand pixels from anything they act on.
+ * The row spans the same content column as the cards beneath it, and its
+ * contents sit **centred** in that column: the search bar with the "+" and the
+ * status indicator against its trailing edge, as one cluster in the middle of
+ * the panel rather than pushed against its left edge. What it does not do is
+ * spread across the whole width — see `.search` below.
  */
 .toolbar {
   display: flex;
-  align-items: center;
+  justify-content: center;
+  /* `stretch`, not `center`: the search pill is the tallest thing in the row and
+     the only one whose height comes from the design system rather than from its
+     own contents, so it sets the row's height and everything beside it matches.
+     Centred, each control kept its own height and the row read as a search bar
+     with three smaller boxes floating next to it. */
+  align-items: stretch;
   gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
+
+  /*
+   * Stays put while the collection scrolls under it.
+   *
+   * Necessary from the moment the same task gave this page infinite scroll:
+   * before that the collection was a screenful and the row was always in view,
+   * and after it a reader forty cards down had to scroll all the way back to
+   * the top to search, or to add anything. That is the same reasoning that sent
+   * the filters into a drawer rather than under the content on a narrow screen
+   * (research/ui-ux/pages/lit-tracker/pages/collection-view.md) — a control
+   * below a list that never ends is a control nobody reaches — and it applies
+   * to the search bar for exactly the same reason. Found by scrolling the real
+   * page; every test still passed.
+   *
+   * **No background of its own**, so the collection is visibly passing behind it
+   * rather than disappearing under an opaque band. The controls stay legible
+   * because each carries its own fill and border; what shows through is the gaps
+   * between them. Decided this way with the user.
+   *
+   * The inset above the row belongs to the row rather than to the panel — both
+   * gaps are `padding` here, so they travel with it. `top` is that same inset,
+   * negated, rather than `0`: a sticky offset is measured from the scroll
+   * container's **content** box, which begins below the panel's padding, so
+   * `top: 0` pinned the row one inset *below* the top of the visible panel and
+   * left it drifting down as the page scrolled. Offsetting by the padding puts
+   * the row's edge at the panel's true top edge, where it sits without ever
+   * moving. The page cancels the panel's own top inset to make room
+   * (collection-page.module.css).
+   */
+  position: sticky;
+  top: calc(-1 * var(--space-lg));
+  z-index: 1;
+  padding-block: var(--space-lg);
 }
 
 /*
- * Where #8's search input goes. It holds the row's width open today so the
- * controls are already positioned against the search bar's trailing edge —
- * which is the arrangement the decided layout asks for.
+ * The search input, and the thing that positions the controls beside it.
+ *
+ * `max-width` is the whole point. The decided layout hangs the "+" and the
+ * status indicator off the search bar's **trailing edge**, moving with it — and
+ * an input that simply grew to fill the row would push them to the far corner of
+ * a wide panel, a thousand pixels from the field they belong to, which is the
+ * arrangement #7's reserved slot was standing in for and not the one it was
+ * standing in for. Capped, the input stops growing and the controls stop with
+ * it, leaving the slack at the row's end where it costs nothing.
+ *
+ * 32rem is about sixty characters of the mono face — comfortably more than any
+ * search anyone types, and narrow enough that the group still reads as one
+ * cluster rather than as two edges of a room. Below that the input shrinks
+ * normally, so on a phone the row is input + controls with nothing to spare —
+ * which is also why the row's `justify-content: center` costs nothing there:
+ * with no free space left there is nothing to centre.
  */
-.searchSlot {
+.search {
   flex: 1;
+  max-width: 32rem;
   min-width: 0;
 }
 

@@ -3,6 +3,7 @@ import { useQuery } from '@rocicorp/zero/react'
 import { useMemo } from 'react'
 import { queries } from '~/zero/queries'
 import { useCollectionFilters } from '../-collection-filters/use-collection-filters'
+import { useCollectionSearch } from '../-collection-filters/use-collection-search'
 import { CollectionToolbar } from '../-components/collection-toolbar/collection-toolbar'
 import type { CollectionState } from './article-collection'
 import { ArticleCollection } from './article-collection'
@@ -32,11 +33,12 @@ import styles from './collection-page.module.css'
  * takes callbacks and knows nothing about Zero — which is what keeps the card,
  * the menu, and the chips assertable without a client.
  *
- * The surface is filling in one task at a time: #7 gave it the toolbar and a
- * plain list, #8's first task made that a card grid, and its second added tags,
- * reading status, and the card menu. Still absent — the filter rail and search —
- * are #8's last two, each of which changes what this page renders without
- * changing how it asks for it.
+ * The surface was filled in one task at a time: #7 gave it the toolbar and a
+ * plain list, #8's first task made that a card grid, its second added tags,
+ * reading status, and the card menu, its third the rail's filters, and its
+ * fourth the search bar and incremental reveal. None of them changed how this
+ * page *asks* for data — every one of them changed only what it draws from what
+ * Zero had already synced, which is what the sync engine was chosen for.
  */
 export function CollectionPage() {
   const [articles, details] = useQuery(queries.articles.mine())
@@ -53,6 +55,11 @@ export function CollectionPage() {
   // in, because the rail that sets it renders in the shell's sidebar and there
   // is no prop path from there to here (see `use-collection-filters.ts`).
   const filters = useCollectionFilters()
+  // The search text, owned here and handed down to the input, because this is
+  // the one component that both draws the field and decides what the grid shows.
+  // Called exactly once on the page for that reason (see
+  // `use-collection-search.ts`).
+  const { query, setQuery } = useCollectionSearch()
 
   // Rebuilt when either list changes rather than on every render: this walks
   // the whole join table, and the grid re-renders for reasons that have nothing
@@ -67,10 +74,27 @@ export function CollectionPage() {
   // filters run against the local cache so they are instant
   // (research/ui-ux/pages/lit-tracker/pages/collection-view.md) — and it is also
   // what lets a filter change be a plain re-render with no round trip.
+  //
+  // One call with all three, not a text pass over the result of a filter pass:
+  // the text and the rail's selections are one question about each article, and
+  // splitting it in two is how they come to disagree about which of them wins.
+  // Depends on the individual filter fields rather than on the controls object,
+  // which carries callbacks this does not read.
   const visible = useMemo(
-    () => filterArticles(articles, tagsForArticle, filters),
-    [articles, tagsForArticle, filters],
+    () =>
+      filterArticles(articles, tagsForArticle, {
+        query,
+        tags: filters.tags,
+        status: filters.status,
+      }),
+    [articles, tagsForArticle, query, filters.tags, filters.status],
   )
+
+  // Whether anything at all is narrowing the collection — the search text
+  // included, which `filters.active` cannot know about. This is what tells "no
+  // articles match" apart from "no articles yet", and a reader who has typed a
+  // query that matches nothing must get the first.
+  const narrowed = filters.active || query.trim() !== ''
 
   return (
     <div className={styles.page}>
@@ -90,7 +114,7 @@ export function CollectionPage() {
       {/* Above the collection and outside its loading states: uploading does
           not depend on the article query having landed, and hiding the "+"
           while the first sync is in flight would make the page look broken. */}
-      <CollectionToolbar />
+      <CollectionToolbar query={query} onQueryChange={setQuery} />
 
       <ArticleCollection
         articles={visible}
@@ -98,7 +122,7 @@ export function CollectionPage() {
         // What tells "nothing matches these filters" apart from "this account
         // has no articles". The collection cannot work it out from an empty
         // array — both cases are one.
-        filtered={filters.active}
+        filtered={narrowed}
         allTags={tags}
         tagsByArticle={tagsForArticle}
         // The card knows which article it is; the mutations take that as an

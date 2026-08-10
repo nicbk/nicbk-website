@@ -113,3 +113,29 @@ row that already holds the search bar and the "+".
   how many articles carry it. The rail is the only surface that lists every tag,
   and "remove from this article" deliberately stays in the card menu rather than
   sitting one row away from "delete everywhere".
+
+## Revision — 2026-08-09: the control row is centred, sticky, and transparent
+
+Decided with the user while building #8's fourth task, which is the one that made
+the collection scroll without end.
+
+The 2026-08-08 revision above put the search row, the "+", the status indicator,
+and the cards in one content column. That still holds; what changes is where the
+row's contents sit in it, and what happens to them when the page scrolls.
+
+- **The cluster is centred in the column**, not pushed against its left edge. The
+  search bar is capped at a readable measure and the "+" and the status indicator
+  hang off its trailing edge as before, so the four controls read as one group in
+  the middle of the panel with the slack split evenly on both sides. Below the
+  cap — a phone, or a narrow window — there is no slack to split and the row is
+  simply full.
+- **The row stays put while the collection scrolls under it.** Infinite scroll is
+  what forces this: a reader twenty cards down had to scroll all the way back to
+  the top to search or to upload, which is the same fault that sent the filters
+  into a drawer rather than under the content, one revision above. A control
+  below a list that never ends is a control nobody reaches, and the search bar is
+  the most-used control on the page.
+- **It carries no background of its own**, so the collection is visibly passing
+  behind the controls rather than disappearing under an opaque band. Each control
+  keeps its own fill and border, which is what holds them legible against moving
+  cards; what shows through is the gaps between them.

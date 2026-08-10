@@ -210,9 +210,7 @@ test.describe('collection filters', () => {
     await tagToggle(page, 'attention').click()
     await statusToggle(page, 'read').click()
 
-    await expect(
-      page.getByText('no articles match these filters.'),
-    ).toBeVisible()
+    await expect(page.getByText('no articles match.')).toBeVisible()
     await expect(page.getByText('no articles yet.')).toHaveCount(0)
     await expect(cards(page)).toHaveCount(0)
   })

@@ -139,8 +139,18 @@ jobs:
       - name: Integration tests
         run: npm run test:integration
 
+  # Both e2e jobs below are SUSPENDED while the Lit Tracker is being built out —
+  # see the 2026-08-09 addendum in research/testing-qa/e2e-testing.md. Together
+  # they were adding ~15 minutes to every PR on surfaces whose shape is still
+  # changing task by task, which is the least useful moment for the slowest
+  # feedback loop in the project. The specs stay committed and still pass
+  # locally; only the per-PR gate is off.
+  #
+  # To turn them back on: delete the `if: false` line from each job. Nothing
+  # else in either job was changed.
   e2e:
     name: Playwright e2e + axe (production build)
+    if: false
     # GitHub-hosted, same decided arrangement as `checks` above.
     runs-on: ubuntu-latest
     steps:
@@ -177,6 +187,8 @@ jobs:
 
   e2e-auth:
     name: Signed-in e2e (stubbed Google + Postgres + zero-cache + Garage)
+    # Suspended with the job above; see the comment there.
+    if: false
     # ubuntu-latest ships a running Docker daemon, which is what the throwaway
     # Postgres and zero-cache need — the same arrangement the integration job
     # relies on. It also supports the `host-gateway` extra host the sync engine

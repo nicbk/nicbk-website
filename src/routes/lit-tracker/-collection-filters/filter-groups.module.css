@@ -115,12 +115,13 @@
 }
 
 /* The one scroll container in the filters. Reaching its end does not start
-   scrolling the collection behind it — the global `overscroll-behavior: none`
-   in globals.css covers that for every scroll container on the site. */
+   scrolling the collection behind it, and does not overshoot. On the vertical
+   axis only — the axis it scrolls; see globals.css for why that matters. */
 .tagList {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior-y: none;
 }
 
 /*

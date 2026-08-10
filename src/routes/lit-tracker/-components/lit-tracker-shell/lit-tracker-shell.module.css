@@ -50,10 +50,12 @@
 .main {
   min-height: 0;
   overflow-y: auto;
-  /* Reaching the end of the list neither scrolls anything behind it nor
-     triggers pull-to-refresh mid-collection: globals.css sets
-     `overscroll-behavior: none` on every scroll container, which also drops the
-     rubber-band overshoot this panel used to play at its end. */
+  /* Reaching the end of the collection neither scrolls anything behind the
+     panel nor plays the platform's rubber-band overshoot — which in a layout of
+     bounded panels reads as the panel coming loose rather than as feedback.
+     `-y` only: this panel scrolls vertically, and claiming an axis it does not
+     scroll would swallow gestures on that axis (globals.css). */
+  overscroll-behavior-y: none;
   /* The page inset for everything the panel holds, defined once here so a page
      and the placeholder standing in for it start at the same spot and nothing
      shifts when one replaces the other. The inline value shrinks with the

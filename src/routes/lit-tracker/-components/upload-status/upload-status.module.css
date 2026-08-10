@@ -37,6 +37,14 @@
   justify-content: center;
   padding: var(--space-2xs);
   border: 1px solid transparent;
+  /* The fill below has to be shaped like the button beside it rather than as a
+     bare square cut out of whatever it is covering. */
+  border-radius: var(--radius-sm);
+  /* Filled even though it has no visible chrome: the toolbar is sticky and the
+     collection scrolls beneath it, and a bare glyph with nothing behind it had
+     card titles sliding through the checkmark. Same fill as the button beside
+     it, so the pair still reads as one row. */
+  background: var(--color-bg);
   color: var(--color-text-muted);
 }
 

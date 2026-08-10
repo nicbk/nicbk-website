@@ -31,6 +31,17 @@
   flex-wrap: nowrap;
   gap: var(--space-2xs);
   overflow-x: auto;
+  /*
+   * The site's only horizontal scroller, and the reason the rule that governs
+   * it is per-axis rather than global. `-x` stops this row from handing a
+   * sideways swipe to anything behind it and drops the overshoot at its ends.
+   * `-y` is deliberately left alone: a vertical wheel over this strip has
+   * nowhere to go here, so it must chain to the collection panel. Shorthand
+   * `overscroll-behavior: none` claims both axes, which made every card in the
+   * grid a dead spot for scrolling — the wheel only worked in the gaps between
+   * them. See globals.css.
+   */
+  overscroll-behavior-x: none;
   margin: 0;
   padding: 0;
   list-style: none;

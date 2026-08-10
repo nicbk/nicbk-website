@@ -33,7 +33,13 @@
   padding: var(--space-xs) var(--space-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background-color: var(--color-bg-surface);
+  /* The fill is a seam a host can move, because "which fill" depends on what
+     sits behind the field. The default is the surface tone — right wherever the
+     field sits on the page background, as on the blog. A host that floats the
+     field *over* surface-colored content overrides it, because a pill the same
+     color as what scrolls behind it is a pill that looks transparent; see
+     collection-toolbar.module.css, where that is exactly what happened. */
+  background-color: var(--search-input-fill, var(--color-bg-surface));
 }
 
 /*

@@ -70,22 +70,26 @@
 }
 
 /*
- * Scrolling stops dead at the edge of whatever is scrolling.
+ * `overscroll-behavior` is deliberately NOT set here. It is the one rule of this
+ * kind that cannot be global, and the reason is worth keeping:
  *
- * `none` rather than `contain`: both stop a scroll from chaining into the
- * element behind, but `none` also suppresses the platform's overscroll
- * affordance — the rubber-band overshoot macOS plays when a container is
- * already at its end. In a layout built from bounded panels that each scroll
- * themselves, that bounce reads as the panel coming loose rather than as
- * feedback, and it is the one animation on the site nobody asked for.
+ * `overscroll-behavior` applies to every *scroll container*, and `overflow:
+ * hidden` makes an element a scroll container — one that simply cannot be
+ * scrolled by the user. The site is full of them: every card clips its corners,
+ * every tag chip clips its ellipsis, the avatar clips its image. Set globally,
+ * each of those became a container that was already at its scroll limit in both
+ * axes, so a wheel over one was "overscroll" and `none` refused to pass it to
+ * the panel behind. Scrolling worked only in the gaps *between* cards. The same
+ * trap catches genuine scrollers on their off axis: the card's tag strip scrolls
+ * horizontally, so a vertical wheel over it is instantly at the limit too.
  *
- * Global for the same reason as the rule above: every scroll container on the
- * site wants the identical answer, and the alternative is remembering to repeat
- * it on each new one.
+ * The rule that avoids all of it: declare `overscroll-behavior` on a real scroll
+ * container, and only on the axis that container actually scrolls. Each one does
+ * that for itself, next to its own `overflow` — see lit-tracker-shell.module.css
+ * (the collection panel), filter-groups.module.css, article-menu.module.css, and
+ * card-footer.module.css (the one horizontal case). The document's own bounce is
+ * suppressed on <html> in __root.module.css.
  */
-* {
-  overscroll-behavior: none;
-}
 
 /* Base link color — anchors appear anywhere (including MDX-authored prose, which
  * emits raw <a> no wrapper component owns), so the base color stays global. */

@@ -11,6 +11,12 @@
  */
 .html {
   height: 100%;
+  /* The page stops dead at its own ends: no rubber-band overshoot at the top of
+     the blog list, and no chaining past the document to whatever the platform
+     does next (pull-to-refresh, the trackpad's back gesture). `-y` only, because
+     the document scrolls vertically and nothing else — see globals.css for what
+     goes wrong when this is declared on an axis a container does not scroll. */
+  overscroll-behavior-y: none;
 }
 
 .body {

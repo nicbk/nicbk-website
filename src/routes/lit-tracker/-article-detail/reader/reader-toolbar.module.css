@@ -1,0 +1,122 @@
+/*
+ * The bar over the document.
+ *
+ * **It overlays the paper rather than sitting above it** (user-decided
+ * 2026-08-13). As a row of its own it cost its full height everywhere, on the
+ * one page whose whole purpose is showing as much of a document as possible.
+ * Absolutely positioned, it costs that height only at the very top of the
+ * scroll — the reader's first page is offset to clear it (see
+ * `pdf-reader.module.css`), and from the second page onwards the document runs
+ * the full height of the panel and passes underneath.
+ *
+ * **The bar itself is transparent; its groups are not** (user-decided
+ * 2026-08-13). A solid band across the panel reads as a second header and walls
+ * the document off from the page; floating pills let the paper show through
+ * between them, so what is over the document is only the controls. This is the
+ * same arrangement the collection's toolbar arrived at, and for the same reason:
+ * transparent is the row, not the controls — each group is opaque in itself, so
+ * a page sliding under it is cleanly interrupted rather than showing through.
+ *
+ * **No `z-index`.** It needs to sit above the document and nothing else, and
+ * being positioned is already enough for that — positioned elements paint after
+ * in-flow content regardless. A `z-index` here would also lift it above every
+ * portalled popup on the page, which render at the end of the document with no
+ * z-index of their own: the article menu would open *underneath* the bar, and a
+ * backdrop would dim the whole page except this one strip of it. The
+ * collection's toolbar learned this first (collection-toolbar.module.css).
+ */
+.toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+
+  /*
+   * One height for every control in the bar, so the three groups are the same
+   * size.
+   *
+   * Derived rather than picked: it is exactly what the borderless icon buttons
+   * come to on their own — a 1.15em glyph with `--space-2xs` around it, the
+   * shape the card menu's three-dot trigger established and the one this bar's
+   * own actions group inherits. The page field and the zoom trigger are bordered
+   * boxes with their own vertical padding, so left alone they each stood a few
+   * pixels taller than the group beside them and the bar read as three
+   * mismatched blocks. Everything is held to this instead, which is what
+   * "uniform things should look uniform" means here (AGENTS.md).
+   */
+  --reader-control-height: calc(1.15em + 2 * var(--space-2xs));
+  /* Nothing of its own: see the note above. */
+  background: none;
+  /* The bar is a layer over the document, not a target — only its groups are.
+     Without this the transparent gaps would still swallow clicks meant for the
+     paper underneath. */
+  pointer-events: none;
+}
+
+/* Re-enabled per child, since the bar itself is click-through. Each group
+   carries its own floating-surface look in its own stylesheet. */
+.toolbar > * {
+  pointer-events: auto;
+}
+
+/*
+ * The space task 4's annotation tools take.
+ *
+ * It takes the slack so the groups sit apart rather than bunched at one end,
+ * which is also the arrangement they keep once the tools arrive. Over a
+ * transparent bar the gap is the paper itself, so the dashed rule is what says
+ * "reserved" rather than "nothing here" — kept to a hairline, and click-through
+ * so it never intercepts a scroll meant for the document.
+ */
+.toolSlot {
+  flex: 1;
+  min-width: 1rem;
+  border-top: 1px dashed var(--color-border);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  flex-shrink: 0;
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+}
+
+/*
+ * The page's controls come from components that belong to other surfaces — the
+ * sidebar's drawer trigger is the collection's too, and it is sized for a row
+ * where it stands alone. Held to the bar's height here rather than changed at
+ * source, because it is this bar that needs them uniform: below the breakpoint
+ * the drawer trigger joins this group and, left to its own padding, made the
+ * group visibly taller than the two beside it.
+ */
+.actions > * {
+  height: var(--reader-control-height);
+}
+
+/*
+ * Below the narrow breakpoint there is no room for a reserved gap beside three
+ * groups: the slot collapses and they take the width between them. The space
+ * comes back with the screen.
+ */
+@media (max-width: 40rem) {
+  .toolbar {
+    justify-content: space-between;
+    gap: var(--space-2xs);
+    padding: var(--space-2xs);
+  }
+
+  .toolSlot {
+    display: none;
+  }
+}

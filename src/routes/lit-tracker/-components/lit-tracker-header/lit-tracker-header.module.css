@@ -32,6 +32,30 @@
 }
 
 /*
+ * Separates the app's name from the page's, so "Literature Tracker" and a paper
+ * title do not read as one run-on line. A rule rather than a slash: this is not
+ * a path — the article is not *inside* the tracker's home the way a URL segment
+ * would be — it is simply what is open.
+ */
+.divider {
+  width: 1px;
+  align-self: stretch;
+  margin-block: var(--space-2xs);
+  background-color: var(--color-border);
+  flex-shrink: 0;
+}
+
+/*
+ * The article's title. It is the one thing in this row with no natural length,
+ * so it is the one allowed to shrink — everything else here is a fixed word or
+ * a control.
+ */
+.pageTitle {
+  min-width: 0;
+  color: var(--color-text-muted);
+}
+
+/*
  * Everything from here rightwards forms the row's right-hand group: the path,
  * then the theme toggle. The app name is alone on the left, so the header
  * splits the same way the site header does.
@@ -39,9 +63,9 @@
 .breadcrumb {
   margin-left: auto;
   color: var(--color-text-muted);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Never truncates: one short literal word, and the link that gets you out of
+     the tracker. The article's title is what gives way instead (`.trail`). */
+  flex-shrink: 0;
 }
 
 .breadcrumbList {
@@ -50,6 +74,10 @@
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.rootSegment {
+  flex-shrink: 0;
 }
 
 /*

@@ -55,6 +55,38 @@
   height: 1.15em;
 }
 
+/*
+ * What dims the page behind a modal menu.
+ *
+ * Only rendered in the modal case (the article page's reader), where the menu
+ * floats above a toolbar that would otherwise stay lit and clickable underneath
+ * it. Light rather than heavy: it needs to say "this is behind the menu now",
+ * not to hide the paper the reader is looking at.
+ */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  /* The same veil as every other modal surface on the site — the drawer's and
+     the settings modal's (narrow-screen-drawer.module.css). A third opacity for
+     a third overlay would read as three different weights of "behind". */
+  background-color: rgb(0 0 0 / 40%);
+}
+
+:global(:root[data-theme="dark"]) .backdrop {
+  background-color: rgb(0 0 0 / 60%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop {
+    transition: opacity var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .backdrop[data-starting-style],
+  .backdrop[data-ending-style] {
+    opacity: 0;
+  }
+}
+
 /* Base UI puts its own outline on the positioner; the popup below carries the
    visible edge, so this one is removed rather than doubled. */
 .positioner {

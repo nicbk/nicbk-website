@@ -1,6 +1,6 @@
 # Status: Article Detail and Reader
 
-**Feature state:** **In progress** — task 1 merged, task 2 implemented and awaiting review. Five tasks, sequential, each gated by its own PR + CI + human review.
+**Feature state:** **In progress** — tasks 1 and 2 merged, task 3 implemented and awaiting review. Five tasks, sequential, each gated by its own PR + CI + human review.
 Depends on [`collection-view`](../collection-view/status.md) (#8, Complete) for
 the card this page is reached from, the tag model its Tags tab presents, and the
 drawer its sidebar becomes; and on
@@ -19,8 +19,8 @@ parent when its sub-issues close.
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`article-detail-shell`](./tasks/article-detail-shell/status.md) ([#96](https://github.com/nicbk/nicbk-website/issues/96)) | **Merged** | [#101](https://github.com/nicbk/nicbk-website/pull/101) | Green | Merged 2026-08-13 |
-| [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | **Implemented** | [#102](https://github.com/nicbk/nicbk-website/pull/102) | Green | Awaiting review |
-| [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | Not started | — | — | — |
+| [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | **Merged** | [#102](https://github.com/nicbk/nicbk-website/pull/102) | Green | Merged 2026-08-13 |
+| [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | **Implemented** | — | — | Awaiting review |
 | [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | Not started | — | — | — |
 | [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | Not started | — | — | — |
 
@@ -41,11 +41,13 @@ write it does not own.
 
 ## Notes carried into implementation
 
-- **The reader is the only real unknown, and task 3 must treat it as one.**
-  PDFium is WebAssembly and this site server-renders. EmbedPDF's docs say
-  nothing about SSR. Verify the mounting approach against the running app before
-  building on it; the `ClientOnly` + `React.lazy` pattern the Zero provider uses
-  is the fallback, not the assumption.
+- ~~**The reader is the only real unknown, and task 3 must treat it as one.**~~
+  **Answered in task 3**: the fallback was the answer — `ClientOnly` +
+  `React.lazy`, verified against the running app before anything was built on it.
+  What task 3 did *not* anticipate is in its
+  [status.md](./tasks/pdf-reader/status.md): a `blob:` worker cannot resolve a
+  root-relative wasm URL, `useScroll` reports 0 pages until the first page
+  change, and the decided CSP blocks the engine three ways.
 - **Re-verify EmbedPDF's API against the installed version in task 4.** It moved
   between the 2026-07-02 technology decision and this spec — document-scoped
   hooks, page-index arguments, two new required peer plugins — and it shipped a
@@ -72,8 +74,14 @@ write it does not own.
   feature's canvas is the least unit-testable artifact the project has produced,
   so the browser pass is primary evidence and each task's status must record
   what was exercised by hand.
-- **Watch the coverage ratchet in task 3.** A large client-only component drags
-  line coverage down; the fix is extracting its logic, not lowering the gate.
+- ~~**Watch the coverage ratchet in task 3.**~~ It held: extracting the reader's
+  logic into `reader-plugins.ts`, `reader-state.ts`, `use-page-field.ts`,
+  `zoom-presets.ts` and `wasm-url.ts` left coverage at **91.97%**, above the
+  91.84% baseline. The prescription worked; the same one applies to task 4.
+- **Task 4 inherits a toolbar with a slot in it, not a row to redesign.** The
+  annotation tools go in the reserved gap between the page and zoom groups. It
+  also inherits the engine's plugin list in one place (`reader-plugins.ts`),
+  where the annotation plugin and its two required peers are added.
 - **Separated type imports**, as everywhere.
 
 ## Log
@@ -114,3 +122,28 @@ write it does not own.
   now checked before the query, which is the difference between three
   indistinguishable refusals and two. The browser pass confirmed the rule this
   task exists for: opening a paper made **two requests, neither to Garage**.
+- 2026-08-13 — **Task 2 merged** (PR #102), and **task 3 implemented** — the
+  feature's one genuine unknown, cleared first and against the running app, as
+  the plan demanded. The reader mounts client-only through the same
+  `ClientOnly` + `React.lazy` pattern Zero uses, on EmbedPDF 2.15.0 pinned
+  exactly, with its WebAssembly engine **self-hosted** because the decided CSP
+  and this site's no-CDN posture leave no alternative. Three findings the spec
+  could not have predicted are in the task's
+  [status.md](./tasks/pdf-reader/status.md); one of them amends a decided
+  research doc, because the CSP as written would block this reader outright and
+  the person to tell is whoever implements that middleware.
+
+  **The page's shape changed mid-task, with the user.** The decided metadata
+  header cost roughly a fifth of the panel to state three facts on the one page
+  meant to show a document, so the title moved into the tracker header beside the
+  app name, the authors and venue into the three-dot menu, and that menu and the
+  sidebar trigger into the reader's toolbar — which now floats over the document
+  rather than sitting above it. Three decided documents carry revisions of the
+  same date: [header.md](../../research/ui-ux/pages/lit-tracker/components/header.md)
+  (including what it leaves #10 to decide about citation-graph hops),
+  [article-detail.md](../../research/ui-ux/pages/lit-tracker/pages/article-detail.md),
+  and [reader-annotation.md](../../research/ui-ux/pages/lit-tracker/components/reader-annotation.md).
+  The browser pass earned its keep twice over: it found a horizontal overflow
+  that took the whole shell sideways at 420px — an uncapped grid **column** in
+  `lit-tracker-shell`, not a reader bug — and a paint-order trap where the
+  obvious fix would have opened every popup underneath its own trigger.

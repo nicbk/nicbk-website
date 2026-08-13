@@ -1,12 +1,13 @@
 import { Link } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
 import { ThemeToggle } from '~/routes/-shared/components/theme-toggle/theme-toggle'
 import type { AvatarAccount } from '../account-avatar/account-avatar'
 import { AccountAvatar } from '../account-avatar/account-avatar'
 import styles from './lit-tracker-header.module.css'
 
 /**
- * The breadcrumb's root segment — the personal site this sub-application is
- * hosted on, not the signed-in reader.
+ * The path's root segment — the personal site this sub-application is hosted
+ * on, not the signed-in reader.
  *
  * Literal and identical for every account: `nicbk` is the site owner, the same
  * name the site header spells out as "Nicolás Kennedy". It is not derived from
@@ -21,11 +22,18 @@ interface LitTrackerHeaderProps {
   onSignedOut?: (() => void) | undefined
   /** Called once the account is deleted. */
   onDeleted?: (() => void) | undefined
+  /**
+   * Where the reader is inside the tracker — the article being read.
+   *
+   * Taken as an element so this component stays chrome: it owns the row, not
+   * the question of which article any page is showing.
+   */
+  pageTitle?: ReactNode
 }
 
 /**
- * The Lit Tracker's own header: app name on the left, and on the right the
- * breadcrumb path followed by the theme toggle
+ * The Lit Tracker's own header: app name and the open article on the left, and
+ * on the right the path, the account control and the theme toggle
  * (research/ui-ux/pages/lit-tracker/components/header.md).
  *
  * A separate component from the site header rather than a variant of it, as
@@ -47,8 +55,22 @@ interface LitTrackerHeaderProps {
  *  - **Literature Tracker** goes to the tracker's own root — the
  *    site-name-goes-home pattern, scoped to this sub-application.
  *  - **`↳/nicbk_home`** goes to the *personal site's* home. It is the root of
- *    the path, which is why article detail (#9) grows it one segment per
- *    citation-graph hop into `↳/nicbk_home/Article A/Article B`.
+ *    the path — where this sub-application is hosted, not where you are in it.
+ *
+ * **The article's title lives in this row rather than over the reader**
+ * (user-decided 2026-08-13). It began as a metadata header above the document,
+ * and that header cost roughly a fifth of the panel's height to say three things
+ * — on the one page whose entire purpose is showing as much of a paper as
+ * possible. So the title came up here and the row went away.
+ *
+ * **It sits beside the app name, not in the path** (user-decided 2026-08-13,
+ * after seeing both). The decided spec put it in the breadcrumb, and there it
+ * read as ambiguous: `↳/nicbk_home/Attention Is All You Need` is a path from the
+ * *site's* root, so a paper's title arriving at the end of it looked like a
+ * location on the personal site rather than the thing being read. Beside the app
+ * name, separated by a rule, it reads as what it is — the tracker, then the
+ * article open in it. `header.md`'s revision records the change and what it
+ * leaves #10 to decide about citation-graph hops.
  *
  * **The account control sits between the path and the toggle.** It began here,
  * moved to the foot of the sidebar when #7 read the mockup's bottom-left avatar
@@ -62,6 +84,7 @@ export function LitTrackerHeader({
   account,
   onSignedOut,
   onDeleted,
+  pageTitle,
 }: LitTrackerHeaderProps) {
   return (
     <header className={styles.header}>
@@ -69,13 +92,21 @@ export function LitTrackerHeader({
         Literature Tracker
       </Link>
 
-      {/* A single-item path today, but a path all the same: marking it up as a
-          navigation landmark with a list is what lets #9 add hops without
-          re-deciding the semantics. `↳` and `/` are decoration around the one
-          real word, so they are hidden from assistive tech. */}
+      {/* Where you are inside the tracker, beside what you are inside. The rule
+          separates the app's name from the page's, so the two do not read as one
+          run-on title. */}
+      {pageTitle !== undefined && (
+        <>
+          <span className={styles.divider} aria-hidden="true" />
+          <div className={styles.pageTitle}>{pageTitle}</div>
+        </>
+      )}
+
+      {/* `↳` and `/` are decoration around the one real word, so they are hidden
+          from assistive tech. */}
       <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
         <ol className={styles.breadcrumbList}>
-          <li>
+          <li className={styles.rootSegment}>
             <span aria-hidden="true">↳/</span>
             <Link to="/" className={styles.breadcrumbLink}>
               {SITE_ROOT_SEGMENT}

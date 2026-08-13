@@ -1,0 +1,140 @@
+/*
+ * The zoom group and its menu.
+ *
+ * The buttons match `page-navigation.module.css`'s deliberately — one bar, one
+ * kind of button. The popup matches the card menu's, for the same reason: the
+ * site should have one idea of what a floating list looks like.
+ */
+/* The same floating surface as the page group — see
+   page-navigation.module.css. */
+.group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  flex-shrink: 0;
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* The bar's one control height — see reader-toolbar.module.css. */
+  height: var(--reader-control-height);
+  padding: 0 var(--space-2xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  line-height: 0;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .button:hover:not(:disabled) {
+    color: var(--color-accent);
+  }
+}
+
+/* Dimmed *and* non-interactive, so the state is not carried by contrast alone. */
+.button:disabled,
+.trigger:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/*
+ * The percentage is the trigger.
+ *
+ * A fixed minimum width, because the number it holds changes as the reader
+ * zooms — without it the plus button would shift left every time the paper
+ * crossed 100%, which is motion caused by nothing but the digits.
+ */
+.trigger {
+  min-width: 4.5em;
+  /* The bar's one control height, borders included. */
+  height: var(--reader-control-height);
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .trigger:hover:not(:disabled) {
+    color: var(--color-accent);
+  }
+}
+
+.positioner {
+  outline: none;
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2xs) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+/*
+ * Every row leaves room for the tick whether or not it carries one, so the
+ * labels line up in one column instead of the chosen row sitting alone.
+ */
+.item {
+  display: grid;
+  grid-template-columns: 1.25em 1fr;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.item[data-highlighted] {
+  background-color: var(--color-bg);
+}
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.indicatorIcon {
+  width: 1em;
+  height: 1em;
+}

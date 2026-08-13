@@ -57,6 +57,76 @@ function listedTags() {
 }
 
 describe('ArticleMenu', () => {
+  describe('what it puts behind itself', () => {
+    it('leaves the page alone by default, as the collection grid wants', async () => {
+      // A card's menu floats over cards, which are inert anyway. A dimming
+      // overlay there would be weight for nothing.
+      const user = userEvent.setup()
+      const { container } = render(
+        <ArticleMenu
+          articleTitle="Attention Is All You Need"
+          status="pending"
+          allTags={[]}
+          appliedTagIds={new Set()}
+          onSetStatus={vi.fn()}
+          onToggleTag={vi.fn()}
+          onCreateTag={vi.fn()}
+        />,
+      )
+      await open(user)
+
+      expect(
+        container.ownerDocument.querySelector('[class*="backdrop"]'),
+      ).toBeNull()
+    })
+
+    it('dims and blocks what is behind it when asked to', async () => {
+      // The article page asks: this menu opens over the reader's floating
+      // toolbar, which stays visible and clickable underneath otherwise, and
+      // two live surfaces at once is what that reads as (user-decided
+      // 2026-08-13).
+      const user = userEvent.setup()
+      const { container } = render(
+        <ArticleMenu
+          articleTitle="Attention Is All You Need"
+          status="pending"
+          allTags={[]}
+          appliedTagIds={new Set()}
+          onSetStatus={vi.fn()}
+          onToggleTag={vi.fn()}
+          onCreateTag={vi.fn()}
+          modal
+        />,
+      )
+      await open(user)
+
+      expect(
+        container.ownerDocument.querySelector('[class*="backdrop"]'),
+      ).not.toBeNull()
+    })
+
+    it('shows the article’s own details when it is given them', async () => {
+      // Only the detail page passes these: a card already shows its title,
+      // authors and venue, so repeating them in its menu would be noise.
+      const user = userEvent.setup()
+      render(
+        <ArticleMenu
+          articleTitle="Attention Is All You Need"
+          status="pending"
+          allTags={[]}
+          appliedTagIds={new Set()}
+          onSetStatus={vi.fn()}
+          onToggleTag={vi.fn()}
+          onCreateTag={vi.fn()}
+          details={<p>Ashish Vaswani et al.</p>}
+        />,
+      )
+      await open(user)
+
+      expect(screen.getByText('Ashish Vaswani et al.')).toBeInTheDocument()
+    })
+  })
+
   it('names its trigger after the article it belongs to', () => {
     // Twenty cards in a grid, each with one of these: "options" repeated twenty
     // times is not a name, and a screen-reader user listing the page's controls

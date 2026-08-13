@@ -32,6 +32,40 @@ and building on the syntax-highlighting/`Callout` decisions in
   (camera/microphone/geolocation, etc.) unless a specific sub-app needs
   one.
 
+## Amendment (2026-08-13): what the PDF reader needs from the policy
+
+The starting policy above **blocks the Lit Tracker's PDF reader outright**, in
+three separate ways. Nothing is broken today — no middleware implements any of
+these headers yet — but whoever writes it will take the reader down unless the
+policy accounts for the following. Found while building #9's reader
+(`features/article-detail-and-reader/tasks/pdf-reader/`), by reading EmbedPDF's
+published source rather than by hitting it in production.
+
+- **`script-src` needs `'wasm-unsafe-eval'`.** The reader's engine is PDFium
+  compiled to WebAssembly. A bare `script-src 'self'` blocks WebAssembly
+  compilation entirely in Chrome; `'wasm-unsafe-eval'` is the narrow grant that
+  permits compiling and instantiating wasm without permitting `eval`.
+- **`worker-src` needs `'self' blob:`.** The engine runs PDFium in a Web Worker
+  it constructs from a `blob:` URL (`URL.createObjectURL` over an inlined worker
+  source, in `@embedpdf/engines`). `default-src 'self'` blocks that. The only
+  alternative is running the engine on the main thread, which puts PDF rendering
+  in front of every interaction.
+- **`img-src` needs `'self' blob:`.** Rendered pages are handed to an `<img>` as
+  object URLs, so every page of every document is a `blob:` image.
+- **`connect-src 'self'` is sufficient, and only because the wasm is
+  self-hosted.** EmbedPDF's default fetches its 4.6 MB binary from
+  `cdn.jsdelivr.net`; the reader overrides that with a Vite-emitted asset from
+  this origin, for the same reason the site self-hosts its fonts. Its optional
+  font fallback — also a CDN — is explicitly disabled. **If either is ever
+  allowed to fall back to the default, this policy has to grow a CDN origin**,
+  and a reading tool starts telling a third party which papers are being read.
+
+The general point, which outlives these four bullets: **a strict CSP is a
+constraint on what libraries may be adopted, not only on how they are
+configured.** A dependency that builds workers from blobs, compiles wasm, or
+loads its own assets from a CDN is making policy decisions on this project's
+behalf, and the time to find that out is while choosing it.
+
 ## Reasoning
 
 - Setting HSTS once at Caddy rather than duplicating it at the app avoids
@@ -73,3 +107,11 @@ and building on the syntax-highlighting/`Callout` decisions in
   setting HSTS at the Caddy layer for a proxied app.
 - [header (Caddyfile directive) — Caddy Documentation](https://caddyserver.com/docs/caddyfile/directives/header) —
   the `header_down` directive syntax used above.
+- For the 2026-08-13 amendment:
+  [MDN — CSP `script-src`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/script-src)
+  and [WebAssembly/content-security-policy#7](https://github.com/WebAssembly/content-security-policy/issues/7)
+  — `'wasm-unsafe-eval'`, and that a bare `script-src 'self'` blocks
+  WebAssembly. The `blob:` worker, the `blob:` page images and the default CDN
+  wasm URL were read directly out of the installed `@embedpdf/engines` and
+  `@embedpdf/plugin-render` packages at 2.15.0, and confirmed against a
+  production build's network log.

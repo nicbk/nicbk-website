@@ -1,0 +1,38 @@
+/*
+ * The reader's panel when it holds a message instead of a document.
+ *
+ * It fills the space the document will occupy rather than sizing to its text,
+ * so nothing below it moves when the paper arrives — the same reason task 1's
+ * placeholder held this space open in the first place.
+ */
+.notice {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 0;
+  color: var(--color-text-muted);
+}
+
+/*
+ * Failure is not styled as an error banner: it is still the reader's own panel,
+ * and a full-width red surface would outweigh the paper's own metadata above it
+ * (the visual-hierarchy rule in AGENTS.md). The color is one of three signals —
+ * the icon and the wording carry it too, so nothing depends on seeing red.
+ */
+.failed {
+  color: var(--color-error);
+}
+
+.icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.message {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

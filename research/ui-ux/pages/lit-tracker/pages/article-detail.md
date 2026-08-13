@@ -52,3 +52,33 @@ bibliography data enriched from the Semantic Scholar API, so a visible
 [../../../../licensing/third-party-attribution-requirements.md](../../../../licensing/third-party-attribution-requirements.md).
 Exact placement/wording is left to implementation — the requirement is only
 that the credit exists where S2-sourced data is shown.
+
+## Revision (2026-08-13), decided with the user at implementation
+
+**The metadata summary is no longer a band across the top of the page.** The
+first bullet above puts title, authors and year below the tracker header with a
+three-dot menu on it. Built, that row spent roughly a fifth of the content
+panel's height stating three facts a reader takes in once — on the page whose
+whole purpose is showing as much of a document as possible. Each piece moved to
+somewhere it was already wanted, and the row went away:
+
+- **the title** into the tracker header, beside the app name (see
+  [../components/header.md](../components/header.md)'s revision of the same
+  date);
+- **the authors and venue** into the three-dot menu itself, at the top of the
+  popup, which was already this page's "about this article" surface — and which
+  is now the one place a long title can be read in full;
+- **the three-dot menu and the narrow-screen sidebar trigger** into the reader's
+  own toolbar, which overlays the document (see
+  [../components/reader-annotation.md](../components/reader-annotation.md)'s
+  revision).
+
+Nothing was dropped: every field the summary showed is still one click away, and
+the page keeps a clipped `<h1>` so the route-change focus handoff and the
+document outline are unchanged — the same arrangement
+[collection-view.md](./collection-view.md) already uses.
+
+**What this does not change** is the rest of the bullet list above: the reader as
+main content, the four-tab sidebar and which tabs swap the main area, the drawer
+behaviour below the breakpoint, and the Semantic Scholar attribution requirement,
+which still travels with the S2-derived data #10 will show.

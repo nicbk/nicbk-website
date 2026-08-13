@@ -1,5 +1,6 @@
 import { Popover } from '@base-ui/react/popover'
 import { MoreHorizontal } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { ArticleTagControlsProps } from './article-tag-controls'
 import { ArticleTagControls } from './article-tag-controls'
 import styles from './article-menu.module.css'
@@ -12,6 +13,27 @@ export { EMPTY_TAGS_MESSAGE } from './article-tag-controls'
 interface ArticleMenuProps extends ArticleTagControlsProps {
   /** Names the trigger, so twenty cards do not all announce "options". */
   articleTitle: string
+  /**
+   * What the paper *is*, shown above the controls that change it.
+   *
+   * Optional because only one surface has anything to put here. A card already
+   * shows its own title, authors and venue, so repeating them in its menu would
+   * be noise; the detail page no longer shows them anywhere else, so this is
+   * where they live (`~/routes/lit-tracker/-article-detail/article-details.tsx`).
+   * Taken as an element so this shared component stays free of any one page's
+   * idea of what an article's details are.
+   */
+  details?: ReactNode
+  /**
+   * Dim and disable what is behind the menu while it is open.
+   *
+   * Off by default, and on for the article page. On the collection grid the menu
+   * floats over cards, which are inert anyway — a dimming overlay there would be
+   * weight for nothing. Over the reader it floats above a toolbar that stays
+   * visible and clickable through a popup otherwise, which reads as two live
+   * surfaces at once (user-decided 2026-08-13).
+   */
+  modal?: boolean
 }
 
 /**
@@ -38,9 +60,14 @@ interface ArticleMenuProps extends ArticleTagControlsProps {
  * moved out when #9's sidebar needed the identical ones inline
  * (`article-tag-controls.tsx`); this is now the card's way of reaching them.
  */
-export function ArticleMenu({ articleTitle, ...controls }: ArticleMenuProps) {
+export function ArticleMenu({
+  articleTitle,
+  details,
+  modal = false,
+  ...controls
+}: ArticleMenuProps) {
   return (
-    <Popover.Root>
+    <Popover.Root modal={modal}>
       <Popover.Trigger
         className={styles.trigger}
         aria-label={`Options for ${articleTitle}`}
@@ -49,12 +76,16 @@ export function ArticleMenu({ articleTitle, ...controls }: ArticleMenuProps) {
       </Popover.Trigger>
 
       <Popover.Portal>
+        {/* Only in the modal case: without it the surface behind stays fully
+            lit, and nothing says the menu is the only live thing on screen. */}
+        {modal && <Popover.Backdrop className={styles.backdrop} />}
         <Popover.Positioner
           className={styles.positioner}
           sideOffset={4}
           align="end"
         >
           <Popover.Popup className={styles.popup}>
+            {details}
             <ArticleTagControls {...controls} />
           </Popover.Popup>
         </Popover.Positioner>

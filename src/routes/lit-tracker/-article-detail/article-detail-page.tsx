@@ -1,8 +1,11 @@
 import { Link } from '@tanstack/react-router'
+import { PanelLeft } from 'lucide-react'
+import { ArticleMenu } from '~/routes/lit-tracker/-components/article-menu/article-menu'
+import { NarrowScreenDrawer } from '~/routes/lit-tracker/-components/narrow-screen-drawer/narrow-screen-drawer'
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
-import { ArticleSidebar } from './article-sidebar'
-import { ArticleSummary } from './article-summary'
-import { ReaderPlaceholder } from './reader-placeholder'
+import { ArticleDetails } from './article-details'
+import { ArticleSidebar, SIDEBAR_LABEL } from './article-sidebar'
+import { ArticleReader } from './reader/article-reader'
 import { useArticleDetail } from './use-article-detail'
 import styles from './article-detail-page.module.css'
 
@@ -29,20 +32,31 @@ interface ArticleDetailPageProps {
 }
 
 /**
- * One paper: its metadata across the top, its reader filling the panel, and its
- * sidebar in the shell's rail beside them.
+ * One paper, filling its panel.
  *
- * The decided layout (research/ui-ux/pages/lit-tracker/pages/article-detail.md)
- * puts the reader in the main content area because reading is the primary task
- * on this page. Task 1 builds everything around it; the reader itself is task 3,
- * and until then this page is honest about the hole rather than filling it with
- * a spinner (`reader-placeholder.tsx`).
+ * **The page is the reader now** (user-decided 2026-08-13). It used to open with
+ * a metadata header — title, authors, venue — above the document, and that row
+ * spent roughly a fifth of the panel's height on three lines of text, on the one
+ * page whose entire purpose is showing as much of a paper as possible. Each
+ * piece moved somewhere it was already wanted:
+ *
+ *  - **the title** into the tracker's own header (`article-title.tsx`),
+ *    beside the app name, where it costs the document nothing;
+ *  - **the authors and venue** into the three-dot menu (`article-details.tsx`),
+ *    the page's "about this article" surface;
+ *  - **the two controls** into the reader's toolbar, which overlays the document
+ *    rather than sitting above it.
+ *
+ * What is left here is the `<h1>` — clipped, because nothing draws it any more,
+ * but present because the route-change focus handoff lands on it
+ * (src/focus-handoff.ts) and it names the page for anyone listening. The
+ * collection page's heading works exactly the same way.
  *
  * **The sidebar is not rendered here.** It lives in the shell's rail, which is
  * outside this page entirely — `route.tsx` decides what the rail shows for the
  * matched route, exactly as it already does for the collection's filters. What
  * this page does render is the *sheet* copy of it, below the breakpoint, through
- * the trigger in the summary row.
+ * the trigger it hands to the reader's toolbar.
  */
 export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
   const { state, article, tags, allTags } = useArticleDetail(articleId)
@@ -60,9 +74,10 @@ export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
     return (
       <div className={styles.notice}>
         {/*
-          Still an <h1>: this route matched and rendered a page, so the focus
-          handoff (src/focus-handoff.ts) needs a heading to land on here as much
-          as it does on a page that found its article.
+          Still an <h1>, and drawn rather than clipped: this page found no
+          article, so the sentence *is* the page, and the focus handoff
+          (src/focus-handoff.ts) needs a heading to land on here as much as it
+          does on a page that found one.
         */}
         <h1 className={styles.missingHeading}>{MISSING_MESSAGE}</h1>
         <p>
@@ -76,24 +91,48 @@ export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
 
   return (
     <div className={styles.page}>
-      <ArticleSummary
-        article={article}
-        allTags={allTags}
-        appliedTagIds={appliedTagIds}
-        onSetStatus={(status) => mutations.setStatus(articleId, status)}
-        onToggleTag={(tagId, applied) =>
-          applied
-            ? mutations.applyTag(articleId, tagId)
-            : mutations.removeTag(articleId, tagId)
-        }
-        onCreateTag={(name) => mutations.createAndApplyTag(articleId, name)}
-        // An element, not a rendered tree: the sheet mounts it only while open,
-        // so the sidebar's queries and its tab state exist once at a time even
-        // though two surfaces can show it.
-        sidebar={<ArticleSidebar articleId={articleId} />}
-      />
+      {/* Clipped, not removed — see this component's docblock. */}
+      <h1 className={styles.heading}>{article.title}</h1>
 
-      <ReaderPlaceholder />
+      <ArticleReader
+        articleId={articleId}
+        actions={
+          <>
+            <NarrowScreenDrawer label={SIDEBAR_LABEL} icon={PanelLeft}>
+              {/*
+                An element, not a rendered tree: the sheet mounts it only while
+                open, so the sidebar's queries and its tab state exist once at a
+                time even though two surfaces can show it.
+              */}
+              <ArticleSidebar articleId={articleId} />
+            </NarrowScreenDrawer>
+
+            <ArticleMenu
+              articleTitle={article.title}
+              // The card's menu, unchanged in what it does — #11 adds "edit…"
+              // and "delete…" to this one rather than building a second. What
+              // this surface adds is the article's own details at the top, since
+              // nothing else on the page shows them any more.
+              details={<ArticleDetails article={article} />}
+              // The menu opens over the reader's floating toolbar, which would
+              // otherwise stay lit and clickable behind it.
+              modal
+              status={article.status ?? 'pending'}
+              allTags={allTags}
+              appliedTagIds={appliedTagIds}
+              onSetStatus={(status) => mutations.setStatus(articleId, status)}
+              onToggleTag={(tagId, applied) =>
+                applied
+                  ? mutations.applyTag(articleId, tagId)
+                  : mutations.removeTag(articleId, tagId)
+              }
+              onCreateTag={(name) =>
+                mutations.createAndApplyTag(articleId, name)
+              }
+            />
+          </>
+        }
+      />
     </div>
   )
 }

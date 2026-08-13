@@ -45,6 +45,15 @@ interface ArticleSidebarProps {
  * holds, so the popover and this panel render the same component with different
  * things around it (`article-tag-controls.tsx`).
  */
+/**
+ * Names the sheet and its trigger, and the rail on wide screens.
+ *
+ * It lives beside the sidebar it names rather than beside the control that
+ * opens it — that control has now moved twice, and the label should not travel
+ * with it.
+ */
+export const SIDEBAR_LABEL = 'article'
+
 export function ArticleSidebar({ articleId }: ArticleSidebarProps) {
   const { state, article, tags, allTags } = useArticleDetail(articleId)
   const mutations = useArticleMutations()

@@ -6,7 +6,8 @@ import {
 } from '@tanstack/react-router'
 import { requireAuth } from '~/auth/require-auth'
 import { ArticleRail } from './-article-detail/article-rail'
-import { SIDEBAR_LABEL } from './-article-detail/article-summary'
+import { SIDEBAR_LABEL } from './-article-detail/article-sidebar'
+import { ArticleTitle } from './-article-detail/article-title'
 import { FilterRail } from './-collection-filters/filter-rail'
 import { collectionSearchSchema } from './-collection-filters/search-schema'
 import { LitTrackerShell } from './-components/lit-tracker-shell/lit-tracker-shell'
@@ -98,6 +99,15 @@ function LitTrackerLayout() {
         ) : (
           <FilterRail label={FILTER_RAIL_LABEL} />
         )
+      }
+      // The header's path names the article being read
+      // (research/ui-ux/pages/lit-tracker/components/header.md). Chosen here for
+      // the same reason the rail is: the header is a sibling of the page, so
+      // what the two share is decided one level up.
+      pageTitle={
+        articleMatch ? (
+          <ArticleTitle articleId={articleMatch.params.articleId} />
+        ) : undefined
       }
     >
       <Outlet />

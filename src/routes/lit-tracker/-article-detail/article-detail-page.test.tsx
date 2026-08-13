@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '~/routes/-shared/components/toast/toaster'
@@ -39,6 +40,11 @@ const { ArticleDetailPage } = await import('./article-detail-page')
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
+const ATTENTION_TAG = {
+  id: '018f5b6c-0000-7000-8000-0000000000a1',
+  name: 'attention',
+}
+
 const ARTICLE = {
   id: ARTICLE_ID,
   title: 'Attention Is All You Need',
@@ -76,6 +82,7 @@ function renderPage() {
 
 beforeEach(() => {
   useQuery.mockReset()
+  mutate.mockClear()
 })
 
 describe('ArticleDetailPage', () => {
@@ -184,5 +191,50 @@ describe('ArticleDetailPage', () => {
     expect(
       screen.getByRole('button', { name: `Options for ${ARTICLE.title}` }),
     ).toBeInTheDocument()
+  })
+
+  describe('the menu writes against this article', () => {
+    /** Opens the summary's three-dot menu, which every case below acts inside. */
+    async function openMenu() {
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'tags.mine': [ATTENTION_TAG],
+        'articleTags.mine': [
+          { articleId: ARTICLE_ID, tagId: ATTENTION_TAG.id },
+        ],
+      })
+      renderPage()
+      await userEvent.click(
+        screen.getByRole('button', { name: `Options for ${ARTICLE.title}` }),
+      )
+    }
+
+    it('sets reading status', async () => {
+      await openMenu()
+
+      await userEvent.click(screen.getByRole('button', { name: 'read' }))
+
+      await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1))
+    })
+
+    it('removes a tag the article carries', async () => {
+      await openMenu()
+
+      await userEvent.click(screen.getByRole('checkbox', { name: /attention/ }))
+
+      await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1))
+    })
+
+    it('creates and applies a new tag', async () => {
+      // Two writes: create, then attach.
+      await openMenu()
+
+      await userEvent.type(
+        screen.getByRole('textbox', { name: 'tags' }),
+        'diffusion{Enter}',
+      )
+
+      await waitFor(() => expect(mutate).toHaveBeenCalledTimes(2))
+    })
   })
 })

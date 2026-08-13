@@ -165,6 +165,50 @@ describe('ArticleSidebar', () => {
     await waitFor(() => expect(mutate).toHaveBeenCalled())
   })
 
+  it('applies a tag the article does not carry', async () => {
+    answerQueries({
+      'articles.byId': [ARTICLE],
+      'tags.mine': [ATTENTION_TAG, SURVEY_TAG],
+      'articleTags.mine': [{ articleId: ARTICLE_ID, tagId: ATTENTION_TAG.id }],
+    })
+    renderSidebar()
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /survey/ }))
+
+    // One write: attach. The tag already exists, so nothing is created.
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1))
+  })
+
+  it('removes a tag the article already carries', async () => {
+    // The other half of the same callback, and the half that would be missed by
+    // a test that only ever ticks boxes.
+    answerQueries({
+      'articles.byId': [ARTICLE],
+      'tags.mine': [ATTENTION_TAG],
+      'articleTags.mine': [{ articleId: ARTICLE_ID, tagId: ATTENTION_TAG.id }],
+    })
+    renderSidebar()
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /attention/ }))
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1))
+  })
+
+  it('creates and applies a tag that does not exist yet', async () => {
+    // Two writes, deliberately: create then attach. This is what makes the tag
+    // field the only place tags are made — there is no "manage tags" screen to
+    // visit first.
+    answerQueries({ 'articles.byId': [ARTICLE], 'tags.mine': [] })
+    renderSidebar()
+
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'tags' }),
+      'diffusion{Enter}',
+    )
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(2))
+  })
+
   it('shows the article’s stored notes', async () => {
     answerQueries({ 'articles.byId': [ARTICLE] })
     renderSidebar()

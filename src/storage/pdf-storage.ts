@@ -78,20 +78,76 @@ export class PdfOwnershipError extends Error {
 }
 
 /**
- * Fetches one article's PDF, refusing keys the requester does not own.
+ * Fetches one article's PDF as bytes, refusing keys the requester does not own.
  *
- * The ownership check is here rather than only at the call site so that every
- * read path inherits it — a key that came back from a query is still checked
- * against the session's user before any bytes are fetched. It is defence in
- * depth behind `/query`'s scoping, not a replacement for it: this is the last
- * point at which a mixed-up row can still be caught.
- *
- * The extract stage (task 4) is the first caller.
+ * **Buffered on purpose.** The extraction pipeline is the caller this exists
+ * for, and it posts the whole file to GROBID as one multipart body — it has to
+ * hold the file either way, so streaming would only move the buffer. A caller
+ * that is merely passing the bytes onward wants `openArticlePdf` below instead.
  */
 export async function getArticlePdf(
   key: string,
   userId: string,
 ): Promise<Uint8Array> {
+  const { body } = await fetchOwnedObject(key, userId)
+  return body.transformToByteArray()
+}
+
+/** One article's PDF, unread, with what Garage said about it. */
+export interface ArticlePdfStream {
+  /**
+   * The object's bytes as a web stream.
+   *
+   * Nothing has been read from it yet. Whoever takes this owns it: it must be
+   * consumed or cancelled, or the connection to Garage stays open.
+   */
+  body: ReadableStream<Uint8Array>
+  /**
+   * Garage's own `Content-Length`, or `null` if it reported none — which is
+   * the difference between a browser that can show a progress bar and one that
+   * cannot, so it is passed through rather than recomputed.
+   */
+  contentLength: number | null
+}
+
+/**
+ * Opens one article's PDF for streaming, refusing keys the requester does not
+ * own.
+ *
+ * The counterpart to `getArticlePdf`, for the caller that is handing the bytes
+ * straight to a client: the PDF-serving route
+ * (`src/lit-tracker/pdf/pdf-endpoint.ts`). A paper is megabytes, and buffering
+ * one per in-flight request would put the server's memory at the mercy of how
+ * many tabs are open — the read path has no reason to hold what it is only
+ * passing along. In Node, `transformToWebStream()` is `Readable.toWeb()` over
+ * the socket the SDK is already reading, so this is a genuine stream rather
+ * than a buffer wearing a stream's shape.
+ *
+ * The request is awaited before anything is returned, so a missing object or a
+ * refused signature raises **here** — before a response exists to be half-sent.
+ * That is what makes "a missing object fails cleanly" implementable at all: an
+ * error discovered after the first chunk is already a truncated 200.
+ */
+export async function openArticlePdf(
+  key: string,
+  userId: string,
+): Promise<ArticlePdfStream> {
+  const { body, contentLength } = await fetchOwnedObject(key, userId)
+  return { body: body.transformToWebStream(), contentLength }
+}
+
+/**
+ * The shared half of both reads: check the key belongs to the asker, fetch the
+ * object, and insist it has a body.
+ *
+ * The ownership check is here rather than only at the call sites so that every
+ * read path inherits it — a key that came back from a query is still checked
+ * against the session's user before any bytes are fetched. It is defence in
+ * depth behind `/query`'s scoping and the serving route's own `WHERE user_id`,
+ * not a replacement for either: this is the last point at which a mixed-up row
+ * can still be caught.
+ */
+async function fetchOwnedObject(key: string, userId: string) {
   if (!isOwnedBy(key, userId)) {
     throw new PdfOwnershipError(key)
   }
@@ -102,5 +158,5 @@ export async function getArticlePdf(
   if (!object.Body) {
     throw new Error(`Garage returned no body for ${key}.`)
   }
-  return object.Body.transformToByteArray()
+  return { body: object.Body, contentLength: object.ContentLength ?? null }
 }

@@ -24,6 +24,7 @@ import { Route as ApiZeroMutateRouteImport } from './routes/api/zero/mutate'
 import { Route as ApiLitTrackerUploadRouteImport } from './routes/api/lit-tracker/upload'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as personalSiteBlogSlugRouteImport } from './routes/(personal-site)/blog/$slug'
+import { Route as ApiLitTrackerArticlesArticleIdPdfRouteImport } from './routes/api/lit-tracker/articles/$articleId/pdf'
 
 const ErrorProbeRoute = ErrorProbeRouteImport.update({
   id: '/error-probe',
@@ -100,6 +101,12 @@ const personalSiteBlogSlugRoute = personalSiteBlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => personalSiteRouteRoute,
 } as any)
+const ApiLitTrackerArticlesArticleIdPdfRoute =
+  ApiLitTrackerArticlesArticleIdPdfRouteImport.update({
+    id: '/api/lit-tracker/articles/$articleId/pdf',
+    path: '/api/lit-tracker/articles/$articleId/pdf',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/lit-tracker': typeof LitTrackerRouteRouteWithChildren
@@ -116,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/api/zero/query': typeof ApiZeroQueryRoute
   '/': typeof personalSitehomeIndexRoute
   '/blog/': typeof personalSiteBlogIndexRoute
+  '/api/lit-tracker/articles/$articleId/pdf': typeof ApiLitTrackerArticlesArticleIdPdfRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRouteRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/api/zero/query': typeof ApiZeroQueryRoute
   '/': typeof personalSitehomeIndexRoute
   '/blog': typeof personalSiteBlogIndexRoute
+  '/api/lit-tracker/articles/$articleId/pdf': typeof ApiLitTrackerArticlesArticleIdPdfRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/api/zero/query': typeof ApiZeroQueryRoute
   '/(personal-site)/(home)/': typeof personalSitehomeIndexRoute
   '/(personal-site)/blog/': typeof personalSiteBlogIndexRoute
+  '/api/lit-tracker/articles/$articleId/pdf': typeof ApiLitTrackerArticlesArticleIdPdfRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/api/zero/query'
     | '/'
     | '/blog/'
+    | '/api/lit-tracker/articles/$articleId/pdf'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/api/zero/query'
     | '/'
     | '/blog'
+    | '/api/lit-tracker/articles/$articleId/pdf'
   id:
     | '__root__'
     | '/(personal-site)'
@@ -199,6 +211,7 @@ export interface FileRouteTypes {
     | '/api/zero/query'
     | '/(personal-site)/(home)/'
     | '/(personal-site)/blog/'
+    | '/api/lit-tracker/articles/$articleId/pdf'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +223,7 @@ export interface RootRouteChildren {
   ApiLitTrackerUploadRoute: typeof ApiLitTrackerUploadRoute
   ApiZeroMutateRoute: typeof ApiZeroMutateRoute
   ApiZeroQueryRoute: typeof ApiZeroQueryRoute
+  ApiLitTrackerArticlesArticleIdPdfRoute: typeof ApiLitTrackerArticlesArticleIdPdfRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -319,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof personalSiteBlogSlugRouteImport
       parentRoute: typeof personalSiteRouteRoute
     }
+    '/api/lit-tracker/articles/$articleId/pdf': {
+      id: '/api/lit-tracker/articles/$articleId/pdf'
+      path: '/api/lit-tracker/articles/$articleId/pdf'
+      fullPath: '/api/lit-tracker/articles/$articleId/pdf'
+      preLoaderRoute: typeof ApiLitTrackerArticlesArticleIdPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -364,6 +385,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLitTrackerUploadRoute: ApiLitTrackerUploadRoute,
   ApiZeroMutateRoute: ApiZeroMutateRoute,
   ApiZeroQueryRoute: ApiZeroQueryRoute,
+  ApiLitTrackerArticlesArticleIdPdfRoute:
+    ApiLitTrackerArticlesArticleIdPdfRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

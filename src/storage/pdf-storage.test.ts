@@ -28,9 +28,8 @@ vi.mock('@aws-sdk/client-s3', () => ({
   },
 }))
 
-const { getArticlePdf, putArticlePdf, PdfOwnershipError } = await import(
-  './pdf-storage'
-)
+const { getArticlePdf, openArticlePdf, putArticlePdf, PdfOwnershipError } =
+  await import('./pdf-storage')
 
 const OWNER = 'user-a'
 const ARTICLE = '01930000-0000-7000-8000-000000000001'
@@ -64,6 +63,48 @@ describe('getArticlePdf', () => {
 
     await expect(
       getArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER),
+    ).rejects.toThrow(/no body/)
+  })
+})
+
+describe('openArticlePdf', () => {
+  it('refuses another user key without asking the store for it', async () => {
+    // The same rule as the buffered read, asserted separately because it is a
+    // separate entry point: a second read path that skipped the check would be
+    // a way around it.
+    const key = pdfObjectKey('user-b', ARTICLE)
+
+    await expect(openArticlePdf(key, OWNER)).rejects.toThrow(PdfOwnershipError)
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('hands back the stream without reading it, and the length beside it', async () => {
+    const body = new ReadableStream()
+    send.mockResolvedValue({
+      Body: { transformToWebStream: () => body },
+      ContentLength: 4_812_390,
+    })
+
+    // Unread on purpose: buffering the paper here would put the server's memory
+    // at the mercy of how many readers have a tab open.
+    await expect(
+      openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER),
+    ).resolves.toEqual({ body, contentLength: 4_812_390 })
+  })
+
+  it('reports no length rather than a wrong one when the store gives none', async () => {
+    send.mockResolvedValue({ Body: { transformToWebStream: () => null } })
+
+    const opened = await openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER)
+
+    expect(opened.contentLength).toBeNull()
+  })
+
+  it('raises rather than returning nothing when the store answers with no body', async () => {
+    send.mockResolvedValue({})
+
+    await expect(
+      openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER),
     ).rejects.toThrow(/no body/)
   })
 })

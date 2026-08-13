@@ -1,6 +1,6 @@
 # Status: Article Detail and Reader
 
-**Feature state:** **In progress** — task 1 implemented and awaiting review. Five tasks, sequential, each gated by its own PR + CI + human review.
+**Feature state:** **In progress** — task 1 merged, task 2 implemented and awaiting review. Five tasks, sequential, each gated by its own PR + CI + human review.
 Depends on [`collection-view`](../collection-view/status.md) (#8, Complete) for
 the card this page is reached from, the tag model its Tags tab presents, and the
 drawer its sidebar becomes; and on
@@ -18,8 +18,8 @@ parent when its sub-issues close.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`article-detail-shell`](./tasks/article-detail-shell/status.md) ([#96](https://github.com/nicbk/nicbk-website/issues/96)) | **Implemented** | — | — | Awaiting review |
-| [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | Not started | — | — | — |
+| [`article-detail-shell`](./tasks/article-detail-shell/status.md) ([#96](https://github.com/nicbk/nicbk-website/issues/96)) | **Merged** | [#101](https://github.com/nicbk/nicbk-website/pull/101) | Green | Merged 2026-08-13 |
+| [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | **Implemented** | [#102](https://github.com/nicbk/nicbk-website/pull/102) | Green | Awaiting review |
 | [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | Not started | — | — | — |
 | [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | Not started | — | — | — |
 | [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | Not started | — | — | — |
@@ -102,3 +102,15 @@ write it does not own.
   and the rail stays the same size on both routes. Also this task, and larger
   than it: the card menu, the write path, and the narrow-screen drawer all moved
   out of `-collection-page/` so two pages share one of each.
+- 2026-08-13 — **Task 1 merged** (PR #101), and **task 2 implemented**. Its three
+  open items were settled first: the URL is
+  `/api/lit-tracker/articles/{articleId}/pdf`, a refusal is a 404 for *not
+  yours*, *not there*, and *malformed* alike with a 401 for anonymous, and
+  streaming needed no fallback — a TanStack Start handler returns a web
+  `Response`, and the S3 body's `transformToWebStream()` is `Readable.toWeb()`,
+  confirmed in `@smithy/core`'s source rather than assumed from docs. The spec
+  did not anticipate that a malformed id would reach a `uuid` column and raise
+  `22P02`, giving a 500 where a well-formed unknown id gives a 404 — the shape is
+  now checked before the query, which is the difference between three
+  indistinguishable refusals and two. The browser pass confirmed the rule this
+  task exists for: opening a paper made **two requests, neither to Garage**.

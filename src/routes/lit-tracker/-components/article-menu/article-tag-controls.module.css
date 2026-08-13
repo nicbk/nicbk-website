@@ -30,6 +30,10 @@
   container-name: article-tag-controls;
   display: flex;
   flex-direction: column;
+  /* Grows into a bounded panel and shrinks with it, so the bound reaches the
+     tag list. `flex-grow` rather than `flex: 1`, whose zero basis would collapse
+     this to nothing inside the popup, where height comes from the content. */
+  flex-grow: 1;
   min-height: 0;
 }
 
@@ -96,6 +100,15 @@
   }
 }
 
+/*
+ * The tag section is the one that grows; the status row above it keeps its own
+ * height so it never scrolls out of reach.
+ */
+.tagSection {
+  flex-grow: 1;
+  min-height: 0;
+}
+
 .statusOption {
   padding: var(--space-2xs) 0;
   border: 1px solid var(--color-border);
@@ -149,12 +162,17 @@
 /*
  * The one scroll container in these controls.
  *
- * Capped in `rem` rather than as a fraction of its container, so the list is the
- * same height whether the reader has four tags or forty, and whether it is in a
- * popover or a sidebar. Reaching its end does
- * not start scrolling the collection behind it, and does not overshoot — on the
- * vertical axis only, the axis it scrolls (globals.css explains why the site
- * cannot say this once and be done with it).
+ * **The cap belongs to the popup, not to the list.** 11rem is what keeps a
+ * floating panel from growing down the screen with forty tags in it; a rail is
+ * already exactly as tall as it is, so the same number there left the list
+ * stopping a third of the way down a column of empty space. The narrow container
+ * below drops the cap and lets the list take the height it was given, which is
+ * also what makes it the *only* thing that scrolls — the same arrangement the
+ * filter rail uses one panel over.
+ *
+ * Reaching its end does not start scrolling whatever is behind it, and does not
+ * overshoot — on the vertical axis only, the axis it scrolls (globals.css
+ * explains why the site cannot say this once and be done with it).
  */
 .tagList {
   max-height: 11rem;
@@ -163,6 +181,47 @@
   margin: var(--space-2xs) 0 0;
   padding: 0;
   list-style: none;
+  /*
+   * The hidden scrollbar's replacement affordance: the bottom edge fades, so a
+   * list with more tags than fit looks cut off rather than merely ending.
+   *
+   * This is the case `design-system.md`'s scrolling decision anticipated when it
+   * accepted hiding scrollbars — "where that hint is load-bearing, the region
+   * has to earn it back some other way". It is load-bearing here: without it the
+   * first eight tags looked like all the tags there were. The card's chip strip
+   * earns it back the same way, along its trailing edge.
+   *
+   * Anchored to the container rather than the content, so it stays at the bottom
+   * edge as the list scrolls. Applied unconditionally, because "is this
+   * scrolling?" is not a thing CSS can ask — on a list that fits, the last row
+   * ends above where the fade begins and nothing is dimmed.
+   */
+  mask-image: linear-gradient(
+    to bottom,
+    black calc(100% - var(--space-md)),
+    transparent
+  );
+}
+
+/*
+ * In a rail the list fills what is left below the filter field instead of
+ * stopping at the popup's cap.
+ *
+ * **After `.tagList`, not with the other narrow-container rules above.** A
+ * container query adds no specificity, so this and the base rule are equally
+ * specific and source order decides — written earlier, `max-height: 11rem` won
+ * and the list still stopped a third of the way down the rail.
+ *
+ * `min-height: 0` is what carries the bound down: a flex item's automatic
+ * minimum is its content's, so without it the list would size to all forty tags
+ * and push past the bottom of the panel rather than scrolling inside it.
+ */
+@container article-tag-controls (max-width: 13rem) {
+  .tagList {
+    max-height: none;
+    flex-grow: 1;
+    min-height: 0;
+  }
 }
 
 /*

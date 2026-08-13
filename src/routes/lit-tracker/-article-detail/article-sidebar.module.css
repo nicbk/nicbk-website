@@ -84,19 +84,18 @@
 }
 
 /*
- * The panel. It is what scrolls when its contents are taller than the rail —
- * the tabs above it must stay reachable, which is the same "only one region
- * scrolls" rule the tag controls follow internally.
+ * The panel. It does **not** scroll: it hands its height down and lets whatever
+ * is inside do the scrolling — the tag list, or the notes field growing to fit.
  *
- * `overscroll-behavior-y` on the axis it scrolls and no other: the shorthand
- * claims both axes and swallows gestures on the one it does not use
- * (globals.css).
+ * It scrolled at first, which made two nested scroll containers with the tag
+ * list capped inside a scrollable panel, and neither of them showed a scrollbar
+ * to say so. Same rule the filter rail follows one panel over: the rail hands
+ * the bound down and exactly one region inside consumes it.
  */
 .panel {
   display: flex;
   flex-direction: column;
   min-height: 0;
   flex: 1;
-  overflow-y: auto;
-  overscroll-behavior-y: none;
+  overflow: hidden;
 }

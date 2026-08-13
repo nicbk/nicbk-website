@@ -155,7 +155,9 @@ export function ArticleTagControls({
 
       <div className={styles.separator} />
 
-      <div className={styles.section}>
+      {/* The section that grows: in a rail it takes whatever height is left, so
+          the list inside it is the only thing that scrolls. */}
+      <div className={`${styles.section} ${styles.tagSection}`}>
         <label className={styles.sectionLabel} htmlFor={filterId}>
           tags
         </label>

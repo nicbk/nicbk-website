@@ -6,7 +6,7 @@ which is now answered.
 - Branch: `article-detail-and-reader/pdf-reader`, from `main` after task 2
   merged (`166d743`).
 - Sub-issue: **#98**, self-assigned before work began.
-- PR: opened once CI is green.
+- PR: [**#103**](https://github.com/nicbk/nicbk-website/pull/103).
 
 ## The open items, settled
 

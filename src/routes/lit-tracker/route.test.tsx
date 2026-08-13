@@ -81,6 +81,17 @@ vi.mock('./-article-detail/article-rail', async () => {
       createElement('aside', { 'aria-label': label }, articleId),
   }
 })
+// And the header's article title, which queries for it. That it
+// names the article is `-article-detail/`'s coverage; what this file asserts is
+// that the layout hands it to the header on the article route and nothing
+// everywhere else.
+vi.mock('./-article-detail/article-title', async () => {
+  const { createElement } = await import('react')
+  return {
+    ArticleTitle: ({ articleId }: { articleId: string }) =>
+      createElement('span', null, `trail:${articleId}`),
+  }
+})
 
 const { Route } = await import('./route')
 
@@ -156,6 +167,31 @@ describe('the /lit-tracker group layout', () => {
     expect(
       screen.queryByRole('navigation', { name: 'filter collection' }),
     ).toBeNull()
+  })
+
+  it('names the article in the header, on that route only', () => {
+    // The article's title lives in the header rather than above the reader,
+    // which is what gives the document the panel's full height. Chosen here for
+    // the same reason the rail is: the header is a sibling of the page.
+    const Layout = options.component
+
+    const collection = render(<Layout />)
+    expect(screen.queryByText(/^trail:/)).toBeNull()
+    // And the path stays what it is — where the tracker is hosted, not where you
+    // are in it. The title sits beside the app name instead (user-decided
+    // 2026-08-13; see lit-tracker-header.tsx).
+    expect(
+      screen.getByRole('navigation', { name: 'Breadcrumb' }),
+    ).toHaveTextContent('nicbk_home')
+    collection.unmount()
+
+    articleMatch.current = { params: { articleId: 'article-1' } }
+    render(<Layout />)
+
+    expect(screen.getByText('trail:article-1')).toBeInTheDocument()
+    expect(
+      screen.getByRole('navigation', { name: 'Breadcrumb' }),
+    ).not.toHaveTextContent('trail:')
   })
 
   it('validates the collection filters at the group root', () => {

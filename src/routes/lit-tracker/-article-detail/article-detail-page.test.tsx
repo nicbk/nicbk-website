@@ -33,6 +33,12 @@ vi.mock('@tanstack/react-router', async () => {
   return {
     Link: ({ to, children }: { to: string; children: ReactNode }) =>
       createElement('a', { href: to }, children),
+    // Stands in for the real boundary by rendering only its fallback, which is
+    // what the server pass does. That keeps PDFium's WebAssembly out of jsdom,
+    // and it is deliberately not a pass-through: a `ClientOnly` that rendered
+    // its children here would let a refactor make the engine SSR-eligible
+    // without any test noticing.
+    ClientOnly: ({ fallback }: { fallback: ReactNode }) => fallback,
   }
 })
 
@@ -100,22 +106,42 @@ describe('ArticleDetailPage', () => {
     )
   })
 
-  it('shows the article once it has arrived', () => {
+  it('names the article in a heading, without drawing one', () => {
     answerQueries({ 'articles.byId': [ARTICLE] })
     renderPage()
 
+    // The <h1> is still here — the focus handoff (src/focus-handoff.ts) lands on
+    // it — but nothing on this page draws the title any more: the header's
+    // header does (article-title.tsx). What that buys is the panel
+    // height the metadata row used to spend.
     expect(
       screen.getByRole('heading', { level: 1, name: ARTICLE.title }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/Ashish Vaswani/)).toBeInTheDocument()
-    expect(screen.getByText(/2017/)).toBeInTheDocument()
+    expect(screen.queryByText(/Ashish Vaswani/)).toBeNull()
+    expect(screen.queryByText(/Neural Information/)).toBeNull()
   })
 
-  it('omits a field the article does not have, rather than leaving a gap', () => {
+  it('keeps the authors and venue in the menu, where they moved', async () => {
+    answerQueries({ 'articles.byId': [ARTICLE] })
+    renderPage()
+
+    await userEvent.click(
+      screen.getByRole('button', { name: `Options for ${ARTICLE.title}` }),
+    )
+
+    expect(screen.getByText(/Ashish Vaswani/)).toBeInTheDocument()
+    expect(screen.getByText(/2017, Advances in Neural/)).toBeInTheDocument()
+  })
+
+  it('omits a field the article does not have, rather than leaving a gap', async () => {
     answerQueries({
       'articles.byId': [{ ...ARTICLE, publicationYear: null, venue: null }],
     })
     renderPage()
+
+    await userEvent.click(
+      screen.getByRole('button', { name: `Options for ${ARTICLE.title}` }),
+    )
 
     // No stray separator, and no empty line where the publication details were.
     expect(screen.queryByText(/2017/)).toBeNull()
@@ -175,13 +201,14 @@ describe('ArticleDetailPage', () => {
     expect(screen.queryByText(/no such article/)).toBeNull()
   })
 
-  it('holds the reader’s space open rather than hiding it', () => {
-    // #7's reserved search slot is the precedent: the page's proportions now are
-    // the ones it keeps when task 3 drops a document in.
+  it('fills the reader’s space with the reader, and not on the server', () => {
+    // Task 1 held this space open; task 3 put the reader in it. The engine is
+    // WebAssembly, so what a server render produces here is the fallback —
+    // which is exactly what the mocked `ClientOnly` above renders.
     answerQueries({ 'articles.byId': [ARTICLE] })
     renderPage()
 
-    expect(screen.getByText(/the reader arrives/)).toBeInTheDocument()
+    expect(screen.getByText(/starting the reader/)).toBeInTheDocument()
   })
 
   it('carries the card’s menu, not a second one of its own', () => {

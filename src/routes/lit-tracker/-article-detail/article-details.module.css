@@ -1,0 +1,36 @@
+/*
+ * The article's identity, at the top of its menu.
+ *
+ * Padded and ruled off like the menu's own sections, so it reads as the first
+ * region of the popup rather than as text floating above the controls. The rule
+ * matches `article-tag-controls.module.css`'s separator — the popup should look
+ * like one surface, not two components stacked.
+ */
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: 0 var(--space-sm) var(--space-sm);
+  margin-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  /*
+   * Wraps rather than eliding — this is the surface that exists to show the
+   * whole title, and the breadcrumb is the one that shortens it. `anywhere`
+   * because a title can carry an unbroken run: a DOI, a URL.
+   */
+  overflow-wrap: anywhere;
+}
+
+.authors,
+.publication {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}

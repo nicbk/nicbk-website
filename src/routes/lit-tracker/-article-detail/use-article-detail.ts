@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { queries } from '~/zero/queries'
 import { NO_TAGS, tagsByArticle } from '../-collection-page/article-tags'
-import type { DetailArticle } from './article-summary'
+import type { DetailArticle } from './detail-article'
 
 /** The three states this page can be in, as everything below it needs them. */
 export type ArticleDetailState = 'syncing' | 'ready' | 'missing' | 'error'

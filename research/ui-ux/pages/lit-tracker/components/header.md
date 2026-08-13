@@ -109,3 +109,37 @@ rather than merely different:
 
 The row is now: app name on the left; path, account, theme toggle on the right,
 in that order.
+
+## Revision (2026-08-13), decided with the user at implementation
+
+**The article being read is named in this row, beside the app name — not as a
+segment of the breadcrumb.** Two changes, and the first is what forced the
+second.
+
+- **The detail page's metadata header is gone, and its title came up here.**
+  [article-detail.md](../pages/article-detail.md) puts a metadata summary —
+  title, authors, venue — across the top of the page. Built, it cost roughly a
+  fifth of the content panel's height to state three facts, on the one page in
+  the tracker whose entire purpose is showing as much of a document as possible.
+  The title moved into this row; the authors and venue moved into the page's
+  three-dot menu, which was already its "about this article" surface. The page
+  keeps a clipped `<h1>` for the route-change focus handoff, exactly as
+  [collection-view.md](../pages/collection-view.md) already does.
+- **It sits beside the app name, behind a vertical rule, rather than at the end
+  of the path.** The 2026-07-04 decision above put it in the breadcrumb, and
+  that is what was built first — then read wrong on screen.
+  `↳/nicbk_home/Attention Is All You Need` is a path rooted at the *personal
+  site*, so a paper's title arriving at its end looked like a page on that site
+  rather than the thing open in the tracker. `Literature Tracker │ Attention Is
+  All You Need` reads as what it is. The breadcrumb goes back to being the one
+  thing it was always unambiguous about: where this sub-application is hosted.
+
+**What this leaves #10 to decide.** The 2026-07-04 bullet's real subject was
+citation-graph traversal — `↳/nicbk_home/Article A/Article B`, one segment per
+hop, each clickable to jump back. That requirement is untouched and still
+unbuilt; what is now unsettled is *where the trail of hops goes*, given the
+current article is named beside the app name rather than at the end of the path.
+Either the hops extend the breadcrumb and the two coexist, or the title slot
+grows into the trail. That is a decision for the feature that introduces
+traversal, and it should be made against a working graph rather than in advance —
+which is the same reasoning that produced this revision.

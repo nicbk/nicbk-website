@@ -1,0 +1,14 @@
+/*
+ * The article's title in the tracker header.
+ *
+ * It is the one thing in that row with no natural length — a real paper title is
+ * far longer than the space between the app name and the account controls — so
+ * it is the part that shrinks, and the ellipsis is what it does with what it
+ * gets. The full text stays reachable through the `title` attribute.
+ */
+.label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -3,20 +3,39 @@
  * LitTrackerShell's bounded panel, so nothing here sets a height or an inset —
  * the panel does both.
  *
- * What is different from the collection: this page does **not** scroll as one.
- * The summary stays put and the reader below it scrolls itself, because a
- * document is the one kind of content where scrolling the page away from its own
- * toolbar would be a defect rather than a preference. Task 3 puts the reader in
- * the space `.body` holds open.
+ * The page is the reader: one child, filling the panel. The metadata row that
+ * used to sit above it is gone (see `article-detail-page.tsx`), so there is
+ * nothing left to stack.
  */
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  /* Fills the panel exactly, so the reader below can take the remaining height
-     rather than growing the panel and putting a second scrollbar on it. */
+  /* Fills the panel exactly, so the reader takes the remaining height rather
+     than growing the panel and putting a second scrollbar on it. */
   height: 100%;
   min-height: 0;
+  /* And no wider than it: a PDF page is laid out at a fixed pixel width, which
+     without this pushes the panel — and the whole shell — past the viewport on a
+     narrow screen. See `reader/pdf-reader.module.css`. */
+  min-width: 0;
+}
+
+/*
+ * Clipped, not removed: nothing draws the article's title on this page any more
+ * — the header's breadcrumb does — but the heading still names the page for
+ * assistive technology and is what the route-change focus handoff moves to.
+ * `display: none` would take it out of the accessibility tree along with the
+ * pixels. Same rule as the collection page's own heading.
+ */
+.heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* The three notices — syncing, missing, failed — all read as one short line in

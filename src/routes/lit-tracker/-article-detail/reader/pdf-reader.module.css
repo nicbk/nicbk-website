@@ -1,0 +1,100 @@
+/*
+ * The reader: a document that fills the panel, with its toolbar laid over the
+ * top of it.
+ *
+ * `position: relative` is what the toolbar positions against — it overlays the
+ * document rather than taking a row of its own, so the paper gets the panel's
+ * full height (reader-toolbar.module.css explains why).
+ */
+.reader {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  /*
+   * Both axes, and the width is not the obvious one.
+   *
+   * A flex item's automatic minimum size is its *content's*, and a PDF page is
+   * laid out at a fixed pixel width the engine computed — so on a narrow screen
+   * the pages refused to shrink, pushed this panel wide, and took `main`, the
+   * shell and the header out past the viewport with them. The whole page scrolled
+   * sideways, which the app shell's `100dvh` model says must never happen. This
+   * is what confines a too-wide document to its own scroll region.
+   */
+  min-width: 0;
+}
+
+/*
+ * The document's own scroll region.
+ *
+ * This is the panel the app shell's `100dvh` layout hands to the reader: it
+ * scrolls itself, and the page behind it never does
+ * (research/ui-ux/pages/lit-tracker/components/header.md).
+ */
+.viewport {
+  flex: 1;
+  min-height: 0;
+  /* Same reason as `.reader` above: without it a page wider than the panel
+     escapes the region instead of scrolling inside it. */
+  min-width: 0;
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  /*
+   * Per-container and per-axis, never the shorthand — the shorthand on both
+   * axes is what broke scrolling site-wide once already
+   * (research/ui-ux/design-system.md).
+   *
+   * Both axes are named here because this region genuinely scrolls both: down
+   * the paper always, and sideways whenever the zoom makes a page wider than the
+   * panel. Either one reaching its end should stop here rather than dragging the
+   * surface behind it.
+   */
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: contain;
+
+  /*
+   * Clears the overlaid toolbar at rest, so page one is fully visible rather
+   * than starting underneath it. Padding rather than a margin on the first page:
+   * the scroll plugin virtualizes and positions pages itself, so the offset has
+   * to belong to the container it scrolls inside.
+   *
+   * `scroll-padding-top` matches it, so a jump to a page — typed, or clicked —
+   * lands that page below the bar instead of behind it. That is the half that is
+   * easy to forget and immediately obvious when missing.
+   */
+  --reader-toolbar-height: 2.5rem;
+  padding-top: var(--reader-toolbar-height);
+  scroll-padding-top: var(--reader-toolbar-height);
+}
+
+/*
+ * One page. Sized by the layout the scroll plugin computes rather than by CSS —
+ * it virtualizes, so these boxes must match the positions it reserved or pages
+ * land in the wrong place.
+ */
+.page {
+  position: relative;
+  margin: 0 auto;
+  background-color: var(--color-bg);
+  /* A paper is white in both themes; the edge is what separates it from the
+     panel behind it, which is not. */
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.pageImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * The notice states sit below the bar rather than behind it, for the same
+ * reason page one does.
+ */
+.notice {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding-top: 2.5rem;
+}

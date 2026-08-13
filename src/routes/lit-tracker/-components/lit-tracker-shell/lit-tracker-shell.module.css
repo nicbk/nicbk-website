@@ -15,6 +15,15 @@
      size, so a long list would stretch the row past the viewport and put the
      scrollbar back on the document instead of inside a panel. */
   grid-template-rows: auto minmax(0, 1fr);
+  /*
+   * The same rule on the other axis, and it is not hypothetical: without a
+   * declared column the shell gets one implicit `auto` track, which sizes to its
+   * widest item's content. #9's reader put a PDF page laid out at a fixed pixel
+   * width in there, and on a 420px window the track grew to fit it — taking the
+   * header, the rail and the whole document sideways past the viewport, which is
+   * exactly what this layout model exists to prevent.
+   */
+  grid-template-columns: minmax(0, 1fr);
   height: 100dvh;
 }
 

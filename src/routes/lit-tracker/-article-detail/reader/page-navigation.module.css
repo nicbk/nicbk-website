@@ -1,0 +1,104 @@
+/*
+ * The page group: two buttons around a field that says where you are.
+ *
+ * Shares its button look with the zoom group (zoom-control.module.css) — they
+ * are the same kind of control in the same bar, and the two files stay in step
+ * because both take their values from the same tokens.
+ */
+/*
+ * A floating surface over the document, not a section of a solid bar: opaque,
+ * edged and rounded, so it reads as a control resting on the paper. The zoom
+ * group matches it (zoom-control.module.css) — one bar, one kind of surface.
+ */
+.group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  flex-shrink: 0;
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+}
+
+/*
+ * Quiet at rest, lit on hover and focus — the borderless icon button the card
+ * menu and the rail's edit control already established, rather than a third
+ * idea of what one looks like.
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* The bar's one control height — see reader-toolbar.module.css. */
+  height: var(--reader-control-height);
+  padding: 0 var(--space-2xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  line-height: 0;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .button:hover:not(:disabled) {
+    color: var(--color-accent);
+  }
+}
+
+/*
+ * Disabled at the first and last page. Dimmed *and* non-interactive: the cursor
+ * change is the second signal, so the state does not rest on contrast alone.
+ */
+.button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/*
+ * The typeable page number.
+ *
+ * Centred because it is read far more often than it is written, and a number
+ * that sits against the left edge of its box reads as an empty field.
+ */
+.pageField {
+  min-width: 2ch;
+  /* The bar's one control height, borders included — the global reset makes
+     every box `border-box`, so this is what the group beside it comes to. */
+  height: var(--reader-control-height);
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  text-align: center;
+}
+
+.total {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/*
+ * "of" for a screen reader, "/" on screen — the same fact, in whichever form
+ * reads better. Clipped rather than hidden, which screen readers skip.
+ */
+.totalLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

@@ -47,3 +47,38 @@ PDF binary. No mockup on file — layout worked out directly with the user.
   [article-detail.md](../pages/article-detail.md)'s separate Notes tab
   (a free-text summary field for the article as a whole) — annotations are
   anchored to a specific point in the PDF, notes are not.
+
+## Revision (2026-08-13), decided with the user at implementation
+
+**The toolbar overlays the document instead of sitting above it, and its groups
+float rather than forming one solid bar.** The bullet above rules out a
+"floating/contextual" toolbar, and the half of that which matters is kept: the
+toolbar is *persistent* — always present, identical whatever the reader is doing,
+never summoned by a selection or anchored to what is under the cursor. What
+changed is where its pixels come from.
+
+- **As a row of its own it cost its full height everywhere.** On the one page
+  whose purpose is showing a document, a permanent strip above the paper is the
+  most expensive furniture in the tracker. Absolutely positioned over the top of
+  the document, it costs that height only at the very top of the scroll — the
+  first page is offset to clear it, and from there on the document runs the full
+  height of the panel and passes underneath.
+- **The bar is transparent; the control groups are not.** Pages on the left, zoom
+  on the right, the reserved annotation-tool slot between them, each an opaque
+  rounded surface with the paper visible in the gaps. A solid band read as a
+  second header and walled the document off from the page it sits on. This is the
+  same arrangement [collection-view.md](../pages/collection-view.md)'s toolbar
+  arrived at independently, for the same reason: transparent is the row, never
+  the controls.
+- **The page-level controls joined it** — the sidebar's narrow-screen trigger and
+  the article's three-dot menu, as a third floating group at its end. They had
+  been in the metadata header the same decision removed (see
+  [header.md](./header.md)'s 2026-08-13 revision), and a row kept alive for two
+  buttons costs more document than the separation was worth. A menu opened from
+  that group dims and disables what is behind it, so the bar is not left looking
+  live underneath its own popup.
+
+The general lesson, recorded because it will recur: **"not floating" was written
+about a toolbar's *behaviour* — where it appears and when — and was then read as
+a statement about its *background*.** When a decided constraint turns out to
+carry two readings, the one to keep is the one the reasoning was about.

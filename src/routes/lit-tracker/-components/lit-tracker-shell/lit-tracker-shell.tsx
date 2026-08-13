@@ -32,6 +32,13 @@ interface LitTrackerShellProps {
    * hooks run where the shell *renders* it, which is inside.
    */
   filters?: ReactNode
+  /**
+   * What the header shows beside the app name — the article being read.
+   *
+   * An element for the same reason `filters` is: it reads synced data, so it has
+   * to *render* inside the Zero provider even though it is described out here.
+   */
+  pageTitle?: ReactNode
   children: ReactNode
 }
 
@@ -60,36 +67,61 @@ interface LitTrackerShellProps {
  * #8's third task for a concrete reason: the filter rail lives in the sidebar,
  * beside the page rather than inside it, and a provider wrapping only the page
  * left the rail unable to ask for the tag list it exists to show. One client
- * still — one WebSocket per session, not one per panel.
+ * still — one WebSocket per session, not one per panel. #9's third task pulled
+ * the header inside it too, so it can name the article being read.
  */
 export function LitTrackerShell({
   account,
   onSignedOut,
   onDeleted,
   filters,
+  pageTitle,
   children,
 }: LitTrackerShellProps) {
+  const header = (
+    <LitTrackerHeader
+      account={account}
+      onSignedOut={onSignedOut}
+      onDeleted={onDeleted}
+      pageTitle={pageTitle}
+    />
+  )
+
   return (
     <div className={styles.shell}>
-      {/* Outside the provider on purpose: the header needs no synced data, and
-          the account control it carries must work whether or not Zero ever
-          connects — signing out of a tracker whose sync is broken is exactly
-          when you would want to. */}
-      <LitTrackerHeader
-        account={account}
-        onSignedOut={onSignedOut}
-        onDeleted={onDeleted}
-      />
       {/* Zero has no SSR, so nothing under this provider exists until the
           browser has hydrated. */}
       <ZeroClientProvider
         userId={account.id}
         fallback={
-          <Panels>
-            <TrackerLoading />
-          </Panels>
+          <>
+            {/*
+              The header without the article's title, which is the only part
+              that needs sync. Rendered in both branches — like `Panels` below, and for the
+              same reason: the row must not appear, vanish, and reappear across
+              hydration.
+            */}
+            <LitTrackerHeader
+              account={account}
+              onSignedOut={onSignedOut}
+              onDeleted={onDeleted}
+            />
+            <Panels>
+              <TrackerLoading />
+            </Panels>
+          </>
         }
       >
+        {/*
+          Inside the provider now, so the row can name the article being read
+          (research/ui-ux/pages/lit-tracker/components/header.md). What that
+          costs is nothing the account control depended on: the provider mounts a
+          client whether or not the socket ever connects, so signing out of a
+          tracker whose sync is broken — the case the header was kept outside
+          for — still works. The one moment there is genuinely no client is
+          before hydration, and the fallback above covers it.
+        */}
+        {header}
         <Panels filters={filters}>{children}</Panels>
       </ZeroClientProvider>
     </div>

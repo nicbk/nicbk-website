@@ -37,8 +37,8 @@ The three open items below were agreed up front rather than decided inline.
 
 ## Settled during the browser pass
 
-Four defects, all found by using the page and none visible to any test. The user
-raised the first two.
+Five defects, all found by using the page and none visible to any test. The user
+raised three of them.
 
 - **The card had a dead patch.** The first build stretched one anchor over the
   card with a positioned pseudo-element, so anything that had to sit *above*
@@ -63,6 +63,15 @@ raised the first two.
   as `aria-selected`. Keyed on the accessibility contract now. The strip also
   gained the full-width rule a selected tab's underline needs to read against —
   without it the tabs were two stray words in a corner.
+- **The tag list stopped after eight tags in a rail with room for thirteen, and
+  nothing said more existed below.** The 11rem cap belongs to the popup; a rail
+  is already exactly as tall as it is. The narrow container drops the cap and the
+  list fills the panel — which also meant the panel could stop being a second
+  scroll container wrapped around a capped one. The affordance came back as a
+  fade along the bottom edge, the case `design-system.md`'s scrolling decision
+  explicitly anticipated when it accepted hiding scrollbars. One cascade trap
+  worth remembering: a container query adds no specificity, so the override had
+  to be written *after* the base rule or `max-height: 11rem` simply won.
 - **Tag names broke mid-word** ("architectur / e") in the narrow rail, because
   `overflow-wrap: anywhere` suits a 16rem popup and not an 11rem column. Elided
   on one line, matching the filter rail. Dropping the sections' horizontal

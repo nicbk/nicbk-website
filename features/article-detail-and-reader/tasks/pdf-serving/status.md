@@ -6,8 +6,9 @@
   (task 1 merged).
 - Sub-issue: [#97](https://github.com/nicbk/nicbk-website/issues/97), self-assigned
   before work started.
-- PR: opened 2026-08-13, with the unit tier, the integration tier, and the
-  browser pass all clean.
+- PR: [**#102**](https://github.com/nicbk/nicbk-website/pull/102), opened
+  2026-08-13 with the unit tier, the integration tier, and the browser pass all
+  clean. CI green (both Playwright jobs remain suspended).
 
 ## Open items, settled before writing
 

@@ -19,7 +19,7 @@ parent when its sub-issues close.
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`article-detail-shell`](./tasks/article-detail-shell/status.md) ([#96](https://github.com/nicbk/nicbk-website/issues/96)) | **Merged** | [#101](https://github.com/nicbk/nicbk-website/pull/101) | Green | Merged 2026-08-13 |
-| [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | **Implemented** | — | — | Awaiting review |
+| [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | **Implemented** | [#102](https://github.com/nicbk/nicbk-website/pull/102) | Green | Awaiting review |
 | [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | Not started | — | — | — |
 | [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | Not started | — | — | — |
 | [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | Not started | — | — | — |

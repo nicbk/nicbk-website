@@ -113,7 +113,11 @@ export function ArticleTagControls({
   }
 
   return (
-    <>
+    // A real element rather than a fragment, because it is the **container** the
+    // regions inside query (article-tag-controls.module.css). It passes its own
+    // bounds through to them so the tag list is still the only thing that
+    // scrolls.
+    <div className={styles.controls}>
       {/*
         Region one: never scrolls, because a reader hunting through tags should
         not lose sight of what the article's status is.
@@ -225,7 +229,7 @@ export function ArticleTagControls({
           <p className={styles.empty}>{EMPTY_TAGS_MESSAGE}</p>
         )}
       </div>
-    </>
+    </div>
   )
 }
 

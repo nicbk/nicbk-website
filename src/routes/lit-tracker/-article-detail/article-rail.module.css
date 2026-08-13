@@ -16,10 +16,4 @@
   flex: 1;
   min-height: 0;
   padding: var(--space-md);
-  /* Wide enough for the tag controls to be usable — the status row is three
-     columns and the tag rows carry a checkbox and a name — and capped so a
-     sidebar of tags never takes the page away from the paper. The filter rail
-     gets its width from its contents; this one has a text field in it, which
-     would otherwise take whatever it was given. */
-  width: 18rem;
 }

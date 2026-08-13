@@ -13,6 +13,7 @@ import type { CollectionArticle } from './article-collection'
 vi.mock('@tanstack/react-router', async () => {
   const { createElement } = await import('react')
   return {
+    useNavigate: () => vi.fn(),
     Link: ({
       to,
       params,

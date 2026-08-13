@@ -49,6 +49,8 @@ vi.mock('@tanstack/react-router', async () => {
       useSearch: () => search.current,
       useNavigate: () => navigate,
     }),
+    // The card calls this directly for its click-to-open handler.
+    useNavigate: () => navigate,
     // The cards became links to the detail page in #9's first task. A plain
     // anchor is enough here: what this file asserts is which articles are
     // drawn, and `article-card.test.tsx` owns where the link points.

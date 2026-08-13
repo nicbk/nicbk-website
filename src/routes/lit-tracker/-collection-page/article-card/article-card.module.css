@@ -35,9 +35,9 @@
    * that could scroll and take the whole card with it.
    */
   overflow: hidden;
-  /* The containing block for the title link's stretched pseudo-element below,
-     which is what makes the whole card the link's hit area. */
-  position: relative;
+  /* The whole card opens the article (article-card.tsx), so it says so. The
+     menu inside sets its own cursor back. */
+  cursor: pointer;
 }
 
 /*
@@ -49,15 +49,16 @@
  * the focusable element stays the anchor. Mirrors the global :focus-visible ring
  * so the tracker's cards are indicated the same way as everything else.
  */
-.card:has(.titleLink:focus-visible) {
+.card:has(.link:focus-visible) {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 
 /*
- * The title and the menu share the top row, with the menu pinned to the corner
- * the decided design puts it in. `align-items: start` keeps the trigger level
- * with the title's first line rather than centred against a two-line title.
+ * The article's text and the menu share the top row, with the menu pinned to
+ * the corner the decided design puts it in. `align-items: flex-start` keeps the
+ * trigger level with the title's first line rather than centred against a
+ * three-line block.
  */
 .header {
   display: flex;
@@ -67,18 +68,23 @@
 }
 
 /*
- * Holds the menu above the title link's stretched hit area.
+ * The link, wrapping the title, the authors, and the publication line.
  *
- * Positioned elements paint after in-flow content and, among themselves, in tree
- * order — so this, being later in the tree than the link, sits on top of it and
- * its clicks reach the menu rather than navigating. No `z-index`: the site's
- * stacking rule (research/ui-ux/design-system.md) is that page furniture takes
- * none, because any positive value would also lift this above every portalled
- * popup — including the menu's own.
+ * It is a column because it holds what used to be three siblings of the card;
+ * the gaps between them are the card's own rhythm, kept here so the markup
+ * change is invisible.
  */
-.menuSlot {
-  position: relative;
-  flex-shrink: 0;
+.link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  /* Takes the row's spare width and yields it back when the menu needs its own —
+     without the zero minimum, a long unbroken title would push the trigger off
+     the card. */
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
 }
 
 /*
@@ -110,39 +116,14 @@
 }
 
 /*
- * The link to the article, stretched over the whole card.
- *
- * Inherits its colour rather than taking the site's link accent: a grid of
- * papers where every title is accent-coloured reads as a list of links rather
- * than as a collection, and the card is already obviously clickable once the
- * pointer is on it (below).
- *
- * The pseudo-element is the hit area. `inset: -1 * padding` reaches the card's
- * border rather than stopping at its content box, so the whole card responds
- * including its margin of quiet space. It paints before the menu and the tag
- * row, both of which are positioned later in the tree and therefore above it —
- * which is what keeps them clickable (article-card.tsx,
- * card-footer.module.css).
- */
-.titleLink {
-  color: inherit;
-  text-decoration: none;
-}
-
-.titleLink::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-}
-
-/*
- * Hovering anywhere on the card lights the title, because the hit area is the
- * card — an affordance that appeared only over the two lines of text would be
- * telling the truth about the anchor and lying about the target.
+ * The card carries no link colour at rest: a grid of papers where every title
+ * is accent-coloured reads as a list of links rather than as a collection.
+ * Hovering anywhere on the card lights the title *and* the border, because the
+ * hit area is the card — an affordance that appeared only over the text would
+ * be telling the truth about the anchor and lying about the target.
  */
 @media (hover: hover) {
-  .card:hover .titleLink {
+  .card:hover .title {
     color: var(--color-accent);
   }
 
@@ -153,32 +134,11 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .card,
-  .titleLink {
+  .title {
     transition:
       color var(--motion-duration-fast) var(--motion-ease),
       border-color var(--motion-duration-fast) var(--motion-ease);
   }
-}
-
-/*
- * The two elided lines below the title are positioned for one reason: their
- * tooltips.
- *
- * Each is a `Tooltip.Trigger`, and the title link's stretched pseudo-element
- * covers the card — so without this, hovering the authors line targets the
- * anchor and the line never receives the pointer at all. The full string being
- * one hover away is a decided property of these cards
- * (research/ui-ux/pages/lit-tracker/pages/collection-view.md, 2026-08-09
- * revision), so it wins over the alternative.
- *
- * The cost, which is real and small: a click landing exactly on these two lines
- * of muted text does not navigate, while a click anywhere else on the card does.
- * Accepted because the lines are two short strings in a card-sized target, and
- * because the fix — dropping the tooltips — loses more.
- */
-.authors,
-.meta {
-  position: relative;
 }
 
 .authors {

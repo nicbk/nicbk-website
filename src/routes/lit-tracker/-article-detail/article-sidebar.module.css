@@ -15,10 +15,25 @@
   flex: 1;
 }
 
+/*
+ * The tab strip.
+ *
+ * **The rule across the whole width is what makes these read as tabs.** Without
+ * it they were two short words huddled in the corner with a 2px underline under
+ * the selected one and nothing for that underline to sit against — a pair of
+ * stray labels rather than a control. A tab strip is recognised by the line it
+ * shares, and the selected tab is the one that breaks it.
+ *
+ * The tabs share the row equally rather than sizing to their words, so the
+ * strip stays a strip as #10 and task 5 add the third and fourth: four
+ * different-width words at one end of a rail is a ragged edge, and equal
+ * columns also give each tab a hit target wider than the word in it.
+ */
 .tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2xs);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
@@ -26,15 +41,20 @@
  * A tab is quiet until it is the one showing. Underlined rather than boxed: the
  * rail already sits inside the shell's own panel edge, and a row of bordered
  * buttons inside a bordered column is two frames deep before any content.
+ *
+ * The 2px underline sits *on* the strip's own 1px rule, pulled down by its own
+ * height so the two occupy one line rather than stacking into a thick edge.
  */
 .tab {
   padding: var(--space-2xs) var(--space-xs);
   border: none;
   border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   background: none;
   color: var(--color-text-muted);
   font: inherit;
   font-size: var(--font-size-sm);
+  text-align: center;
   cursor: pointer;
 }
 
@@ -42,8 +62,16 @@
  * The selected tab. Border *and* weight as well as color, so which one is
  * showing survives grayscale (WCAG 1.4.1) — the same treatment the reading
  * status toggles use, for the same reason.
+ *
+ * Keyed on `aria-selected` rather than a `data-` attribute. This was written as
+ * `[data-selected]` first, by analogy with the `[data-pressed]` the toggles use,
+ * and it silently matched nothing: Base UI's `Tab` exposes selection as
+ * `aria-selected` plus a `data-active` of its own. The state that is part of the
+ * accessibility contract is the one worth styling from — it cannot quietly be
+ * renamed, and if it ever stopped being set the tabs would be broken for screen
+ * readers too rather than only looking wrong.
  */
-.tab[data-selected] {
+.tab[aria-selected="true"] {
   border-bottom-color: var(--color-accent);
   color: var(--color-text);
   font-weight: var(--font-weight-bold);

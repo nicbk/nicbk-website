@@ -14,6 +14,7 @@ import { Route as SignInRouteRouteImport } from './routes/sign-in/route'
 import { Route as LitTrackerRouteRouteImport } from './routes/lit-tracker/route'
 import { Route as personalSiteRouteRouteImport } from './routes/(personal-site)/route'
 import { Route as LitTrackerIndexRouteImport } from './routes/lit-tracker/index'
+import { Route as LitTrackerArticleIdRouteImport } from './routes/lit-tracker/$articleId'
 import { Route as personalSiteProjectsRouteRouteImport } from './routes/(personal-site)/projects/route'
 import { Route as personalSiteAboutRouteRouteImport } from './routes/(personal-site)/about/route'
 import { Route as personalSiteBlogIndexRouteImport } from './routes/(personal-site)/blog/index'
@@ -46,6 +47,11 @@ const personalSiteRouteRoute = personalSiteRouteRouteImport.update({
 const LitTrackerIndexRoute = LitTrackerIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => LitTrackerRouteRoute,
+} as any)
+const LitTrackerArticleIdRoute = LitTrackerArticleIdRouteImport.update({
+  id: '/$articleId',
+  path: '/$articleId',
   getParentRoute: () => LitTrackerRouteRoute,
 } as any)
 const personalSiteProjectsRouteRoute =
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/error-probe': typeof ErrorProbeRoute
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
+  '/lit-tracker/$articleId': typeof LitTrackerArticleIdRoute
   '/lit-tracker/': typeof LitTrackerIndexRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/error-probe': typeof ErrorProbeRoute
   '/about': typeof personalSiteAboutRouteRoute
   '/projects': typeof personalSiteProjectsRouteRoute
+  '/lit-tracker/$articleId': typeof LitTrackerArticleIdRoute
   '/lit-tracker': typeof LitTrackerIndexRoute
   '/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/error-probe': typeof ErrorProbeRoute
   '/(personal-site)/about': typeof personalSiteAboutRouteRoute
   '/(personal-site)/projects': typeof personalSiteProjectsRouteRoute
+  '/lit-tracker/$articleId': typeof LitTrackerArticleIdRoute
   '/lit-tracker/': typeof LitTrackerIndexRoute
   '/(personal-site)/blog/$slug': typeof personalSiteBlogSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/error-probe'
     | '/about'
     | '/projects'
+    | '/lit-tracker/$articleId'
     | '/lit-tracker/'
     | '/blog/$slug'
     | '/api/auth/$'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/error-probe'
     | '/about'
     | '/projects'
+    | '/lit-tracker/$articleId'
     | '/lit-tracker'
     | '/blog/$slug'
     | '/api/auth/$'
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/error-probe'
     | '/(personal-site)/about'
     | '/(personal-site)/projects'
+    | '/lit-tracker/$articleId'
     | '/lit-tracker/'
     | '/(personal-site)/blog/$slug'
     | '/api/auth/$'
@@ -235,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/lit-tracker/'
       preLoaderRoute: typeof LitTrackerIndexRouteImport
+      parentRoute: typeof LitTrackerRouteRoute
+    }
+    '/lit-tracker/$articleId': {
+      id: '/lit-tracker/$articleId'
+      path: '/$articleId'
+      fullPath: '/lit-tracker/$articleId'
+      preLoaderRoute: typeof LitTrackerArticleIdRouteImport
       parentRoute: typeof LitTrackerRouteRoute
     }
     '/(personal-site)/projects': {
@@ -323,10 +342,12 @@ const personalSiteRouteRouteWithChildren =
   personalSiteRouteRoute._addFileChildren(personalSiteRouteRouteChildren)
 
 interface LitTrackerRouteRouteChildren {
+  LitTrackerArticleIdRoute: typeof LitTrackerArticleIdRoute
   LitTrackerIndexRoute: typeof LitTrackerIndexRoute
 }
 
 const LitTrackerRouteRouteChildren: LitTrackerRouteRouteChildren = {
+  LitTrackerArticleIdRoute: LitTrackerArticleIdRoute,
   LitTrackerIndexRoute: LitTrackerIndexRoute,
 }
 

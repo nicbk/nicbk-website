@@ -1,10 +1,53 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import type { ReactNode } from 'react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { UNKNOWN_AUTHORS } from '../authors'
 import type { CollectionArticle } from './article-card'
 import { ArticleCard } from './article-card'
-import type { CollectionTag } from './article-menu/article-menu'
+
+/**
+ * The card opens the detail page as of #9's first task, so the router has to
+ * answer for both `Link` and `useNavigate` — the card uses each for a different
+ * part of the target (see `article-card.tsx`).
+ *
+ * A plain anchor is the right stub for `Link`: what matters here is that the
+ * link exists, points at the right article, and that the card's own handler
+ * leaves it, the menu, and a text selection alone. None of that needs a real
+ * router.
+ */
+const navigate = vi.hoisted(() => vi.fn())
+
+vi.mock('@tanstack/react-router', async () => {
+  const { createElement } = await import('react')
+  return {
+    // One stable spy for the card's click-to-open handler, so a test can assert
+    // that clicking the menu did *not* navigate.
+    useNavigate: () => navigate,
+    Link: ({
+      to,
+      params,
+      children,
+      ...rest
+    }: {
+      to: string
+      params?: Record<string, string>
+      children: ReactNode
+    }) =>
+      createElement(
+        'a',
+        {
+          ...rest,
+          href: Object.entries(params ?? {}).reduce(
+            (path, [key, value]) => path.replace(`$${key}`, value),
+            to,
+          ),
+        },
+        children,
+      ),
+  }
+})
 
 /**
  * The card against the shapes real articles actually take.
@@ -61,6 +104,10 @@ function renderCard({
     />,
   )
 }
+
+beforeEach(() => {
+  navigate.mockClear()
+})
 
 describe('ArticleCard', () => {
   it('shows the title, authors, year, and venue', () => {
@@ -221,14 +268,60 @@ describe('ArticleCard', () => {
     ).not.toBeChecked()
   })
 
-  it('is not a link, and its only control is the menu', () => {
-    // #9 owns navigation to the article detail page. Until it exists, a card
-    // that looks clickable and does nothing is worse than one that plainly is
-    // not — so the corner menu is the only thing here to activate, and the tag
-    // chips are labels rather than a tab stop each.
+  it('links to the article, from the title', () => {
+    // #8 shipped the card deliberately un-linked because this route did not
+    // exist; #9's first task is that route arriving. The link is on the title
+    // and stretched over the card in CSS, so there is exactly one of it — a card
+    // whose every line was its own anchor would be one tab stop per line, in a
+    // grid of them.
+    const article = articleWith()
+    renderCard({ article })
+
+    const link = screen.getByRole('link', { name: article.title })
+    expect(link).toHaveAttribute('href', `/lit-tracker/${article.id}`)
+  })
+
+  it('keeps the menu as its only control, beside the link', () => {
+    // The tag chips are labels rather than a tab stop each, and the menu is
+    // still the one thing on a card to activate.
     renderCard({ tags: [ATTENTION_TAG, SURVEY_TAG] })
 
-    expect(screen.queryByRole('link')).toBeNull()
     expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(screen.getAllByRole('link')).toHaveLength(1)
+  })
+
+  it('opens the article when the card itself is clicked', async () => {
+    // The decided click target is the card, not just its title. The chip row is
+    // the case worth naming: it has to stay scrollable under the pointer, so it
+    // cannot be inside the anchor, and an earlier build left it a dead patch in
+    // the middle of a clickable card.
+    const article = articleWith()
+    renderCard({ article, tags: [ATTENTION_TAG] })
+
+    await userEvent.click(screen.getByRole('list', { name: 'tags' }))
+
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { articleId: article.id } }),
+    )
+  })
+
+  it('does not open the article when the menu is clicked', async () => {
+    // The specific regression a whole-card click target risks: every press of
+    // the one control on the card would also navigate away from it.
+    renderCard()
+
+    await userEvent.click(screen.getByRole('button'))
+
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('does not open the article twice when the title link is followed', async () => {
+    // The link's own click bubbles to the card's handler. Navigating again would
+    // push a duplicate history entry, so going back would take two presses.
+    renderCard()
+
+    await userEvent.click(screen.getByRole('link'))
+
+    expect(navigate).not.toHaveBeenCalled()
   })
 })

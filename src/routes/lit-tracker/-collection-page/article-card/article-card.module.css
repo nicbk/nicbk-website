@@ -35,18 +35,56 @@
    * that could scroll and take the whole card with it.
    */
   overflow: hidden;
+  /* The whole card opens the article (article-card.tsx), so it says so. The
+     menu inside sets its own cursor back. */
+  cursor: pointer;
 }
 
 /*
- * The title and the menu share the top row, with the menu pinned to the corner
- * the decided design puts it in. `align-items: start` keeps the trigger level
- * with the title's first line rather than centred against a two-line title.
+ * The focus ring belongs to the card, not to the two lines of title text that
+ * happen to carry the link.
+ *
+ * Same `:has()` idiom as the search pill (search-input.module.css): the visible
+ * indicator is drawn on the box a sighted reader thinks of as the control, while
+ * the focusable element stays the anchor. Mirrors the global :focus-visible ring
+ * so the tracker's cards are indicated the same way as everything else.
+ */
+.card:has(.link:focus-visible) {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/*
+ * The article's text and the menu share the top row, with the menu pinned to
+ * the corner the decided design puts it in. `align-items: flex-start` keeps the
+ * trigger level with the title's first line rather than centred against a
+ * three-line block.
  */
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-xs);
+}
+
+/*
+ * The link, wrapping the title, the authors, and the publication line.
+ *
+ * It is a column because it holds what used to be three siblings of the card;
+ * the gaps between them are the card's own rhythm, kept here so the markup
+ * change is invisible.
+ */
+.link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  /* Takes the row's spare width and yields it back when the menu needs its own —
+     without the zero minimum, a long unbroken title would push the trigger off
+     the card. */
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
 }
 
 /*
@@ -75,6 +113,32 @@
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
+}
+
+/*
+ * The card carries no link colour at rest: a grid of papers where every title
+ * is accent-coloured reads as a list of links rather than as a collection.
+ * Hovering anywhere on the card lights the title *and* the border, because the
+ * hit area is the card — an affordance that appeared only over the text would
+ * be telling the truth about the anchor and lying about the target.
+ */
+@media (hover: hover) {
+  .card:hover .title {
+    color: var(--color-accent);
+  }
+
+  .card:hover {
+    border-color: var(--color-accent);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card,
+  .title {
+    transition:
+      color var(--motion-duration-fast) var(--motion-ease),
+      border-color var(--motion-duration-fast) var(--motion-ease);
+  }
 }
 
 .authors {

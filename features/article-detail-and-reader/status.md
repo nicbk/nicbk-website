@@ -1,14 +1,14 @@
 # Status: Article Detail and Reader
 
-**Feature state:** **Spec'd** — awaiting spec review, then GitHub issues and
-task 1. Five tasks, sequential, each gated by its own PR + CI + human review.
+**Feature state:** **In progress** — task 1 implemented and awaiting review. Five tasks, sequential, each gated by its own PR + CI + human review.
 Depends on [`collection-view`](../collection-view/status.md) (#8, Complete) for
 the card this page is reached from, the tag model its Tags tab presents, and the
 drawer its sidebar becomes; and on
 [`article-upload-and-extraction`](../article-upload-and-extraction/status.md)
 (#7, Complete) for the PDFs in Garage, `articles.notes`, and the app shell.
 
-Feature parent issue: filed at spec review, with one sub-issue per task, per
+Feature parent issue: [**#95**](https://github.com/nicbk/nicbk-website/issues/95),
+with one sub-issue per task, per
 [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md).
 The roadmap entry is **#9** in [../index.md](../index.md). When the feature
 completes, its parent issue **must be closed by hand** — GitHub does not close a
@@ -18,11 +18,11 @@ parent when its sub-issues close.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`article-detail-shell`](./tasks/article-detail-shell/status.md) | Not started | — | — | — |
-| [`pdf-serving`](./tasks/pdf-serving/status.md) | Not started | — | — | — |
-| [`pdf-reader`](./tasks/pdf-reader/status.md) | Not started | — | — | — |
-| [`annotations`](./tasks/annotations/status.md) | Not started | — | — | — |
-| [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) | Not started | — | — | — |
+| [`article-detail-shell`](./tasks/article-detail-shell/status.md) ([#96](https://github.com/nicbk/nicbk-website/issues/96)) | **Implemented** | — | — | Awaiting review |
+| [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | Not started | — | — | — |
+| [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | Not started | — | — | — |
+| [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | Not started | — | — | — |
+| [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | Not started | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -94,3 +94,11 @@ write it does not own.
   `committed` flag** that persistence must gate on. The decided
   `annotations-schema.md` needed no revision. Awaiting spec review, then GitHub
   issues and task 1.
+- 2026-08-13 — **Task 1 implemented.** Two design calls came out of the browser
+  pass rather than the plan, both raised by the user: the card's whole surface
+  opens the article rather than a stretched-anchor overlay that left the tag
+  strip dead, and the sidebar's controls adapt to the rail by **container
+  query** instead of the rail widening to fit them — the reader keeps its width
+  and the rail stays the same size on both routes. Also this task, and larger
+  than it: the card menu, the write path, and the narrow-screen drawer all moved
+  out of `-collection-page/` so two pages share one of each.

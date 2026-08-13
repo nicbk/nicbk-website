@@ -2,7 +2,7 @@ import { Tooltip } from '@base-ui/react/tooltip'
 import { BookmarkCheck, BookOpen, Circle } from 'lucide-react'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { ARTICLE_STATUS_LABELS } from '~/lit-tracker/article-status'
-import type { CollectionTag } from '../article-menu/article-menu'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import styles from './card-footer.module.css'
 
 interface CardFooterProps {

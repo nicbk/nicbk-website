@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 /**
  * The `/lit-tracker` group layout: that the route guard is attached at the
@@ -21,6 +21,10 @@ const SESSION = {
 
 const requireAuth = vi.hoisted(() => vi.fn())
 const navigate = vi.hoisted(() => vi.fn())
+/** What `useMatch` answers for the article route — see the mock below. */
+const articleMatch = vi.hoisted(() => ({
+  current: undefined as { params: { articleId: string } } | undefined,
+}))
 
 vi.mock('~/auth/require-auth', () => ({ requireAuth }))
 vi.mock('@tanstack/react-router', async () => {
@@ -43,6 +47,10 @@ vi.mock('@tanstack/react-router', async () => {
     }),
     Outlet: () => createElement('p', null, 'page content'),
     useNavigate: () => navigate,
+    // Which page is showing, which is how the layout decides what the rail
+    // holds. `undefined` is "not the article route"; a test that wants the
+    // article rail sets `articleMatch.current`.
+    useMatch: () => articleMatch.current,
     Link: ({ to, children }: { to: string; children: React.ReactNode }) =>
       createElement('a', { href: to }, children),
   }
@@ -62,6 +70,17 @@ vi.mock('./-collection-filters/filter-rail', async () => {
       createElement('nav', { 'aria-label': label }),
   }
 })
+// Stubbed for the same reason as the filter rail above: it runs Zero queries of
+// its own. What it draws is `-article-detail/`'s coverage; what this file
+// asserts is that the layout puts it in the rail on the article route and the
+// filters everywhere else.
+vi.mock('./-article-detail/article-rail', async () => {
+  const { createElement } = await import('react')
+  return {
+    ArticleRail: ({ articleId, label }: { articleId: string; label: string }) =>
+      createElement('aside', { 'aria-label': label }, articleId),
+  }
+})
 
 const { Route } = await import('./route')
 
@@ -73,6 +92,13 @@ interface RouteOptions {
 }
 
 const options = Route.options as unknown as RouteOptions
+
+beforeEach(() => {
+  // Default to "not the article route"; the one test that wants the article
+  // rail opts in. Reset here rather than in that test so the order of the file
+  // cannot matter.
+  articleMatch.current = undefined
+})
 
 describe('the /lit-tracker group layout', () => {
   it('guards the whole group, and hands the session to the layout', async () => {
@@ -112,6 +138,24 @@ describe('the /lit-tracker group layout', () => {
     // un-named while it was empty), and it sits outside the content panel.
     const rail = screen.getByRole('navigation', { name: 'filter collection' })
     expect(screen.getByRole('main')).not.toContainElement(rail)
+  })
+
+  it('puts the article’s own sidebar in the rail on the article route', () => {
+    // The rail's contents belong to the page, and the rail is outside the page —
+    // so the choice is made here, at the only level that can see both. This is
+    // the same reason the collection's search params are validated at this
+    // level.
+    articleMatch.current = { params: { articleId: 'article-1' } }
+    const Layout = options.component
+    render(<Layout />)
+
+    const rail = screen.getByRole('complementary', { name: 'article' })
+    expect(rail).toHaveTextContent('article-1')
+    expect(screen.getByRole('main')).not.toContainElement(rail)
+    // And not both: two rails at once would be two panels claiming one slot.
+    expect(
+      screen.queryByRole('navigation', { name: 'filter collection' }),
+    ).toBeNull()
   })
 
   it('validates the collection filters at the group root', () => {

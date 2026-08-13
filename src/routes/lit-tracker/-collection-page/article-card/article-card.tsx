@@ -1,10 +1,11 @@
 import { Tooltip } from '@base-ui/react/tooltip'
-import type { ReactElement } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import type { MouseEvent, ReactElement } from 'react'
 import type { Author } from '~/db/schema/lit-tracker'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
+import { ArticleMenu } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { formatAuthors } from '../authors'
-import type { CollectionTag } from './article-menu/article-menu'
-import { ArticleMenu } from './article-menu/article-menu'
 import { CardFooter } from './card-footer/card-footer'
 import styles from './article-card.module.css'
 
@@ -23,10 +24,28 @@ import styles from './article-card.module.css'
  * `ArticleCollection` next door owns the states, and `CollectionPage` above that
  * owns the query and the mutations.
  *
- * **Still not a link.** The decided click target is the article detail page,
- * which is #9 and does not exist yet. The card is now interactive in one place —
- * the menu in its corner — and nowhere else, so a reader who clicks the body of
- * a card gets nothing rather than something misleading.
+ * **Clicking the card opens the article**, which is the decided click target
+ * (research/ui-ux/pages/lit-tracker/pages/article-detail.md: "reached by
+ * clicking a card"). #8 shipped the card without one because #9's route did not
+ * exist; this is that route arriving.
+ *
+ * Two mechanisms, because one cannot do both jobs:
+ *
+ * - **A real `<a>` around the title, authors, and publication line.** That is
+ *   what makes this a link rather than a widget: one tab stop per card, a
+ *   discernible name, and cmd-click, middle-click, and the browser's own context
+ *   menu all working where a reader would naturally aim.
+ * - **A click handler on the card** for everything outside it — the padding, the
+ *   space above the footer, the chips — which `openUnlessControl` below turns
+ *   into the same navigation.
+ *
+ * The obvious alternative, one anchor stretched over the card by a positioned
+ * pseudo-element, was built first and rejected: anything that has to sit *above*
+ * that overlay to keep working — the menu button, and the tag strip, which
+ * scrolls sideways under the pointer — stops being part of the link. That left
+ * the chip row as a dead patch in the middle of a clickable card. Wrapping the
+ * whole card in an `<a>` instead is invalid HTML (a button and a scrollable,
+ * focusable region inside a link) and breaks both of their keyboard models.
  */
 
 /**
@@ -71,6 +90,7 @@ export function ArticleCard({
   onToggleTag,
   onCreateTag,
 }: ArticleCardProps) {
+  const navigate = useNavigate()
   const { title, authors, publicationYear, venue } = article
   // See `CollectionArticle`: the null is Zero's, not Postgres's.
   const status = article.status ?? 'pending'
@@ -78,12 +98,73 @@ export function ArticleCard({
   const meta = formatPublication(publicationYear, venue)
   const appliedTagIds = new Set(tags.map((tag) => tag.id))
 
+  /**
+   * Open the article, unless the click was meant for something else on the card.
+   *
+   * Three things are left alone, and each is a real case rather than a
+   * precaution:
+   *
+   * - **Clicks inside a control.** The three-dot menu is the one on the card
+   *   today and #11 adds more; matching by role rather than by name means they
+   *   do not each have to remember to stop propagation.
+   * - **Clicks the title link already handled.** Following it fires a click that
+   *   bubbles up here, and navigating a second time would push a duplicate
+   *   history entry, so the back button would need pressing twice.
+   * - **The end of a text selection.** Dragging across a title and releasing is
+   *   a click by the DOM's definition; treating it as one would make the card's
+   *   text impossible to copy.
+   */
+  function openUnlessControl(event: MouseEvent<HTMLElement>) {
+    if (event.defaultPrevented) {
+      return
+    }
+    const target = event.target as Element
+    if (target.closest('a, button, input, textarea, select, [role="button"]')) {
+      return
+    }
+    if (window.getSelection()?.toString() !== '') {
+      return
+    }
+    void navigate({
+      to: '/lit-tracker/$articleId',
+      params: { articleId: article.id },
+    })
+  }
+
   return (
-    <article className={styles.card}>
+    // The click target, not the link: the link is the title inside it, which is
+    // what carries the semantics and the keyboard route to the same place. A
+    // `<article>` with a handler and no tab stop of its own is the pointer
+    // shortcut for something already reachable, rather than a control masquerading
+    // as one.
+    // biome-ignore lint/a11y/useKeyWithClickEvents: the anchor inside is the keyboard equivalent.
+    <article className={styles.card} onClick={openUnlessControl}>
       <div className={styles.header}>
-        <ElidedText text={title}>
-          <h2 className={styles.title}>{title}</h2>
-        </ElidedText>
+        {/*
+          `aria-label` keeps the link's accessible name to the title. Without it
+          the name is all three lines run together, which is the whole card read
+          out before you learn where it goes.
+        */}
+        <Link
+          className={styles.link}
+          to="/lit-tracker/$articleId"
+          params={{ articleId: article.id }}
+          aria-label={title}
+        >
+          <ElidedText text={title}>
+            <h2 className={styles.title}>{title}</h2>
+          </ElidedText>
+
+          <ElidedText text={authorLine}>
+            <p className={styles.authors}>{authorLine}</p>
+          </ElidedText>
+
+          {meta !== null && (
+            <ElidedText text={meta}>
+              <p className={styles.meta}>{meta}</p>
+            </ElidedText>
+          )}
+        </Link>
 
         <ArticleMenu
           articleTitle={title}
@@ -95,16 +176,6 @@ export function ArticleCard({
           onCreateTag={onCreateTag}
         />
       </div>
-
-      <ElidedText text={authorLine}>
-        <p className={styles.authors}>{authorLine}</p>
-      </ElidedText>
-
-      {meta !== null && (
-        <ElidedText text={meta}>
-          <p className={styles.meta}>{meta}</p>
-        </ElidedText>
-      )}
 
       <CardFooter status={status} tags={tags} />
     </article>

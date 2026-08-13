@@ -1,0 +1,19 @@
+/*
+ * The article sidebar inside the shell rail.
+ *
+ * Only the inset lives here — the rail's width, its scrolling, and its
+ * disappearance below the responsive breakpoint all belong to the sidebar
+ * (lit-tracker-sidebar.module.css). Deliberately the same shape as the filter
+ * rail's stylesheet next door: the two panels occupy the same slot on different
+ * routes, and if they inset differently the column would jump when a reader
+ * follows a card into an article.
+ */
+.rail {
+  display: flex;
+  flex-direction: column;
+  /* Fills the rail's height and passes the bound down, so whichever panel is
+     open is what scrolls rather than this. */
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-md);
+}

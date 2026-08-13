@@ -37,7 +37,7 @@ interface ZeroClientProps {
  * permission check and cannot be — `ctx` here is whatever this client says it
  * is. The authoritative run happens at `/api/zero/mutate` under a context
  * derived from the session, and it is allowed to disagree; when it does, Zero
- * rolls the local write back and `useCollectionMutations` says so.
+ * rolls the local write back and `useArticleMutations` says so.
  */
 export function ZeroClient({ userId, children }: ZeroClientProps) {
   // ZeroProvider re-creates its Zero instance whenever any option's *value*

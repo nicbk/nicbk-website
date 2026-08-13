@@ -20,8 +20,8 @@ vi.mock('~/routes/-shared/components/toast/use-error-toast', () => ({
   useErrorToast: () => showError,
 }))
 
-const { useCollectionMutations, timeOrderedId } = await import(
-  './use-collection-mutations'
+const { useArticleMutations, timeOrderedId } = await import(
+  './use-article-mutations'
 )
 
 const ARTICLE = '0199a1b2-c3d4-7e5f-8a9b-000000000a01'
@@ -44,7 +44,7 @@ function refused(error: { type: 'app' | 'zero'; message: string }) {
 }
 
 function mutations() {
-  return renderHook(() => useCollectionMutations()).result.current
+  return renderHook(() => useArticleMutations()).result.current
 }
 
 /** What each call to `zero.mutate` was asked to do: the name, and the args. */

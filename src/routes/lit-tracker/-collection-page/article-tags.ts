@@ -1,4 +1,4 @@
-import type { CollectionTag } from './article-card/article-menu/article-menu'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 
 /** One row of the join table, as it arrives from sync. */
 export interface AppliedTag {

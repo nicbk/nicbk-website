@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CollectionTag } from './article-card/article-menu/article-menu'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { tagsByArticle } from './article-tags'
 
 /**

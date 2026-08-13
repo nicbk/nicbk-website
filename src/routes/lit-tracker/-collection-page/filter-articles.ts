@@ -1,7 +1,7 @@
 import type { Author } from '~/db/schema/lit-tracker'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { ARTICLE_STATUS_LABELS } from '~/lit-tracker/article-status'
-import type { CollectionTag } from './article-card/article-menu/article-menu'
+import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 
 /** The fields filtering needs from an article; the card needs many more. */
 interface FilterableArticle {

@@ -1,0 +1,92 @@
+/*
+ * The card's three-dot control and the popover it opens — the surface only.
+ *
+ * What goes *inside* the popover has its own stylesheet
+ * (article-tag-controls.module.css), because #9's detail sidebar shows the same
+ * controls with no popover around them. Everything here is about the trigger and
+ * the floating box; nothing here is about tags.
+ */
+
+/*
+ * The trigger sits in the card's corner and is the only interactive thing on a
+ * card, so it is deliberately quiet at rest — the grid should read as a grid of
+ * papers, not a grid of buttons — and fully visible on hover and on focus. It is
+ * never hidden until hover: a control that appears only under a pointer does not
+ * exist for anyone navigating by keyboard or touch.
+ */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: var(--space-2xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  line-height: 0;
+  cursor: pointer;
+}
+
+/*
+ * Hover and open both show as the accent colour rather than as a box.
+ *
+ * A border appearing on hover added an outline inside a card that is already an
+ * outlined box, so the corner gained a second frame for as long as the pointer
+ * sat there. Recolouring the glyph says the same thing with nothing drawn — and
+ * it is what the rail's edit control does, so the site has one idea of what a
+ * borderless icon button looks like when you touch it.
+ */
+@media (hover: hover) {
+  .trigger:hover {
+    color: var(--color-accent);
+  }
+}
+
+/* While the popover is open the trigger stays lit, so it is obvious which card
+   it belongs to when several are on screen. */
+.trigger[data-popup-open] {
+  color: var(--color-accent);
+}
+
+.triggerIcon {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/* Base UI puts its own outline on the positioner; the popup below carries the
+   visible edge, so this one is removed rather than doubled. */
+.positioner {
+  outline: none;
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  /* Wide enough for a real tag name, capped so it never reaches a phone's
+     edges. */
+  width: 16rem;
+  max-width: calc(100vw - 2 * var(--space-md));
+  padding: var(--space-sm) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}

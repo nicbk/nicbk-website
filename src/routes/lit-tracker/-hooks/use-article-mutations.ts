@@ -6,7 +6,17 @@ import { useErrorToast } from '~/routes/-shared/components/toast/use-error-toast
 import { mutators } from '~/zero/mutators'
 
 /**
- * Every write the collection view can make, in the shape the UI wants them.
+ * Every write the tracker can make against an article, in the shape the UI
+ * wants them.
+ *
+ * **It lives here, above both pages, because two of them write.** It was
+ * `useCollectionMutations` under `-collection-page/` when the collection was
+ * the only surface that could change anything; #9's detail page sets the same
+ * status, applies the same tags, and adds notes, and reaching into the
+ * collection's folder for that would tie one page to another page's internals.
+ * The alternative — a second hook — is two write paths that authorize, await,
+ * and report failures slightly differently by the second time somebody touches
+ * one.
  *
  * Two things this adds over calling `zero.mutate(...)` at each call site, and
  * both are the reason it exists rather than being inlined:
@@ -28,7 +38,7 @@ import { mutators } from '~/zero/mutators'
  * these promises settle, because Zero has already applied the write locally.
  * What the awaiting buys is knowing when to say it did not stick.
  */
-export interface CollectionMutations {
+export interface ArticleMutations {
   /** Creates a tag and applies it to an article in one step. */
   createAndApplyTag: (articleId: string, name: string) => Promise<void>
   /** Applies a tag the user already has. */
@@ -39,9 +49,18 @@ export interface CollectionMutations {
   deleteTag: (tagId: string) => Promise<void>
   /** Sets where the reader has got to. */
   setStatus: (articleId: string, status: ArticleStatus) => Promise<void>
+  /**
+   * Replaces an article's free-text notes.
+   *
+   * The whole value each time rather than a patch: the field is one textarea
+   * bound to one column, and Zero's last-write-wins is the same answer a diff
+   * would arrive at for a single editor. Callers debounce — see
+   * `use-article-notes.ts` for why that is the caller's job and not this one's.
+   */
+  setNotes: (articleId: string, notes: string) => Promise<void>
 }
 
-export function useCollectionMutations(): CollectionMutations {
+export function useArticleMutations(): ArticleMutations {
   const zero = useZero()
   const showError = useErrorToast()
 
@@ -112,6 +131,11 @@ export function useCollectionMutations(): CollectionMutations {
       setStatus: (articleId, status) =>
         run(() =>
           zero.mutate(mutators.articles.setStatus({ id: articleId, status })),
+        ),
+
+      setNotes: (articleId, notes) =>
+        run(() =>
+          zero.mutate(mutators.articles.setNotes({ id: articleId, notes })),
         ),
     }),
     [run, zero],

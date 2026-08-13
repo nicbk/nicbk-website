@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '~/routes/-shared/components/toast/toaster'
 import { TRACKER_LOADING_MESSAGE } from '../-components/tracker-loading/tracker-loading'
@@ -41,12 +42,22 @@ const search = vi.hoisted(() => ({ current: {} as Record<string, unknown> }))
  * field being instant.
  */
 const navigate = vi.hoisted(() => vi.fn())
-vi.mock('@tanstack/react-router', () => ({
-  getRouteApi: () => ({
-    useSearch: () => search.current,
+vi.mock('@tanstack/react-router', async () => {
+  const { createElement } = await import('react')
+  return {
+    getRouteApi: () => ({
+      useSearch: () => search.current,
+      useNavigate: () => navigate,
+    }),
+    // The card calls this directly for its click-to-open handler.
     useNavigate: () => navigate,
-  }),
-}))
+    // The cards became links to the detail page in #9's first task. A plain
+    // anchor is enough here: what this file asserts is which articles are
+    // drawn, and `article-card.test.tsx` owns where the link points.
+    Link: ({ to, children }: { to: string; children: ReactNode }) =>
+      createElement('a', { href: to }, children),
+  }
+})
 
 const { CollectionPage } = await import('./collection-page')
 

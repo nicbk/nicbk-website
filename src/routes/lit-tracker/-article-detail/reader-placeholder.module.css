@@ -1,0 +1,33 @@
+/*
+ * The reader's space, held open before there is a reader.
+ *
+ * It takes the panel's remaining height rather than sizing to its message, so
+ * the page's proportions now are the proportions it keeps once task 3 drops a
+ * document in — nothing below it shifts when the placeholder goes.
+ *
+ * A dashed edge rather than a filled box: it reads as a space reserved rather
+ * than as a surface that failed to load.
+ */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  flex: 1;
+  min-height: 0;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+}
+
+.icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.message {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

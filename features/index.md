@@ -66,7 +66,7 @@ need them (see Phases 2–3).
 |---|---|---|---|---|
 | 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **Complete** (2026-08-09; all 5 tasks merged, #67 + #68 + #69 + #70 + #71) | #6 |
 | 8 | Collection view (card grid, tags, reading status, filtering, live search) | [`collection-view`](./collection-view/description.md) | **Complete** (2026-08-09; all 4 tasks merged, #86 + #88 + #90 + #92) | #7 |
-| 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **Spec'd** (2026-08-09; 5 tasks, awaiting spec review) | #7, #8 |
+| 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **In progress** (5 tasks; 1 merged, #96) | #7, #8 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
 
@@ -77,7 +77,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `about-page` (complete), `error-and-not-found` (complete), `blog` (complete),
 `projects-page` (complete), `authentication` (complete),
 `article-upload-and-extraction` (complete), `collection-view` (complete), and
-`article-detail-and-reader` (spec'd) have
+`article-detail-and-reader` (in progress) have
 full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

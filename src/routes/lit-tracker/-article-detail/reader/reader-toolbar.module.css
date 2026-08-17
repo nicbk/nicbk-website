@@ -33,6 +33,11 @@
 
   display: flex;
   align-items: center;
+  /* Spread rather than bunched: pages at one end, the page's own controls at the
+     other, and the paper visible between the groups. Task 3 got this from a
+     flexible spacer standing in for the tools; now that they are here, the
+     groups themselves are what the space is distributed between. */
+  justify-content: space-between;
   gap: var(--space-xs);
   padding: var(--space-xs);
 
@@ -64,23 +69,6 @@
   pointer-events: auto;
 }
 
-/*
- * The space task 4's annotation tools take.
- *
- * It takes the slack so the groups sit apart rather than bunched at one end,
- * which is also the arrangement they keep once the tools arrive. Over a
- * transparent bar the gap is the paper itself, so the dashed rule is what says
- * "reserved" rather than "nothing here" — kept to a hairline, and click-through
- * so it never intercepts a scroll meant for the document.
- */
-.toolSlot {
-  flex: 1;
-  min-width: 1rem;
-  border-top: 1px dashed var(--color-border);
-  opacity: 0.4;
-  pointer-events: none;
-}
-
 .actions {
   display: flex;
   align-items: center;
@@ -105,18 +93,14 @@
 }
 
 /*
- * Below the narrow breakpoint there is no room for a reserved gap beside three
- * groups: the slot collapses and they take the width between them. The space
- * comes back with the screen.
+ * Below the narrow breakpoint four groups have to share a phone's width, so
+ * every gap tightens and the tool group drops its word for its glyph
+ * (annotation-tool-control.module.css). Nothing is removed: the same four groups
+ * are there, and the accessible names do not change.
  */
 @media (max-width: 40rem) {
   .toolbar {
-    justify-content: space-between;
     gap: var(--space-2xs);
     padding: var(--space-2xs);
-  }
-
-  .toolSlot {
-    display: none;
   }
 }

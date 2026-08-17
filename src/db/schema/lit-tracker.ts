@@ -9,6 +9,10 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core'
+import type {
+  AnnotationPayload,
+  AnnotationType,
+} from '~/lit-tracker/annotation-type'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { user } from './identity'
 
@@ -41,13 +45,15 @@ export interface Author {
   family?: string
 }
 
+/** The twelve kinds of mark, defined away from here for the same reason. */
+export { ANNOTATION_TYPES } from '~/lit-tracker/annotation-type'
 /**
  * Where the reader has got to. Defined away from this file — see
  * `src/lit-tracker/article-status.ts` for why — and re-exported here so the
  * schema still reads as the description of its own columns.
  */
 export { ARTICLE_STATUSES } from '~/lit-tracker/article-status'
-export type { ArticleStatus }
+export type { AnnotationPayload, AnnotationType, ArticleStatus }
 
 /**
  * How much metadata the pipeline managed to attach.
@@ -340,6 +346,90 @@ export const citationEdges = pgTable(
   ],
 )
 
+/**
+ * One mark a reader left on a paper — a highlight, an ink stroke, a circle
+ * round a figure.
+ *
+ * Written to the letter of research/data-modeling/annotations-schema.md. The
+ * shape is unusual for this codebase and the reasoning is worth having to hand:
+ *
+ * - **`payload` is one `jsonb` column, not thirteen tables.** Each annotation
+ *   type carries different fields — `inkList` and `strokeWidth` for ink,
+ *   `segmentRects` for the text markups, `vertices` for the shapes — and nothing
+ *   here ever filters, sorts, or joins on any of them. Normalizing would fight
+ *   EmbedPDF's object-shaped create/update/import API for no query this project
+ *   makes.
+ * - **`page_index` is a column precisely because `payload` is opaque.** Task 5's
+ *   "jump to this mark's page" reads it, and the schema doc says in as many words
+ *   that it must not be buried in the JSON. `type` and `contents` are promoted
+ *   for the same reason — the annotations list shows a kind and a snippet.
+ * - **Neither EmbedPDF's `author` nor its own `created`/`modified` are stored.**
+ *   Every annotation here has exactly one possible author, this row's `user_id`,
+ *   and these timestamps are this row's own. Storing the library's copies would
+ *   be a duplicate free to disagree; the reader fills them back in when it hands
+ *   an object to the engine.
+ * - **The id is EmbedPDF's**, not a UUIDv7 minted here — the one deviation from
+ *   the project's id convention, recorded in the 2026-08-13 revision to
+ *   research/data-modeling/zero-schema-conventions.md. The engine mints a v4 uuid
+ *   inside the tool that draws the mark, and adopting it means the mark has one
+ *   identity in the engine, in this table, and in the sidebar rather than an id
+ *   map that has to be rebuilt on every load and kept true across two windows.
+ */
+export const annotations = pgTable(
+  'annotations',
+  {
+    /** EmbedPDF's own annotation id — see the note above. */
+    id: uuid('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    /**
+     * Both foreign keys are ownership, so both cascade: an annotation has no
+     * meaning without the paper it is on or the reader who made it.
+     */
+    articleId: uuid('article_id')
+      .notNull()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+
+    type: text('type').$type<AnnotationType>().notNull(),
+    /** Zero-based, as EmbedPDF counts pages. The reader adds one to display it. */
+    pageIndex: integer('page_index').notNull(),
+    /**
+     * The words attached to the mark. Nullable and often absent: EmbedPDF does
+     * not fill it in from the highlighted text, and a shape or an ink stroke has
+     * nothing to put here. Task 5 renders a fallback rather than treating the
+     * absence as a defect.
+     */
+    contents: text('contents'),
+
+    payload: jsonb('payload').$type<AnnotationPayload>().notNull(),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    // The one query anything makes of this table: this paper's marks, in page
+    // order. The reader subscribes to it per article and the sidebar lists it.
+    index('annotations_article_page_idx').on(table.articleId, table.pageIndex),
+  ],
+)
+
+export const annotationsRelations = relations(annotations, ({ one }) => ({
+  owner: one(user, {
+    fields: [annotations.userId],
+    references: [user.id],
+  }),
+  article: one(articles, {
+    fields: [annotations.articleId],
+    references: [articles.id],
+  }),
+}))
+
 export const articlesRelations = relations(articles, ({ one, many }) => ({
   owner: one(user, {
     fields: [articles.userId],
@@ -352,6 +442,8 @@ export const articlesRelations = relations(articles, ({ one, many }) => ({
   references: many(citationEdges, { relationName: 'citingArticle' }),
   /** The bibliography entries of other articles that point at this one. */
   citedBy: many(citationEdges, { relationName: 'citedArticle' }),
+  /** The marks the reader has left on this paper. */
+  annotations: many(annotations),
 }))
 
 /**

@@ -104,6 +104,28 @@ annotates or the user who created it, so both `article_id` and `user_id`
 are `ON DELETE CASCADE` — deleting the article or the account removes its
 annotations, consistent with every other table in this category.
 
+## Revision (2026-08-13), from implementing it
+
+The table above was built unchanged — the column list, the `payload jsonb`
+decision, the promoted `page_index`/`contents`, the unstored `author` and
+timestamps, and both cascades all survived contact with the library. Three
+things this document could not have known are recorded here rather than left for
+the next reader of it to rediscover:
+
+- **The `id` is EmbedPDF's own UUIDv4**, not a UUIDv7 minted by this project.
+  The engine creates it inside the tool that draws the mark. See the exception
+  added the same day to [zero-schema-conventions.md](./zero-schema-conventions.md).
+- **`type` is stored as a name, not as EmbedPDF's number.** The library
+  identifies an annotation by `PdfAnnotationSubtype`, a numeric enum from the PDF
+  specification (a highlight is `9`). Storing the number would make a row
+  unreadable without the library and would tie the column to an enum this project
+  does not own, so the reader translates in one place.
+- **`payload` excludes one more field than this document lists: `appearanceModes`.**
+  It is a bitmask describing the appearance stream the annotation was read out of
+  a PDF *with* — a fact about a particular binary rather than about the mark — and
+  this design never rewrites the binary. Carrying it forward would claim an
+  appearance stream that the next freshly-fetched PDF does not contain.
+
 ## Sources
 
 - [embedpdf.com — Annotation Models](https://www.embedpdf.com/docs/engines/annotations/annotation-models),

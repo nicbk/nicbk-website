@@ -29,6 +29,30 @@
   }
 }
 
+/*
+ * On the narrowest screens the word gives way to the glyph.
+ *
+ * This trigger sits in a row that is already full: on #9's reader it is one of
+ * four floating groups over the document, and at 420px the last of them —
+ * this one, plus the article's three-dot menu — ran past the right edge, putting
+ * the menu off screen where it could not be reached at all. The label is the one
+ * part of that row that a glyph can stand in for.
+ *
+ * Nothing is lost to anyone: the trigger carries the same text as its accessible
+ * name either way, and the sheet it opens is titled with it.
+ *
+ * `40rem` rather than a breakpoint of its own: it is the width at which the
+ * reader's toolbar already goes compact, dropping the annotation tool's word for
+ * its glyph (reader-toolbar.module.css). One threshold, one behaviour — a second
+ * number here would mean the row shed its labels in two stages for no reason a
+ * reader could see.
+ */
+@media (max-width: 40rem) {
+  .triggerLabel {
+    display: none;
+  }
+}
+
 @media (hover: hover) {
   .trigger:hover {
     border-color: var(--color-accent);

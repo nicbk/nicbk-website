@@ -35,6 +35,22 @@
 .viewport {
   flex: 1;
   min-height: 0;
+  /*
+   * A stacking context of its own, so nothing the engine draws can rise above
+   * the toolbar.
+   *
+   * EmbedPDF's scroller wraps each page in a `position: relative; z-index: 1`
+   * container. Left alone, that competes in the same stacking context as the
+   * toolbar — which deliberately has no `z-index` — and wins, so the paper
+   * painted straight over the controls and the bar vanished behind page one
+   * (user-reported). Establishing a context here confines every one of those
+   * layers to this subtree, and the toolbar, a later sibling, paints above the
+   * whole of it while still having no `z-index` of its own to lift it above the
+   * page's portalled popups. `z-index: 0` rather than a larger number on
+   * purpose: what is wanted is a context, not a claim on any layer.
+   */
+  position: relative;
+  z-index: 0;
   /* Same reason as `.reader` above: without it a page wider than the panel
      escapes the region instead of scrolling inside it. */
   min-width: 0;
@@ -82,10 +98,25 @@
   box-shadow: 0 0 0 1px var(--color-border);
 }
 
+/*
+ * The stack over one page: the rendered paper, the text selection, and the
+ * marks. It fills the page box exactly, because everything inside positions
+ * itself against it — a pointer's position within this element is what the
+ * interaction manager turns into a point on the page, so an element of the wrong
+ * size would put every mark somewhere other than where it was drawn.
+ */
+.pageLayers {
+  position: absolute;
+  inset: 0;
+}
+
 .pageImage {
   display: block;
   width: 100%;
   height: 100%;
+  /* The page image is scenery, not something to pick up: a drag across it
+     belongs to the reader's tools. See `draggable={false}` in pdf-reader.tsx. */
+  user-select: none;
 }
 
 /*

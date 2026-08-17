@@ -1,0 +1,195 @@
+/*
+ * The annotation-tools group and its menu.
+ *
+ * Same floating surface, same button shape, and same popup as the page and zoom
+ * groups beside it (page-navigation.module.css, zoom-control.module.css) — one
+ * bar, one idea of what a control looks like. What is particular to this group is
+ * the trigger, which carries a word that changes with the live tool, and the
+ * sectioned list inside the popup.
+ */
+.group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  /* Enough of the reserved slot to sit apart from its neighbours, never enough
+     to push them off a narrow bar. */
+  min-width: 0;
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-width: 0;
+  /* The bar's one control height — see reader-toolbar.module.css. */
+  height: var(--reader-control-height);
+  padding: 0 var(--space-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+/*
+ * A live tool is stated three ways: the trigger names it, its own glyph replaces
+ * the pen, and the whole control takes the accent colour. Colour is the last of
+ * the three rather than the only one, which is what
+ * research/accessibility/color-contrast-and-focus-visibility.md asks for.
+ */
+.trigger[data-active] {
+  color: var(--color-accent);
+}
+
+@media (hover: hover) {
+  .trigger:hover:not(:disabled) {
+    color: var(--color-accent);
+  }
+}
+
+/* Dimmed *and* non-interactive, so the state is not carried by contrast alone. */
+.trigger:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.triggerIcon {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+/*
+ * The tool's name, and the one thing in the bar that may be dropped.
+ *
+ * Below the narrow breakpoint the three groups plus the page actions have to
+ * share the width, and a word is what a glyph can stand in for — the accessible
+ * name on the trigger says the same thing either way, so nothing is lost to
+ * anyone navigating by screen reader.
+ */
+.label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 40rem) {
+  .label {
+    display: none;
+  }
+}
+
+.positioner {
+  outline: none;
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2xs) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  outline: none;
+  /*
+   * Thirteen rows is taller than a short window, and a menu that runs off the
+   * screen has items that cannot be reached at all. Base UI keeps the popup
+   * inside the viewport; this makes the overflow scroll rather than clip.
+   */
+  max-height: var(--available-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /*
+   * A stated width, like the card menu's, rather than shrink-to-fit.
+   *
+   * It is stated because shrink-to-fit got it wrong: the popup came out 132px
+   * against a longest row of 142px, and **clipped "sticky note"** — a menu of
+   * twelve tools offering eleven and a half. Found in the browser, and worth the
+   * detail because the obvious fixes do not work: the intrinsic size is computed
+   * through a flex column holding a flex section holding a grid row, and neither
+   * `width: max-content` here nor `min-width: max-content` on the rows changed
+   * it. The `max-height` above is what makes this bite rather than merely look
+   * tight — a scroll container on one axis is a scroll container on both, so the
+   * overflow is clipped instead of spilling visibly.
+   *
+   * The value is the longest label plus its two glyph columns, with room to
+   * spare, in a face where every character is the same width.
+   */
+  width: 11rem;
+  /* Never as wide as a phone, for the same reason the card menu is capped. */
+  max-width: calc(100vw - 2 * var(--space-md));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+ * What the group is for, in the same quiet register as the collection rail's
+ * headings: this is a signpost between rows, not a row of its own.
+ */
+.sectionLabel {
+  padding: var(--space-2xs) var(--space-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * Every row leaves room for the tick whether or not it carries one, so the names
+ * line up in one column instead of the chosen row sitting alone. The middle
+ * column is the tool's glyph, which is what makes the list scannable without
+ * reading it.
+ */
+.item {
+  display: grid;
+  /* The tick, the tool's glyph, and its name. */
+  grid-template-columns: 1.25em 1.25em auto;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.item[data-highlighted] {
+  background-color: var(--color-bg);
+}
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.indicatorIcon {
+  width: 1em;
+  height: 1em;
+}
+
+.itemIcon {
+  width: 1.15em;
+  height: 1.15em;
+  color: var(--color-text-muted);
+}

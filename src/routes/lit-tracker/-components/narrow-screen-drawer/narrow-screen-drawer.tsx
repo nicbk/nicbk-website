@@ -88,9 +88,11 @@ export function NarrowScreenDrawer({
 
   return (
     <Drawer.Root open={open} onOpenChange={setOpen} swipeDirection="down">
-      <Drawer.Trigger className={styles.trigger}>
+      {/* The name is on the button rather than left to its text, because the
+          text goes away on the narrowest screens — see the stylesheet. */}
+      <Drawer.Trigger className={styles.trigger} aria-label={label}>
         <Icon className={styles.triggerIcon} aria-hidden="true" />
-        {label}
+        <span className={styles.triggerLabel}>{label}</span>
       </Drawer.Trigger>
 
       <Drawer.Portal>

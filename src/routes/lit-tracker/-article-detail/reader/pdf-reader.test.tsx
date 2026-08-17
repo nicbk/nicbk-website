@@ -42,6 +42,15 @@ const zoomScope = vi.hoisted(() => ({
 const scrollState = vi.hoisted(() => ({
   current: { currentPage: 1, totalPages: 0 },
 }))
+const annotationScope = vi.hoisted(() => ({
+  setActiveTool: vi.fn(),
+  deselectAnnotation: vi.fn(),
+  deleteAnnotation: vi.fn(),
+}))
+const selectionScope = vi.hoisted(() => ({ clear: vi.fn() }))
+const annotationState = vi.hoisted(() => ({
+  current: { activeToolId: null as string | null },
+}))
 
 vi.mock('@embedpdf/engines/react', () => ({
   usePdfiumEngine: () => engine.current,
@@ -81,6 +90,31 @@ vi.mock('@embedpdf/plugin-viewport/react', async () => {
   }
 })
 vi.mock('@embedpdf/plugin-render/react', () => ({ RenderLayer: () => null }))
+vi.mock('@embedpdf/plugin-annotation/react', () => ({
+  useAnnotation: () => ({
+    state: annotationState.current,
+    provides: annotationScope,
+  }),
+  AnnotationLayer: () => null,
+}))
+vi.mock('@embedpdf/plugin-selection/react', () => ({
+  SelectionLayer: () => null,
+  useSelectionCapability: () => ({ provides: selectionScope }),
+}))
+vi.mock('@embedpdf/plugin-interaction-manager/react', async () => {
+  const { createElement, Fragment } = await import('react')
+  return {
+    PagePointerProvider: ({ children }: { children: React.ReactNode }) =>
+      createElement(Fragment, null, children),
+  }
+})
+// The bridge between the engine and Zero, which has its own tests and needs a
+// sync client this file has no business standing up. What belongs here is that
+// the reader mounts it, which the mock's own call count would not prove any
+// better than the import does.
+vi.mock('./annotation-sync/use-annotation-sync', () => ({
+  useAnnotationSync: () => {},
+}))
 // The wasm asset import: a URL string in the real build, and nothing jsdom can
 // resolve otherwise.
 vi.mock('@embedpdf/pdfium/pdfium.wasm?url', () => ({
@@ -95,6 +129,7 @@ beforeEach(() => {
   engine.current = { engine: {}, isLoading: false, error: null }
   documentState.current = { status: 'loaded', document: { pageCount: 15 } }
   scrollState.current = { currentPage: 1, totalPages: 0 }
+  annotationState.current = { activeToolId: null }
   vi.clearAllMocks()
 })
 
@@ -224,6 +259,33 @@ describe('PdfReader', () => {
       ).toHaveTextContent('169%')
     })
 
+    it('activates an annotation tool through the annotation scope', async () => {
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      await userEvent.click(
+        screen.getByRole('button', { name: /annotation tools/ }),
+      )
+      await userEvent.click(
+        await screen.findByRole('menuitemradio', { name: 'highlight' }),
+      )
+
+      expect(annotationScope.setActiveTool).toHaveBeenCalledWith('highlight')
+    })
+
+    it('shows the live tool the engine reports, not one of its own', () => {
+      // The active tool lives in the plugin's own state, keyed by document —
+      // holding a second copy here is how a toolbar starts disagreeing with the
+      // thing it controls.
+      annotationState.current = { activeToolId: 'ink' }
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(
+        screen.getByRole('button', {
+          name: 'annotation tools, freehand selected',
+        }),
+      ).toBeInTheDocument()
+    })
+
     it('carries the page’s own controls', () => {
       render(
         <PdfReader
@@ -235,6 +297,43 @@ describe('PdfReader', () => {
       expect(
         screen.getByRole('button', { name: 'options' }),
       ).toBeInTheDocument()
+    })
+  })
+
+  describe('putting things down', () => {
+    it('drops the text selection, the mark and the tool on Escape', async () => {
+      // Three things can be held at once and each has its own way out; Escape
+      // is the one gesture that means "never mind" for all of them.
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      await userEvent.keyboard('{Escape}')
+
+      expect(selectionScope.clear).toHaveBeenCalledOnce()
+      expect(annotationScope.deselectAnnotation).toHaveBeenCalledOnce()
+      expect(annotationScope.setActiveTool).toHaveBeenCalledWith(null)
+    })
+
+    it('listens while focus is anywhere, not only inside the reader', () => {
+      // The viewport is not focusable, so a listener on it would fire only when
+      // some control inside happened to hold focus — which is exactly when
+      // Escape is least needed.
+      const listen = vi.spyOn(window, 'addEventListener')
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(listen).toHaveBeenCalledWith('keydown', expect.any(Function))
+      listen.mockRestore()
+    })
+
+    it('stops listening once the reader is gone', async () => {
+      // A keydown handler that outlives its scopes would go on calling into a
+      // torn-down engine from every other page on the site.
+      const stop = vi.spyOn(window, 'removeEventListener')
+      const view = render(<PdfReader articleId={ARTICLE_ID} />)
+
+      view.unmount()
+
+      expect(stop).toHaveBeenCalledWith('keydown', expect.any(Function))
+      stop.mockRestore()
     })
   })
 

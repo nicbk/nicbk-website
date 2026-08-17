@@ -1,0 +1,67 @@
+/*
+ * The little bar that appears beside a selected mark.
+ *
+ * Same floating surface as the reader's toolbar groups — one bar, one idea of
+ * what a control looks like — but smaller, because it sits over the paper right
+ * next to what it acts on rather than in a row of its own.
+ */
+.menu {
+  /*
+   * Opting back in to the pointer.
+   *
+   * EmbedPDF's positioning wrapper is `pointer-events: none` so a menu can
+   * never block the page it floats over, and it is for the content inside to
+   * take the pointer back. Without this the control highlighted under the
+   * cursor — hover is not affected — and clicks fell straight through to the
+   * paper: a delete button that could be aimed at but not pressed. It is the
+   * same arrangement the reader's own toolbar uses, for the same reason
+   * (reader-toolbar.module.css).
+   */
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  /* It hangs off the mark's own box, which EmbedPDF positions and
+     counter-rotates; without this the menu would sit on top of the mark it is
+     about. */
+  transform: translateY(calc(-100% - var(--space-2xs)));
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  line-height: 0;
+  cursor: pointer;
+}
+
+/*
+ * Deleting is the one destructive thing in the reader and there is no undo
+ * (research/data-modeling/zero-schema-conventions.md — hard deletes, and the
+ * feature deliberately ships no history plugin), so the control says so on
+ * hover and on focus rather than only in its label.
+ */
+@media (hover: hover) {
+  .button:hover {
+    color: var(--color-error);
+  }
+}
+
+.button:focus-visible {
+  color: var(--color-error);
+}
+
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+}

@@ -118,6 +118,47 @@ describe('articles.byId', () => {
   })
 })
 
+describe('annotations.forArticle', () => {
+  it('filters by owner as well as by article, in page order', () => {
+    const ast = astOf(
+      queries.annotations.forArticle.fn({ args: AN_ARTICLE_ID, ctx: OWNER }),
+    )
+
+    expect(ast.table).toBe('annotations')
+    // Both conditions, joined by AND. Filtering by article alone would hand any
+    // signed-in client every mark on any paper whose id it could name.
+    expect(ast.where).toEqual({
+      type: 'and',
+      conditions: [
+        equals('articleId', AN_ARTICLE_ID),
+        equals('userId', OWNER.id),
+      ],
+    })
+    expect(ast.orderBy).toEqual([
+      ['pageIndex', 'asc'],
+      ['createdAt', 'asc'],
+    ])
+  })
+
+  it('rejects an argument that is not an article id', () => {
+    expect(() =>
+      queries.annotations.forArticle.fn({ args: 'not-a-uuid', ctx: OWNER }),
+    ).toThrow()
+  })
+
+  it('matches nothing without a context', () => {
+    const ast = astOf(
+      queries.annotations.forArticle.fn({
+        args: AN_ARTICLE_ID,
+        ctx: undefined,
+      }),
+    )
+
+    expect(ast.limit).toBe(0)
+    expect(ast.where).toBeUndefined()
+  })
+})
+
 describe('uploadJobs.mine', () => {
   it('filters to the context user, oldest first', () => {
     const ast = astOf(

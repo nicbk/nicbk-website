@@ -45,6 +45,8 @@ const ARTICLE_A = '0199a1b2-c3d4-7e5f-8a9b-000000000a01'
 const ARTICLE_B = '0199a1b2-c3d4-7e5f-8a9b-000000000b01'
 const TAG_A = '0199a1b2-c3d4-7e5f-8a9b-000000000a02'
 const TAG_B = '0199a1b2-c3d4-7e5f-8a9b-000000000b02'
+const ANNOTATION_A = '0199a1b2-c3d4-7e5f-8a9b-000000000a03'
+const ANNOTATION_B = '0199a1b2-c3d4-7e5f-8a9b-000000000b03'
 
 let testDatabase: TestDatabase
 let database: DatabaseHandle
@@ -124,6 +126,25 @@ async function applyTag(articleId: string, tagId: string): Promise<void> {
   })
 }
 
+/** One mark on a paper, written straight in rather than through a mutator. */
+async function createAnnotation(
+  id: string,
+  articleId: string,
+  userId: string,
+  overrides: Partial<typeof drizzleSchema.annotations.$inferInsert> = {},
+): Promise<void> {
+  await database.db.insert(drizzleSchema.annotations).values({
+    id,
+    userId,
+    articleId,
+    type: 'highlight',
+    pageIndex: 0,
+    contents: 'the passage itself',
+    payload: { color: '#ffd400' },
+    ...overrides,
+  })
+}
+
 /** Returns the new job's id, which is also the future article's id. */
 async function createUploadJob(userId: string): Promise<string> {
   const [row] = await database.db
@@ -174,6 +195,8 @@ async function seedTwoUsers(): Promise<void> {
   await createTag(TAG_B, USER_B)
   await applyTag(ARTICLE_A, TAG_A)
   await applyTag(ARTICLE_B, TAG_B)
+  await createAnnotation(ANNOTATION_A, ARTICLE_A, USER_A)
+  await createAnnotation(ANNOTATION_B, ARTICLE_B, USER_B)
 }
 
 describe('the committed migrations', () => {
@@ -257,12 +280,160 @@ describe('the committed migrations', () => {
     )
 
     expect(rows.map((row) => row.tablename)).toEqual([
+      'annotations',
       'article_tags',
       'articles',
       'citation_edges',
       'tags',
       'upload_jobs',
     ])
+  })
+
+  it('replicate a mark written straight into Postgres', async () => {
+    // Publication membership is what the assertion above states and this one
+    // exercises: `drizzle-zero.config.ts` decides what the *generated schema*
+    // knows about, and CI's drift check covers that — nothing but this covers
+    // whether the row would ever reach zero-cache's replica in the first place.
+    await createUser(USER_A)
+    await createArticle(ARTICLE_A, USER_A)
+    await createAnnotation(ANNOTATION_A, ARTICLE_A, USER_A)
+
+    const { rows } = await database.pool.query<{ count: string }>(
+      `select count(*) as count from pg_publication_tables
+       where pubname = 'zero_data' and tablename = 'annotations'`,
+    )
+    expect(rows[0]?.count).toBe('1')
+
+    const replicated = await runAs(
+      queries.annotations.forArticle,
+      CONTEXT_A,
+      ARTICLE_A,
+    )
+    expect(replicated.map((row) => row.id)).toEqual([ANNOTATION_A])
+  })
+
+  it('index a paper’s marks by the page they are on', async () => {
+    // The one lookup anything makes of this table, and task 5's jump-to-page
+    // reads the column it leads with.
+    const { rows } = await database.pool.query<{ indexname: string }>(
+      `select indexname from pg_indexes where tablename = 'annotations'`,
+    )
+
+    expect(rows.map((row) => row.indexname)).toContain(
+      'annotations_article_page_idx',
+    )
+  })
+
+  it('cascade both of an annotation’s foreign keys', async () => {
+    const { rows } = await database.pool.query<{
+      column_name: string
+      delete_rule: string
+    }>(
+      `select kcu.column_name, rc.delete_rule
+       from information_schema.table_constraints tc
+       join information_schema.key_column_usage kcu
+         on kcu.constraint_name = tc.constraint_name
+       join information_schema.referential_constraints rc
+         on rc.constraint_name = tc.constraint_name
+       where tc.constraint_type = 'FOREIGN KEY'
+         and tc.table_name = 'annotations'
+       order by kcu.column_name`,
+    )
+
+    // Both are ownership: a mark has no meaning without the paper it is on or
+    // the reader who made it.
+    expect(rows).toEqual([
+      { column_name: 'article_id', delete_rule: 'CASCADE' },
+      { column_name: 'user_id', delete_rule: 'CASCADE' },
+    ])
+  })
+
+  it('take a paper’s marks with the paper', async () => {
+    await createUser(USER_A)
+    await createArticle(ARTICLE_A, USER_A)
+    await createAnnotation(ANNOTATION_A, ARTICLE_A, USER_A)
+
+    await database.db
+      .delete(drizzleSchema.articles)
+      .where(eq(drizzleSchema.articles.id, ARTICLE_A))
+
+    expect(await database.db.select().from(drizzleSchema.annotations)).toEqual(
+      [],
+    )
+  })
+
+  it('take a reader’s marks with the account', async () => {
+    // The account-deletion cascade #7 and #8 established, extended to the table
+    // #9 adds — this is what makes "delete my account" actually remove the data.
+    await createUser(USER_A)
+    await createArticle(ARTICLE_A, USER_A)
+    await createAnnotation(ANNOTATION_A, ARTICLE_A, USER_A)
+
+    await database.db
+      .delete(drizzleSchema.user)
+      .where(eq(drizzleSchema.user.id, USER_A))
+
+    expect(await database.db.select().from(drizzleSchema.annotations)).toEqual(
+      [],
+    )
+  })
+
+  it('round-trip an annotation payload through jsonb unchanged', async () => {
+    // The payload mirrors EmbedPDF's own object shape and is never interpreted
+    // by anything on the server, so the property that matters is that what comes
+    // back is what went in — for each structurally different family of type.
+    await createUser(USER_A)
+    await createArticle(ARTICLE_A, USER_A)
+
+    const payloads = {
+      // A text markup: rectangles inside an array of objects.
+      highlight: {
+        rect: { origin: { x: 1.5, y: 2.25 }, size: { width: 90, height: 12 } },
+        segmentRects: [
+          { origin: { x: 1, y: 2 }, size: { width: 3, height: 4 } },
+        ],
+        color: '#ffd400',
+        opacity: 0.5,
+      },
+      // Ink: arrays of arrays of points, and the deepest nesting stored here.
+      ink: {
+        inkList: [
+          {
+            points: [
+              { x: 0, y: 0 },
+              { x: 1.75, y: 3.5 },
+            ],
+          },
+        ],
+        strokeWidth: 2,
+      },
+      // Free text: strings and numbers side by side, plus a `custom` extension
+      // field, which EmbedPDF leaves entirely to the embedder.
+      freeText: {
+        fontSize: 12,
+        fontFamily: 'Helvetica',
+        custom: { note: 'anything at all', flagged: true, count: 0 },
+      },
+    }
+
+    for (const [type, payload] of Object.entries(payloads)) {
+      const id = `0199a1b2-c3d4-7e5f-8a9b-0000000000${type.length}1`
+      await database.db.insert(drizzleSchema.annotations).values({
+        id,
+        userId: USER_A,
+        articleId: ARTICLE_A,
+        type: type as 'highlight',
+        pageIndex: 0,
+        payload,
+      })
+
+      const [stored] = await database.db
+        .select()
+        .from(drizzleSchema.annotations)
+        .where(eq(drizzleSchema.annotations.id, id))
+
+      expect(stored?.payload).toEqual(payload)
+    }
   })
 
   it('default an upload job id to a time-ordered uuid', async () => {
@@ -379,8 +550,47 @@ describe('cross-user isolation', () => {
     expect(forA[0]?.id).not.toBe(forB[0]?.id)
   })
 
+  it('returns only the requesting user’s marks on a paper', async () => {
+    const forA = await runAs(
+      queries.annotations.forArticle,
+      CONTEXT_A,
+      ARTICLE_A,
+    )
+    const forB = await runAs(
+      queries.annotations.forArticle,
+      CONTEXT_B,
+      ARTICLE_B,
+    )
+
+    expect(forA.map((row) => row.id)).toEqual([ANNOTATION_A])
+    expect(forB.map((row) => row.id)).toEqual([ANNOTATION_B])
+  })
+
+  it('returns nothing for another user’s paper, though its marks exist', async () => {
+    // The argument is an article id straight from the client, and B's paper
+    // genuinely has a mark on it — so a query filtering by article alone would
+    // hand it over. Non-vacuous by construction: the second assertion proves the
+    // row is there to be found.
+    const asA = await runAs(
+      queries.annotations.forArticle,
+      CONTEXT_A,
+      ARTICLE_B,
+    )
+    const asB = await runAs(
+      queries.annotations.forArticle,
+      CONTEXT_B,
+      ARTICLE_B,
+    )
+
+    expect(asA).toEqual([])
+    expect(asB.map((row) => row.id)).toEqual([ANNOTATION_B])
+  })
+
   it('returns nothing when the request carries no session', async () => {
     expect(await runAs(queries.articles.mine, undefined, undefined)).toEqual([])
+    expect(
+      await runAs(queries.annotations.forArticle, undefined, ARTICLE_A),
+    ).toEqual([])
     expect(await runAs(queries.uploadJobs.mine, undefined, undefined)).toEqual(
       [],
     )

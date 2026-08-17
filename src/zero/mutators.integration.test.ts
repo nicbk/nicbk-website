@@ -52,11 +52,14 @@ const ARTICLE_A = '0199a1b2-c3d4-7e5f-8a9b-000000001a01'
 const ARTICLE_B = '0199a1b2-c3d4-7e5f-8a9b-000000001b01'
 const TAG_A = '0199a1b2-c3d4-7e5f-8a9b-000000001a02'
 const TAG_B = '0199a1b2-c3d4-7e5f-8a9b-000000001b02'
+const MARK_A = '0199a1b2-c3d4-7e5f-8a9b-000000001a03'
+const MARK_B = '0199a1b2-c3d4-7e5f-8a9b-000000001b03'
 
 /** Ids for rows a test creates, rather than ones the fixture seeded. */
 const NEW_TAG = '0199a1b2-c3d4-7e5f-8a9b-00000000c001'
 const NEW_LINK = '0199a1b2-c3d4-7e5f-8a9b-00000000c002'
 const OTHER_LINK = '0199a1b2-c3d4-7e5f-8a9b-00000000c003'
+const NEW_MARK = '0199a1b2-c3d4-7e5f-8a9b-00000000c004'
 
 let testDatabase: TestDatabase
 let database: DatabaseHandle
@@ -99,9 +102,9 @@ async function runAs(
 }
 
 async function seedTwoUsers(): Promise<void> {
-  for (const [userId, articleId, tagId] of [
-    [USER_A, ARTICLE_A, TAG_A],
-    [USER_B, ARTICLE_B, TAG_B],
+  for (const [userId, articleId, tagId, markId] of [
+    [USER_A, ARTICLE_A, TAG_A, MARK_A],
+    [USER_B, ARTICLE_B, TAG_B, MARK_B],
   ] as const) {
     await database.db.insert(drizzleSchema.user).values({
       id: userId,
@@ -121,11 +124,29 @@ async function seedTwoUsers(): Promise<void> {
       userId,
       name: `tag of ${userId}`,
     })
+    // One mark each, so every "A cannot write B's annotation" assertion has a
+    // real row to fail against.
+    await database.db.insert(drizzleSchema.annotations).values({
+      id: markId,
+      userId,
+      articleId,
+      type: 'highlight',
+      pageIndex: 0,
+      contents: `mark of ${userId}`,
+      payload: { color: '#ffd400' },
+    })
   }
 }
 
 const allTags = () => database.db.select().from(drizzleSchema.tags)
 const allLinks = () => database.db.select().from(drizzleSchema.articleTags)
+const allAnnotations = () =>
+  database.db.select().from(drizzleSchema.annotations)
+const annotationById = (id: string) =>
+  database.db
+    .select()
+    .from(drizzleSchema.annotations)
+    .where(eq(drizzleSchema.annotations.id, id))
 const articleById = (id: string) =>
   database.db
     .select()
@@ -505,6 +526,149 @@ describe('articles.setNotes', () => {
 
     const [other] = await articleById(ARTICLE_B)
     expect(other?.notes).toBeNull()
+  })
+})
+
+describe('annotations.create', () => {
+  const mark = {
+    id: NEW_MARK,
+    articleId: ARTICLE_A,
+    type: 'highlight',
+    pageIndex: 3,
+    contents: 'the passage itself',
+    payload: { color: '#ffd400', segmentRects: [{ x: 1, y: 2 }] },
+  }
+
+  it('stores the mark under the caller, with the payload it was given', async () => {
+    await runAs('annotations.create', CONTEXT_A, mark)
+
+    const [created] = await annotationById(NEW_MARK)
+
+    expect(created).toMatchObject({
+      articleId: ARTICLE_A,
+      type: 'highlight',
+      pageIndex: 3,
+      contents: 'the passage itself',
+    })
+    expect(created?.payload).toEqual(mark.payload)
+    // From the context. No argument could have set it to anything else.
+    expect(created?.userId).toBe(USER_A)
+  })
+
+  it('refuses a mark on another user’s paper and writes nothing', async () => {
+    // The load-bearing one, and non-vacuous: B's article genuinely exists and B
+    // can be marked up, so a mutator that wrote nothing at all would still fail
+    // the pairing below.
+    await expect(
+      runAs('annotations.create', CONTEXT_A, { ...mark, articleId: ARTICLE_B }),
+    ).rejects.toThrow()
+    expect(await allAnnotations()).toHaveLength(2)
+
+    await runAs('annotations.create', CONTEXT_B, {
+      ...mark,
+      articleId: ARTICLE_B,
+    })
+    expect(await allAnnotations()).toHaveLength(3)
+  })
+
+  it('refuses to overwrite another user’s mark by reusing its id', async () => {
+    // Why `create` inserts rather than upserts: an upsert addressed by primary
+    // key would rewrite B's annotation — including its owner — from A's session.
+    await expect(
+      runAs('annotations.create', CONTEXT_A, { ...mark, id: MARK_B }),
+    ).rejects.toThrow()
+
+    const [victim] = await annotationById(MARK_B)
+    expect(victim?.userId).toBe(USER_B)
+    expect(victim?.contents).toBe(`mark of ${USER_B}`)
+  })
+
+  it('refuses a request with no session', async () => {
+    await expect(runAs('annotations.create', undefined, mark)).rejects.toThrow()
+    expect(await allAnnotations()).toHaveLength(2)
+  })
+})
+
+describe('annotations.update', () => {
+  it('replaces the caller’s own mark’s page, contents and payload', async () => {
+    await runAs('annotations.update', CONTEXT_A, {
+      id: MARK_A,
+      pageIndex: 7,
+      contents: 'reworded',
+      payload: { color: '#000000' },
+    })
+
+    const [updated] = await annotationById(MARK_A)
+    expect(updated).toMatchObject({ pageIndex: 7, contents: 'reworded' })
+    expect(updated?.payload).toEqual({ color: '#000000' })
+  })
+
+  it('cannot change the type or move the mark to another paper', async () => {
+    // Neither is in the mutator's schema, so both are dropped rather than
+    // refused — and this is where that claim is worth proving, because what
+    // matters is what is *stored* afterwards.
+    await runAs('annotations.update', CONTEXT_A, {
+      id: MARK_A,
+      pageIndex: 1,
+      contents: null,
+      payload: {},
+      type: 'ink',
+      articleId: ARTICLE_B,
+    })
+
+    const [updated] = await annotationById(MARK_A)
+    expect(updated?.type).toBe('highlight')
+    expect(updated?.articleId).toBe(ARTICLE_A)
+  })
+
+  it('refuses another user’s mark and leaves it as it was', async () => {
+    await expect(
+      runAs('annotations.update', CONTEXT_A, {
+        id: MARK_B,
+        pageIndex: 99,
+        contents: 'A should not be able to write this',
+        payload: {},
+      }),
+    ).rejects.toThrow()
+
+    const [victim] = await annotationById(MARK_B)
+    expect(victim?.contents).toBe(`mark of ${USER_B}`)
+    expect(victim?.pageIndex).toBe(0)
+  })
+
+  it('accepts the same write twice', async () => {
+    // Rebase safety: Zero re-runs a pending mutation whenever it rebases onto
+    // newly-arrived data, so writing the same object again must be a no-op
+    // rather than an error.
+    const args = {
+      id: MARK_A,
+      pageIndex: 2,
+      contents: 'settled',
+      payload: { color: '#ffd400' },
+    }
+    await runAs('annotations.update', CONTEXT_A, args)
+    await runAs('annotations.update', CONTEXT_A, args)
+
+    const [updated] = await annotationById(MARK_A)
+    expect(updated?.contents).toBe('settled')
+  })
+})
+
+describe('annotations.delete', () => {
+  it('deletes the caller’s own mark', async () => {
+    await runAs('annotations.delete', CONTEXT_A, { id: MARK_A })
+
+    expect((await allAnnotations()).map((row) => row.id)).toEqual([MARK_B])
+  })
+
+  it('refuses another user’s mark and leaves it in place', async () => {
+    await expect(
+      runAs('annotations.delete', CONTEXT_A, { id: MARK_B }),
+    ).rejects.toThrow()
+
+    expect((await allAnnotations()).map((row) => row.id).sort()).toEqual(
+      [MARK_A, MARK_B].sort(),
+    )
   })
 })
 

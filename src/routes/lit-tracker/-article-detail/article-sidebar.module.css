@@ -24,15 +24,20 @@
  * stray labels rather than a control. A tab strip is recognised by the line it
  * shares, and the selected tab is the one that breaks it.
  *
- * The tabs share the row equally rather than sizing to their words, so the
- * strip stays a strip as #10 adds the fourth: four different-width words at
- * one end of a rail is a ragged edge, and equal columns also give each tab a
- * hit target wider than the word in it.
+ * The tabs grow to share each line equally, and the strip **actually wraps**.
+ * It was a column-flow grid first, which cannot wrap however its comment
+ * insisted otherwise — a defect invisible for two tasks because two short
+ * words fit one line, and caught the moment "annotations" arrived: the rail
+ * gives this strip ~143px and the three words need ~216px, so the third tab
+ * clipped to "annot". No wording rescues a single line here (even "tags
+ * notes" alone spend 108px), and #10's "citations" makes the words longer
+ * still — so wrapping is the design, not the fallback. A wrapped tab keeps
+ * its own selected underline; only the strip's shared rule stays below the
+ * last line, which reads fine because the underline belongs to the tab.
  */
 .tabs {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  display: flex;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -46,6 +51,7 @@
  * height so the two occupy one line rather than stacking into a thick edge.
  */
 .tab {
+  flex: 1 1 auto;
   padding: var(--space-2xs) var(--space-xs);
   border: none;
   border-bottom: 2px solid transparent;

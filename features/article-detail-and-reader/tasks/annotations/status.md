@@ -130,9 +130,10 @@ would not have failed any test in this repository as written.
 - The four-group toolbar fits at 420px, 1064px and 1440px, in both themes, with
   no horizontal overflow of the shell.
 
-**Still owed** — the multi-window check. Zero drops sync for a hidden document,
-so a second *tab* proves nothing; this needs a genuine second window and is the
-one item not yet exercised.
+~~**Still owed** — the multi-window check.~~ **Paid in task 5** (2026-08-17):
+with two genuine windows both `visible`, a mark drawn in one was on the other's
+paper — and in its annotations list — within ~2 seconds. Recorded in
+[the sidebar task's status.md](../annotations-sidebar/status.md).
 
 ## Defects found in the browser, none of which a unit test caught
 

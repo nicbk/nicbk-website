@@ -1,9 +1,11 @@
 import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation'
 import { describe, expect, it } from 'vitest'
+import { ANNOTATION_TYPES } from '~/lit-tracker/annotation-type'
 import {
   ANNOTATION_TOOL_GROUPS,
   ANNOTATION_TOOLS,
   activeToolLabel,
+  annotationTypeLabel,
   NO_TOOL,
 } from './annotation-tools'
 
@@ -102,5 +104,25 @@ describe('activeToolLabel', () => {
     // Nothing offers one today. Saying something beats an empty trigger if
     // anything ever does.
     expect(activeToolLabel('inkHighlighter')).toBe('annotate')
+  })
+})
+
+describe('annotationTypeLabel', () => {
+  it('names every stored type in the toolbar menu’s own words', () => {
+    // The sidebar's list says this for a textless mark, so all twelve must
+    // resolve to a tool's label — a stored type falling through to its raw name
+    // would put "freeText" in a list that says "text box" one panel over.
+    const toolLabels = ANNOTATION_TOOLS.map((tool) => tool.label)
+    for (const type of ANNOTATION_TYPES) {
+      expect(toolLabels).toContain(annotationTypeLabel(type))
+    }
+  })
+
+  it('bridges the one name the two vocabularies disagree on', () => {
+    // The sticky note: the tool is `textComment`, the stored PDF subtype is
+    // `text`. Everything else matches by name and would pass by accident.
+    expect(annotationTypeLabel('text')).toBe('sticky note')
+    expect(annotationTypeLabel('ink')).toBe('freehand')
+    expect(annotationTypeLabel('square')).toBe('rectangle')
   })
 })

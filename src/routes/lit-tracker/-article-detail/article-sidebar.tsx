@@ -1,7 +1,10 @@
 import { Tabs } from '@base-ui/react/tabs'
 import { ArticleTagControls } from '~/routes/lit-tracker/-components/article-menu/article-tag-controls'
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
+import { AnnotationsPanel } from './annotations-panel'
 import { NotesPanel } from './notes-panel'
+import { useReaderJump } from './reader-jump'
+import { useArticleAnnotations } from './use-article-annotations'
 import { useArticleDetail } from './use-article-detail'
 import styles from './article-sidebar.module.css'
 
@@ -9,16 +12,17 @@ import styles from './article-sidebar.module.css'
  * The tabs, in the decided order.
  *
  * Declared as data rather than as JSX so the two things that must agree — the
- * tab and its panel — cannot drift apart, and so #10's Citations tab and task
- * 5's Annotations tab are each one entry rather than two edits in two places.
+ * tab and its panel — cannot drift apart, and so #10's Citations tab is one
+ * entry rather than two edits in two places.
  *
  * The decided sidebar has **four** tabs (Tags, Notes, Citations, Annotations).
- * This is #9's first task, so it has two; the other two arrive with the things
- * they show. **A tab is not rendered before its contents exist** — a disabled
+ * Three exist now; **Citations arrives with the citation graph it opens**
+ * (#10), because a tab is not rendered before its contents exist — a disabled
  * "Citations" would be a promise the page cannot keep, and an empty one is
- * worse.
+ * worse. Annotations sits where the decided order puts it, which will be after
+ * Citations once that tab exists between them.
  */
-const TABS = ['tags', 'notes'] as const
+const TABS = ['tags', 'notes', 'annotations'] as const
 
 interface ArticleSidebarProps {
   articleId: string
@@ -57,6 +61,8 @@ export const SIDEBAR_LABEL = 'article'
 export function ArticleSidebar({ articleId }: ArticleSidebarProps) {
   const { state, article, tags, allTags } = useArticleDetail(articleId)
   const mutations = useArticleMutations()
+  const annotations = useArticleAnnotations(articleId)
+  const jumpToPage = useReaderJump()
 
   // Nothing to edit until the row is here. Rendering the tabs against an absent
   // article would offer controls that write to an id whose ownership has not
@@ -113,6 +119,21 @@ export function ArticleSidebar({ articleId }: ArticleSidebarProps) {
           key={articleId}
           notes={article.notes}
           onSave={(notes) => mutations.setNotes(articleId, notes)}
+        />
+      </Tabs.Panel>
+
+      <Tabs.Panel className={styles.panel} value="annotations">
+        {/*
+          Selecting this tab must not swap the main content area — the decided
+          contrast with #10's Citations tab. Upholding it costs nothing here
+          (the reader is another panel entirely, and the only reach into it is
+          the jump), but the invariant belongs to this tab, so it is stated
+          where the tab is made.
+        */}
+        <AnnotationsPanel
+          state={annotations.state}
+          annotations={annotations.annotations}
+          onJumpToPage={jumpToPage}
         />
       </Tabs.Panel>
     </Tabs.Root>

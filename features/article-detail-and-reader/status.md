@@ -1,6 +1,6 @@
 # Status: Article Detail and Reader
 
-**Feature state:** **In progress** — tasks 1–3 merged, task 4 implemented and awaiting review. Six tasks now: a sixth was added on 2026-08-16 for the reader's text tools (see the log), so the count in `plan.md` is five *decided at spec time* plus one added from use. Sequential, each gated by its own PR + CI + human review.
+**Feature state:** **In progress** — tasks 1–4 merged, task 5 in progress. Six tasks: a sixth was added on 2026-08-16 for the reader's text tools (see the log), so the count in `plan.md` is five *decided at spec time* plus one added from use. Sequential, each gated by its own PR + CI + human review.
 Depends on [`collection-view`](../collection-view/status.md) (#8, Complete) for
 the card this page is reached from, the tag model its Tags tab presents, and the
 drawer its sidebar becomes; and on
@@ -21,9 +21,9 @@ parent when its sub-issues close.
 | [`article-detail-shell`](./tasks/article-detail-shell/status.md) ([#96](https://github.com/nicbk/nicbk-website/issues/96)) | **Merged** | [#101](https://github.com/nicbk/nicbk-website/pull/101) | Green | Merged 2026-08-13 |
 | [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | **Merged** | [#102](https://github.com/nicbk/nicbk-website/pull/102) | Green | Merged 2026-08-13 |
 | [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | **Merged** | [#103](https://github.com/nicbk/nicbk-website/pull/103) | Green | Merged 2026-08-13 |
-| [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | **Implemented** | — | — | Awaiting review |
-| [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | Not started | — | — | — |
-| `reader-text-tools` (task 6, to be filed) | Not started | — | — | — |
+| [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | **Merged** | [#104](https://github.com/nicbk/nicbk-website/pull/104) | Green | Merged 2026-08-16 |
+| [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | **In progress** | — | — | — |
+| [`reader-text-tools`](./tasks/reader-text-tools/status.md) ([#105](https://github.com/nicbk/nicbk-website/issues/105)) | Not started | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -170,3 +170,17 @@ write it does not own.
   removing a selection covers both a mark and a text selection; and copy,
   comments and a translucent rectangle become **task 6** rather than growing this
   diff. Deleting stays a single click with no undo, decided knowingly.
+- 2026-08-16 — **Task 4 merged** (PR #104), and **task 5 started**. Its three
+  open items settled with the user first: the list reuses
+  `queries.annotations.forArticle`'s decided order (page, then creation time);
+  a textless row falls back to the **tool's own name from the toolbar menu**,
+  muted, so the list and the toolbar share one vocabulary; and the jump call
+  crosses from the rail to the reader through a **context mounted at the route
+  layout** — the only level that can see both, and the same level #10's
+  tab-swap state will need. One finding widened the fallback's importance:
+  **EmbedPDF never captures the selected text**, so highlight rows are textless
+  too (confirmed empty in the database, and absent from the payload) — accepted
+  for this task, with task 6's text-association being what fills them. **Task 6
+  filed** as [`reader-text-tools`](./tasks/reader-text-tools/status.md)
+  (#105), sixth and last, taking with it the close-#95-by-hand duty task 5's
+  spec had carried.

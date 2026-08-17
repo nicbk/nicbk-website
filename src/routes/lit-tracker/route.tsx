@@ -8,6 +8,7 @@ import { requireAuth } from '~/auth/require-auth'
 import { ArticleRail } from './-article-detail/article-rail'
 import { SIDEBAR_LABEL } from './-article-detail/article-sidebar'
 import { ArticleTitle } from './-article-detail/article-title'
+import { ReaderJumpProvider } from './-article-detail/reader-jump'
 import { FilterRail } from './-collection-filters/filter-rail'
 import { collectionSearchSchema } from './-collection-filters/search-schema'
 import { LitTrackerShell } from './-components/lit-tracker-shell/lit-tracker-shell'
@@ -82,35 +83,41 @@ function LitTrackerLayout() {
   const leave = () => void navigate({ to: '/' })
 
   return (
-    <LitTrackerShell
-      account={auth.user}
-      onSignedOut={leave}
-      onDeleted={leave}
-      // An element, not a rendered tree: the shell renders it inside the Zero
-      // provider, which is where its queries need to run. Named here rather than
-      // inside the shell so the shell stays chrome with no page-specific
-      // contents compiled into it.
-      filters={
-        articleMatch ? (
-          <ArticleRail
-            articleId={articleMatch.params.articleId}
-            label={SIDEBAR_LABEL}
-          />
-        ) : (
-          <FilterRail label={FILTER_RAIL_LABEL} />
-        )
-      }
-      // The header's path names the article being read
-      // (research/ui-ux/pages/lit-tracker/components/header.md). Chosen here for
-      // the same reason the rail is: the header is a sibling of the page, so
-      // what the two share is decided one level up.
-      pageTitle={
-        articleMatch ? (
-          <ArticleTitle articleId={articleMatch.params.articleId} />
-        ) : undefined
-      }
-    >
-      <Outlet />
-    </LitTrackerShell>
+    // Around the shell rather than inside the article page, because the two
+    // ends of the jump — the annotations list in the shell's rail, the reader
+    // in the page — are siblings, and this is the only level that sees both.
+    // See reader-jump.tsx.
+    <ReaderJumpProvider>
+      <LitTrackerShell
+        account={auth.user}
+        onSignedOut={leave}
+        onDeleted={leave}
+        // An element, not a rendered tree: the shell renders it inside the Zero
+        // provider, which is where its queries need to run. Named here rather than
+        // inside the shell so the shell stays chrome with no page-specific
+        // contents compiled into it.
+        filters={
+          articleMatch ? (
+            <ArticleRail
+              articleId={articleMatch.params.articleId}
+              label={SIDEBAR_LABEL}
+            />
+          ) : (
+            <FilterRail label={FILTER_RAIL_LABEL} />
+          )
+        }
+        // The header's path names the article being read
+        // (research/ui-ux/pages/lit-tracker/components/header.md). Chosen here for
+        // the same reason the rail is: the header is a sibling of the page, so
+        // what the two share is decided one level up.
+        pageTitle={
+          articleMatch ? (
+            <ArticleTitle articleId={articleMatch.params.articleId} />
+          ) : undefined
+        }
+      >
+        <Outlet />
+      </LitTrackerShell>
+    </ReaderJumpProvider>
   )
 }

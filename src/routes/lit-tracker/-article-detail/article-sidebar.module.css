@@ -1,7 +1,7 @@
 /*
  * The sidebar's tabs and the panel below them.
  *
- * Two tabs today, four by the end of #10 — so the row is built to take more
+ * Three tabs today, four by the end of #10 — so the row is built to take more
  * without being redesigned: it wraps rather than scrolls, because four short
  * words in a narrow column are a second line, not a horizontal scroller nobody
  * would find.
@@ -25,9 +25,9 @@
  * shares, and the selected tab is the one that breaks it.
  *
  * The tabs share the row equally rather than sizing to their words, so the
- * strip stays a strip as #10 and task 5 add the third and fourth: four
- * different-width words at one end of a rail is a ragged edge, and equal
- * columns also give each tab a hit target wider than the word in it.
+ * strip stays a strip as #10 adds the fourth: four different-width words at
+ * one end of a rail is a ragged edge, and equal columns also give each tab a
+ * hit target wider than the word in it.
  */
 .tabs {
   display: grid;

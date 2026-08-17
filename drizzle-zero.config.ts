@@ -53,6 +53,17 @@ export default drizzleZeroConfig(drizzleSchema, {
       tagId: true,
       createdAt: true,
     },
+    annotations: {
+      id: true,
+      userId: true,
+      articleId: true,
+      type: true,
+      pageIndex: true,
+      contents: true,
+      payload: true,
+      createdAt: true,
+      updatedAt: true,
+    },
     citationEdges: {
       id: true,
       userId: true,

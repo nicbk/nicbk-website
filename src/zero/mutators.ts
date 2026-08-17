@@ -4,8 +4,10 @@ import { z } from 'zod'
 // From the domain module, not from `db/schema` which re-exports it: this file
 // runs in the browser too, and the schema module pulls in Drizzle's Postgres
 // dialect.
+import { ANNOTATION_TYPES } from '~/lit-tracker/annotation-type'
 import { ARTICLE_STATUSES } from '~/lit-tracker/article-status'
 import {
+  requireOwnedAnnotation,
   requireOwnedArticle,
   requireOwnedTag,
   requireSession,
@@ -149,6 +151,107 @@ export const mutators = defineMutators({
     ),
   },
 
+  annotations: {
+    /**
+     * Store a mark the reader just made.
+     *
+     * **The id comes from the client and is EmbedPDF's own.** That is the same
+     * property every other create here has — a client-generated primary key, so
+     * the optimistic row and the authoritative one are one row — and it is
+     * `insert` rather than `upsert` for the same security reason as
+     * `tags.create`: an upsert addressed by primary key would let a client name
+     * someone else's annotation id and overwrite that row, including its
+     * `userId`. A duplicate key fails instead.
+     *
+     * The payload is passed through unvalidated beyond "a JSON object", because
+     * its shape belongs to EmbedPDF and differs per annotation type. That is not
+     * a hole: nothing on the server interprets it, it is scoped to a row this
+     * user owns, and it comes back out only to the browser that wrote it. What
+     * *is* checked is everything authorization depends on — the article, and the
+     * owner, which is taken from the session and never from the arguments.
+     */
+    create: defineMutator(
+      z.object({
+        id: z.uuid(),
+        articleId: z.uuid(),
+        type: z.enum(ANNOTATION_TYPES),
+        pageIndex: z.int().min(0),
+        contents: z.string().max(20_000).nullable(),
+        payload: annotationPayloadSchema(),
+      }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        await requireOwnedArticle(tx, session, args.articleId)
+
+        const now = Date.now()
+        await tx.mutate.annotations.insert({
+          id: args.id,
+          userId: session.id,
+          articleId: args.articleId,
+          type: args.type,
+          pageIndex: args.pageIndex,
+          contents: args.contents,
+          payload: args.payload,
+          createdAt: now,
+          updatedAt: now,
+        })
+      },
+    ),
+
+    /**
+     * Replace a mark's geometry and contents after the reader moved, resized, or
+     * retyped it.
+     *
+     * The whole payload rather than a patch, for the reason `articles.setNotes`
+     * gives: the writer holds the complete object the engine handed it, so a
+     * patch protocol would be machinery for merging edits that only ever come
+     * from one editor at a time. It is also what makes this safe to re-run on
+     * rebase — writing the same object twice is writing it once.
+     *
+     * `type` is deliberately not updatable. A highlight does not become an ink
+     * stroke; a request that says so is a bug in the caller, and refusing to
+     * encode it keeps the column trustworthy.
+     */
+    update: defineMutator(
+      z.object({
+        id: z.uuid(),
+        pageIndex: z.int().min(0),
+        contents: z.string().max(20_000).nullable(),
+        payload: annotationPayloadSchema(),
+      }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        await requireOwnedAnnotation(tx, session, args.id)
+
+        await tx.mutate.annotations.update({
+          id: args.id,
+          pageIndex: args.pageIndex,
+          contents: args.contents,
+          payload: args.payload,
+          updatedAt: Date.now(),
+        })
+      },
+    ),
+
+    /**
+     * Remove a mark. Hard delete, per
+     * research/data-modeling/zero-schema-conventions.md — there is no undo in
+     * this reader by decision, so a tombstone would be a row kept for nothing.
+     *
+     * Guarded like `tags.delete`, and refusing the same way: an annotation that
+     * is not there and one that is someone else's are one answer, so neither
+     * confirms the other's existence.
+     */
+    delete: defineMutator(
+      z.object({ id: z.uuid() }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        await requireOwnedAnnotation(tx, session, args.id)
+        await tx.mutate.annotations.delete({ id: args.id })
+      },
+    ),
+  },
+
   articles: {
     /**
      * Set where the reader has got to.
@@ -226,6 +329,27 @@ function tagNameSchema() {
  */
 function notesSchema() {
   return z.string().max(50_000)
+}
+
+/**
+ * An annotation's type-specific fields, as the reader may submit them.
+ *
+ * Validated as "a JSON object" and no further, on purpose. The fields differ per
+ * annotation type and their shape is EmbedPDF's to define, so a schema listing
+ * them here would be a second, hand-maintained copy of a library's internals —
+ * wrong the first time the library adds a property, and wrong in the direction
+ * that silently drops what the engine needs to redraw the mark.
+ *
+ * What it does insist on is that the values are **JSON** — Zod's own recursive
+ * JSON type rather than `unknown`. That is not decoration: this ends up in a
+ * `jsonb` column and travels through Zero, both of which can only carry JSON, so
+ * a payload holding a `Date` or a function must be refused here rather than
+ * losing a field somewhere downstream where nobody is looking. The reader's
+ * translation layer is what strips the one such field EmbedPDF supplies (its
+ * `Date` timestamps) before a payload ever reaches this.
+ */
+function annotationPayloadSchema() {
+  return z.record(z.string(), z.json())
 }
 
 /**

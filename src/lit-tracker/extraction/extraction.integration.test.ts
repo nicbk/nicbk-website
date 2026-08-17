@@ -441,6 +441,9 @@ describe('what Zero replicates', () => {
     // (research/system-architecture/background-jobs.md).
     expect(published.map((row) => row.schemaname)).not.toContain('pgboss')
     expect(published.map((row) => row.tablename).sort()).toEqual([
+      // Added by #9's fourth task, in the migration that creates it: a mark
+      // drawn in one window reaches another by sync and by nothing else.
+      'annotations',
       // Both added by #8's second task, in the migration that creates them:
       // the card draws an article's tags and the filter rail will list them.
       'article_tags',

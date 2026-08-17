@@ -82,3 +82,69 @@ The general lesson, recorded because it will recur: **"not floating" was written
 about a toolbar's *behaviour* — where it appears and when — and was then read as
 a statement about its *background*.** When a decided constraint turns out to
 carry two readings, the one to keep is the one the reasoning was about.
+
+## Revision (2026-08-13), decided with the user as the tools were built
+
+**The twelve tools are one control in the bar, not twelve.** The bullet above
+says the toolbar holds "annotation tool buttons", which read as a strip of them.
+Twelve icon buttons is most of a narrow screen's width — the bar had already been
+taken sideways once at 420px by this feature — and the usual fix for that, a
+menu, may as well be the design rather than the retreat. So the reserved slot
+holds a single group whose trigger **names the live tool**, opening a menu of
+thirteen choices: "select" (which deselects), then the tools under three
+headings — *text* for the four that attach to selected text, *draw* for the six
+drawn on the page, *write* for the two that carry the reader's own words.
+
+Two consequences worth stating, because both are requirements rather than
+niceties:
+
+- **Every tool carries a word as well as a glyph.** An icon-only control needs an
+  accessible name regardless, so the name is visible to everyone instead of only
+  to a screen reader — and nobody has to guess which pentagon means polygon. Below
+  the narrow breakpoint the trigger drops its word for its glyph; its accessible
+  name does not change.
+- **The active tool is stated three ways** — named in the trigger, shown by its
+  own glyph, and coloured — so the state is never carried by colour alone.
+
+## Revision (2026-08-16), from using the reader
+
+**The groups are one centred cluster, not four islands.** The 2026-08-13
+revision put the page-level controls "as a third floating group at its end", and
+with the annotation tools present that spread the bar's contents across the whole
+window: at 1440px the four groups sat as far apart as the width allowed and read
+as four unrelated things (user-reported). The distance between controls is now a
+constant and what varies with the window is the paper on either side of them.
+The distinction the earlier revision was protecting survives — the page's
+controls are still their own opaque group, adjacent rather than merged — but
+"at its end" is superseded: the end of a wide bar is nowhere near what it acts
+on.
+
+**A mark can be selected, and selecting it is how it is removed.** The original
+decision covers making marks and lists them in the sidebar, and says nothing
+about unmaking one — yet "annotations are individually deletable" is the reason
+undo was ruled out. So: clicking a mark selects it and floats a small control
+beside it carrying **delete**. Anchored to the mark rather than added to the
+toolbar, because the toolbar is about the document and stays identical whatever
+is selected; a control that acts on *this* mark belongs beside it.
+
+**Deleting is one click, with no confirmation and no undo** (decided with the
+user). The control sits just above the mark, which is also where "click away to
+deselect" naturally lands, and marks were lost that way in testing — judged
+acceptable anyway, because a mark takes seconds to redraw and a confirmation
+would tax every deliberate deletion to protect against the occasional slip. If
+this proves wrong in use, moving the control is the cheaper remedy than adding a
+step.
+
+**Putting a selection down has two ways out, and both are needed.** Clicking the
+bare paper deselects the mark; **Escape** drops all three things a reader can be
+holding at once — a text selection, a selected mark, and a live tool. EmbedPDF
+supplies neither: its "empty space" event means *no text here*, and the
+annotation plugin does not listen to it, so a selected mark stayed selected
+until another was chosen.
+
+**Colour selection is deliberately not built.** The creation-flow bullet above
+mentions picking a tool "with a color" in passing; every tool draws in its
+built-in colour for now (user-decided). The task carrying this was the one
+introducing a new synced table, and a colour control is new UI, new state, and a
+new accessibility surface with no decision behind its palette. It can be added
+later against a working sync bridge; nothing here forecloses it.

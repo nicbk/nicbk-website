@@ -7,12 +7,24 @@ import { usePdfiumEngine } from '@embedpdf/engines/react'
 // self-hosted for the same reason. Imported through Vite rather than copied
 // into `public/` so the binary can never drift from the installed package.
 import pdfiumWasmUrl from '@embedpdf/pdfium/pdfium.wasm?url'
+import {
+  AnnotationLayer,
+  useAnnotation,
+} from '@embedpdf/plugin-annotation/react'
+import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react'
 import { RenderLayer } from '@embedpdf/plugin-render/react'
 import { Scroller, useScroll } from '@embedpdf/plugin-scroll/react'
+import {
+  SelectionLayer,
+  useSelectionCapability,
+} from '@embedpdf/plugin-selection/react'
 import { Viewport } from '@embedpdf/plugin-viewport/react'
 import { useZoom } from '@embedpdf/plugin-zoom/react'
 import type { ReactNode } from 'react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import { AnnotationSelectionMenu } from './annotation-selection-menu'
+import { useAnnotationSync } from './annotation-sync/use-annotation-sync'
+import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
 import { ReaderNotice } from './reader-notice'
 import { createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
@@ -103,6 +115,41 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
   const documentState = useDocumentState(articleId)
   const { state: scroll, provides: scrollScope } = useScroll(articleId)
   const { state: zoom, provides: zoomScope } = useZoom(articleId)
+  const { state: annotation, provides: annotationScope } =
+    useAnnotation(articleId)
+  const { provides: selectionScope } = useSelectionCapability()
+
+  // The marks and the rows, kept saying the same thing. Mounted here because
+  // this is the first place the annotation scope exists; everything it decides
+  // is in `annotation-sync/`.
+  useAnnotationSync(articleId)
+
+  /**
+   * Escape puts down whatever the reader had picked up.
+   *
+   * Three things can be "held" at once — a stretch of selected text, a selected
+   * mark, and a live tool — and each has its own way out (click elsewhere, click
+   * the paper, choose "select" in the menu). Escape is the one gesture that
+   * means "never mind" everywhere else on this site, and without it a selection
+   * made by accident had to be undone by working out which of the three it was.
+   *
+   * On the window rather than the viewport: the viewport is not focusable, so a
+   * listener there would only fire when a control inside it happened to hold
+   * focus — which is exactly when Escape is least needed.
+   */
+  useEffect(() => {
+    function dismiss(event: KeyboardEvent) {
+      if (event.key !== 'Escape') {
+        return
+      }
+      selectionScope?.clear()
+      annotationScope?.deselectAnnotation()
+      annotationScope?.setActiveTool(null)
+    }
+
+    window.addEventListener('keydown', dismiss)
+    return () => window.removeEventListener('keydown', dismiss)
+  }, [selectionScope, annotationScope])
 
   const state = deriveReaderState({
     isEngineLoading: false,
@@ -156,11 +203,64 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                 className={styles.page}
                 style={{ width, height }}
               >
-                <RenderLayer
+                {/*
+                 * Three layers over each page, and the order is the order they
+                 * stack: the paper, the text selection over it, the marks over
+                 * that. `PagePointerProvider` is what turns a pointer event on
+                 * this element into a point on the page — the coordinate space
+                 * every tool draws in, and the reason a mark made at 61% is in
+                 * the right place at 200%.
+                 */}
+                <PagePointerProvider
                   documentId={articleId}
                   pageIndex={pageIndex}
-                  className={styles.pageImage}
-                />
+                  className={styles.pageLayers}
+                  // Clicking away from a mark puts it down. On `pointerdown`
+                  // rather than `click` so the mark is released as the press
+                  // begins — by the time a click completes the reader may
+                  // already be dragging a new one.
+                  onPointerDown={(event) => {
+                    if (isBlankPaper(event.target)) {
+                      annotationScope?.deselectAnnotation()
+                    }
+                  }}
+                >
+                  <RenderLayer
+                    documentId={articleId}
+                    pageIndex={pageIndex}
+                    className={styles.pageImage}
+                    // What "the reader clicked the bare paper" is recognised by
+                    // — see `blank-paper.ts`.
+                    {...{ [PAPER_ATTRIBUTE]: '' }}
+                    // The page is an `<img>`, and dragging an image is a
+                    // browser-native drag-and-drop: press and pull across a
+                    // paragraph and what moves is a ghost of the page, not a
+                    // text selection. It made highlighting feel broken — the
+                    // reader had to "drag in weird ways" to select anything
+                    // (user-reported). Nothing here wants that gesture: every
+                    // drag over a page belongs to the reader's own tools.
+                    draggable={false}
+                  />
+                  <SelectionLayer
+                    documentId={articleId}
+                    pageIndex={pageIndex}
+                  />
+                  <AnnotationLayer
+                    documentId={articleId}
+                    pageIndex={pageIndex}
+                    // What a reader can do to the mark they have selected.
+                    // EmbedPDF calls this for every annotation on the page and
+                    // the control declines to draw for the unselected ones.
+                    selectionMenu={(menu) => (
+                      <AnnotationSelectionMenu
+                        {...menu}
+                        onDelete={(page, annotationId) =>
+                          annotationScope?.deleteAnnotation(page, annotationId)
+                        }
+                      />
+                    )}
+                  />
+                </PagePointerProvider>
               </div>
             )}
           />
@@ -182,6 +282,8 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
         onZoomIn={() => zoomScope?.zoomIn()}
         onZoomOut={() => zoomScope?.zoomOut()}
         onRequestZoom={(level) => zoomScope?.requestZoom(level)}
+        activeToolId={annotation.activeToolId}
+        onSelectTool={(toolId) => annotationScope?.setActiveTool(toolId)}
         // The scopes exist as soon as the plugins register, but they have
         // nothing to act on until the document is drawn.
         disabled={state !== 'ready'}

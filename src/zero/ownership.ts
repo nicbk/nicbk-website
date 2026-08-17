@@ -78,6 +78,29 @@ export async function requireOwnedArticle(
   }
 }
 
+/**
+ * Asserts the annotation exists and belongs to the caller. As above.
+ *
+ * Ownership is read from the annotation's own `user_id` rather than through the
+ * article it is on. Both are true of every row — the two cascade from the same
+ * account — but the direct column is the one the decided model puts on every
+ * user-owned table for exactly this check
+ * (research/system-architecture/data-sharing-boundaries.md), and reading it
+ * through a join would make the guard depend on a second row being consistent.
+ */
+export async function requireOwnedAnnotation(
+  tx: Transaction,
+  ctx: ZeroContext,
+  annotationId: string,
+): Promise<void> {
+  const [annotation] = await tx.run(
+    zql.annotations.where('id', annotationId).where('userId', ctx.id).limit(1),
+  )
+  if (!annotation) {
+    throw new MutationRefusedError()
+  }
+}
+
 /** Asserts the tag exists and belongs to the caller. As above. */
 export async function requireOwnedTag(
   tx: Transaction,

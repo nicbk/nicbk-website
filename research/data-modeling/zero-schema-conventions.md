@@ -44,6 +44,21 @@ so the client-generated-ID rationale above doesn't apply, and Postgres's
 own `uuidv7()` (extension-free as of v18) avoids adding app code solely
 to generate an ID for an insert that's already entirely server-side.
 
+**Exception (added 2026-08-13): `annotations.id` is EmbedPDF's, and is a
+UUIDv4.** The reader's engine mints an annotation's id inside the tool that
+draws the mark (`uuidV4()`, in each pointer handler), before any of this
+project's code sees it. The alternatives were to re-key every mark — keeping a
+map from the engine's id to a v7 row id, in both directions, rebuilt on every
+load and kept true across two open windows — or to adopt the id the engine
+already made. Adopting it was decided with the user at implementation: a mark
+then has **one identity** in the engine, in this table, and in the annotations
+list, and the component where an identity mistake means duplicated or lost
+annotations has no mapping layer in it at all. What is given up is the
+insert-ordering property above, on one table whose rows are a single reader's
+marks on their own papers; the optimistic-create property that motivates
+client-generated ids in the first place is unaffected, since the id still
+arrives with the write.
+
 ### Timestamps — `timestamptz` in Postgres, `number()` (epoch-ms) in Zero
 
 `created_at`/`updated_at` (and any other timestamp column) are Postgres

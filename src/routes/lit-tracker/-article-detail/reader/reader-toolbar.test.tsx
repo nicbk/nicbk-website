@@ -2,6 +2,7 @@ import { ZoomMode } from '@embedpdf/plugin-zoom'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { ANNOTATION_TOOLS } from './annotation-tools'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
 
 /**
@@ -27,6 +28,8 @@ function renderToolbar(
     onZoomIn: vi.fn(),
     onZoomOut: vi.fn(),
     onRequestZoom: vi.fn(),
+    activeToolId: null as string | null,
+    onSelectTool: vi.fn(),
     disabled: false,
     ...overrides,
   }
@@ -127,25 +130,89 @@ describe('the reader toolbar', () => {
     expect(props.onRequestZoom).toHaveBeenCalledWith(ZoomMode.FitWidth)
   })
 
-  it('keeps a space for the annotation tools task 4 adds', () => {
-    // Reserved rather than laid out for two groups and re-laid-out for three.
-    const { container } = render(
-      <ReaderToolbar
-        currentPage={1}
-        totalPages={15}
-        onGoToPage={vi.fn()}
-        onPreviousPage={vi.fn()}
-        onNextPage={vi.fn()}
-        currentZoom={1}
-        zoomLevel={1}
-        onZoomIn={vi.fn()}
-        onZoomOut={vi.fn()}
-        onRequestZoom={vi.fn()}
-        disabled={false}
-      />,
-    )
+  describe('the annotation tools', () => {
+    /** Opens the tool menu and returns nothing — the items are queried by role. */
+    async function openTools() {
+      await userEvent.click(
+        screen.getByRole('button', { name: /annotation tools/ }),
+      )
+    }
 
-    expect(container.querySelector('[class*="toolSlot"]')).not.toBeNull()
+    it('offers all twelve decided types, each with a name', async () => {
+      // Twelve, and no thirteenth: stamp is out of scope by decision, and link,
+      // popup and widget are furniture a PDF arrives carrying.
+      renderToolbar()
+      await openTools()
+
+      const items = await screen.findAllByRole('menuitemradio')
+      expect(items).toHaveLength(ANNOTATION_TOOLS.length + 1)
+      for (const tool of ANNOTATION_TOOLS) {
+        expect(
+          screen.getByRole('menuitemradio', { name: tool.label }),
+        ).toBeInTheDocument()
+      }
+    })
+
+    it('activates the tool that was picked', async () => {
+      const props = renderToolbar()
+      await openTools()
+
+      await userEvent.click(
+        await screen.findByRole('menuitemradio', { name: 'highlight' }),
+      )
+
+      expect(props.onSelectTool).toHaveBeenCalledWith('highlight')
+    })
+
+    it('switches tools rather than adding one', async () => {
+      // The engine holds one active tool per document, so picking a second is
+      // what deactivates the first — there is no state here to get out of step.
+      const props = renderToolbar({ activeToolId: 'highlight' })
+      await openTools()
+
+      await userEvent.click(
+        await screen.findByRole('menuitemradio', { name: 'freehand' }),
+      )
+
+      expect(props.onSelectTool).toHaveBeenCalledWith('ink')
+    })
+
+    it('deselects, which is how the reader gets back to reading', async () => {
+      const props = renderToolbar({ activeToolId: 'highlight' })
+      await openTools()
+
+      await userEvent.click(
+        await screen.findByRole('menuitemradio', { name: 'select' }),
+      )
+
+      expect(props.onSelectTool).toHaveBeenCalledWith(null)
+    })
+
+    it('says which tool is live in words, not in colour', async () => {
+      // The requirement is that the active state is exposed programmatically and
+      // conveyed by more than colour. The trigger's own text and accessible name
+      // are what satisfy both, and a stylesheet cannot be asserted here.
+      renderToolbar({ activeToolId: 'squiggly' })
+
+      const trigger = screen.getByRole('button', { name: /annotation tools/ })
+      expect(trigger).toHaveTextContent('squiggly')
+      expect(trigger).toHaveAccessibleName(
+        'annotation tools, squiggly selected',
+      )
+
+      await openTools()
+      expect(
+        await screen.findByRole('menuitemradio', { name: 'squiggly' }),
+      ).toBeChecked()
+    })
+
+    it('says so when none is', () => {
+      renderToolbar({ activeToolId: null })
+
+      expect(
+        screen.getByRole('button', { name: 'annotation tools, none selected' }),
+      ).toBeInTheDocument()
+    })
   })
 
   it('carries the page’s own controls when it is given them', () => {

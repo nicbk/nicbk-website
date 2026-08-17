@@ -93,6 +93,32 @@ export const queries = defineQueries({
     }),
   },
 
+  annotations: {
+    /**
+     * Every mark the signed-in user has left on one paper, in page order.
+     *
+     * Scoped by owner *as well as* by article, like `articles.byId` and for the
+     * same reason: naming another user's article id returns nothing rather than
+     * their marks. The annotation's own `user_id` is what the filter reads —
+     * every row has one, so this needs no join to be safe.
+     *
+     * Sorted here rather than at each consumer because both of them want the
+     * same order: the reader imports these into the engine, and task 5's sidebar
+     * lists them beside a page number. `createdAt` breaks ties within a page so
+     * the list does not reshuffle when two marks share one.
+     */
+    forArticle: defineQuery(z.uuid(), ({ args: articleId, ctx }) => {
+      if (!ctx) {
+        return zql.annotations.limit(0)
+      }
+      return zql.annotations
+        .where('articleId', articleId)
+        .where('userId', ctx.id)
+        .orderBy('pageIndex', 'asc')
+        .orderBy('createdAt', 'asc')
+    }),
+  },
+
   uploadJobs: {
     /**
      * The signed-in user's unresolved uploads, oldest first — what the upload

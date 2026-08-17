@@ -23,6 +23,7 @@ const CONTEXT: ZeroContext = { id: 'reader-1' }
 const ARTICLE = '0199a1b2-c3d4-7e5f-8a9b-000000000001'
 const TAG = '0199a1b2-c3d4-7e5f-8a9b-000000000002'
 const LINK = '0199a1b2-c3d4-7e5f-8a9b-000000000003'
+const MARK = '0199a1b2-c3d4-7e5f-8a9b-000000000004'
 
 interface RecordedWrite {
   table: string
@@ -62,6 +63,7 @@ function stubTransaction({ reads }: { reads?: boolean[] } = {}) {
       tags: table('tags'),
       articleTags: table('articleTags'),
       articles: table('articles'),
+      annotations: table('annotations'),
     },
   }
 
@@ -221,6 +223,138 @@ describe('tags.detach', () => {
 
     await expect(
       mutators.tags.detach.fn({ args, tx, ctx: CONTEXT } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+})
+
+describe('annotations.create', () => {
+  const args = {
+    id: MARK,
+    articleId: ARTICLE,
+    type: 'highlight',
+    pageIndex: 3,
+    contents: 'the passage itself',
+    payload: { rect: { origin: { x: 1, y: 2 } }, color: '#ffd400' },
+  }
+
+  it('accepts a well-formed mark and writes exactly one row', async () => {
+    expect(await run(mutators.annotations.create, args)).toEqual([
+      { table: 'annotations', operation: 'insert' },
+    ])
+  })
+
+  it('accepts a mark with nothing written on it', async () => {
+    // A shape or an ink stroke has no contents, which is expected rather than
+    // invalid — the column is nullable for exactly this.
+    expect(
+      await run(mutators.annotations.create, { ...args, contents: null }),
+    ).toEqual([{ table: 'annotations', operation: 'insert' }])
+  })
+
+  it.each([
+    ['an id that is not a uuid', { ...args, id: 'mark-1' }],
+    ['a type outside the twelve', { ...args, type: 'stamp' }],
+    ['a type in the wrong case', { ...args, type: 'Highlight' }],
+    ['a negative page index', { ...args, pageIndex: -1 }],
+    ['a fractional page index', { ...args, pageIndex: 1.5 }],
+    ['a malformed article id', { ...args, articleId: 'article-1' }],
+    ['a payload that is not an object', { ...args, payload: 'rect' }],
+    ['a missing payload', { ...args, payload: undefined }],
+    // The payload is stored as `jsonb` and travels through Zero, neither of
+    // which can carry anything else — so a value that is not JSON is refused at
+    // the boundary rather than lost somewhere past it.
+    [
+      'a payload holding something that is not JSON',
+      {
+        ...args,
+        payload: { rect: () => 'nope' },
+      },
+    ],
+  ])('refuses %s without writing', async (_case, args) => {
+    const { tx, writes } = stubTransaction()
+
+    await expect(
+      mutators.annotations.create.fn({ args, tx, ctx: CONTEXT } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+
+  it('writes nothing when the article is not the caller’s', async () => {
+    const { tx, writes } = stubTransaction({ reads: [false] })
+
+    await expect(
+      mutators.annotations.create.fn({ args, tx, ctx: CONTEXT } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+
+  it('refuses a request with no session, before validating anything', async () => {
+    const { tx, writes } = stubTransaction()
+
+    await expect(
+      mutators.annotations.create.fn({ args, tx, ctx: undefined } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+})
+
+describe('annotations.update', () => {
+  const args = {
+    id: MARK,
+    pageIndex: 3,
+    contents: null,
+    payload: { rect: { origin: { x: 1, y: 2 } } },
+  }
+
+  it('updates when the mark is the caller’s', async () => {
+    expect(await run(mutators.annotations.update, args)).toEqual([
+      { table: 'annotations', operation: 'update' },
+    ])
+  })
+
+  it('writes nothing when the ownership check finds no row', async () => {
+    const { tx, writes } = stubTransaction({ reads: [false] })
+
+    await expect(
+      mutators.annotations.update.fn({ args, tx, ctx: CONTEXT } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+
+  it('ignores a request to change the type or the article', async () => {
+    // A highlight does not become an ink stroke, and a mark does not move to
+    // another paper. Neither is in this mutator's schema, so both are dropped
+    // before the body runs rather than refused — the write still happens, and
+    // still touches only the three columns the mutator names. What is *stored*
+    // after such a request is asserted against real Postgres in
+    // `mutators.integration.test.ts`, which is where that claim belongs.
+    const writes = await run(mutators.annotations.update, {
+      ...args,
+      type: 'ink',
+      articleId: ARTICLE,
+    })
+
+    expect(writes).toEqual([{ table: 'annotations', operation: 'update' }])
+  })
+})
+
+describe('annotations.delete', () => {
+  it('deletes when the mark is the caller’s', async () => {
+    expect(await run(mutators.annotations.delete, { id: MARK })).toEqual([
+      { table: 'annotations', operation: 'delete' },
+    ])
+  })
+
+  it('writes nothing when the ownership check finds no row', async () => {
+    const { tx, writes } = stubTransaction({ reads: [false] })
+
+    await expect(
+      mutators.annotations.delete.fn({
+        args: { id: MARK },
+        tx,
+        ctx: CONTEXT,
+      } as never),
     ).rejects.toThrow()
     expect(writes).toEqual([])
   })

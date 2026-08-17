@@ -1,7 +1,10 @@
 import { createPluginRegistration } from '@embedpdf/core'
+import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation'
 import { DocumentManagerPluginPackage } from '@embedpdf/plugin-document-manager'
+import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager'
 import { RenderPluginPackage } from '@embedpdf/plugin-render'
 import { ScrollPluginPackage, ScrollStrategy } from '@embedpdf/plugin-scroll'
+import { SelectionPluginPackage } from '@embedpdf/plugin-selection'
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport'
 import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom'
 
@@ -31,12 +34,18 @@ export function articlePdfUrl(articleId: string): string {
 }
 
 /**
- * The five plugins the viewer needs, and no more.
+ * The eight plugins the reader needs, and no more.
  *
  * Thumbnails, text search, printing, rotation, and page spreads all exist and
  * none is asked for by anything decided; each would be a UI decision with no
- * decision behind it. Task 4 adds the annotation plugin here — with the two
- * peers it requires — when it adds the tools that use it.
+ * decision behind it.
+ *
+ * **Three of the eight are the annotation plugin and its dependencies.** The
+ * plugin's manifest declares `requires: ['interaction-manager', 'selection']`,
+ * and they are registered before it because the library's own documentation says
+ * that order matters. The manifest also lists `history` as *optional* — that is
+ * undo/redo, which is out of scope by decision, and its absence is why nothing
+ * here works around it.
  *
  * **The document id is the article id.** EmbedPDF keys every scope — scroll,
  * zoom, viewport — by document id and lets the caller choose it, so using the
@@ -59,6 +68,17 @@ export function createReaderPlugins(articleId: string) {
       // A paper in a panel that is often half a screen wide: fitting the width
       // is the zoom a reader would otherwise set by hand every time.
       defaultZoomLevel: ZoomMode.FitWidth,
+    }),
+
+    // The annotation plugin's two required dependencies, before it.
+    createPluginRegistration(InteractionManagerPluginPackage),
+    createPluginRegistration(SelectionPluginPackage),
+    createPluginRegistration(AnnotationPluginPackage, {
+      // Every default here is EmbedPDF's own except this one, and it is the
+      // decided creation flow: the tool stays live after a mark is made, so a
+      // reader marking six passages picks the tool once
+      // (research/ui-ux/pages/lit-tracker/components/reader-annotation.md).
+      deactivateToolAfterCreate: false,
     }),
   ]
 }

@@ -1,6 +1,6 @@
 # Status: Article Detail and Reader
 
-**Feature state:** **In progress** — tasks 1 and 2 merged, task 3 implemented and awaiting review. Five tasks, sequential, each gated by its own PR + CI + human review.
+**Feature state:** **In progress** — tasks 1–3 merged, task 4 implemented and awaiting review. Six tasks now: a sixth was added on 2026-08-16 for the reader's text tools (see the log), so the count in `plan.md` is five *decided at spec time* plus one added from use. Sequential, each gated by its own PR + CI + human review.
 Depends on [`collection-view`](../collection-view/status.md) (#8, Complete) for
 the card this page is reached from, the tag model its Tags tab presents, and the
 drawer its sidebar becomes; and on
@@ -20,9 +20,10 @@ parent when its sub-issues close.
 |---|---|---|---|---|
 | [`article-detail-shell`](./tasks/article-detail-shell/status.md) ([#96](https://github.com/nicbk/nicbk-website/issues/96)) | **Merged** | [#101](https://github.com/nicbk/nicbk-website/pull/101) | Green | Merged 2026-08-13 |
 | [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | **Merged** | [#102](https://github.com/nicbk/nicbk-website/pull/102) | Green | Merged 2026-08-13 |
-| [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | **Implemented** | [#103](https://github.com/nicbk/nicbk-website/pull/103) | — | Awaiting review |
-| [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | Not started | — | — | — |
+| [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | **Merged** | [#103](https://github.com/nicbk/nicbk-website/pull/103) | Green | Merged 2026-08-13 |
+| [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | **Implemented** | — | — | Awaiting review |
 | [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | Not started | — | — | — |
+| `reader-text-tools` (task 6, to be filed) | Not started | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -147,3 +148,25 @@ write it does not own.
   that took the whole shell sideways at 420px — an uncapped grid **column** in
   `lit-tracker-shell`, not a reader bug — and a paint-order trap where the
   obvious fix would have opened every popup underneath its own trigger.
+- 2026-08-16 — **Task 3 merged** (PR #103), and **task 4 implemented** — the
+  table, its mutators, the tools, and the two-way bridge. Its open items were
+  settled first against the installed 2.15.0, which confirmed the spec's
+  predictions and added two the spec could not have made: `committed` is absent
+  from the `loaded` event, and `importAnnotations` re-emits every restored mark
+  as a committed creation, so the committed-only rule alone does not stop a paper
+  rewriting itself on open.
+
+  **The browser pass was the task**, and the user found most of what it found.
+  Seven defects, listed in the task's
+  [status.md](./tasks/annotations/status.md); the one worth carrying forward is
+  that **`jsonb` does not preserve key order**, which made every stored mark
+  differ from itself and turned the bridge into a write loop that jittered on
+  screen and was invisible to every test. The durable check that catches its
+  whole family — watch `updated_at` on an untouched row while the page sits idle
+  — is recorded there.
+
+  Three scope calls were taken with the user: deleting a mark was built here
+  (its own constraints require it and nothing on screen could reach the path);
+  removing a selection covers both a mark and a text selection; and copy,
+  comments and a translucent rectangle become **task 6** rather than growing this
+  diff. Deleting stays a single click with no undo, decided knowingly.

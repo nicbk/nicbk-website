@@ -1,12 +1,13 @@
 import type { ZoomLevel } from '@embedpdf/plugin-zoom'
 import type { ReactNode } from 'react'
+import { AnnotationToolControl } from './annotation-tool-control'
 import { PageNavigation } from './page-navigation'
 import { ZoomControl } from './zoom-control'
 import styles from './reader-toolbar.module.css'
 
 /**
- * The reader's persistent controls: pages on the left, zoom on the right, and
- * the space between them reserved for the annotation tools task 4 adds.
+ * The reader's persistent controls: pages on the left, the annotation tools in
+ * the middle, zoom on the right, and the page's own controls at the end.
  *
  * **Persistent, and floating over the document.** The decided spec asks for a
  * toolbar that is "not floating/contextual"
@@ -19,12 +20,9 @@ import styles from './reader-toolbar.module.css'
  * the paper shows through between them. `reader-toolbar.module.css` covers how,
  * including why this element must not claim a `z-index`.
  *
- * **The middle is left empty on purpose.** Laying out for two groups now and
- * three later would mean rearranging this bar in task 4; leaving the slot open
- * means that task fills a space rather than redesigning a row. It is marked
- * rather than merely blank so the gap reads as reserved instead of as something
- * that failed to render, and hidden from assistive technology because an empty
- * slot is nothing to announce.
+ * **The middle was left empty by task 3 and is filled here.** That worked as
+ * intended: the tools arrived as one more floating group in a space already laid
+ * out for them, and nothing about the bar's arrangement had to change.
  *
  * **`role="group"` rather than `role="toolbar"`.** A toolbar's ARIA contract is
  * roving tabindex — one tab stop, arrow keys between controls — and this bar
@@ -44,6 +42,10 @@ interface ReaderToolbarProps {
   onZoomIn: () => void
   onZoomOut: () => void
   onRequestZoom: (level: ZoomLevel) => void
+  /** EmbedPDF's active annotation tool for this document, or null when none is. */
+  activeToolId: string | null
+  /** Null deselects, leaving the reader selecting text normally again. */
+  onSelectTool: (toolId: string | null) => void
   /**
    * True while there is no document to act on.
    *
@@ -81,6 +83,8 @@ export function ReaderToolbar({
   onZoomIn,
   onZoomOut,
   onRequestZoom,
+  activeToolId,
+  onSelectTool,
   disabled,
   actions,
 }: ReaderToolbarProps) {
@@ -96,7 +100,11 @@ export function ReaderToolbar({
         disabled={disabled}
       />
 
-      <div className={styles.toolSlot} aria-hidden="true" />
+      <AnnotationToolControl
+        activeToolId={activeToolId}
+        onSelectTool={onSelectTool}
+        disabled={disabled}
+      />
 
       <ZoomControl
         currentZoom={currentZoom}
@@ -140,6 +148,8 @@ export function InertReaderToolbar({ actions }: { actions?: ReactNode }) {
       onZoomIn={() => {}}
       onZoomOut={() => {}}
       onRequestZoom={() => {}}
+      activeToolId={null}
+      onSelectTool={() => {}}
       disabled
     />
   )

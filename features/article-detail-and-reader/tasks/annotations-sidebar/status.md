@@ -80,9 +80,20 @@ pages.
 strip was a column-flow grid whose own comment promised wrapping — invisible
 for two tasks because "tags notes" fit one line, and caught the moment a long
 tab name arrived. No wording rescues a single line (the rail gives the strip
-~143px; the three words need ~216px), and #10's "citations" is longer still,
-so the strip is now a wrapping flex row and two-line tab strips are the
-design. Fixed in `article-sidebar.module.css` with the reasoning in place.
+~143px; the three words need ~216px), and #10's "citations" is longer still.
+
+The first remedy — a wrapping flex row — fixed the clipping but **read as
+ragged: two tabs on one line and "annotations" alone on a second
+(user-reported)**. The design is now **a word or a glyph, one row always**:
+a container query on the sidebar trades every tab's word for its Lucide glyph
+below 20rem, keeping the word as the accessible name and the pointer tooltip
+(`title`). The rail always shows glyphs, the drawer sheet always shows words,
+and the threshold is sized for the decided four tabs so #10 renders into it
+rather than moving it. This is the same trade the reader's toolbar triggers
+already make at their narrow breakpoint, and a container rather than a media
+query for the same reason the tag controls use one: the component renders at
+two very different widths on a single viewport. `flex-wrap` stays only as the
+failure mode of last resort, clipping being the worse one.
 
 ## Log
 
@@ -93,3 +104,7 @@ design. Fixed in `article-sidebar.module.css` with the reasoning in place.
 - 2026-08-17 — Implemented and browser-verified (above). One defect found and
   fixed (the strip that could not wrap). Task 4's owed multi-window check
   passed here, as its status.md predicted it would.
+- 2026-08-17 — **The wrapped strip superseded, with the user**: glyph tabs
+  with tooltips in the rail, words in the sheet, one row at every width (see
+  the defect section). Re-verified in both themes, in the rail and the
+  drawer sheet.

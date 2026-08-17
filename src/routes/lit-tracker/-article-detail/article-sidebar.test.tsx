@@ -89,6 +89,20 @@ describe('ArticleSidebar', () => {
     ])
   })
 
+  it('names every tab independently of its visible word', () => {
+    // In the rail the word is hidden and only the glyph is drawn (a container
+    // query jsdom cannot exercise), so the accessible name must not depend on
+    // the word being visible — the label carries it in both states, and the
+    // title gives pointer users the same word as a tooltip.
+    answerQueries({ 'articles.byId': [ARTICLE] })
+    renderSidebar()
+
+    for (const tab of screen.getAllByRole('tab')) {
+      expect(tab).toHaveAttribute('aria-label', tab.getAttribute('title'))
+      expect(tab.getAttribute('aria-label')).not.toBe('')
+    }
+  })
+
   it('renders no Citations tab', () => {
     // #10's, and it arrives with the citation graph it opens. Not disabled, not
     // empty — absent. This assertion is meant to be inverted by that feature.

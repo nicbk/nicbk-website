@@ -1,4 +1,5 @@
 import { Tabs } from '@base-ui/react/tabs'
+import { Highlighter, NotebookPen, Tag } from 'lucide-react'
 import { ArticleTagControls } from '~/routes/lit-tracker/-components/article-menu/article-tag-controls'
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { AnnotationsPanel } from './annotations-panel'
@@ -11,9 +12,9 @@ import styles from './article-sidebar.module.css'
 /**
  * The tabs, in the decided order.
  *
- * Declared as data rather than as JSX so the two things that must agree — the
- * tab and its panel — cannot drift apart, and so #10's Citations tab is one
- * entry rather than two edits in two places.
+ * Declared as data rather than as JSX so the things that must agree — the tab,
+ * its panel, its glyph — cannot drift apart, and so #10's Citations tab is one
+ * entry rather than edits in three places.
  *
  * The decided sidebar has **four** tabs (Tags, Notes, Citations, Annotations).
  * Three exist now; **Citations arrives with the citation graph it opens**
@@ -21,8 +22,20 @@ import styles from './article-sidebar.module.css'
  * "Citations" would be a promise the page cannot keep, and an empty one is
  * worse. Annotations sits where the decided order puts it, which will be after
  * Citations once that tab exists between them.
+ *
+ * **Each tab is a word or a glyph, by container width** (user-decided
+ * 2026-08-17): the strip shows the words where they fit on one line — the
+ * narrow-screen sheet — and in the rail, which cannot fit three words in one
+ * row, every tab drops its word for its glyph, keeping the word as its
+ * accessible name and its tooltip. The same trade the reader's toolbar
+ * triggers already make at their narrow breakpoint, chosen here over a
+ * wrapped two-line strip, which read as ragged.
  */
-const TABS = ['tags', 'notes', 'annotations'] as const
+const TABS = [
+  { id: 'tags', icon: Tag },
+  { id: 'notes', icon: NotebookPen },
+  { id: 'annotations', icon: Highlighter },
+] as const
 
 interface ArticleSidebarProps {
   articleId: string
@@ -87,8 +100,18 @@ export function ArticleSidebar({ articleId }: ArticleSidebarProps) {
       */}
       <Tabs.List className={styles.tabs}>
         {TABS.map((tab) => (
-          <Tabs.Tab key={tab} className={styles.tab} value={tab}>
-            {tab}
+          <Tabs.Tab
+            key={tab.id}
+            className={styles.tab}
+            value={tab.id}
+            // The name is the word whether or not the word is drawn — in the
+            // rail only the glyph is, and `title` gives pointer users the same
+            // word as a tooltip that assistive tech gets from the label.
+            aria-label={tab.id}
+            title={tab.id}
+          >
+            <tab.icon className={styles.tabIcon} aria-hidden="true" />
+            <span className={styles.tabLabel}>{tab.id}</span>
           </Tabs.Tab>
         ))}
       </Tabs.List>

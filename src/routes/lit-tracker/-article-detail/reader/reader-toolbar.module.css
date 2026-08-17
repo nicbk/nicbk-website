@@ -33,11 +33,30 @@
 
   display: flex;
   align-items: center;
-  /* Spread rather than bunched: pages at one end, the page's own controls at the
-     other, and the paper visible between the groups. Task 3 got this from a
-     flexible spacer standing in for the tools; now that they are here, the
-     groups themselves are what the space is distributed between. */
-  justify-content: space-between;
+  /*
+   * One cluster, centred over the paper — not four groups pushed to the edges.
+   *
+   * This was `space-between`, inherited from task 3 where a flexible spacer
+   * stood in for the tools. With the tools actually present it made the bar's
+   * width the thing that set the distance between controls: at 1440px the four
+   * groups sat as far apart as the window allowed and read as four unrelated
+   * islands rather than one set of controls (user-reported). The controls belong
+   * to each other, so the gap between them is a constant, and what varies with
+   * the window is the empty paper on either side.
+   *
+   * Centred rather than left-aligned because the paper is centred: the controls
+   * sit over the document they act on at every width.
+   */
+  justify-content: center;
+  /*
+   * Wrapping is the floor, not the layout: the cluster is about 438px wide once
+   * the labels are dropped, so it fits every width this shell supports and
+   * wraps only on a phone narrower than that. A second row costs document, which
+   * is what this bar exists to avoid — but a centred cluster that overflows
+   * would clip at *both* ends, and a page field half off the screen is worse
+   * than a taller bar.
+   */
+  flex-wrap: wrap;
   gap: var(--space-xs);
   padding: var(--space-xs);
 

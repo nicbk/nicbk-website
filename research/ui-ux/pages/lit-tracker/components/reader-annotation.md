@@ -108,6 +108,17 @@ niceties:
 
 ## Revision (2026-08-16), from using the reader
 
+**The groups are one centred cluster, not four islands.** The 2026-08-13
+revision put the page-level controls "as a third floating group at its end", and
+with the annotation tools present that spread the bar's contents across the whole
+window: at 1440px the four groups sat as far apart as the width allowed and read
+as four unrelated things (user-reported). The distance between controls is now a
+constant and what varies with the window is the paper on either side of them.
+The distinction the earlier revision was protecting survives — the page's
+controls are still their own opaque group, adjacent rather than merged — but
+"at its end" is superseded: the end of a wide bar is nowhere near what it acts
+on.
+
 **A mark can be selected, and selecting it is how it is removed.** The original
 decision covers making marks and lists them in the sidebar, and says nothing
 about unmaking one — yet "annotations are individually deletable" is the reason

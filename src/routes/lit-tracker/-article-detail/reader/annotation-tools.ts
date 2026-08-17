@@ -13,6 +13,7 @@ import {
   Underline,
   Waves,
 } from 'lucide-react'
+import type { AnnotationType } from '~/lit-tracker/annotation-type'
 
 /**
  * The twelve marks the reader may make, in the order they are offered.
@@ -93,6 +94,45 @@ export const ANNOTATION_TOOLS: readonly AnnotationToolChoice[] =
  * a second control beside it.
  */
 export const NO_TOOL = 'none'
+
+/**
+ * Which tool draws each *stored* row type.
+ *
+ * The two vocabularies are the same word for eleven of the twelve — the
+ * exception is the sticky note, whose tool EmbedPDF calls `textComment` while
+ * the PDF subtype it stores is `text` (see `annotation-sync/annotation-row.ts`).
+ * This map is what lets a surface that has only a row — the sidebar's list —
+ * speak about it in the toolbar's words rather than growing a second set.
+ */
+const TOOL_ID_BY_TYPE: Record<AnnotationType, string> = {
+  highlight: 'highlight',
+  underline: 'underline',
+  strikeout: 'strikeout',
+  squiggly: 'squiggly',
+  ink: 'ink',
+  square: 'square',
+  circle: 'circle',
+  line: 'line',
+  polyline: 'polyline',
+  polygon: 'polygon',
+  freeText: 'freeText',
+  text: 'textComment',
+}
+
+/**
+ * The stored type's name as the toolbar menu spells it — "freehand" for an ink
+ * row, "rectangle" for a square one. One vocabulary across the toolbar and the
+ * sidebar's list, whose textless rows say this instead of a blank line
+ * (user-decided 2026-08-16).
+ */
+export function annotationTypeLabel(type: AnnotationType): string {
+  return (
+    ANNOTATION_TOOLS.find((tool) => tool.id === TOOL_ID_BY_TYPE[type])?.label ??
+    // Unreachable while the map above stays total, and the stored name is a
+    // truthful fallback if it ever stops being.
+    type
+  )
+}
 
 /**
  * What the menu's trigger says.

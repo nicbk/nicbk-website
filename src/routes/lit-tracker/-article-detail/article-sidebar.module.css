@@ -1,10 +1,13 @@
 /*
  * The sidebar's tabs and the panel below them.
  *
- * Two tabs today, four by the end of #10 — so the row is built to take more
- * without being redesigned: it wraps rather than scrolls, because four short
- * words in a narrow column are a second line, not a horizontal scroller nobody
- * would find.
+ * Three tabs today, four by the end of #10 — and the strip stays **one row**
+ * at every width: words where they fit, glyphs where they do not (see
+ * `.tabLabel` below). A container query rather than a media query because the
+ * same component renders at two very different widths on one viewport — the
+ * ~175px rail and the near-full-width sheet — and it is the box, not the
+ * screen, that decides whether the words fit. The same reasoning as the tag
+ * controls' container (`article-tag-controls.module.css`).
  */
 .sidebar {
   display: flex;
@@ -13,6 +16,7 @@
   /* Passes the rail's bounded height down to the panel, which is what scrolls. */
   min-height: 0;
   flex: 1;
+  container: article-sidebar / inline-size;
 }
 
 /*
@@ -24,15 +28,21 @@
  * stray labels rather than a control. A tab strip is recognised by the line it
  * shares, and the selected tab is the one that breaks it.
  *
- * The tabs share the row equally rather than sizing to their words, so the
- * strip stays a strip as #10 and task 5 add the third and fourth: four
- * different-width words at one end of a rail is a ragged edge, and equal
- * columns also give each tab a hit target wider than the word in it.
+ * The tabs grow to share the line, and the line is meant to be the only one:
+ * below, the container query trades each tab's word for its glyph before the
+ * words stop fitting. The history matters enough to keep: this was first a
+ * column-flow grid that **cannot wrap** however its comment insisted
+ * otherwise — invisible for two tasks because two short words fit one line,
+ * and caught the moment "annotations" clipped to "annot" in the rail (~143px
+ * for the strip, ~216px for three words). A wrapped flex strip fixed the
+ * clipping but read as ragged (user-reported), so glyphs-when-narrow is the
+ * design. `flex-wrap` stays as the failure mode of last resort — it should
+ * never fire at the decided thresholds, and if something ever outgrows them
+ * anyway, a second line is a lesser evil than clipped words.
  */
 .tabs {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  display: flex;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -46,6 +56,10 @@
  * height so the two occupy one line rather than stacking into a thick edge.
  */
 .tab {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: var(--space-2xs) var(--space-xs);
   border: none;
   border-bottom: 2px solid transparent;
@@ -56,6 +70,31 @@
   font-size: var(--font-size-sm);
   text-align: center;
   cursor: pointer;
+}
+
+/*
+ * A word or a glyph, never both. The word is the default; the glyph takes
+ * over when the container cannot fit every tab's word on one line. 20rem
+ * rather than today's break-even (~14rem for three words) because the
+ * threshold is sized for the **decided four tabs** — #10's "citations" must
+ * not move it, only render into it. The word stays the accessible name and
+ * the tooltip either way (`article-sidebar.tsx`), which is the same trade the
+ * reader's toolbar triggers make at their narrow breakpoint.
+ */
+.tabIcon {
+  display: none;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+@container article-sidebar (max-width: 20rem) {
+  .tabLabel {
+    display: none;
+  }
+
+  .tabIcon {
+    display: block;
+  }
 }
 
 /*

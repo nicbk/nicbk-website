@@ -122,6 +122,7 @@ vi.mock('@embedpdf/pdfium/pdfium.wasm?url', () => ({
 }))
 
 const { PdfReader } = await import('./pdf-reader')
+const { ReaderJumpProvider, useReaderJump } = await import('../reader-jump')
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
@@ -334,6 +335,52 @@ describe('PdfReader', () => {
 
       expect(stop).toHaveBeenCalledWith('keydown', expect.any(Function))
       stop.mockRestore()
+    })
+  })
+
+  describe('the jump the annotations list steers it by', () => {
+    /** Renders the reader inside the channel and hands the jump out. */
+    function renderWithJump() {
+      let jump: (pageIndex: number) => void = () => {}
+      function Grab() {
+        jump = useReaderJump()
+        return null
+      }
+      render(
+        <ReaderJumpProvider>
+          <PdfReader articleId={ARTICLE_ID} />
+          <Grab />
+        </ReaderJumpProvider>,
+      )
+      return (pageIndex: number) => jump(pageIndex)
+    }
+
+    it('turns a stored 0-based page index into the scroller’s 1-based page', () => {
+      const jump = renderWithJump()
+
+      jump(4)
+
+      expect(scrollScope.scrollToPage).toHaveBeenCalledWith({ pageNumber: 5 })
+    })
+
+    it('clamps a page this file does not have, like the typed field does', () => {
+      // A row can outlive the document it described. The end of the paper is a
+      // better answer than a jump that silently does nothing — the same
+      // treatment `use-page-field.ts` gives a typed 900.
+      const jump = renderWithJump()
+
+      jump(99)
+
+      expect(scrollScope.scrollToPage).toHaveBeenCalledWith({ pageNumber: 15 })
+    })
+
+    it('does not scroll a document that has not loaded', () => {
+      documentState.current = { status: 'loading', document: null }
+      const jump = renderWithJump()
+
+      jump(2)
+
+      expect(scrollScope.scrollToPage).not.toHaveBeenCalled()
     })
   })
 

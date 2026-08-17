@@ -21,7 +21,8 @@ import {
 import { Viewport } from '@embedpdf/plugin-viewport/react'
 import { useZoom } from '@embedpdf/plugin-zoom/react'
 import type { ReactNode } from 'react'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
+import { useRegisterReaderJump } from '../reader-jump'
 import { AnnotationSelectionMenu } from './annotation-selection-menu'
 import { useAnnotationSync } from './annotation-sync/use-annotation-sync'
 import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
@@ -168,6 +169,27 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
    * the moment the document is loaded.
    */
   const totalPages = documentState?.document?.pageCount ?? 0
+
+  /**
+   * The way in from the sidebar's annotations list (`reader-jump.tsx`): a row
+   * names a stored 0-based `page_index`, the scroller counts from 1.
+   *
+   * Clamped rather than rejected, the same treatment the page field gives a
+   * typed 900 (`use-page-field.ts`): a row can name a page this file does not
+   * have — the PDF was replaced, or the count is not known yet — and the end of
+   * the document is a better answer than a jump that silently does nothing.
+   */
+  const jumpToPage = useCallback(
+    (pageIndex: number) => {
+      if (totalPages < 1) {
+        return
+      }
+      const pageNumber = Math.min(Math.max(pageIndex + 1, 1), totalPages)
+      scrollScope?.scrollToPage({ pageNumber })
+    },
+    [scrollScope, totalPages],
+  )
+  useRegisterReaderJump(jumpToPage)
 
   return (
     // The document comes first and the toolbar second, which is the opposite of

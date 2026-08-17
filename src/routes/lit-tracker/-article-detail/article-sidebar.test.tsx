@@ -26,6 +26,9 @@ vi.mock('@rocicorp/zero/react', () => ({
 }))
 
 const { ArticleSidebar } = await import('./article-sidebar')
+const { ReaderJumpProvider, useRegisterReaderJump } = await import(
+  './reader-jump'
+)
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
@@ -44,7 +47,13 @@ const SURVEY_TAG = { id: 'tag-2', name: 'survey' }
 
 function answerQueries(
   answers: Partial<
-    Record<'articles.byId' | 'tags.mine' | 'articleTags.mine', unknown[]>
+    Record<
+      | 'articles.byId'
+      | 'tags.mine'
+      | 'articleTags.mine'
+      | 'annotations.forArticle',
+      unknown[]
+    >
   >,
   details: { type: string } = { type: 'complete' },
 ) {
@@ -73,7 +82,25 @@ describe('ArticleSidebar', () => {
     renderSidebar()
 
     const tabs = screen.getAllByRole('tab')
-    expect(tabs.map((tab) => tab.textContent)).toEqual(['tags', 'notes'])
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'tags',
+      'notes',
+      'annotations',
+    ])
+  })
+
+  it('names every tab independently of its visible word', () => {
+    // In the rail the word is hidden and only the glyph is drawn (a container
+    // query jsdom cannot exercise), so the accessible name must not depend on
+    // the word being visible — the label carries it in both states, and the
+    // title gives pointer users the same word as a tooltip.
+    answerQueries({ 'articles.byId': [ARTICLE] })
+    renderSidebar()
+
+    for (const tab of screen.getAllByRole('tab')) {
+      expect(tab).toHaveAttribute('aria-label', tab.getAttribute('title'))
+      expect(tab.getAttribute('aria-label')).not.toBe('')
+    }
   })
 
   it('renders no Citations tab', () => {
@@ -230,6 +257,74 @@ describe('ArticleSidebar', () => {
     })
 
     expect(mutate).not.toHaveBeenCalled()
+  })
+
+  it('lists this article’s marks under the annotations tab', async () => {
+    answerQueries({
+      'articles.byId': [ARTICLE],
+      'annotations.forArticle': [
+        {
+          id: 'a1',
+          type: 'ink',
+          pageIndex: 3,
+          contents: null,
+          payload: {},
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      ],
+    })
+    renderSidebar()
+
+    await userEvent.click(screen.getByRole('tab', { name: 'annotations' }))
+
+    expect(
+      screen.getByRole('list', { name: 'marks on this paper' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /freehand/ })).toHaveTextContent(
+      'p. 4',
+    )
+  })
+
+  it('steers the reader from a row, without swapping anything', async () => {
+    // The whole channel, end to end: the row's click crosses the jump context
+    // to whatever the reader registered (`reader-jump.tsx`) — and that is *all*
+    // it does. The reader stand-in staying mounted is the decided contrast with
+    // #10's Citations tab, which will swap the main content on purpose.
+    const handle = vi.fn()
+    function ReaderStandIn() {
+      useRegisterReaderJump(handle)
+      return <div data-testid="reader" />
+    }
+
+    answerQueries({
+      'articles.byId': [ARTICLE],
+      'annotations.forArticle': [
+        {
+          id: 'a1',
+          type: 'ink',
+          pageIndex: 3,
+          contents: null,
+          payload: {},
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      ],
+    })
+    render(
+      <Toaster>
+        <ReaderJumpProvider>
+          <ReaderStandIn />
+          <ArticleSidebar articleId={ARTICLE_ID} />
+        </ReaderJumpProvider>
+      </Toaster>,
+    )
+
+    await userEvent.click(screen.getByRole('tab', { name: 'annotations' }))
+    await userEvent.click(screen.getByRole('button', { name: /freehand/ }))
+
+    expect(handle).toHaveBeenCalledWith(3)
+    expect(screen.getByTestId('reader')).toBeInTheDocument()
   })
 
   it('renders nothing until the article has arrived', () => {

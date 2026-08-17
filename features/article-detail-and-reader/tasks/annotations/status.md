@@ -1,13 +1,13 @@
 # Status: Annotations
 
-**State:** Implemented, awaiting review. Fourth of five.
+**State:** **Merged** — PR
+[#104](https://github.com/nicbk/nicbk-website/pull/104), 2026-08-16, CI green,
+tip verified in `main` (`3b48d0b`). Fourth of six.
 
 - Branch: `article-detail-and-reader/annotations`, from `main` at `0ce1eef`
-  (task 3's merge).
+  (task 3's merge). Deleted after the merge was verified.
 - Sub-issue: [**#99**](https://github.com/nicbk/nicbk-website/issues/99),
-  self-assigned before work began.
-- PR: opened once the unit and integration tiers and the browser pass are all
-  clean.
+  closed by the merge.
 
 ## Open items, as settled
 
@@ -98,6 +98,12 @@ itself arrived carrying.
   the mutator, the bridge and the cascade all existed and nothing on screen could
   reach them, which the task's own constraints already required. Escape and
   click-away round out "remove a selection".
+- 2026-08-16 — **Merged** (PR #104, squash). CI green: Biome/typecheck/unit,
+  integration, PR-title lint, with the ratchet logging 92.32% against the
+  91.97% baseline. The branch tip was diffed against `main` after the squash
+  merge and matched exactly. #99 closed; #95 at 4 of its sub-issues complete.
+  The one item still owed — the multi-window sync check — travels to task 5's
+  browser pass, which opens two windows anyway.
 
 ## Browser verification
 
@@ -124,9 +130,10 @@ would not have failed any test in this repository as written.
 - The four-group toolbar fits at 420px, 1064px and 1440px, in both themes, with
   no horizontal overflow of the shell.
 
-**Still owed** — the multi-window check. Zero drops sync for a hidden document,
-so a second *tab* proves nothing; this needs a genuine second window and is the
-one item not yet exercised.
+~~**Still owed** — the multi-window check.~~ **Paid in task 5** (2026-08-17):
+with two genuine windows both `visible`, a mark drawn in one was on the other's
+paper — and in its annotations list — within ~2 seconds. Recorded in
+[the sidebar task's status.md](../annotations-sidebar/status.md).
 
 ## Defects found in the browser, none of which a unit test caught
 

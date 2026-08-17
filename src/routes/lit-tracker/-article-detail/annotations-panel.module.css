@@ -1,0 +1,82 @@
+/*
+ * The Annotations tab: a column of rows, each a button back to its page.
+ */
+
+/* "loading…", "no marks…" — a sentence in the panel, not a row of the list. */
+.notice {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * The list is the panel's one scroll region: the panel above it hands its
+ * bounded height down (`article-sidebar.module.css` explains the rule), and a
+ * hundred marks on a long paper must scroll here rather than grow the rail.
+ */
+.list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * A row is one button: snippet left, page number right, the page column sized
+ * by its own width so every row's number lines up against the rail's edge.
+ * Baseline-aligned rather than centred, because a two-line snippet beside a
+ * one-line page number should read from their shared first line.
+ */
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-xs);
+  align-items: baseline;
+  width: 100%;
+  padding: var(--space-2xs) var(--space-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* A colour shift rather than a filled background, as every other hoverable row
+   in the tracker's menus indicates itself. */
+@media (hover: hover) {
+  .row:hover {
+    color: var(--color-accent);
+  }
+}
+
+/*
+ * A highlight can be a paragraph, and the row it gets is two lines of it.
+ * Clamped rather than single-line-ellipsized because the first few words of a
+ * sentence are rarely the identifying ones; clamped rather than unbounded
+ * because a list where every row is a different height stops reading as a
+ * list. `overflow-wrap` for the URL-shaped strings papers are full of.
+ */
+.snippet {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+/* A textless mark's row names its kind — a label, so it must not pass for the
+   mark's own words. Muted and italic, saying so twice. */
+.kind {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.page {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}

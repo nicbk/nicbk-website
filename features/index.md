@@ -66,9 +66,11 @@ need them (see Phases 2–3).
 |---|---|---|---|---|
 | 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **Complete** (2026-08-09; all 5 tasks merged, #67 + #68 + #69 + #70 + #71) | #6 |
 | 8 | Collection view (card grid, tags, reading status, filtering, live search) | [`collection-view`](./collection-view/description.md) | **Complete** (2026-08-09; all 4 tasks merged, #86 + #88 + #90 + #92) | #7 |
-| 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **In progress** (6 tasks; 5 merged, #96 + #97 + #98 + #99 + #100) | #7, #8 |
+| 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **Complete** (2026-08-17; all 6 tasks merged, #96 + #97 + #98 + #99 + #100 + #105) | #7, #8 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
+| 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **In progress** (3 tasks) | #9 |
+| 13 | Tracker navigation latency (the auth guard stops blocking) | `tracker-navigation-latency` | Not yet spec'd | #6, #8 |
 
 ## How this roadmap is spec'd out
 
@@ -99,6 +101,16 @@ late also caught that **EmbedPDF's annotation API had moved** since the
 technology was chosen, including a `committed` flag on its change events that
 the persistence design has to gate on — a detail an up-front draft written in
 July would have got wrong.
+
+**#12 and #13 came from using the finished tracker, not from the roadmap** —
+reported by the user on 2026-08-17, the day #9 completed, and spec'd against
+what that feature actually shipped. They are the first entries here that exist
+to fix built behaviour rather than to add some, which is why they are features
+rather than a "bugs" list: each is a vertical slice of user-visible behaviour
+with its own acceptance criteria, and the project has no separate defect track.
+Their causes were measured before either was spec'd — see each one's
+`research.md` — which is what split five reported symptoms into two features
+instead of five tasks.
 
 #10 and #11 stay one-liners for the same reason. #11 inherits the failure path
 #7 deliberately leaves unresolvable, and extends the card menu #8 builds rather

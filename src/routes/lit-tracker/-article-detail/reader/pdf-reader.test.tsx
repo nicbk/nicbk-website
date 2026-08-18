@@ -67,6 +67,10 @@ const annotationCapability = vi.hoisted(() => ({
 const annotationState = vi.hoisted(() => ({
   current: { activeToolId: null as string | null },
 }))
+/** What the zoom-gesture wrapper was mounted with, for the assertions below. */
+const zoomGestureProps = vi.hoisted(() => ({
+  current: null as Record<string, unknown> | null,
+}))
 
 vi.mock('@embedpdf/engines/react', () => ({
   usePdfiumEngine: () => engine.current,
@@ -89,12 +93,29 @@ vi.mock('@embedpdf/plugin-scroll/react', async () => {
       createElement('p', null, `pages:${documentId}`),
   }
 })
-vi.mock('@embedpdf/plugin-zoom/react', () => ({
-  useZoom: () => ({
-    state: { currentZoomLevel: 1.6934, zoomLevel: 'fit-width' },
-    provides: zoomScope,
-  }),
-}))
+vi.mock('@embedpdf/plugin-zoom/react', async () => {
+  const { createElement } = await import('react')
+  return {
+    useZoom: () => ({
+      state: { currentZoomLevel: 1.6934, zoomLevel: 'fit-width' },
+      provides: zoomScope,
+    }),
+    /*
+     * The pinch/wheel wrapper, recorded rather than simulated. jsdom has no
+     * touch and no compositor, so the gesture itself cannot be exercised here —
+     * what *can* be, and what breaks silently, is where it sits in the tree and
+     * what it is configured with. It renders its children so the assertions
+     * about the document's structure still see them.
+     */
+    ZoomGestureWrapper: ({
+      children,
+      ...props
+    }: { children: React.ReactNode } & Record<string, unknown>) => {
+      zoomGestureProps.current = props
+      return createElement('div', { 'data-zoom-gestures': '' }, children)
+    },
+  }
+})
 vi.mock('@embedpdf/plugin-viewport/react', async () => {
   const { createElement } = await import('react')
   return {
@@ -148,6 +169,7 @@ beforeEach(() => {
   documentState.current = { status: 'loaded', document: { pageCount: 15 } }
   scrollState.current = { currentPage: 1, totalPages: 0 }
   annotationState.current = { activeToolId: null }
+  zoomGestureProps.current = null
   vi.clearAllMocks()
 })
 
@@ -398,6 +420,55 @@ describe('PdfReader', () => {
       jump(2)
 
       expect(scrollScope.scrollToPage).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('zooming by gesture', () => {
+    /**
+     * The gesture cannot be exercised in jsdom — no touch, no compositor, and
+     * the maths lives behind a WebAssembly engine. What these assert is the
+     * composition, which is the part that fails silently: a wrapper in the
+     * wrong place, or scoped to the wrong document, looks perfectly correct in
+     * a diff and does nothing at all in a browser.
+     */
+    it('mounts the gesture wrapper for this document', () => {
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(zoomGestureProps.current).toMatchObject({
+        // Scoped to the article, per the reader's keying convention. A wrapper
+        // pointed at another document zooms nothing.
+        documentId: ARTICLE_ID,
+      })
+    })
+
+    it('enables both gestures explicitly, so a package default cannot remove one', () => {
+      // Both are the component's own defaults today. Passing them is what makes
+      // a future version changing its mind a test failure rather than a
+      // silently missing feature.
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(zoomGestureProps.current).toMatchObject({
+        enablePinch: true,
+        enableWheel: true,
+      })
+    })
+
+    it('wraps the pages rather than sitting beside them', () => {
+      // It measures and transforms its own element to preview the zoom and to
+      // keep the pages centred, so the pages have to be inside it. Beside them,
+      // the gesture fires and zooms about nothing.
+      const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
+
+      const wrapper = container.querySelector('[data-zoom-gestures]')
+      expect(wrapper).not.toBeNull()
+      expect(wrapper?.textContent).toContain(`pages:${ARTICLE_ID}`)
+    })
+
+    it('does not mount it while there is no document to zoom', () => {
+      documentState.current = { status: 'loading', document: null }
+      const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(container.querySelector('[data-zoom-gestures]')).toBeNull()
     })
   })
 

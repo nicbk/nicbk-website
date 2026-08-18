@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { NOTES_DEBOUNCE_MS, useArticleNotes } from './use-article-notes'
+import { SYNCED_TEXT_DEBOUNCE_MS, useSyncedText } from './use-synced-text'
 
 /**
  * The notes field's text, and when it is written.
@@ -22,44 +22,44 @@ afterEach(() => {
 function renderNotes(synced: string | null, onSave = vi.fn()) {
   const view = renderHook(
     ({ synced: value }: { synced: string | null }) =>
-      useArticleNotes({ synced: value, onSave }),
+      useSyncedText({ synced: value, onSave }),
     { initialProps: { synced } },
   )
   return { ...view, onSave }
 }
 
-describe('useArticleNotes', () => {
+describe('useSyncedText', () => {
   it('starts from the stored value', () => {
     const { result } = renderNotes('what I think of this paper')
 
-    expect(result.current.notes).toBe('what I think of this paper')
+    expect(result.current.text).toBe('what I think of this paper')
   })
 
   it('treats a null column as an empty field', () => {
     // `null` and `''` both mean "no notes"; the field cannot show either.
     const { result } = renderNotes(null)
 
-    expect(result.current.notes).toBe('')
+    expect(result.current.text).toBe('')
   })
 
   it('shows what is typed immediately, before anything is written', () => {
     const { result, onSave } = renderNotes('')
 
-    act(() => result.current.onNotesChange('half a th'))
+    act(() => result.current.onTextChange('half a th'))
 
-    expect(result.current.notes).toBe('half a th')
+    expect(result.current.text).toBe('half a th')
     expect(onSave).not.toHaveBeenCalled()
   })
 
   it('writes once the reader pauses, not once per keystroke', () => {
     const { result, onSave } = renderNotes('')
 
-    act(() => result.current.onNotesChange('a'))
-    act(() => result.current.onNotesChange('ab'))
-    act(() => result.current.onNotesChange('abc'))
+    act(() => result.current.onTextChange('a'))
+    act(() => result.current.onTextChange('ab'))
+    act(() => result.current.onTextChange('abc'))
     expect(onSave).not.toHaveBeenCalled()
 
-    act(() => void vi.advanceTimersByTime(NOTES_DEBOUNCE_MS))
+    act(() => void vi.advanceTimersByTime(SYNCED_TEXT_DEBOUNCE_MS))
 
     expect(onSave).toHaveBeenCalledTimes(1)
     expect(onSave).toHaveBeenCalledWith('abc')
@@ -71,7 +71,7 @@ describe('useArticleNotes', () => {
 
     rerender({ synced: 'written elsewhere' })
 
-    expect(result.current.notes).toBe('written elsewhere')
+    expect(result.current.text).toBe('written elsewhere')
   })
 
   it('does not clobber what the reader is typing', () => {
@@ -80,10 +80,10 @@ describe('useArticleNotes', () => {
     // not replace the draft under the cursor.
     const { result, rerender } = renderNotes('first')
 
-    act(() => result.current.onNotesChange('what I am in the middle of'))
+    act(() => result.current.onTextChange('what I am in the middle of'))
     rerender({ synced: 'written elsewhere' })
 
-    expect(result.current.notes).toBe('what I am in the middle of')
+    expect(result.current.text).toBe('what I am in the middle of')
   })
 
   it('adopts synced values again once the write has gone out', () => {
@@ -92,13 +92,13 @@ describe('useArticleNotes', () => {
     // the rest of the session.
     const { result, rerender, onSave } = renderNotes('first')
 
-    act(() => result.current.onNotesChange('mine'))
-    act(() => void vi.advanceTimersByTime(NOTES_DEBOUNCE_MS))
+    act(() => result.current.onTextChange('mine'))
+    act(() => void vi.advanceTimersByTime(SYNCED_TEXT_DEBOUNCE_MS))
     expect(onSave).toHaveBeenCalledWith('mine')
 
     rerender({ synced: 'theirs' })
 
-    expect(result.current.notes).toBe('theirs')
+    expect(result.current.text).toBe('theirs')
   })
 
   it('writes the pending value on unmount', () => {
@@ -106,7 +106,7 @@ describe('useArticleNotes', () => {
     // debounce window must not silently drop the tail of what was typed.
     const { result, unmount, onSave } = renderNotes('')
 
-    act(() => result.current.onNotesChange('typed and gone'))
+    act(() => result.current.onTextChange('typed and gone'))
     unmount()
 
     expect(onSave).toHaveBeenCalledWith('typed and gone')
@@ -125,8 +125,8 @@ describe('useArticleNotes', () => {
     // as `''` rather than being treated as "nothing to save".
     const { result, onSave } = renderNotes('something')
 
-    act(() => result.current.onNotesChange(''))
-    act(() => void vi.advanceTimersByTime(NOTES_DEBOUNCE_MS))
+    act(() => result.current.onTextChange(''))
+    act(() => void vi.advanceTimersByTime(SYNCED_TEXT_DEBOUNCE_MS))
 
     expect(onSave).toHaveBeenCalledWith('')
   })

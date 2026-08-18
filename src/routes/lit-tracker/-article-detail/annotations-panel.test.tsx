@@ -80,10 +80,11 @@ describe('AnnotationsPanel', () => {
     ).toBeInTheDocument()
   })
 
-  it('names a textless highlight too, because the engine captures no text', () => {
-    // Found while building this panel: EmbedPDF does not put the selected text
-    // into `contents`, so a highlight's row is as textless as an ink stroke's
-    // until task 6 associates text with marks.
+  it('names a highlight that carries neither a comment nor a passage', () => {
+    // Rare rather than routine, now that the captured passage is read: a
+    // highlight reaches its type name only when the engine captured nothing —
+    // a mark drawn over a page with no text layer, or one imported from
+    // elsewhere.
     renderPanel([mark({ id: 'a1', type: 'highlight' })])
 
     expect(
@@ -158,6 +159,102 @@ describe('AnnotationsPanel', () => {
 
     expect(
       screen.getByText('could not load the marks on this paper.'),
+    ).toBeInTheDocument()
+  })
+})
+
+/**
+ * A row can hold two texts, and which one it leads with is the decision
+ * (2026-08-17). The reader's comment is theirs; the quote is the paper's; the
+ * type name is what is left when there is neither.
+ */
+describe('a row with words in it', () => {
+  it('quotes the passage the mark was drawn over', () => {
+    // In `payload`, because that is where EmbedPDF puts it — the finding that
+    // reframed task 6. Nothing had to be captured; this had to be read.
+    renderPanel([
+      mark({
+        id: 'a1',
+        payload: { custom: { text: 'we employed label smoothing' } },
+      }),
+    ])
+
+    expect(
+      screen.getByRole('button', { name: /we employed label smoothing/ }),
+    ).toBeInTheDocument()
+  })
+
+  it('leads with the reader’s comment and keeps the passage under it', () => {
+    // Showing the comment alone would strand a note reading "important" with
+    // nothing to be important about.
+    renderPanel([
+      mark({
+        id: 'a1',
+        contents: 'hurts perplexity, improves BLEU',
+        payload: { custom: { text: 'we employed label smoothing' } },
+      }),
+    ])
+
+    const row = screen.getByRole('button', {
+      name: /hurts perplexity, improves BLEU/,
+    })
+    expect(row).toHaveTextContent('we employed label smoothing')
+    // Quoted only when it accompanies a comment: alone there is nothing to
+    // tell it apart from.
+    expect(screen.getByText(/“we employed label smoothing”/)).toBeVisible()
+  })
+
+  it('styles the passage as the paper’s voice, not as a label', () => {
+    renderPanel([
+      mark({
+        id: 'a1',
+        contents: 'mine',
+        payload: { custom: { text: 'theirs' } },
+      }),
+    ])
+
+    expect(screen.getByText('“theirs”')).toHaveClass(styles.quote)
+    expect(screen.getByText('“theirs”')).not.toHaveClass(styles.kind)
+    expect(screen.getByText('mine')).not.toHaveClass(styles.quote)
+  })
+
+  it('never shows the type name once there is anything better to say', () => {
+    renderPanel([
+      mark({ id: 'a1', type: 'ink', contents: 'a note on a scribble' }),
+    ])
+
+    expect(screen.queryByText('freehand')).not.toBeInTheDocument()
+  })
+
+  it('collapses the paper’s own line breaks out of the passage', () => {
+    // A PDF's text layer breaks lines mid-sentence, and a clamped snippet
+    // should spend its two lines on words.
+    renderPanel([
+      mark({
+        id: 'a1',
+        payload: { custom: { text: 'we employed\nlabel\n smoothing' } },
+      }),
+    ])
+
+    expect(screen.getByText('we employed label smoothing')).toBeVisible()
+  })
+
+  it('calls a highlight box by its own name, not the rectangle’s', () => {
+    // Both are stored as `square`; only the intent separates them.
+    renderPanel([
+      mark({
+        id: 'a1',
+        type: 'square',
+        payload: { intent: 'SquareHighlight' },
+      }),
+      mark({ id: 'a2', type: 'square' }),
+    ])
+
+    expect(
+      screen.getByRole('button', { name: /highlight box/ }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /^rectangle/ }),
     ).toBeInTheDocument()
   })
 })

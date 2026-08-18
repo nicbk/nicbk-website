@@ -1,6 +1,6 @@
 # Status: Article Detail and Reader
 
-**Feature state:** **In progress** — tasks 1–4 merged, task 5 in progress. Six tasks: a sixth was added on 2026-08-16 for the reader's text tools (see the log), so the count in `plan.md` is five *decided at spec time* plus one added from use. Sequential, each gated by its own PR + CI + human review.
+**Feature state:** **In progress** — tasks 1–5 merged, task 6 in progress. Six tasks: a sixth was added on 2026-08-16 for the reader's text tools (see the log), so the count in `plan.md` is five *decided at spec time* plus one added from use. Sequential, each gated by its own PR + CI + human review.
 Depends on [`collection-view`](../collection-view/status.md) (#8, Complete) for
 the card this page is reached from, the tag model its Tags tab presents, and the
 drawer its sidebar becomes; and on
@@ -22,8 +22,8 @@ parent when its sub-issues close.
 | [`pdf-serving`](./tasks/pdf-serving/status.md) ([#97](https://github.com/nicbk/nicbk-website/issues/97)) | **Merged** | [#102](https://github.com/nicbk/nicbk-website/pull/102) | Green | Merged 2026-08-13 |
 | [`pdf-reader`](./tasks/pdf-reader/status.md) ([#98](https://github.com/nicbk/nicbk-website/issues/98)) | **Merged** | [#103](https://github.com/nicbk/nicbk-website/pull/103) | Green | Merged 2026-08-13 |
 | [`annotations`](./tasks/annotations/status.md) ([#99](https://github.com/nicbk/nicbk-website/issues/99)) | **Merged** | [#104](https://github.com/nicbk/nicbk-website/pull/104) | Green | Merged 2026-08-16 |
-| [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | **In progress** | — | — | — |
-| [`reader-text-tools`](./tasks/reader-text-tools/status.md) ([#105](https://github.com/nicbk/nicbk-website/issues/105)) | Not started | — | — | — |
+| [`annotations-sidebar`](./tasks/annotations-sidebar/status.md) ([#100](https://github.com/nicbk/nicbk-website/issues/100)) | **Merged** | [#106](https://github.com/nicbk/nicbk-website/pull/106) | Green | Merged 2026-08-17 |
+| [`reader-text-tools`](./tasks/reader-text-tools/status.md) ([#105](https://github.com/nicbk/nicbk-website/issues/105)) | **In progress** | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -178,9 +178,35 @@ write it does not own.
   crosses from the rail to the reader through a **context mounted at the route
   layout** — the only level that can see both, and the same level #10's
   tab-swap state will need. One finding widened the fallback's importance:
-  **EmbedPDF never captures the selected text**, so highlight rows are textless
-  too (confirmed empty in the database, and absent from the payload) — accepted
+  **EmbedPDF never captures the selected text into `contents`**, so highlight
+  rows are textless too (confirmed empty in the database) — accepted
   for this task, with task 6's text-association being what fills them. **Task 6
   filed** as [`reader-text-tools`](./tasks/reader-text-tools/status.md)
   (#105), sixth and last, taking with it the close-#95-by-hand duty task 5's
   spec had carried.
+
+  *Corrected while researching task 6:* the second half of that finding — "and
+  absent from the payload" — was wrong. The engine **does** capture the selected
+  text; it writes it to `custom.text`, which `toPayload` carries into the row
+  like every other field it does not exclude. The quotes were in the database the
+  whole time, one key away from the column the list reads.
+- 2026-08-17 — **Task 5 merged** (PR #106), and **task 6 started** — the
+  feature's last. Its three open items settled with the user first, and the
+  research that settled them changed what the task *is*. Re-verifying EmbedPDF
+  2.15.0 found that the engine's default text-markup handler already writes the
+  selected text to `custom.text` at creation, so "capture at creation" was
+  already happening and the row already held the quote. That turned the first
+  open item from a mechanism into a naming decision, settled as **two fields**:
+  `contents` is the reader's own comment — the same meaning it already carries
+  for a text box — and `custom.text` is the paper's words, with the sidebar
+  preferring the comment, falling back to the quote, then to the type name.
+  Also settled: the comment is written in a **popover from the mark's own
+  floating menu**, beside delete; copy is a **button over the selection plus
+  ⌘C**, because EmbedPDF's selection is overlay rects rather than a DOM
+  selection and the platform shortcut does nothing without help; and the
+  translucent rectangle is **"highlight box" in the draw group**. Two API facts
+  shaped the build rather than the plan: `copyToClipboard()` only *emits* an
+  event — the utility that writes the clipboard ships in the package's `/react`
+  entry, which this reader does not register — and `squareHandlerFactory` is
+  not exported, so the new tool is cloned from the resolved built-in rather than
+  declared in config.

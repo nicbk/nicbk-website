@@ -148,3 +148,52 @@ built-in colour for now (user-decided). The task carrying this was the one
 introducing a new synced table, and a colour control is new UI, new state, and a
 new accessibility surface with no decision behind its palette. It can be added
 later against a working sync bridge; nothing here forecloses it.
+
+## Revision (2026-08-17), decided with the user before the reader's text tools
+
+Three capabilities were scoped out of the annotations task and asked for
+together — copying selected text, saying something about a mark, and a
+translucent rectangle. The capability list was decided then; the UI is decided
+here.
+
+**A reader's words and the paper's words are two different things, and the mark
+holds both.** The engine already captures the text a highlight was drawn over —
+it writes it to the annotation's `custom` data at creation — so the question was
+never how to capture it but what to call it. `contents` is **the reader's own
+comment**, which is the meaning it already carries for a text box and for a
+sticky note; the captured passage stays where the engine puts it. The
+annotations list then reads, in order: the comment if there is one, else the
+quoted passage, else the tool's name as the 2026-08-16 fallback decided. A
+reader who writes on a highlight therefore never overwrites the sentence they
+highlighted, and the list stops naming shapes as soon as there is anything
+better to say.
+
+**The comment is written beside the mark, in a popover from the mark's own
+floating menu.** That menu already exists and already carries delete, so the
+reasoning that put it there carries the editor too: a control that acts on
+*this* mark belongs beside it, not in a toolbar that stays identical whatever is
+selected. The sidebar's list was considered and declined — it is where the text
+is *read*, and a second editor for one field would be two mid-edit-overwrite
+guards and two ways to reach one outcome.
+
+**Copying has both a button and the platform shortcut, and it needs both.** A
+small control floats over the selection, positioned by the same mechanism as the
+mark's menu, because nothing otherwise tells a reader that copying is possible.
+⌘C/Ctrl+C does the same thing, because it is what a reader tries first — and it
+does not work by itself: the reader's selection is drawn as overlay rectangles
+over a canvas, not as a browser text selection, so the platform has nothing to
+copy unless the page arranges it. Two entry points to one outcome is normally
+one too many; a keyboard shortcut that mirrors a visible control is the
+exception, because the alternative is a gesture that silently does nothing.
+
+**A copy that cannot happen says so.** A PDF may withhold permission to extract
+its text, and the clipboard may refuse the write; both are ordinary and neither
+may be a button that does nothing when pressed.
+
+**The translucent rectangle is "highlight box", in the *draw* group.** It sits
+next to "rectangle", where someone hunting for a box will look, and borrows the
+word the menu already uses for the see-through mark so its relation to the
+opaque rectangle needs no explaining. It is *not* in the *text* group despite
+what it is for: that group is defined as the tools that attach to selected text,
+and this one is drawn on the page. It stays a distinct tool rather than a colour
+option on the rectangle, which is what keeps the deferred colour picker deferred.

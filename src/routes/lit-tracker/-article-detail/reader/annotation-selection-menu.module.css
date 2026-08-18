@@ -18,9 +18,15 @@
    * (reader-toolbar.module.css).
    */
   pointer-events: auto;
+  /*
+   * A column, because the menu is two things stacked: its row of controls, and —
+   * when the reader opens it — the note editor under them. It is one surface
+   * rather than a second popup beside the first, so the editor is unmistakably
+   * *this* mark's and there is no second thing to position over a document.
+   */
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-2xs);
+  flex-direction: column;
+  align-items: stretch;
   padding: var(--space-2xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -29,6 +35,13 @@
      counter-rotates; without this the menu would sit on top of the mark it is
      about. */
   transform: translateY(calc(-100% - var(--space-2xs)));
+}
+
+/* The controls themselves, side by side above whatever they open. */
+.buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
 }
 
 .button {
@@ -45,19 +58,31 @@
   cursor: pointer;
 }
 
-/*
- * Deleting is the one destructive thing in the reader and there is no undo
- * (research/data-modeling/zero-schema-conventions.md — hard deletes, and the
- * feature deliberately ships no history plugin), so the control says so on
- * hover and on focus rather than only in its label.
- */
 @media (hover: hover) {
   .button:hover {
-    color: var(--color-error);
+    color: var(--color-accent);
   }
 }
 
 .button:focus-visible {
+  color: var(--color-accent);
+}
+
+/*
+ * Deleting is the one destructive thing in the reader and there is no undo
+ * (research/data-modeling/zero-schema-conventions.md — hard deletes, and the
+ * feature deliberately ships no history plugin), so the control says so on
+ * hover and on focus rather than only in its label. Now that it has a harmless
+ * neighbour, the red has to be the delete button's alone — a warning every
+ * control in the bar gives is not a warning.
+ */
+@media (hover: hover) {
+  .destructive:hover {
+    color: var(--color-error);
+  }
+}
+
+.destructive:focus-visible {
   color: var(--color-error);
 }
 

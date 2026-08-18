@@ -7,6 +7,7 @@ import {
   Slash,
   Spline,
   Square,
+  SquareStack,
   StickyNote,
   Strikethrough,
   Type,
@@ -14,17 +15,26 @@ import {
   Waves,
 } from 'lucide-react'
 import type { AnnotationType } from '~/lit-tracker/annotation-type'
+import {
+  HIGHLIGHT_BOX_INTENT,
+  HIGHLIGHT_BOX_TOOL_ID,
+} from './highlight-box-tool'
 
 /**
- * The twelve marks the reader may make, in the order they are offered.
+ * The thirteen marks the reader may make, in the order they are offered.
  *
  * The list itself is decided
  * (research/ui-ux/pages/lit-tracker/components/reader-annotation.md); what is
- * chosen here is the grouping and the wording. Every id is one of EmbedPDF's own
- * built-in tools, so this is a presentation of the engine's capabilities rather
- * than a parallel definition of them — a tool named here that the plugin does
- * not have would simply never activate, which is what `annotation-tools.test.ts`
- * pins against the installed package.
+ * chosen here is the grouping and the wording. Twelve of the ids are EmbedPDF's
+ * own built-in tools, so this is mostly a presentation of the engine's
+ * capabilities rather than a parallel definition of them — a tool named here
+ * that the plugin does not have would simply never activate, which is what
+ * `annotation-tools.test.ts` pins against the installed package.
+ *
+ * **The thirteenth is this reader's own**: the highlight box, cloned from the
+ * engine's square at mount (see `highlight-box-tool.ts`). It is named here like
+ * any other because from the menu's point of view it is one; the test knows to
+ * exclude it from the engine check, and nothing else needs to.
  *
  * **Grouped by what the reader is doing, not by what the PDF specification calls
  * things.** Marking a passage, drawing on the page, and writing something down
@@ -66,6 +76,14 @@ export const ANNOTATION_TOOL_GROUPS: readonly AnnotationToolGroup[] = [
     tools: [
       { id: 'ink', label: 'freehand', icon: PenLine },
       { id: 'square', label: 'rectangle', icon: Square },
+      // Beside the rectangle, where someone hunting for a box will look —
+      // rather than in `text` with the other see-through marks, because that
+      // group is the tools that attach to *selected text* and this one is drawn
+      // on the page (decided 2026-08-17).
+      // A square laid over another: unmistakably box-shaped so it reads beside
+      // `Square`, and offset so it does not read *as* it. The word carries the
+      // meaning either way — every tool has one.
+      { id: HIGHLIGHT_BOX_TOOL_ID, label: 'highlight box', icon: SquareStack },
       { id: 'circle', label: 'ellipse', icon: Circle },
       { id: 'line', label: 'line', icon: Slash },
       { id: 'polyline', label: 'polyline', icon: Spline },
@@ -124,10 +142,25 @@ const TOOL_ID_BY_TYPE: Record<AnnotationType, string> = {
  * row, "rectangle" for a square one. One vocabulary across the toolbar and the
  * sidebar's list, whose textless rows say this instead of a blank line
  * (user-decided 2026-08-16).
+ *
+ * **The intent is not optional trivia.** Two of the offered tools store the same
+ * type: a highlight box is a `square`, exactly as a plain rectangle is, and the
+ * only thing separating them on the way back out is the `intent` the tool wrote
+ * (see `highlight-box-tool.ts`). A caller with a stored row therefore passes the
+ * row's intent; one asking about a bare type gets the plain tool's name, which
+ * is the right answer when there is nothing to say otherwise.
  */
-export function annotationTypeLabel(type: AnnotationType): string {
+export function annotationTypeLabel(
+  type: AnnotationType,
+  intent?: string | null,
+): string {
+  const toolId =
+    intent === HIGHLIGHT_BOX_INTENT
+      ? HIGHLIGHT_BOX_TOOL_ID
+      : TOOL_ID_BY_TYPE[type]
+
   return (
-    ANNOTATION_TOOLS.find((tool) => tool.id === TOOL_ID_BY_TYPE[type])?.label ??
+    ANNOTATION_TOOLS.find((tool) => tool.id === toolId)?.label ??
     // Unreachable while the map above stays total, and the stored name is a
     // truthful fallback if it ever stops being.
     type

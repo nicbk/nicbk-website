@@ -1,0 +1,55 @@
+/*
+ * The note on a mark: a label and a small field, floating over the paper.
+ *
+ * The same field as the sidebar's notes tab (notes-panel.module.css) — one idea
+ * of what writing prose looks like on this site — but sized for a comment
+ * instead of a notebook, and with its own surface because this one floats rather
+ * than filling a panel.
+ */
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  /* Wide enough for a sentence to break naturally, narrow enough not to cover
+     the passage the note is about. */
+  width: min(20rem, 60vw);
+  padding: var(--space-xs);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * Fixed at a few lines rather than growing: this floats over the document, so a
+ * field that grew with its content would creep across the paper as the reader
+ * typed. It scrolls instead, and the sidebar's list is where a long note is read
+ * in full.
+ *
+ * `resize: vertical` — unlike the notes panel, which has no larger size to drag
+ * to. Here there is, and a reader writing a paragraph should be able to see it.
+ */
+.field {
+  min-height: 4.5rem;
+  max-height: 40vh;
+  padding: var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  /* `font: inherit` rather than a size: form controls do not inherit the
+     document's font family, and the site is monospace throughout. */
+  font: inherit;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  resize: vertical;
+}
+
+.field:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.field::placeholder {
+  color: var(--color-text-muted);
+}

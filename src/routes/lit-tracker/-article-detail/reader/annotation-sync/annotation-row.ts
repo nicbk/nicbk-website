@@ -178,6 +178,54 @@ export function toAnnotation(
   } as PdfAnnotationObject
 }
 
+/**
+ * The passage a mark was drawn over, if the engine captured one.
+ *
+ * **It is in `payload`, not in `contents`, and that is EmbedPDF's doing rather
+ * than a choice made here.** The plugin's text-markup handler puts the selected
+ * text in the annotation's `custom` data at creation, and `toPayload` carries
+ * `custom` through like any other field it does not exclude — so every highlight
+ * this reader has ever made already holds its quote. Task 5's list showed a type
+ * name for them because it read `contents`, which the engine leaves empty; the
+ * finding is written up in that task's status.
+ *
+ * `contents` is left to mean **the reader's own words**, which is what it
+ * already means for a text box and a sticky note. Keeping the two apart is what
+ * lets a comment on a highlight coexist with the sentence it comments on.
+ *
+ * Read defensively because `payload` is typed as JSON and no more: its shape
+ * belongs to EmbedPDF, and a mark made by any other tool simply has no `custom`.
+ * Blank is treated as absent — a quote of nothing is not a quote.
+ */
+export function quotedText(
+  row: Pick<SyncedAnnotation, 'payload'>,
+): string | null {
+  // Bracketed because `payload` is an index signature by design — its keys are
+  // EmbedPDF's, not this project's, so none of them is a declared property.
+  const custom = row.payload['custom']
+  if (typeof custom !== 'object' || custom === null || Array.isArray(custom)) {
+    return null
+  }
+  const text = custom['text']
+  return typeof text === 'string' && text.trim() !== '' ? text : null
+}
+
+/**
+ * A mark's `intent`, the PDF field that distinguishes two marks of one subtype.
+ *
+ * The engine uses it for exactly this — its own `inkHighlighter` is an ink
+ * annotation whose intent is `InkHighlight` — and this reader's highlight box is
+ * a square whose intent says so (see `highlight-box-tool.ts`). Without it, a
+ * translucent box and an opaque rectangle are the same stored type and the
+ * sidebar would have to call them the same thing.
+ */
+export function annotationIntent(
+  row: Pick<SyncedAnnotation, 'payload'>,
+): string | null {
+  const intent = row.payload['intent']
+  return typeof intent === 'string' ? intent : null
+}
+
 /** Epoch milliseconds as EmbedPDF's optional `Date`, absent staying absent. */
 function asDate(epochMs: number | null): Date | undefined {
   return epochMs === null ? undefined : new Date(epochMs)

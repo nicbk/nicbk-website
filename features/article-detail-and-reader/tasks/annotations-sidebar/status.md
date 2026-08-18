@@ -1,6 +1,6 @@
 # Status: Annotations Sidebar
 
-**State:** In progress. Fifth of six — no longer the feature's last:
+**State:** **Merged** (2026-08-17). Fifth of six — no longer the feature's last:
 [`reader-text-tools`](../reader-text-tools/status.md) (#105) was added after
 this task was spec'd, and the close-#95-by-hand duty moved there with it.
 
@@ -8,7 +8,10 @@ this task was spec'd, and the close-#95-by-hand duty moved there with it.
   `3b48d0b` (task 4's merge).
 - Sub-issue: [**#100**](https://github.com/nicbk/nicbk-website/issues/100),
   self-assigned before work began.
-- PR: opened once the unit tier and the browser pass are both clean.
+- PR: [**#106**](https://github.com/nicbk/nicbk-website/pull/106), CI green,
+  merged 2026-08-17. Tip verified against `main` afterwards (empty diff over
+  `src/`, `features/`, `research/`) — the glyph-tab commit went up minutes
+  before the merge click, which is exactly the case that check exists for.
 
 ## Open items, as settled (with the user, 2026-08-16)
 
@@ -32,13 +35,24 @@ this task was spec'd, and the close-#95-by-hand duty moved there with it.
 ## The finding that widened an assumption
 
 **Highlights are textless too.** The spec framed empty `contents` as the ink-
-and-shapes case, but EmbedPDF never captures the selected text — confirmed
-against the dev database (every text-markup row's `contents` empty, and the
-payload carrying only rects and colours). So the fallback is the common case
+and-shapes case, but EmbedPDF never captures the selected text *into `contents`*
+— confirmed against the dev database (every text-markup row's `contents` empty).
+So the fallback is the common case
 for now, not the edge: only the two "write" tools put words in a row. Accepted
 for this task with the user; **task 6's text-association is what fills the
 snippets**, and this list needs no change when it does — rows with `contents`
 already show it.
+
+*Corrected in task 6, and the correction is worth reading:* the parenthesis
+above originally also claimed the payload carried "only rects and colours". It
+does not. The engine's default text-markup handler writes the selected text to
+`custom.text` at creation, and `toPayload` carries it through, so a highlight's
+quote was in this article's rows the whole time — the list showed a type name
+because it reads `contents`, not because nothing was captured. The lesson is
+about the check, not the library: "the column is empty" was read as "the value
+was never captured", and one `select payload->'custom'` would have separated
+them. When a field is missing, look at the whole record before concluding
+nothing produced it.
 
 ## Browser verification
 

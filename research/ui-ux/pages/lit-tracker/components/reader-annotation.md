@@ -197,3 +197,59 @@ opaque rectangle needs no explaining. It is *not* in the *text* group despite
 what it is for: that group is defined as the tools that attach to selected text,
 and this one is drawn on the page. It stays a distinct tool rather than a colour
 option on the rectangle, which is what keeps the deferred colour picker deferred.
+
+## Revision (2026-08-18), decided with the user from using the finished reader
+
+**Everything decided above assumed a mouse.** Every gesture in this document is
+a click, a pointer drag, or a key; touch was never considered, and the reader
+that resulted is unusable on a phone — a one-finger drag starts a text selection
+and the document does not move. That is also a **regression against a decided
+rule**: [design-system.md](../../../design-system.md)'s 2026-08-09 scrolling
+decision states that hiding scrollbars leaves scrolling itself untouched, and
+that "wheel, trackpad, keyboard, and touch all work". So the touch model is
+decided here, and it is decided as a restoration rather than an addition.
+
+**One finger reads; two fingers zoom; a held finger selects.**
+
+| | no tool active | tool active |
+|---|---|---|
+| one finger, drag | **scrolls the paper** | draws the mark |
+| one finger, long press then drag | **selects text** | draws the mark |
+| two fingers | pinches to zoom | pinches to zoom |
+
+The reasoning is that **the plain gesture should do the plain thing**. Reading is
+what a reader mostly does, so the undecorated drag is reading; selecting a
+passage is deliberate, so it costs a deliberate gesture. This is also how text
+selection already works everywhere else on a phone, which means the gesture has
+to be learned exactly zero times.
+
+**Selecting a tool is what claims the finger.** With a tool live, a drag draws —
+which is the same "the tool stays active until you put it down" the creation-flow
+bullet above decided, now extended to the only input where the alternative would
+be ambiguous. Putting the tool down (choosing "select", or Escape) hands the
+finger back to scrolling. This is deliberately the *same* mental model as the
+pointer's, not a second one for touch.
+
+**Zoom by pinch, on a trackpad as much as a touchscreen.** A trackpad pinch is a
+ctrl-modified wheel event, so it is the same decision and the same
+implementation. Today it falls through to the browser and zooms the whole page —
+chrome, sidebar and paper together — which is never what pinching a document
+means. Gesture zoom and the toolbar's zoom controls move one zoom level, not two.
+
+**Every gesture here is a second way to reach something already reachable.** Zoom
+stays in the toolbar, scrolling stays on the keyboard, selection stays available
+to a pointer. Nothing in this revision may become a path only a multi-touch
+device can walk — that is what keeps the AA commitment true rather than
+approximately true.
+
+**Clicking away from a mark puts it down and draws nothing.** The 2026-08-16
+revision decided that clicking bare paper deselects; what it did not anticipate
+is that with a tool still live, the same click *also* creates a mark, because
+the shape tools place one on a bare click. Two wanted behaviours produced an
+unwanted third. The click that deselects is now spent on deselecting, and the
+next click creates as before — neither of the two decisions is reversed.
+
+The general lesson, recorded because it will recur: **a decision taken about one
+input device is not a decision about the others.** "Clicking away deselects" was
+true and complete for a mouse, and silently wrong for a finger and for a live
+tool.

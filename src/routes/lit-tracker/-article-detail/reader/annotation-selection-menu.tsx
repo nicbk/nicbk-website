@@ -1,9 +1,12 @@
+import { PdfAnnotationSubtype } from '@embedpdf/models'
 import type { AnnotationSelectionMenuProps } from '@embedpdf/plugin-annotation/react'
-import { Trash2 } from 'lucide-react'
+import { MessageSquare, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { AnnotationNoteEditor } from './annotation-note-editor'
 import styles from './annotation-selection-menu.module.css'
 
 /**
- * What a reader can do to a mark they have selected. Today: remove it.
+ * What a reader can do to a mark they have selected: write on it, or remove it.
  *
  * **A mark has to be removable, and until this existed none was.** Every other
  * half of deletion was already built — the mutator refuses another account's
@@ -15,9 +18,13 @@ import styles from './annotation-selection-menu.module.css'
  * **Anchored to the mark rather than parked in the toolbar.** The bar at the top
  * is about the document — pages, zoom, which tool is live — and stays identical
  * whatever is selected. A control that acts on *this* mark belongs beside it, so
- * there is never a question of which mark it would remove. EmbedPDF positions
- * this for us and counter-rotates it, which is why the wrapper's props are
- * spread rather than reimplemented.
+ * there is never a question of which mark it would remove, or which one is being
+ * written about. EmbedPDF positions this for us and counter-rotates it, which is
+ * why the wrapper's props are spread rather than reimplemented.
+ *
+ * **The note is written here rather than in the sidebar's list** (decided
+ * 2026-08-17). The list is where notes are *read*; a second editor over there
+ * would be a second no-clobber guard and two ways to reach one outcome.
  *
  * It renders for every annotation on the page, selected or not, so the first
  * thing it does is decline to draw for the ones that are not.
@@ -27,6 +34,11 @@ interface AnnotationSelectionMenuControlProps
   extends AnnotationSelectionMenuProps {
   /** Removes the selected mark: from the engine, and by sync from the row. */
   onDelete: (pageIndex: number, annotationId: string) => void
+  /**
+   * Writes the reader's comment onto the mark. Empty clears it — emptying the
+   * field is how a note is removed, there being no separate control for it.
+   */
+  onSaveNote: (pageIndex: number, annotationId: string, note: string) => void
 }
 
 export function AnnotationSelectionMenu({
@@ -34,7 +46,21 @@ export function AnnotationSelectionMenu({
   menuWrapperProps,
   context,
   onDelete,
+  onSaveNote,
 }: AnnotationSelectionMenuControlProps) {
+  /*
+   * Before the early return, because hooks must be. It is also why deselecting
+   * has to close the editor explicitly: this component stays mounted for every
+   * annotation on the page and merely stops drawing, so the state would
+   * otherwise be waiting, open, the next time this mark was picked up.
+   */
+  const [writing, setWriting] = useState(false)
+  useEffect(() => {
+    if (!selected) {
+      setWriting(false)
+    }
+  }, [selected])
+
   // `structurallyLocked` covers a PDF's own read-only or hidden annotations.
   // Nothing this reader creates is locked, but a mark the file arrived with can
   // be, and offering to delete what the engine will refuse to touch is a lie.
@@ -42,7 +68,20 @@ export function AnnotationSelectionMenu({
     return null
   }
 
-  const annotationId = context.annotation.object.id
+  const annotation = context.annotation.object
+  const annotationId = annotation.id
+
+  /*
+   * A text box already has an editor, and it is the engine's.
+   *
+   * Its `contents` *is* what the box says on the page, edited in place by
+   * double-clicking it. Offering this menu's note on one would be two editors
+   * over a single field — the arrangement declined for the sidebar, and worse
+   * here because the two would be inches apart. Every other mark, the sticky
+   * note included, has no other way to carry words.
+   */
+  const canWrite =
+    !context.contentLocked && annotation.type !== PdfAnnotationSubtype.FREETEXT
 
   return (
     <div {...menuWrapperProps}>
@@ -62,15 +101,43 @@ export function AnnotationSelectionMenu({
         onPointerDown={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          className={styles.button}
-          // Icon-only, so the name is the whole of what a screen reader gets.
-          aria-label="delete annotation"
-          onClick={() => onDelete(context.pageIndex, annotationId)}
-        >
-          <Trash2 className={styles.icon} aria-hidden="true" />
-        </button>
+        <div className={styles.buttons}>
+          {canWrite ? (
+            <button
+              type="button"
+              className={styles.button}
+              // Icon-only, so the name is the whole of what a screen reader
+              // gets — and it names the state, because the control toggles.
+              aria-label={writing ? 'close note' : 'write a note'}
+              aria-expanded={writing}
+              onClick={() => setWriting((open) => !open)}
+            >
+              <MessageSquare className={styles.icon} aria-hidden="true" />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={`${styles.button} ${styles.destructive}`}
+            // Icon-only, so the name is the whole of what a screen reader gets.
+            aria-label="delete annotation"
+            onClick={() => onDelete(context.pageIndex, annotationId)}
+          >
+            <Trash2 className={styles.icon} aria-hidden="true" />
+          </button>
+        </div>
+        {writing ? (
+          /*
+           * Keyed by the mark, which is what makes "a different mark is a
+           * different field" true by construction rather than by a reset the
+           * editor would have to remember — and what makes its unmount flush
+           * write the previous mark's text to the previous mark.
+           */
+          <AnnotationNoteEditor
+            key={annotationId}
+            contents={annotation.contents ?? null}
+            onSave={(note) => onSaveNote(context.pageIndex, annotationId, note)}
+          />
+        ) : null}
       </div>
     </div>
   )

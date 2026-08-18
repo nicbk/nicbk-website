@@ -10,6 +10,7 @@ import pdfiumWasmUrl from '@embedpdf/pdfium/pdfium.wasm?url'
 import {
   AnnotationLayer,
   useAnnotation,
+  useAnnotationCapability,
 } from '@embedpdf/plugin-annotation/react'
 import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react'
 import { RenderLayer } from '@embedpdf/plugin-render/react'
@@ -26,10 +27,15 @@ import { useRegisterReaderJump } from '../reader-jump'
 import { AnnotationSelectionMenu } from './annotation-selection-menu'
 import { useAnnotationSync } from './annotation-sync/use-annotation-sync'
 import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
+import { canCopyText } from './copy-permission'
 import { ReaderNotice } from './reader-notice'
 import { createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
+import { SelectionCopyMenu } from './selection-copy-menu'
+import { useHighlightBoxTool } from './use-highlight-box-tool'
+import { useReaderCopyShortcut } from './use-reader-copy-shortcut'
+import { useSelectionCopy } from './use-selection-copy'
 import { absoluteAssetUrl } from './wasm-url'
 import styles from './pdf-reader.module.css'
 
@@ -118,12 +124,24 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
   const { state: zoom, provides: zoomScope } = useZoom(articleId)
   const { state: annotation, provides: annotationScope } =
     useAnnotation(articleId)
+  const { provides: annotations } = useAnnotationCapability()
   const { provides: selectionScope } = useSelectionCapability()
 
   // The marks and the rows, kept saying the same thing. Mounted here because
   // this is the first place the annotation scope exists; everything it decides
   // is in `annotation-sync/`.
   useAnnotationSync(articleId)
+
+  // The thirteenth tool, which is this reader's rather than the engine's and so
+  // has to be handed to it. See `use-highlight-box-tool.ts`.
+  useHighlightBoxTool(annotations)
+
+  const {
+    copy,
+    state: copyState,
+    hasSelection,
+  } = useSelectionCopy(articleId, selectionScope)
+  useReaderCopyShortcut({ hasSelection, copy })
 
   /**
    * Escape puts down whatever the reader had picked up.
@@ -169,6 +187,13 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
    * the moment the document is loaded.
    */
   const totalPages = documentState?.document?.pageCount ?? 0
+
+  /**
+   * Whether this paper allows its text to be taken, asked once here and handed
+   * to the control that has to answer for it. `copy-permission.ts` explains why
+   * the question is asked at all rather than left to fail silently.
+   */
+  const canCopy = canCopyText(documentState?.document?.permissions)
 
   /**
    * The way in from the sidebar's annotations list (`reader-jump.tsx`): a row
@@ -266,6 +291,17 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                   <SelectionLayer
                     documentId={articleId}
                     pageIndex={pageIndex}
+                    // What a reader can do with a passage they have selected.
+                    // The same mechanism as the mark's menu below, deliberately
+                    // — see `selection-copy-menu.tsx`.
+                    selectionMenu={(menu) => (
+                      <SelectionCopyMenu
+                        {...menu}
+                        canCopy={canCopy}
+                        state={copyState}
+                        onCopy={copy}
+                      />
+                    )}
                   />
                   <AnnotationLayer
                     documentId={articleId}
@@ -278,6 +314,23 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                         {...menu}
                         onDelete={(page, annotationId) =>
                           annotationScope?.deleteAnnotation(page, annotationId)
+                        }
+                        /*
+                         * One patch, one column. The bridge does the rest: an
+                         * update commits at once with no history plugin
+                         * registered, and `contents` is already part of the
+                         * fingerprint it compares, so a note reaches the row —
+                         * and the sidebar — through the path every other change
+                         * to a mark already takes.
+                         */
+                        onSaveNote={(page, annotationId, note) =>
+                          annotationScope?.updateAnnotation(
+                            page,
+                            annotationId,
+                            {
+                              contents: note,
+                            },
+                          )
                         }
                       />
                     )}

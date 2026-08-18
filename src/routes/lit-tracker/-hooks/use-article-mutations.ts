@@ -50,7 +50,7 @@ export interface ArticleMutations {
    * The whole value each time rather than a patch: the field is one textarea
    * bound to one column, and Zero's last-write-wins is the same answer a diff
    * would arrive at for a single editor. Callers debounce — see
-   * `use-article-notes.ts` for why that is the caller's job and not this one's.
+   * `use-synced-text.ts` for why that is the caller's job and not this one's.
    */
   setNotes: (articleId: string, notes: string) => Promise<void>
 }

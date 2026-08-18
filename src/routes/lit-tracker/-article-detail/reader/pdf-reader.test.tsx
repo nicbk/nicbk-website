@@ -47,7 +47,23 @@ const annotationScope = vi.hoisted(() => ({
   deselectAnnotation: vi.fn(),
   deleteAnnotation: vi.fn(),
 }))
-const selectionScope = vi.hoisted(() => ({ clear: vi.fn() }))
+const selectionScope = vi.hoisted(() => ({
+  clear: vi.fn(),
+  copyToClipboard: vi.fn(),
+  // The two hooks the copy path subscribes with. Each returns its unsubscribe,
+  // which is what the effects clean up with.
+  onCopyToClipboard: vi.fn(() => () => {}),
+  onSelectionChange: vi.fn(() => () => {}),
+}))
+/**
+ * The document-wide capability, as distinct from the per-document scope above.
+ * The reader reaches for it to register the one tool that is its own rather than
+ * the engine's — see `use-highlight-box-tool.ts`.
+ */
+const annotationCapability = vi.hoisted(() => ({
+  getTool: vi.fn((_toolId: string) => undefined as unknown),
+  addTool: vi.fn(),
+}))
 const annotationState = vi.hoisted(() => ({
   current: { activeToolId: null as string | null },
 }))
@@ -95,6 +111,7 @@ vi.mock('@embedpdf/plugin-annotation/react', () => ({
     state: annotationState.current,
     provides: annotationScope,
   }),
+  useAnnotationCapability: () => ({ provides: annotationCapability }),
   AnnotationLayer: () => null,
 }))
 vi.mock('@embedpdf/plugin-selection/react', () => ({
@@ -381,6 +398,38 @@ describe('PdfReader', () => {
       jump(2)
 
       expect(scrollScope.scrollToPage).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('the tool the reader adds to the engine', () => {
+    it('hands the engine a highlight box built from its own square', () => {
+      // The plugin does not export the square's pointer handler, so the tool
+      // has to be cloned from a mounted plugin's resolved one. Nothing else in
+      // this reader registers a tool at all.
+      const square = { id: 'square', defaults: {}, pointerHandler: {} }
+      annotationCapability.getTool.mockImplementation((id: string) =>
+        id === 'square' ? square : undefined,
+      )
+
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(annotationCapability.addTool).toHaveBeenCalledTimes(1)
+      expect(annotationCapability.addTool).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'highlightBox',
+          pointerHandler: square.pointerHandler,
+        }),
+      )
+    })
+
+    it('does not add it twice, which would replace a live tool', () => {
+      annotationCapability.getTool.mockImplementation((id: string) =>
+        id === 'highlightBox' ? { id } : { id: 'square', defaults: {} },
+      )
+
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(annotationCapability.addTool).not.toHaveBeenCalled()
     })
   })
 

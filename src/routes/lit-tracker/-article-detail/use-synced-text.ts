@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 /**
- * How long after the last keystroke the notes are written.
+ * How long after the last keystroke the text is written.
  *
  * Deliberately far longer than the 250ms the collection's search bar uses. That
  * one mirrors typing into the URL for feedback, where a lag is felt; this is a
@@ -10,45 +10,47 @@ import { useEffect, useRef, useState } from 'react'
  * short enough that closing the tab straight after typing still saves, and long
  * enough that a paragraph is a handful of writes rather than fifty.
  */
-export const NOTES_DEBOUNCE_MS = 1000
+export const SYNCED_TEXT_DEBOUNCE_MS = 1000
 
-interface UseArticleNotesOptions {
-  /** The stored value, from sync. `null` and `''` both mean "no notes". */
+interface UseSyncedTextOptions {
+  /** The stored value, from sync. `null` and `''` both mean "nothing written". */
   synced: string | null
-  /** Called with the whole new value once the reader pauses. */
-  onSave: (notes: string) => void
+  /** Called with the whole new value once the writer pauses. */
+  onSave: (text: string) => void
 }
 
 /**
- * The notes field's text, and when it is written.
+ * A free-text field bound to synced data: what it shows, and when it is written.
  *
  * Two jobs, and the second is the one worth the file.
  *
  * **It does not clobber what is being typed.** The field is bound to a column
  * that also arrives by sync, so the naive binding — value straight from the
- * synced row — loses characters the moment the reader's own debounced write
- * comes back, and loses whole sentences if the same article is open in a second
+ * synced row — loses characters the moment the writer's own debounced write
+ * comes back, and loses whole sentences if the same record is open in a second
  * window. The rule here is that **a synced value is only adopted while nothing
- * is pending**: an unwritten edit is what "the reader is busy" means, so an
+ * is pending**: an unwritten edit is what "the writer is busy" means, so an
  * incoming value lands on an idle field and is ignored by a busy one. That is
- * the decided editing-vs-non-editing rule
- * (research/ui-ux/design-system.md) applied to the one field on this site it was
- * written for.
+ * the decided editing-vs-non-editing rule (research/ui-ux/design-system.md),
+ * which the same document says is general rather than form-specific.
  *
- * The cost, stated: two windows editing the same notes at once is last-writer
- * -wins, and the loser's text is replaced when they stop typing. Nothing here
+ * The cost, stated: two windows editing the same text at once is last-writer
+ * -wins, and the loser's words are replaced when they stop typing. Nothing here
  * merges, because merging prose needs a CRDT and this is one person's notebook.
  *
- * **It does not write on every keystroke.** `NOTES_DEBOUNCE_MS` after the last
- * one, and once more on unmount if anything is still pending — otherwise
+ * **It does not write on every keystroke.** `SYNCED_TEXT_DEBOUNCE_MS` after the
+ * last one, and once more on unmount if anything is still pending — otherwise
  * switching tabs within a second of typing would silently drop the tail.
  *
- * The hook takes no article id and needs none: `NotesPanel` is keyed by the
- * article, so a different paper is a different field by construction, and the
- * unmount flush that entails writes the old text through the old article's own
- * `onSave`.
+ * **It is deliberately anonymous about what it is editing**, which is what let
+ * it serve a second field without changing: it was written for the sidebar's
+ * notes tab (`articles.notes`) and now also carries a mark's comment
+ * (`annotations.contents`) in the reader. It takes no id and needs none —
+ * callers key the component by the record, so a different record is a different
+ * field by construction, and the unmount flush that entails writes the old text
+ * through the old record's own `onSave`.
  */
-export function useArticleNotes({ synced, onSave }: UseArticleNotesOptions) {
+export function useSyncedText({ synced, onSave }: UseSyncedTextOptions) {
   const [draft, setDraft] = useState(synced ?? '')
   /** The edit waiting to be written, or `null` when the field is idle. */
   const [pending, setPending] = useState<string | null>(null)
@@ -86,7 +88,7 @@ export function useArticleNotes({ synced, onSave }: UseArticleNotesOptions) {
       pendingRef.current = null
       setPending(null)
       save.current(pending)
-    }, NOTES_DEBOUNCE_MS)
+    }, SYNCED_TEXT_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [pending])
 
@@ -112,5 +114,5 @@ export function useArticleNotes({ synced, onSave }: UseArticleNotesOptions) {
     setDraft(value)
   }
 
-  return { notes: draft, onNotesChange: change }
+  return { text: draft, onTextChange: change }
 }

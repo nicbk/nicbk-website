@@ -3,37 +3,52 @@
 This task was added after the feature's acceptance criteria were written, so
 its criteria live here rather than as a subset of
 [the feature's](../../constraints-and-behavior.md). The capability list below
-was decided with the user (2026-08-16); the UI shapes are deliberately **not
-decided yet** — they are this task's open items, to be settled with the user
-before writing, together with the `research/` revisions that record them.
+was decided with the user (2026-08-16); the UI shapes were settled with the user
+on 2026-08-17 and are recorded in
+[reader-annotation.md](../../../../research/ui-ux/pages/lit-tracker/components/reader-annotation.md)'s
+revision of that date. Where research changed a criterion below, the change is
+marked.
 
 ## Copy selected text
 
-- A reader who has selected text in the document can copy it, by an affordance
-  reachable with the selection active and by the platform's own copy shortcut
-  if the selection model allows it.
+- A reader who has selected text in the document can copy it, by a control that
+  floats over the selection **and** by ⌘C/Ctrl+C. Both are required: the
+  selection is drawn as overlay rectangles rather than as a browser text
+  selection, so the shortcut copies nothing unless the page arranges it.
 - Copying does not disturb the selection, the active tool, or any selected
   mark.
+- **A copy that cannot happen says so.** A PDF may withhold permission to
+  extract its text and the clipboard write may be refused; neither may present
+  as a button that does nothing.
 
 ## Text on a mark
 
 - A mark can carry the reader's own text, stored in the annotation row's
   existing `contents` column and synced like any other annotation change.
 - The text is editable and removable after the fact, from the mark itself in
-  the reader.
-- A text-markup annotation (highlight, underline, strikeout, squiggly) captures
-  **the text it was drawn over** into `contents` at creation, so the sidebar's
-  rows quote the paper rather than naming the tool.
-- Task 5's sidebar picks the text up with no changes of its own: rows with
-  `contents` already show it.
+  the reader — a popover from the floating menu that already carries delete.
+- **Changed by research (2026-08-17).** This criterion originally said a
+  text-markup annotation captures the text it was drawn over *into `contents`*.
+  The engine already captures that text, into the annotation's `custom` data,
+  and it was already reaching the row through `payload`. So `contents` is the
+  reader's **comment** — the meaning it already carries for a text box — and the
+  captured passage stays where the engine puts it. Nothing is written into
+  `contents` at creation.
+- Task 5's sidebar therefore does change, in one place: a row shows the comment
+  if there is one, else the captured passage, else the tool's name as its
+  2026-08-16 fallback decided.
 
 ## Translucent rectangle
 
 - A rectangle tool whose fill leaves the paper readable through it, distinct
   from the opaque-stroke rectangle task 4 shipped.
 - It can carry text like any other mark.
-- Where it appears in the tool menu, and its name, are wording decisions to
-  settle at implementation.
+- **Settled:** it is called **"highlight box"** and sits in the *draw* group,
+  next to "rectangle". Not in *text*, which is defined as the tools that attach
+  to selected text.
+- A mark it makes is recognisably its own after a reload — the sidebar must not
+  call it "rectangle", and selecting it must not offer the opaque tool's
+  behaviour.
 
 ## Explicitly not in this task
 

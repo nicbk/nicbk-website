@@ -3,7 +3,12 @@ import { PdfAnnotationSubtype } from '@embedpdf/models'
 import { describe, expect, it } from 'vitest'
 import { ANNOTATION_TYPES } from '~/lit-tracker/annotation-type'
 import type { SyncedAnnotation } from './annotation-row'
-import { toAnnotation, toRow } from './annotation-row'
+import {
+  annotationIntent,
+  quotedText,
+  toAnnotation,
+  toRow,
+} from './annotation-row'
 
 /**
  * The translation, in both directions and for every type.
@@ -327,5 +332,50 @@ describe('the round trip', () => {
 
       expect(throughJson).toEqual(row?.payload)
     }
+  })
+})
+
+describe('quotedText', () => {
+  it('finds the passage the engine captured at creation', () => {
+    // EmbedPDF's own text-markup handler writes the selected text here, and
+    // `toPayload` carries it through. It has been arriving in every highlight
+    // since task 4; task 5's list showed a type name because it read `contents`.
+    expect(
+      quotedText({
+        payload: { custom: { text: 'Label Smoothing During training' } },
+      }),
+    ).toBe('Label Smoothing During training')
+  })
+
+  it('finds nothing on a mark that was not drawn over text', () => {
+    // The ordinary case for ink, shapes and the sticky note.
+    expect(quotedText({ payload: {} })).toBeNull()
+    expect(quotedText({ payload: { custom: {} } })).toBeNull()
+  })
+
+  it('treats blank as absent, a quote of nothing not being a quote', () => {
+    expect(quotedText({ payload: { custom: { text: '   ' } } })).toBeNull()
+    expect(quotedText({ payload: { custom: { text: '' } } })).toBeNull()
+  })
+
+  it('does not trust the shape, the payload being EmbedPDF’s to define', () => {
+    expect(quotedText({ payload: { custom: null } })).toBeNull()
+    expect(quotedText({ payload: { custom: ['text'] } })).toBeNull()
+    expect(quotedText({ payload: { custom: 'text' } })).toBeNull()
+    expect(quotedText({ payload: { custom: { text: 42 } } })).toBeNull()
+  })
+})
+
+describe('annotationIntent', () => {
+  it('reads the field that separates two marks of one subtype', () => {
+    // A highlight box and a plain rectangle are both stored as `square`.
+    expect(annotationIntent({ payload: { intent: 'SquareHighlight' } })).toBe(
+      'SquareHighlight',
+    )
+  })
+
+  it('is null when the mark carries none, which is most of them', () => {
+    expect(annotationIntent({ payload: {} })).toBeNull()
+    expect(annotationIntent({ payload: { intent: 7 } })).toBeNull()
   })
 })

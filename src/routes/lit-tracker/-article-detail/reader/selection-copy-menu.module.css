@@ -1,0 +1,83 @@
+/*
+ * The little bar that appears beside a selected passage.
+ *
+ * Deliberately the same surface as the one beside a selected mark
+ * (annotation-selection-menu.module.css) — same border, radius, padding and
+ * offset — because they are the same idea in two places and a reader should not
+ * have to learn it twice. What differs is only what is inside: this one carries
+ * a word beside its glyph, since it reports an outcome as well as offering an
+ * action.
+ */
+.menu {
+  /* Opting back in to the pointer — EmbedPDF's positioning wrapper is
+     `pointer-events: none` so a menu can never block the page it floats over.
+     The annotation menu's stylesheet explains what happens without this. */
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  /* Capped so the permission message cannot stretch the bar off the page over a
+     one-word selection. It is the label that gives way, not the layout. */
+  max-width: 14rem;
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  /* Above the selection rather than over it: the passage is what the reader is
+     looking at, and EmbedPDF anchors this to its box. */
+  transform: translateY(calc(-100% - var(--space-2xs)));
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-width: 0;
+  padding: var(--space-2xs) var(--space-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .button:hover:not(:disabled) {
+    color: var(--color-accent);
+  }
+}
+
+.button:focus-visible {
+  color: var(--color-accent);
+}
+
+/*
+ * A PDF that forbids text extraction. It stays legible rather than fading to
+ * near-nothing, because the label is the explanation — dimming the sentence to
+ * the point of being hard to read would defeat the reason it is shown at all.
+ */
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 1.15em;
+  height: 1.15em;
+}
+
+/*
+ * The selection can be narrow — a single word — and this bar is anchored to it.
+ * Wrapping the label would make the bar taller than the line it floats over, so
+ * a long message (the permission refusal) truncates instead. It is never the
+ * only copy of that sentence: the button carries its full text as its
+ * accessible name.
+ */
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

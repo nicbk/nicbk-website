@@ -55,6 +55,19 @@
 }
 
 /*
+ * The row's left column, which may hold one text or two — the reader's comment
+ * and, under it, the passage the mark was drawn over. A wrapper rather than two
+ * grid children, so the page number stays in its own column either way and the
+ * baseline the row aligns on is still the first line of the first text.
+ */
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+/*
  * A highlight can be a paragraph, and the row it gets is two lines of it.
  * Clamped rather than single-line-ellipsized because the first few words of a
  * sentence are rarely the identifying ones; clamped rather than unbounded
@@ -74,6 +87,15 @@
 .kind {
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+/*
+ * The passage under a comment: the paper's voice, so it recedes behind the
+ * reader's. Muted like the kind label but upright, because it *is* content —
+ * the italics are what separate a label from a quotation.
+ */
+.quote {
+  color: var(--color-text-muted);
 }
 
 .page {

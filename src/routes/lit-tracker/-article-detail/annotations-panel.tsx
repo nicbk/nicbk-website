@@ -1,4 +1,8 @@
 import type { SyncedAnnotation } from './reader/annotation-sync/annotation-row'
+import {
+  annotationIntent,
+  quotedText,
+} from './reader/annotation-sync/annotation-row'
 import { annotationTypeLabel } from './reader/annotation-tools'
 import type { ArticleAnnotationsState } from './use-article-annotations'
 import styles from './annotations-panel.module.css'
@@ -75,25 +79,61 @@ export function AnnotationsPanel({
 }
 
 /**
- * What a row says: the mark's own words, or failing that its kind.
+ * What a row says, in the order a reader would want it: **their own words about
+ * the mark, the paper's words under it, and failing both, the mark's kind.**
  *
- * The fallback is the common case for now, not the edge — EmbedPDF never
- * captures selected text, so highlights are as textless as ink until task 6
- * associates text with marks (see that task's spec). It uses the toolbar
- * menu's own vocabulary, muted so it reads as a label rather than as content
+ * The two texts are different things and the row can hold both (decided
+ * 2026-08-17). `contents` is the comment the reader wrote — the meaning it
+ * already had for a text box, now available on any mark — and the quote is the
+ * passage the engine captured when the mark was drawn, which lives in `payload`
+ * because that is where EmbedPDF puts it (`annotation-row.ts` explains why the
+ * two were ever confused). Showing the comment alone would strand a note reading
+ * "important" with nothing to be important *about*, so when both exist the quote
+ * follows as a second, quieter line.
+ *
+ * The kind is the last resort, not the common case it was in task 5: it is now
+ * reached only by a mark that is neither commented on nor drawn over text — an
+ * ink stroke, a circle round a figure. It keeps the toolbar menu's own
+ * vocabulary, muted so it reads as a label rather than as content
  * (user-decided 2026-08-16).
  */
 function Snippet({ annotation }: { annotation: SyncedAnnotation }) {
-  // Whitespace collapsed because `contents` may carry newlines, and a clamped
-  // multi-line snippet should spend its lines on words.
-  const contents = annotation.contents?.replace(/\s+/g, ' ').trim()
+  // Whitespace collapsed because both strings may carry newlines — a PDF's text
+  // layer is full of them mid-sentence — and a clamped snippet should spend its
+  // two lines on words rather than on the paper's line breaks.
+  const comment = collapse(annotation.contents)
+  const quote = collapse(quotedText(annotation))
 
-  if (!contents) {
+  if (!comment && !quote) {
     return (
-      <span className={`${styles.snippet} ${styles.kind}`}>
-        {annotationTypeLabel(annotation.type)}
+      <span className={styles.text}>
+        <span className={`${styles.snippet} ${styles.kind}`}>
+          {annotationTypeLabel(annotation.type, annotationIntent(annotation))}
+        </span>
       </span>
     )
   }
-  return <span className={styles.snippet}>{contents}</span>
+
+  return (
+    <span className={styles.text}>
+      {comment ? <span className={styles.snippet}>{comment}</span> : null}
+      {/*
+        Quoted when it accompanies a comment, bare when it is the row's whole
+        content. The marks are what distinguish the paper's sentence from the
+        reader's when the two sit one above the other; alone, there is nothing
+        to distinguish it from.
+      */}
+      {quote ? (
+        <span className={`${styles.snippet} ${comment ? styles.quote : ''}`}>
+          {comment ? `“${quote}”` : quote}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+/** One line's worth of a string that may not be one, or null if it is blank. */
+function collapse(text: string | null | undefined): string | null {
+  const collapsed = text?.replace(/\s+/g, ' ').trim()
+  return collapsed ? collapsed : null
 }

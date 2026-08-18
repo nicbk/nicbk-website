@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
  * scrolling.
  *
  * So the same editing-vs-non-editing rule the notes field uses
- * (research/ui-ux/design-system.md, `use-article-notes.ts`) applies here in its
+ * (research/ui-ux/design-system.md, `use-synced-text.ts`) applies here in its
  * simplest form: **while the field has focus it belongs to the reader, and the
  * document's page is adopted only when it does not.**
  */

@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { useArticleNotes } from './use-article-notes'
+import { useSyncedText } from './use-synced-text'
 import styles from './notes-panel.module.css'
 
 interface NotesPanelProps {
@@ -22,7 +22,7 @@ const NOTES_PLACEHOLDER = 'your notes on this paper…'
  *
  * **No save button**, consistent with everything else on this site: the value
  * persists on its own a beat after the reader stops typing. When and how is
- * `use-article-notes.ts`'s problem, including the part that matters — not
+ * `use-synced-text.ts`'s problem, including the part that matters — not
  * overwriting what is being typed when a synced value arrives.
  *
  * The label is visible rather than hidden. The tab above it says "notes" too,
@@ -36,7 +36,7 @@ const NOTES_PLACEHOLDER = 'your notes on this paper…'
  */
 export function NotesPanel({ notes, onSave }: NotesPanelProps) {
   const fieldId = useId()
-  const { notes: draft, onNotesChange } = useArticleNotes({
+  const { text: draft, onTextChange } = useSyncedText({
     synced: notes,
     onSave,
   })
@@ -50,7 +50,7 @@ export function NotesPanel({ notes, onSave }: NotesPanelProps) {
         id={fieldId}
         className={styles.field}
         value={draft}
-        onChange={(event) => onNotesChange(event.target.value)}
+        onChange={(event) => onTextChange(event.target.value)}
         placeholder={NOTES_PLACEHOLDER}
         // Prose, unlike a tag name: the browser's spellchecker is wanted here
         // and is the reason this is not `spellCheck={false}` like the tag field.

@@ -20,7 +20,7 @@ import {
   useSelectionCapability,
 } from '@embedpdf/plugin-selection/react'
 import { Viewport } from '@embedpdf/plugin-viewport/react'
-import { useZoom } from '@embedpdf/plugin-zoom/react'
+import { useZoom, ZoomGestureWrapper } from '@embedpdf/plugin-zoom/react'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useRegisterReaderJump } from '../reader-jump'
@@ -242,103 +242,139 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
           role="region"
           aria-label="pdf reader"
         >
-          <Scroller
+          {/*
+           * Pinch to zoom — on a trackpad and on a touchscreen alike.
+           *
+           * **The library's, not this project's.** EmbedPDF ships this
+           * component with both gestures on by default; the headless build
+           * simply never mounts anything for you, so the reader had zoom
+           * controls and no zoom gestures until this was rendered. Writing
+           * pinch maths beside a working implementation is the duplication the
+           * project's guidelines forbid, and this is precisely the kind of
+           * thing the headless decision traded away — the drop-in viewer mounts
+           * it, and choosing headless means choosing to mount it deliberately.
+           *
+           * **Inside the viewport, wrapping the pages.** It is not free to sit
+           * anywhere: it reads the viewport element from context to attach its
+           * listeners, and it measures and transforms *its own* element to
+           * preview the zoom mid-gesture and to keep the pages centred. Outside
+           * the viewport the gestures do not fire; beside the scroller rather
+           * than around it, they zoom about nothing.
+           *
+           * Both flags are the component's own defaults, and are passed anyway:
+           * a default that is the whole purpose of a dependency should be
+           * visible in the code that depends on it, and a future version
+           * changing its mind must not silently remove a feature.
+           */}
+          <ZoomGestureWrapper
             documentId={articleId}
-            renderPage={({ pageIndex, width, height }) => (
-              <div
-                key={pageIndex}
-                className={styles.page}
-                style={{ width, height }}
-              >
-                {/*
-                 * Three layers over each page, and the order is the order they
-                 * stack: the paper, the text selection over it, the marks over
-                 * that. `PagePointerProvider` is what turns a pointer event on
-                 * this element into a point on the page — the coordinate space
-                 * every tool draws in, and the reason a mark made at 61% is in
-                 * the right place at 200%.
-                 */}
-                <PagePointerProvider
-                  documentId={articleId}
-                  pageIndex={pageIndex}
-                  className={styles.pageLayers}
-                  // Clicking away from a mark puts it down. On `pointerdown`
-                  // rather than `click` so the mark is released as the press
-                  // begins — by the time a click completes the reader may
-                  // already be dragging a new one.
-                  onPointerDown={(event) => {
-                    if (isBlankPaper(event.target)) {
-                      annotationScope?.deselectAnnotation()
-                    }
-                  }}
+            enablePinch={true}
+            // ctrl/cmd + wheel, which is what a trackpad pinch emits. Without
+            // it the browser's own page zoom answers instead, and the reader
+            // watches the whole interface grow rather than the paper.
+            enableWheel={true}
+          >
+            <Scroller
+              documentId={articleId}
+              renderPage={({ pageIndex, width, height }) => (
+                <div
+                  key={pageIndex}
+                  className={styles.page}
+                  style={{ width, height }}
                 >
-                  <RenderLayer
+                  {/*
+                   * Three layers over each page, and the order is the order they
+                   * stack: the paper, the text selection over it, the marks over
+                   * that. `PagePointerProvider` is what turns a pointer event on
+                   * this element into a point on the page — the coordinate space
+                   * every tool draws in, and the reason a mark made at 61% is in
+                   * the right place at 200%.
+                   */}
+                  <PagePointerProvider
                     documentId={articleId}
                     pageIndex={pageIndex}
-                    className={styles.pageImage}
-                    // What "the reader clicked the bare paper" is recognised by
-                    // — see `blank-paper.ts`.
-                    {...{ [PAPER_ATTRIBUTE]: '' }}
-                    // The page is an `<img>`, and dragging an image is a
-                    // browser-native drag-and-drop: press and pull across a
-                    // paragraph and what moves is a ghost of the page, not a
-                    // text selection. It made highlighting feel broken — the
-                    // reader had to "drag in weird ways" to select anything
-                    // (user-reported). Nothing here wants that gesture: every
-                    // drag over a page belongs to the reader's own tools.
-                    draggable={false}
-                  />
-                  <SelectionLayer
-                    documentId={articleId}
-                    pageIndex={pageIndex}
-                    // What a reader can do with a passage they have selected.
-                    // The same mechanism as the mark's menu below, deliberately
-                    // — see `selection-copy-menu.tsx`.
-                    selectionMenu={(menu) => (
-                      <SelectionCopyMenu
-                        {...menu}
-                        canCopy={canCopy}
-                        state={copyState}
-                        onCopy={copy}
-                      />
-                    )}
-                  />
-                  <AnnotationLayer
-                    documentId={articleId}
-                    pageIndex={pageIndex}
-                    // What a reader can do to the mark they have selected.
-                    // EmbedPDF calls this for every annotation on the page and
-                    // the control declines to draw for the unselected ones.
-                    selectionMenu={(menu) => (
-                      <AnnotationSelectionMenu
-                        {...menu}
-                        onDelete={(page, annotationId) =>
-                          annotationScope?.deleteAnnotation(page, annotationId)
-                        }
-                        /*
-                         * One patch, one column. The bridge does the rest: an
-                         * update commits at once with no history plugin
-                         * registered, and `contents` is already part of the
-                         * fingerprint it compares, so a note reaches the row —
-                         * and the sidebar — through the path every other change
-                         * to a mark already takes.
-                         */
-                        onSaveNote={(page, annotationId, note) =>
-                          annotationScope?.updateAnnotation(
-                            page,
-                            annotationId,
-                            {
-                              contents: note,
-                            },
-                          )
-                        }
-                      />
-                    )}
-                  />
-                </PagePointerProvider>
-              </div>
-            )}
-          />
+                    className={styles.pageLayers}
+                    // Clicking away from a mark puts it down. On `pointerdown`
+                    // rather than `click` so the mark is released as the press
+                    // begins — by the time a click completes the reader may
+                    // already be dragging a new one.
+                    onPointerDown={(event) => {
+                      if (isBlankPaper(event.target)) {
+                        annotationScope?.deselectAnnotation()
+                      }
+                    }}
+                  >
+                    <RenderLayer
+                      documentId={articleId}
+                      pageIndex={pageIndex}
+                      className={styles.pageImage}
+                      // What "the reader clicked the bare paper" is recognised by
+                      // — see `blank-paper.ts`.
+                      {...{ [PAPER_ATTRIBUTE]: '' }}
+                      // The page is an `<img>`, and dragging an image is a
+                      // browser-native drag-and-drop: press and pull across a
+                      // paragraph and what moves is a ghost of the page, not a
+                      // text selection. It made highlighting feel broken — the
+                      // reader had to "drag in weird ways" to select anything
+                      // (user-reported). Nothing here wants that gesture: every
+                      // drag over a page belongs to the reader's own tools.
+                      draggable={false}
+                    />
+                    <SelectionLayer
+                      documentId={articleId}
+                      pageIndex={pageIndex}
+                      // What a reader can do with a passage they have selected.
+                      // The same mechanism as the mark's menu below, deliberately
+                      // — see `selection-copy-menu.tsx`.
+                      selectionMenu={(menu) => (
+                        <SelectionCopyMenu
+                          {...menu}
+                          canCopy={canCopy}
+                          state={copyState}
+                          onCopy={copy}
+                        />
+                      )}
+                    />
+                    <AnnotationLayer
+                      documentId={articleId}
+                      pageIndex={pageIndex}
+                      // What a reader can do to the mark they have selected.
+                      // EmbedPDF calls this for every annotation on the page and
+                      // the control declines to draw for the unselected ones.
+                      selectionMenu={(menu) => (
+                        <AnnotationSelectionMenu
+                          {...menu}
+                          onDelete={(page, annotationId) =>
+                            annotationScope?.deleteAnnotation(
+                              page,
+                              annotationId,
+                            )
+                          }
+                          /*
+                           * One patch, one column. The bridge does the rest: an
+                           * update commits at once with no history plugin
+                           * registered, and `contents` is already part of the
+                           * fingerprint it compares, so a note reaches the row —
+                           * and the sidebar — through the path every other change
+                           * to a mark already takes.
+                           */
+                          onSaveNote={(page, annotationId, note) =>
+                            annotationScope?.updateAnnotation(
+                              page,
+                              annotationId,
+                              {
+                                contents: note,
+                              },
+                            )
+                          }
+                        />
+                      )}
+                    />
+                  </PagePointerProvider>
+                </div>
+              )}
+            />
+          </ZoomGestureWrapper>
         </Viewport>
       ) : (
         <div className={styles.notice}>

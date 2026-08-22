@@ -1,6 +1,6 @@
 # Task: Touch Scrolling
 
-**Second of three, and the largest.** The touch model: what one finger does.
+**Second of four.** One finger scrolls the paper.
 
 On a phone, dragging the paper starts a text selection and the document does not
 move. A reader cannot read. This is the reported problem, and it is a regression
@@ -9,50 +9,47 @@ untouched site-wide and "wheel, trackpad, keyboard, and touch all work".
 
 ## What it does
 
-Implements the touch model decided with the user (2026-08-18, recorded in
-[reader-annotation.md](../../../../research/ui-ux/pages/lit-tracker/components/reader-annotation.md)):
-
-| | no tool active | tool active |
-|---|---|---|
-| one finger, drag | **scrolls the paper** | draws the mark |
-| one finger, long press then drag | **selects text** | draws the mark |
-| two fingers | pinches to zoom | pinches to zoom |
-
-Three parts, in rising order of novelty:
-
-- **Give the default mode `wantsRawTouch: false`.** The library's own
-  `pointerMode` leaves it unset, which resolves to `true` and puts
-  `touch-action: none` on every page. That single default is why touch does
-  nothing.
-- **Keep raw touch for a live tool's mode**, which the annotation plugin
-  registers per tool — so drawing by touch keeps working, unchanged.
-- **Build long-press-to-select**, which EmbedPDF does not have.
+- **Stops the reader claiming every touch.** The interaction manager puts
+  `touch-action: none` on every page whenever the active mode does not say
+  otherwise, and the library's own default mode never says otherwise. That one
+  default is why touch does nothing.
+- **Leaves the paper pannable and pinch reserved.** Panning goes to the browser,
+  which does it far better than JavaScript can; the two-finger gesture stays
+  with task 1's zoom wrapper.
+- **Keeps a live tool's touch.** A tool chosen from the menu still draws with a
+  one-finger drag, which is the same "the tool stays live until you put it down"
+  the creation flow already decided.
 
 ## What it does not do
 
-- **It does not clear `touch-action` outright.** That hands pinch back to the
-  browser and undoes task 1. The pages permit panning while reserving pinch.
-- **It does not change what a pointer does.** Mouse and trackpad selection,
-  drawing and clicking behave exactly as they do today; this task is about the
-  touch path only.
-- **It does not add a mobile layout.** #9 verified the reader at 420px.
+- **It does not implement selecting text by touch.** That is now
+  [`touch-selection`](../touch-selection/status.md), task 4, after the model it
+  needs was re-decided mid-task — see below. **Until that ships, a touch user can
+  scroll, zoom and annotate, but cannot select a passage.** That is a real gap,
+  accepted deliberately with the user so reading on a phone is not held hostage
+  to it.
+- **It does not clear `touch-action` outright.** That would return the
+  two-finger gesture to the browser and undo task 1.
+- **It does not change what a pointer does.** Mouse and trackpad behaviour is
+  untouched.
 
-## The risk, named
+## Why this task shrank
 
-**Long press is this feature's one genuinely novel interaction.** Neither the
-selection plugin nor the interaction manager exposes anything in that family —
-no `longPress`, no `holdDelay`. The raw material exists (`setSelection(range)`
-takes glyph-index pointers, and the plugin can resolve a point to a glyph), but
-nothing is designed for driving a selection from a synthetic hold.
+It was specified to carry the whole touch model, including "long press, then
+drag to select". That turned out to be unbuildable: a browser latches its
+`touch-action` decision when a gesture starts, so a finger that holds cannot
+reclaim a touch the browser is already allowed to pan. The spec's own fallback
+said to raise it and re-decide rather than ship a half-working gesture, which is
+what happened — the corrected model is in
+[reader-annotation.md](../../../../research/ui-ux/pages/lit-tracker/components/reader-annotation.md)'s
+2026-08-22 revision, and the work it implies is task 4.
 
-If it cannot be made to sit correctly on top of EmbedPDF's model, **the fallback
-is to raise it and re-decide the touch model with the user** — not to ship a
-gesture that half-works. Selecting text by touch was chosen knowing it was the
-uncertain part; scrolling was not.
+What is left here is the part that was never in doubt, and it is the part the
+user actually reported.
 
 ## Exit state
 
 A reader on a phone drags a thumb and the paper scrolls, stopping at the end of
-the reader's own panel rather than dragging the page behind it. Holding a finger
-still and then dragging selects a passage, which the copy control then offers to
-copy. Choosing a tool returns the drag to drawing. Two fingers pinch throughout.
+the reader's own panel rather than dragging the page behind it. Two fingers
+still pinch. Choosing a tool returns the drag to drawing, and putting the tool
+down returns it to scrolling.

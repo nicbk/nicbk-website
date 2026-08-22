@@ -12,7 +12,10 @@ import {
   useAnnotation,
   useAnnotationCapability,
 } from '@embedpdf/plugin-annotation/react'
-import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react'
+import {
+  PagePointerProvider,
+  useInteractionManagerCapability,
+} from '@embedpdf/plugin-interaction-manager/react'
 import { RenderLayer } from '@embedpdf/plugin-render/react'
 import { Scroller, useScroll } from '@embedpdf/plugin-scroll/react'
 import {
@@ -35,6 +38,7 @@ import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
 import { SelectionCopyMenu } from './selection-copy-menu'
 import { useHighlightBoxTool } from './use-highlight-box-tool'
 import { useReaderCopyShortcut } from './use-reader-copy-shortcut'
+import { useReadingMode } from './use-reading-mode'
 import { useSelectionCopy } from './use-selection-copy'
 import { absoluteAssetUrl } from './wasm-url'
 import styles from './pdf-reader.module.css'
@@ -125,6 +129,7 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
   const { state: annotation, provides: annotationScope } =
     useAnnotation(articleId)
   const { provides: annotations } = useAnnotationCapability()
+  const { provides: interaction } = useInteractionManagerCapability()
   const { provides: selectionScope } = useSelectionCapability()
 
   // The marks and the rows, kept saying the same thing. Mounted here because
@@ -135,6 +140,11 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
   // The thirteenth tool, which is this reader's rather than the engine's and so
   // has to be handed to it. See `use-highlight-box-tool.ts`.
   useHighlightBoxTool(annotations)
+
+  // Gives the paper back to the browser to scroll, when no tool is live. Before
+  // this, every page carried `touch-action: none` and a thumb moved nothing —
+  // see `reading-mode.ts` for why one flag does all of that.
+  useReadingMode(interaction)
 
   const {
     copy,

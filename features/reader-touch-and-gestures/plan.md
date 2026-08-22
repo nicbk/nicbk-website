@@ -1,6 +1,11 @@
 # Plan: Reader Touch and Gestures
 
-Three tasks, sequential, each gated by its own PR + CI + human review. The order
+> **Revised 2026-08-22.** Four tasks, not three: task 2's implementation proved
+> part of the decided touch model unbuildable, and the risk this plan names at
+> the bottom landed. What follows is the original sequence, amended where the
+> re-decision changed it — see [status.md](./status.md)'s log for the finding.
+
+Four tasks, sequential, each gated by its own PR + CI + human review. The order
 is not arbitrary: **task 2 can undo task 1 if it is done first**, and task 3 is
 independent of both.
 
@@ -19,15 +24,15 @@ uninterrupted, so touch pinch works *before* the touch model changes and must go
 on working after. Doing this first makes that a regression the next task can be
 checked against rather than a behaviour it has to invent.
 
-### 2. [`touch-scrolling`](./tasks/touch-scrolling/status.md) — the touch model
+### 2. [`touch-scrolling`](./tasks/touch-scrolling/status.md) — one finger scrolls
 
-Give `pointerMode` `wantsRawTouch: false` so a one-finger drag scrolls, keep
-raw touch for a live tool's mode, and build long-press-to-select on top.
+Stop the reader claiming every touch, so a one-finger drag scrolls, while a live
+tool's mode keeps raw touch and the two-finger gesture stays with task 1.
 
-Second because it is the largest and the least certain. Two of its three parts
-are configuration of a lever the library already has; the third — long press —
-has no support in EmbedPDF at all and is this feature's one piece of genuinely
-novel interaction code. Its task spec carries the fallback if that fails.
+**Now smaller than planned.** It was to carry the whole touch model; the
+long-press half proved unbuildable and moved to task 4. What remains is
+configuration of a lever the library already has — and it is the part the user
+actually reported.
 
 The interaction with task 1 is the thing to watch: clearing `touch-action`
 entirely would hand pinch back to the browser and undo task 1, so the pages must
@@ -52,11 +57,24 @@ turns out to need splitting.
 - **It does not touch layout.** #9 verified the reader at 420px; this feature
   changes what a hand does, not where anything sits.
 
-## Risk, stated once
+### 4. [`touch-selection`](./tasks/touch-selection/status.md) — long press selects, handles extend
 
-The long press is the only part of this feature that could fail to be buildable
-as decided. If EmbedPDF's selection model cannot be driven from a synthetic
-hold — the plugin exposes `setSelection(range)` and glyph-index pointers, so the
-raw material is there, but nothing is designed for this — the fallback is to
-raise it and re-decide the touch model with the user rather than to ship a
-gesture that half-works. Task 2's spec says so in its own words.
+Added 2026-08-22. Selecting a passage with a finger, under the corrected model.
+Last because it depends on task 2 having given the paper back to the browser,
+and because a gap it leaves open — no touch selection at all — is the price
+already agreed for shipping scrolling first.
+
+## Risk, and what became of it
+
+The long press was named here as the only part of this feature that could fail
+to be buildable as decided, with the fallback written down: raise it and
+re-decide with the user rather than ship a gesture that half-works.
+
+**It failed, and the fallback was taken as written.** Not for the reason
+anticipated, though — the guess was that EmbedPDF's selection model might not be
+drivable from a synthetic hold, and in fact it is (`glyphAt`,
+`expandToWordBoundary` and `setSelection` are all public). What could not be done
+was reclaiming a gesture from the *browser* after declaring the paper pannable.
+The risk was correctly located and incorrectly explained, which is worth
+recording: naming where a plan is fragile is useful even when the reason turns
+out to be the wrong one.

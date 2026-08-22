@@ -108,6 +108,31 @@
 .pageLayers {
   position: absolute;
   inset: 0;
+
+  /*
+   * What a finger on the paper is allowed to do, when no tool is live.
+   *
+   * **This is the value the engine clears *to*, not a value fighting it.** The
+   * interaction manager owns this property on this element and rewrites it on
+   * every mode change: a tool's mode gets an inline `touch-action: none` so a
+   * drag draws, and the reading mode clears the inline value so this declaration
+   * applies (see `reading-mode.ts`). Setting it here is the only half of the
+   * decision that is ours; trying to set the other half from CSS would lose at
+   * the next tool switch.
+   *
+   * **Both axes, and not `auto`.** Naming the pans hands scrolling to the
+   * browser — which does momentum, fling and the rest far better than
+   * JavaScript would — while withholding the browser's *own* pinch-zoom, so the
+   * two-finger gesture still reaches the zoom wrapper this reader mounts
+   * (`pdf-reader.tsx`). `auto` would permit both and quietly undo that.
+   *
+   * The horizontal axis is not decoration: this region genuinely scrolls
+   * sideways whenever a zoom makes a page wider than the panel, which is why
+   * `.viewport` above declares `overscroll-behavior` on both. `pan-y` alone
+   * would leave a zoomed-in paper unpannable — a new defect wearing the clothes
+   * of a fix.
+   */
+  touch-action: pan-x pan-y;
 }
 
 .pageImage {

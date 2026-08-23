@@ -1,13 +1,15 @@
 # Plan: Reader Touch and Gestures
 
-> **Revised 2026-08-22.** Four tasks, not three: task 2's implementation proved
-> part of the decided touch model unbuildable, and the risk this plan names at
-> the bottom landed. What follows is the original sequence, amended where the
-> re-decision changed it — see [status.md](./status.md)'s log for the finding.
+> **Revised 2026-08-22**, then **2026-08-23.** Five tasks, not three. First,
+> task 2's implementation proved part of the decided touch model unbuildable and
+> the risk this plan names at the bottom landed. Then task 4's settled design
+> made it four subsystems in one PR, and its cross-page half became task 5. What
+> follows is the original sequence, amended where each changed it — see
+> [status.md](./status.md)'s log.
 
-Four tasks, sequential, each gated by its own PR + CI + human review. The order
-is not arbitrary: **task 2 can undo task 1 if it is done first**, and task 3 is
-independent of both.
+Five tasks, sequential, each gated by its own PR + CI + human review. The order
+is not arbitrary: **task 2 can undo task 1 if it is done first**, task 3 is
+independent of both, and task 5 builds directly on task 4.
 
 ## Task sequence
 
@@ -46,6 +48,28 @@ the other two — it is a pointer behaviour, touched by no gesture — so it is 
 by size rather than by dependency, and could equally be first if the touch work
 turns out to need splitting.
 
+### 4. [`touch-selection`](./tasks/touch-selection/status.md) — long press selects, handles extend
+
+Added 2026-08-22. Selecting a passage with a finger, under the corrected model,
+**within one page**. After task 2 because it depends on the paper having been
+given back to the browser, and because the gap it leaves open — no touch
+selection at all — is the price already agreed for shipping scrolling first.
+
+**Smaller than filed, by one half.** Its three open design questions were
+settled on 2026-08-23 toward what a phone already does — iOS-shaped handles,
+character-precise extension, a magnifier to aim with — and crossing a page break
+moved to task 5 so that neither PR carries four subsystems.
+
+### 5. [`selection-across-pages`](./tasks/selection-across-pages/status.md) — past the page break
+
+Added 2026-08-23. A handle dragged past the end of its page continues onto the
+next, and the paper scrolls under the finger while it is held at the panel's
+edge.
+
+Last because it is task 4's work extended, not beside it — and split at this
+seam so the state between the two PRs is a finished thing that stops at a page
+edge, rather than a half-built one.
+
 ## What this plan deliberately does not do
 
 - **It does not reverse either decision that produces the task-3 defect.** The
@@ -56,13 +80,6 @@ turns out to need splitting.
   satisfiable.
 - **It does not touch layout.** #9 verified the reader at 420px; this feature
   changes what a hand does, not where anything sits.
-
-### 4. [`touch-selection`](./tasks/touch-selection/status.md) — long press selects, handles extend
-
-Added 2026-08-22. Selecting a passage with a finger, under the corrected model.
-Last because it depends on task 2 having given the paper back to the browser,
-and because a gap it leaves open — no touch selection at all — is the price
-already agreed for shipping scrolling first.
 
 ## Risk, and what became of it
 

@@ -1,9 +1,10 @@
 # Status: Reader Touch and Gestures
 
-**Feature state:** **In progress** — tasks 1 and 2 merged, task 3 in progress. **Four**
-tasks: three spec'd up front plus one added on 2026-08-22, when task 2's
-implementation proved part of the decided touch model unbuildable (see the log).
-Sequential, each gated by its own PR + CI + human review.
+**Feature state:** **In progress** — tasks 1, 2 and 3 merged, task 4 in
+progress. **Five** tasks: three spec'd up front, one added on 2026-08-22 when
+task 2's implementation proved part of the decided touch model unbuildable, and
+one on 2026-08-23 when task 4's settled design made a single PR too large (see
+the log). Sequential, each gated by its own PR + CI + human review.
 
 Depends on [`article-detail-and-reader`](../article-detail-and-reader/status.md)
 (#9, Complete) for the reader itself, its plugin registration, its toolbar, and
@@ -22,8 +23,9 @@ parent when its sub-issues close.
 |---|---|---|---|---|
 | [`gestures`](./tasks/gestures/status.md) ([#109](https://github.com/nicbk/nicbk-website/issues/109)) | **Merged** | [#110](https://github.com/nicbk/nicbk-website/pull/110) | Green | Merged 2026-08-22 |
 | [`touch-scrolling`](./tasks/touch-scrolling/status.md) ([#111](https://github.com/nicbk/nicbk-website/issues/111)) | **Merged** | [#113](https://github.com/nicbk/nicbk-website/pull/113) | Green | Merged 2026-08-23 |
-| [`click-away`](./tasks/click-away/status.md) ([#114](https://github.com/nicbk/nicbk-website/issues/114)) | **In progress** | — | — | — |
-| [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | Not started | — | — | — |
+| [`click-away`](./tasks/click-away/status.md) ([#114](https://github.com/nicbk/nicbk-website/issues/114)) | **Merged** | [#115](https://github.com/nicbk/nicbk-website/pull/115) | Green | Merged 2026-08-23 |
+| [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | **In progress** | — | — | — |
+| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | Not started | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -61,6 +63,14 @@ without drawing another.
   but cannot select, so #9's copy control is unreachable by touch alone in that
   window. Accepted with the user; recorded so it is visible rather than
   discovered.
+- **A pointer handler cannot tell touch from mouse.** The interaction manager
+  does not forward the native event — it builds a plain object with
+  `clientX/clientY/target/…` and no `pointerType`. Anything that must behave
+  differently for a finger has to learn the pointer's kind elsewhere. This is
+  the third time this manager's shape has decided a design in this feature.
+- **Handlers receive page coordinates, with the zoom already divided out.** So
+  any threshold about how far a finger moved belongs in screen pixels
+  (`clientX/clientY`), or it silently tightens as the reader zooms in.
 - **Neither decision behind the task-3 defect is to be reversed.** The sticky
   tool and click-to-create are both wanted; what is unwanted is the third thing
   they do together.
@@ -85,3 +95,9 @@ without drawing another.
   to a different subsystem entirely and became **#13**. The touch model was
   decided with the user before any of it was spec'd, since
   `reader-annotation.md` had never considered touch at all.
+- 2026-08-23 — Tasks 3 and 4's boundaries both moved. Task 3 merged (#115), and
+  task 4's three open design questions were settled with the user toward what a
+  phone already does: **iOS-shaped handles**, **character-precise extension**,
+  and a **magnifier** to aim with. That made task 4 four subsystems in one PR, so
+  crossing a page break — and the auto-scroll it needs — became **task 5**
+  (#116). The parent-closing duty moved with it.

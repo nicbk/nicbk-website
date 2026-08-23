@@ -37,6 +37,9 @@ import { createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
 import { SelectionCopyMenu } from './selection-copy-menu'
+import { usePointerKind } from './touch-selection/pointer-kind'
+import { READER_PANEL_ATTRIBUTE } from './touch-selection/reader-panel'
+import { TouchSelection } from './touch-selection/touch-selection'
 import { useHighlightBoxTool } from './use-highlight-box-tool'
 import { useReaderCopyShortcut } from './use-reader-copy-shortcut'
 import { useReadingMode } from './use-reading-mode'
@@ -147,6 +150,15 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
   // see `reading-mode.ts` for why one flag does all of that.
   useReadingMode(interaction)
 
+  /**
+   * Which kind of pointer is in the reader's hand — see
+   * `touch-selection/pointer-kind.ts` for why this cannot be asked of the
+   * event. Read here for the one decision that is the whole document's rather
+   * than a page's: whether a long press is also allowed to raise the browser's
+   * own menu.
+   */
+  const pointerKind = usePointerKind()
+
   const {
     copy,
     state: copyState,
@@ -252,6 +264,10 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
           // region's purpose and a name to navigate by.
           role="region"
           aria-label="pdf reader"
+          // What "the reader's panel" is recognised by, so the magnifier can
+          // stay inside it — see `touch-selection/reader-panel.ts`. The role and
+          // label above are for assistive technology and are not a selector.
+          {...{ [READER_PANEL_ATTRIBUTE]: '' }}
         >
           {/*
            * Pinch to zoom — on a trackpad and on a touchscreen alike.
@@ -314,6 +330,25 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                         annotationScope?.deselectAnnotation()
                       }
                     }}
+                    /*
+                     * A long press on a phone must mean one thing, and here it
+                     * means "select this word". Chrome on Android would
+                     * otherwise answer the same gesture with its own menu for
+                     * the page image — two affordances for one press, one of
+                     * them offering to save a picture of the paper.
+                     *
+                     * Only for a press that began as touch: a right-click is a
+                     * different gesture with a different answer, and taking the
+                     * context menu off the paper for mouse users would be a
+                     * silent regression nobody asked for. iOS Safari raises no
+                     * such event at all — `-webkit-touch-callout` is that half,
+                     * and it is in the stylesheet.
+                     */
+                    onContextMenu={(event) => {
+                      if (pointerKind.current === 'touch') {
+                        event.preventDefault()
+                      }
+                    }}
                   >
                     {/*
                      * Spends the click that puts a mark down on putting it
@@ -328,6 +363,26 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                         (annotationScope?.getSelectedAnnotationIds().length ??
                           0) > 0
                       }
+                    />
+                    {/*
+                     * Selecting a passage with a finger: the long press, the
+                     * handles that adjust what it caught, and the magnifier
+                     * that makes a character-precise drag possible on glass.
+                     *
+                     * **Before the selection layer, deliberately.** Handlers
+                     * registered without a mode are walked in the order they
+                     * were registered, and this one has to run ahead of
+                     * EmbedPDF's text handler to stop a lifting thumb's jitter
+                     * turning the word it just selected into a single
+                     * character. Mounting order is registration order, so the
+                     * position of this element in this list is load-bearing —
+                     * `use-hold-to-select.ts` explains the rest. It paints
+                     * above the selection anyway, which its own stylesheet
+                     * arranges.
+                     */}
+                    <TouchSelection
+                      documentId={articleId}
+                      pageIndex={pageIndex}
                     />
                     <RenderLayer
                       documentId={articleId}

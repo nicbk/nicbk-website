@@ -253,3 +253,56 @@ The general lesson, recorded because it will recur: **a decision taken about one
 input device is not a decision about the others.** "Clicking away deselects" was
 true and complete for a mouse, and silently wrong for a finger and for a live
 tool.
+
+## Revision (2026-08-22), correcting the revision above
+
+**"Long press, then drag to select" cannot be built, and the table above is
+wrong in that one cell.** Found while implementing it, and corrected here rather
+than worked around, because the reason generalizes.
+
+A browser **latches its `touch-action` decision when a gesture begins**. Telling
+it the paper may be panned — which is exactly what makes one-finger scrolling
+work — means it has already committed to possibly panning *this* touch. A finger
+that then stops and holds cannot take the gesture back; there is no API for
+un-declaring it mid-touch. The decided model required precisely that.
+
+Two supporting findings, both from the installed EmbedPDF, both worth keeping
+because they will mislead again otherwise:
+
+- **`wantsRawTouch` is not what its name suggests.** The interaction manager
+  attaches touch listeners only when `PointerEvent` is undefined, which on any
+  current browser it is not. So the flag has exactly one effect in practice:
+  whether `touch-action: none` is set. It does not route touch anywhere.
+- **The selection handler has no `onPointerCancel`.** It implements
+  `onPointerDown`, `onPointerMove` and `onPointerUp`. When a browser starts
+  scrolling it cancels the pointer stream, and the handler is never told — it
+  keeps the anchor it took.
+
+**The corrected model, decided with the user:**
+
+| | no tool active | tool active |
+|---|---|---|
+| one finger, drag | **scrolls the paper** | draws the mark |
+| one finger, long press | **selects the word under it** | draws the mark |
+| dragging a selection handle | **extends the selection** | — |
+| two fingers | pinches to zoom | pinches to zoom |
+
+**Long press selects a word; handles extend it.** This is what every phone does
+to text, so it is learned zero times — and, unlike the model it replaces, it
+does not fight the browser for a gesture. The hold happens with no movement, so
+nothing is contested. Extending happens by dragging a **handle**, which is a
+fresh gesture beginning on an element that declares `touch-action: none` for
+itself, so the browser never had a claim on it.
+
+The pieces are all public: `glyphAt` finds the glyph under a point,
+`expandToWordBoundary` grows it to a word, and `setSelection` applies the range.
+
+Everything else in the 2026-08-18 revision stands: one finger scrolls, two
+pinch, a live tool takes the drag back, and every gesture remains a second way
+to reach something a pointer or the keyboard can already reach.
+
+**The lesson, which is the reason this revision exists at all:** the earlier
+decision was checked against *the library's* API surface — `wantsRawTouch` is
+per-mode, so the model looked expressible — and not against **the platform's
+arbitration rules**, which is where it actually failed. A gesture model is a
+negotiation with the browser before it is a configuration of a library.

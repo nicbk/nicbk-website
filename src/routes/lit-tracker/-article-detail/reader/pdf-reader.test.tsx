@@ -67,6 +67,11 @@ const annotationCapability = vi.hoisted(() => ({
 const annotationState = vi.hoisted(() => ({
   current: { activeToolId: null as string | null },
 }))
+/**
+ * The interaction manager, which owns `touch-action` on every page. The reader
+ * replaces its default mode so a thumb can scroll — see `reading-mode.ts`.
+ */
+const interactionCapability = vi.hoisted(() => ({ registerMode: vi.fn() }))
 /** What the zoom-gesture wrapper was mounted with, for the assertions below. */
 const zoomGestureProps = vi.hoisted(() => ({
   current: null as Record<string, unknown> | null,
@@ -144,6 +149,9 @@ vi.mock('@embedpdf/plugin-interaction-manager/react', async () => {
   return {
     PagePointerProvider: ({ children }: { children: React.ReactNode }) =>
       createElement(Fragment, null, children),
+    useInteractionManagerCapability: () => ({
+      provides: interactionCapability,
+    }),
   }
 })
 // The bridge between the engine and Zero, which has its own tests and needs a
@@ -469,6 +477,32 @@ describe('PdfReader', () => {
       const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
 
       expect(container.querySelector('[data-zoom-gestures]')).toBeNull()
+    })
+  })
+
+  describe('giving the paper back to the browser', () => {
+    it('replaces the engine’s default mode with one that declines raw touch', () => {
+      // `touch-action` has no behaviour in jsdom, so what is checked is the
+      // descriptor handed over. Without this the engine puts
+      // `touch-action: none` on every page and a thumb moves nothing.
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(interactionCapability.registerMode).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'pointerMode', wantsRawTouch: false }),
+      )
+    })
+
+    it('registers it before any page could have mounted', () => {
+      // The pointer provider fixes a page's `touch-action` when it attaches its
+      // listeners and thereafter only on a mode *change* — and activating an
+      // already-active mode returns early without emitting. So arriving late
+      // means pages that never hear about it. Pages only render once the
+      // document is ready, and this must already have run by then.
+      documentState.current = { status: 'loading', document: null }
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(interactionCapability.registerMode).toHaveBeenCalled()
+      expect(screen.queryByText(`pages:${ARTICLE_ID}`)).toBeNull()
     })
   })
 

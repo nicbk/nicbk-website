@@ -357,6 +357,28 @@ describe('ClickAwayGuard', () => {
     expect(onDeselect).toHaveBeenCalledTimes(1)
   })
 
+  it('does not judge a press that turned into a pinch', () => {
+    /*
+     * This guard never sees the second finger — `pinch/pinch-guard.tsx`
+     * withholds it — so the lift at the end of a pinch arrives looking exactly
+     * like the end of the ordinary press the gesture began as. Judged, a pinch
+     * whose fingers happened to stay put would put the reader's selected mark
+     * down: a zoom that deselects, which is not what a zoom is for.
+     */
+    const { onDeselect } = renderGuard()
+
+    window.dispatchEvent(pointerEvent('touch', 3))
+    const down = managerEvent()
+    registered.current?.['onPointerDown']?.({ x: 5, y: 5 }, down, 'pointerMode')
+    // The second finger, which only the window-level watcher hears.
+    window.dispatchEvent(pointerEvent('touch', 4))
+    const up = managerEvent()
+    registered.current?.['onPointerUp']?.({ x: 5, y: 5 }, up, 'pointerMode')
+
+    expect(onDeselect).not.toHaveBeenCalled()
+    expect(up.stopImmediatePropagation).not.toHaveBeenCalled()
+  })
+
   it('ignores a pointer-up it never saw begin', () => {
     // Presses that started on another page, or before this mounted.
     renderGuard()

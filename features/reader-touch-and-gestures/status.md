@@ -29,7 +29,7 @@ parent when its sub-issues close.
 | [`click-away`](./tasks/click-away/status.md) ([#114](https://github.com/nicbk/nicbk-website/issues/114)) | **Merged** | [#115](https://github.com/nicbk/nicbk-website/pull/115) | Green | Merged 2026-08-23 |
 | [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | **Merged** | [#117](https://github.com/nicbk/nicbk-website/pull/117) | Green | Merged 2026-08-23 |
 | [`deselect-without-drawing`](./tasks/deselect-without-drawing/status.md) ([#118](https://github.com/nicbk/nicbk-website/issues/118)) | **Merged** | [#119](https://github.com/nicbk/nicbk-website/pull/119) | Green | Merged 2026-08-23 |
-| [`pinch-without-selecting`](./tasks/pinch-without-selecting/status.md) ([#122](https://github.com/nicbk/nicbk-website/issues/122)) | **Not started** | — | — | — |
+| [`pinch-without-selecting`](./tasks/pinch-without-selecting/status.md) ([#122](https://github.com/nicbk/nicbk-website/issues/122)) | **In progress** | — | — | — |
 | [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | Not started, and last to merge | — | — | — |
 
 ## Definition of Done (feature)
@@ -87,6 +87,13 @@ without drawing another.
   *earlier* still loses, because every layout effect runs before every ordinary
   one. Anything here that must pre-empt the library registers in a layout
   effect. Task 4 shipped the wrong way round first and the browser showed it.
+- **Ordering is decided by this project or by accident, and both of those have
+  now happened here.** Task 4 lost a race to a library because React runs every
+  layout effect before any ordinary one; task 7 lost one to *itself*, between two
+  of its own window listeners, so the second finger of a pinch overwrote the
+  state the first had preserved. The general rule is now in
+  [AGENTS.md](../../AGENTS.md); the practical one is that two listeners for the
+  same event should usually be one.
 - **Withholding an event from the library means owning what it would have
   done — including its bookkeeping.** Its text handler drops its anchor only on
   pointer-up; swallowing that leaves a stale anchor which turns the *next*

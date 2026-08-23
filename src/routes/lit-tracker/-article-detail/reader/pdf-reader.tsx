@@ -34,6 +34,8 @@ import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
 import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
 import { canCopyText } from './copy-permission'
+import { PinchGuard } from './pinch/pinch-guard'
+import { usePinchRecovery } from './pinch/use-pinch-recovery'
 import { ReaderNotice } from './reader-notice'
 import { BASE_PAGE_SCALE, createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
@@ -151,6 +153,15 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
   // this, every page carried `touch-action: none` and a thumb moved nothing —
   // see `reading-mode.ts` for why one flag does all of that.
   useReadingMode(interaction)
+
+  /*
+   * Takes back what the first finger of a pinch did before anyone could know it
+   * was one — the selection it cleared, and the mark the live tool began. The
+   * rest of the gesture never reaches anything, which is `PinchGuard`'s job
+   * below. Mounted here, once, because both repairs are the document's rather
+   * than any page's.
+   */
+  usePinchRecovery({ documentId: articleId, selection: selectionScope ?? null })
 
   /**
    * Which kind of pointer is in the reader's hand — see
@@ -421,6 +432,20 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                       documentId={articleId}
                       pageIndex={pageIndex}
                     />
+                    {/*
+                     * Keeps a two-finger gesture to itself: while a pinch is in
+                     * flight nothing else hears the fingers, so the paper zooms
+                     * and no text is selected, no mark drawn, and nothing
+                     * already selected disturbed.
+                     *
+                     * **After the touch selection, deliberately.** Both
+                     * register in a layout effect and are therefore walked
+                     * ahead of the library, but in the order they mounted — and
+                     * `use-hold-to-select.ts` drops the hold it is timing when
+                     * a second finger lands, which it can only do if it hears
+                     * that press before this swallows it.
+                     */}
+                    <PinchGuard documentId={articleId} pageIndex={pageIndex} />
                     {/*
                      * The paper, in two layers: the whole page drawn once at a
                      * fixed scale, and the part of it that is on screen drawn

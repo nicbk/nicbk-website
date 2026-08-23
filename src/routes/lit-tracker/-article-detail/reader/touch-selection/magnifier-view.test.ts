@@ -18,7 +18,7 @@ import {
  * screenshot.
  */
 
-const PANEL = { left: 0, top: 100, right: 400 }
+const PANEL = { left: 0, top: 100, right: 400, bottom: 700 }
 
 describe('magnifierSource', () => {
   it('centres on the boundary and shows a lens-worth of paper', () => {

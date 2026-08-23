@@ -13,7 +13,7 @@ import { MAGNIFIER_GAP, MAGNIFIER_SIZE } from './magnifier-view'
  * boundary the reader is aiming at.
  */
 
-const PANEL = { left: 0, top: 100, right: 400 }
+const PANEL = { left: 0, top: 100, right: 400, bottom: 700 }
 const ANCHOR = { x: 100, top: 40, bottom: 52 }
 const FINGER = { x: 200, y: 400 }
 

@@ -1,14 +1,16 @@
 # Status: Pinch Without Selecting
 
-**State:** **In review** — implemented, browser-verified, and
-[PR #125](https://github.com/nicbk/nicbk-website/pull/125) is open with CI green.
+**State:** **Merged** — `315073b`
+([PR #125](https://github.com/nicbk/nicbk-website/pull/125)), 2026-08-23, behind
+green CI and human review.
 
 Seventh of seven, added mid-feature, and **run before task 5** — like task 6, it
 repairs behaviour the reader already has in front of them.
 
 - Branch: `reader-touch-and-gestures/pinch-without-selecting`, from `main` at
-  `0907859`.
-- Sub-issue: [**#122**](https://github.com/nicbk/nicbk-website/issues/122).
+  `0907859`; merged and deleted.
+- Sub-issue: [**#122**](https://github.com/nicbk/nicbk-website/issues/122),
+  closed by the PR.
 - PR: [**#125**](https://github.com/nicbk/nicbk-website/pull/125), CI green.
 - The close-#108 duty stays with
   [`selection-across-pages`](../selection-across-pages/status.md), still the last

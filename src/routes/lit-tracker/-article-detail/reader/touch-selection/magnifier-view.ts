@@ -105,6 +105,14 @@ export interface PanelBounds {
   left: number
   top: number
   right: number
+  /**
+   * Not used by the lens, which flips above or below the finger and is never
+   * held inside the panel vertically. It is here because the panel is one thing
+   * and this is its fourth side: `drag/auto-scroll.ts` measures a finger against
+   * both horizontal edges, and a second, three-sided description of the same
+   * rectangle would be one to keep in step.
+   */
+  bottom: number
 }
 
 /**

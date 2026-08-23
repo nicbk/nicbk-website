@@ -1,7 +1,8 @@
 # Status: Tiled Rendering
 
-**State:** **In review** — implemented, browser-verified, and
-[PR #123](https://github.com/nicbk/nicbk-website/pull/123) is open with CI green.
+**State:** **Merged** 2026-08-23 as `0907859`
+([PR #123](https://github.com/nicbk/nicbk-website/pull/123)), closing #121 and
+completing the feature.
 
 Issue [**#121**](https://github.com/nicbk/nicbk-website/issues/121), sub-issue of
 [#120](https://github.com/nicbk/nicbk-website/issues/120). Branch
@@ -13,7 +14,7 @@ Issue [**#121**](https://github.com/nicbk/nicbk-website/issues/121), sub-issue o
 | Unit tests | Green (ratchet 92.93% vs 92.88% on `main`) |
 | CI | Green ([PR #123](https://github.com/nicbk/nicbk-website/pull/123)) |
 | Browser verification | Done — see below |
-| Human review | Waiting |
+| Human review | Merged 2026-08-23 |
 
 ## Baseline to beat
 

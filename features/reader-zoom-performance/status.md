@@ -1,7 +1,9 @@
 # Status: Reader Zoom Performance
 
-**Feature state:** **In progress** — its one task is implemented and
-browser-verified, awaiting its PR. Gated by that PR + CI + human review.
+**Feature state:** **Complete** (2026-08-23) — its one task merged as `0907859`
+([PR #123](https://github.com/nicbk/nicbk-website/pull/123)) behind green CI and
+human review. Parent issue **#120 closed by hand**, as this file's own note
+below requires.
 
 Depends on [`article-detail-and-reader`](../article-detail-and-reader/status.md)
 (#9, Complete) for the reader and its plugin registration, and sits beside
@@ -19,7 +21,7 @@ parent when its sub-issues close.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`tiled-rendering`](./tasks/tiled-rendering/status.md) (**#121**) | **In progress** | — | — | — |
+| [`tiled-rendering`](./tasks/tiled-rendering/status.md) ([#121](https://github.com/nicbk/nicbk-website/issues/121)) | **Merged** | [#123](https://github.com/nicbk/nicbk-website/pull/123) | Green | Merged 2026-08-23 |
 
 ## Definition of Done (feature)
 
@@ -51,6 +53,11 @@ over it behaving as it did.
 
 ## Log
 
+- 2026-08-23 — **Merged as `0907859` and the feature is complete**, same day it
+  was spec'd. #120 closed by hand. What is left open on purpose is the one thing
+  a desktop cannot answer: whether an iPhone's tab now survives the top of the
+  zoom range. The task's status says so plainly rather than implying it was
+  checked.
 - 2026-08-23 — **Task implemented and browser-verified.** At 400% the reader
   went from 620 MB of decoded image to 62 MB, and a zoom step from 3825 ms to
   193 ms; at fit width it costs about twice what it did, which is the base

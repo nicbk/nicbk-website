@@ -32,6 +32,7 @@ vi.mock('@embedpdf/plugin-interaction-manager/react', () => ({
 }))
 
 const { ClickAwayGuard } = await import('./click-away-guard')
+type LiveTool = import('./click-away').LiveTool
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 const ON_SCREEN = { x: 500, y: 400 }
@@ -98,13 +99,16 @@ function press({
 
 interface GuardOptions {
   isMarkSelected?: () => boolean
-  activeTool?: () => string | null
+  activeTool?: () => LiveTool | null
   onDeselect?: () => void
 }
 
+/** A tool that makes a mark where it is clicked — a shape, or the text box. */
+const SHAPE: LiveTool = { id: 'square', createsOnClick: true }
+
 function renderGuard({
   isMarkSelected = () => true,
-  activeTool = () => 'square',
+  activeTool = () => SHAPE,
   onDeselect = vi.fn(),
 }: GuardOptions = {}) {
   const result = render(
@@ -334,7 +338,9 @@ describe('ClickAwayGuard', () => {
   it('takes the press away from a tool that creates on the press itself', () => {
     // The sticky note commits at pointer-down, so its press has to be stopped
     // at the start — and then there is no release to withhold.
-    renderGuard({ activeTool: () => 'textComment' })
+    renderGuard({
+      activeTool: () => ({ id: 'textComment', createsOnClick: false }),
+    })
     const { down, up } = press()
 
     expect(down.stopImmediatePropagation).toHaveBeenCalledTimes(1)

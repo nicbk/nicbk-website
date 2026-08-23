@@ -1,4 +1,5 @@
 import type { Position } from '@embedpdf/models'
+import type { AnnotationCapability } from '@embedpdf/plugin-annotation'
 import { createsOnPress } from './annotation-tools'
 import { hasWandered } from './touch-selection/hold'
 import type { PointerKind } from './touch-selection/pointer-kind'
@@ -50,13 +51,36 @@ import type { PointerKind } from './touch-selection/pointer-kind'
  */
 export const CLICK_MOVEMENT_THRESHOLD = 5
 
+export interface LiveTool {
+  /** EmbedPDF's id for it, as the toolbar spells it. */
+  id: string
+  /**
+   * Whether a *bare click* with this tool makes a mark.
+   *
+   * **Asked of the plugin rather than assumed**, because only five of the
+   * thirteen say yes: the shapes and the text box declare `clickBehavior`, and
+   * the four text-markup tools and freehand declare none — a click with them
+   * creates nothing at all, because what they mark is a text selection.
+   *
+   * That distinction is the whole of the second defect found here. Withholding
+   * a click from a tool that would not have acted on it accomplishes nothing
+   * and costs something: the press-up is also what makes the *selection*
+   * plugin's text handler forget its anchor, and that handler has no cancel
+   * path to be told any other way. Left holding one, it turned the next
+   * mouse-moves into a drag-selection trailing the cursor, drawn in the live
+   * tool's colour — a mark apparently being sized, which never appeared
+   * (user-reported, 2026-08-24).
+   */
+  createsOnClick: boolean
+}
+
 export interface PressToJudge {
   /** What is pressing: a finger behaves differently from a mouse. */
   kind: PointerKind
   /** Whether a mark was selected when the press began, not now — see below. */
   wasSelected: boolean
   /** The tool that was live when it began, if any. */
-  tool: string | null
+  tool: LiveTool | null
   /** Where the press began, in page coordinates. */
   from: Position
   /** Where it ended, likewise. */
@@ -92,7 +116,7 @@ export function withholdsThePress({
   if (!wasSelected || tool === null) {
     return false
   }
-  return kind === 'touch' || createsOnPress(tool)
+  return kind === 'touch' || createsOnPress(tool.id)
 }
 
 /**
@@ -102,12 +126,21 @@ export function withholdsThePress({
  * spent on deselecting; a press that travelled was a drag, so the tool keeps it
  * and draws what was dragged out.
  *
- * Only for presses the tool was allowed to hear in the first place —
+ * **Only when that click would otherwise have made something.** A tool with no
+ * click behaviour — the text-markup four, freehand — makes nothing from a bare
+ * press, so there is nothing to withhold, and withholding anyway breaks
+ * something else: see {@link LiveTool.createsOnClick}. Withhold only what the
+ * library would have acted on.
+ *
+ * And only for presses the tool was allowed to hear in the first place —
  * {@link withholdsThePress} has already taken the others, and a tool that never
  * started has nothing to be stopped from finishing.
  */
 export function withholdsTheRelease(press: PressToJudge): boolean {
   if (withholdsThePress(press) || !press.wasSelected || press.tool === null) {
+    return false
+  }
+  if (!press.tool.createsOnClick) {
     return false
   }
   return !travelled(press)
@@ -152,4 +185,34 @@ function travelled(press: PressToJudge): boolean {
 
 function distanceBetween(from: Position, to: Position): number {
   return Math.hypot(to.x - from.x, to.y - from.y)
+}
+
+/**
+ * The live tool as this decision needs to know it: its id, and whether a bare
+ * click with it would make a mark.
+ *
+ * **The second half is asked of the plugin, every time.** Only five of the
+ * thirteen tools declare a `clickBehavior` — the shapes and the text box — and
+ * the guard's whole job is to withhold a click from a tool that would have acted
+ * on it. Withholding one from a tool that would not costs something real (see
+ * {@link LiveTool.createsOnClick}), so the answer has to be the library's rather
+ * than a list kept beside it. It also comes out right for free for the thirteenth
+ * tool, which is a clone of the square and carries the square's behaviour.
+ */
+export function liveToolFrom(
+  annotations: AnnotationCapability | null,
+  activeToolId: string | null,
+): LiveTool | null {
+  if (activeToolId === null) {
+    return null
+  }
+
+  const tool = annotations?.getTool(activeToolId)
+  return {
+    id: activeToolId,
+    createsOnClick:
+      tool !== undefined &&
+      'clickBehavior' in tool &&
+      tool.clickBehavior?.enabled === true,
+  }
 }

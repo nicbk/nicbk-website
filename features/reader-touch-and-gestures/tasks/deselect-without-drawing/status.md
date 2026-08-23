@@ -61,6 +61,27 @@ The behaviour, in their words, restated as a table:
   scoped to that state, is the one lever that fits. Given back the moment
   nothing is selected.
 
+## The same defect, once more, with a different tool
+
+Reported by the user on 2026-08-24, after the first fix: with **highlight or
+strikeout** live, clicking away from a selected mark still made something appear
+to be sized behind the cursor — though clicking again never created it.
+
+**It is the same swallowed pointer-up, stranding a different library.** Only five
+of the thirteen tools declare a `clickBehavior` — the shapes and the text box —
+so a bare click with the four text-markup tools, or with freehand, creates
+nothing at all: what they mark is a *text selection*. The guard was withholding
+their pointer-up anyway, and that event is also the only thing that makes the
+**selection** plugin's text handler drop its anchor (it implements no
+`onPointerCancel`, which task 2 recorded and this is the second defect to turn
+on). Left holding one, it turned the next mouse-moves into a drag-selection
+trailing the cursor, drawn in the live tool's colour.
+
+**The rule that fixes it is narrower than the one it replaces:** withhold a click
+only from a tool that would have *acted* on it, asked of the plugin rather than
+assumed. Which is the same lesson as the rest of this task, arrived at from the
+other side: withholding an event you did not need to withhold is not free.
+
 ## Browser verification
 
 Recorded here because both Playwright tiers are suspended. Exercised against the

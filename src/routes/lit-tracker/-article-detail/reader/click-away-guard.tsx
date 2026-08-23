@@ -1,6 +1,6 @@
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/react'
 import { useEffect, useRef } from 'react'
-import type { PressToJudge } from './click-away'
+import type { LiveTool, PressToJudge } from './click-away'
 import {
   putsTheMarkDownOnRelease,
   withholdsThePress,
@@ -41,8 +41,8 @@ interface ClickAwayGuardProps {
   pageIndex: number
   /** Whether a mark is selected *now* — read when a press begins. */
   isMarkSelected: () => boolean
-  /** Which tool is live *now*, if any — likewise. */
-  activeTool: () => string | null
+  /** Which tool is live *now*, if any, and what a click with it would do. */
+  activeTool: () => LiveTool | null
   /**
    * Puts the selected mark down.
    *

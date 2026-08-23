@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { PressToJudge } from './click-away'
+import type { LiveTool, PressToJudge } from './click-away'
 import {
   CLICK_MOVEMENT_THRESHOLD,
+  liveToolFrom,
   putsTheMarkDownOnRelease,
   withholdsThePress,
   withholdsTheRelease,
@@ -18,12 +19,17 @@ import {
 
 const AT = (x: number, y: number) => ({ x, y })
 
+/** A tool that makes a mark where it is clicked — a shape, or the text box. */
+const SHAPE: LiveTool = { id: 'square', createsOnClick: true }
+/** One that makes nothing from a click, because what it marks is selected text. */
+const MARKUP: LiveTool = { id: 'highlight', createsOnClick: false }
+
 /** A press, with the parts each test cares about spelled out. */
 function press(over: Partial<PressToJudge> = {}): PressToJudge {
   return {
     kind: 'mouse',
     wasSelected: true,
-    tool: 'square',
+    tool: SHAPE,
     from: AT(100, 100),
     to: AT(100, 100),
     fromOnScreen: AT(400, 300),
@@ -50,7 +56,11 @@ describe('withholdsThePress', () => {
   it('takes the press away from a tool that creates on the press itself', () => {
     // The sticky note commits at pointer-down. Judging its release would be
     // judging a note that already exists.
-    expect(withholdsThePress(press({ tool: 'textComment' }))).toBe(true)
+    expect(
+      withholdsThePress(
+        press({ tool: { id: 'textComment', createsOnClick: false } }),
+      ),
+    ).toBe(true)
   })
 
   it('leaves every press alone when no mark is selected', () => {
@@ -85,12 +95,31 @@ describe('withholdsTheRelease', () => {
     expect(withholdsTheRelease(press({ wasSelected: false }))).toBe(false)
   })
 
+  it('leaves a click alone when the live tool makes nothing from one', () => {
+    /*
+     * The second defect found here, and the more interesting one: the four
+     * text-markup tools and freehand declare no click behaviour, so a bare
+     * press with them creates nothing and there is nothing to withhold.
+     * Withholding anyway is not merely pointless — the pointer-up is also what
+     * makes the *selection* plugin's text handler drop its anchor, and that
+     * handler has no cancel path to be told any other way. Taken from it, it
+     * turned the next mouse-moves into a drag-selection trailing the cursor,
+     * drawn in the tool's own colour: a mark that looked like it was being
+     * sized and never appeared.
+     */
+    expect(withholdsTheRelease(press({ tool: MARKUP }))).toBe(false)
+  })
+
   it('does not judge a release the tool never heard begin', () => {
     // A finger's press, and a sticky note's, were taken at the start. There is
     // no half-made mark to stop, and saying otherwise would send the tool a
     // cancel for a gesture it knows nothing about.
     expect(withholdsTheRelease(press({ kind: 'touch' }))).toBe(false)
-    expect(withholdsTheRelease(press({ tool: 'textComment' }))).toBe(false)
+    expect(
+      withholdsTheRelease(
+        press({ tool: { id: 'textComment', createsOnClick: false } }),
+      ),
+    ).toBe(false)
   })
 
   it('treats a press exactly at the threshold as a click', () => {
@@ -173,5 +202,55 @@ describe('putsTheMarkDownOnRelease', () => {
     })
 
     expect(putsTheMarkDownOnRelease(zoomedOut)).toBe(true)
+  })
+})
+
+describe('liveToolFrom', () => {
+  /** The plugin, as far as this needs one: a lookup from id to tool. */
+  const engineWith = (tools: Record<string, unknown>) =>
+    ({
+      getTool: (id: string) => tools[id],
+    }) as unknown as Parameters<typeof liveToolFrom>[0]
+
+  it('asks the plugin whether a click with this tool makes a mark', () => {
+    // The shapes and the text box declare it; nothing else does.
+    const engine = engineWith({
+      square: { clickBehavior: { enabled: true, defaultSize: {} } },
+    })
+
+    expect(liveToolFrom(engine, 'square')).toEqual({
+      id: 'square',
+      createsOnClick: true,
+    })
+  })
+
+  it('says no for a tool that declares no click behaviour', () => {
+    // A highlight marks a text selection; a bare click with it does nothing,
+    // which is why its press must not be withheld.
+    expect(liveToolFrom(engineWith({ highlight: {} }), 'highlight')).toEqual({
+      id: 'highlight',
+      createsOnClick: false,
+    })
+  })
+
+  it('says no for one that declares it and turns it off', () => {
+    const engine = engineWith({ line: { clickBehavior: { enabled: false } } })
+
+    expect(liveToolFrom(engine, 'line')?.createsOnClick).toBe(false)
+  })
+
+  it('is nothing at all when no tool is live', () => {
+    expect(liveToolFrom(engineWith({}), null)).toBeNull()
+  })
+
+  it('survives a plugin that is not there yet, and a tool it does not know', () => {
+    // The capability arrives a tick after the first render, and the toolbar can
+    // name a tool the engine has not been given (`annotation-tools.ts` says
+    // when). Neither is a reason to throw at a reader mid-press.
+    expect(liveToolFrom(null, 'square')).toEqual({
+      id: 'square',
+      createsOnClick: false,
+    })
+    expect(liveToolFrom(engineWith({}), 'square')?.createsOnClick).toBe(false)
   })
 })

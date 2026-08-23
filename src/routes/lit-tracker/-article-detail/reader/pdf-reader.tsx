@@ -30,6 +30,7 @@ import { useRegisterReaderJump } from '../reader-jump'
 import { AnnotationSelectionMenu } from './annotation-selection-menu'
 import { useAnnotationSync } from './annotation-sync/use-annotation-sync'
 import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
+import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
 import { canCopyText } from './copy-permission'
 import { ReaderNotice } from './reader-notice'
@@ -392,7 +393,9 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                         (annotationScope?.getSelectedAnnotationIds().length ??
                           0) > 0
                       }
-                      activeTool={() => annotation.activeToolId}
+                      activeTool={() =>
+                        liveToolFrom(annotations, annotation.activeToolId)
+                      }
                       onDeselect={() => annotationScope?.deselectAnnotation()}
                     />
                     {/*

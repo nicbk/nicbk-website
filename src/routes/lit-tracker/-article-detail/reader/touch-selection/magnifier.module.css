@@ -1,0 +1,42 @@
+/*
+ * The lens that floats over the paper while a selection handle is dragged.
+ *
+ * Positioned against the window rather than the page, because it has to escape
+ * the reader's own scroll region: the boundary being adjusted is often near an
+ * edge, which is exactly where a lens confined to the panel would be clipped.
+ * `magnifier-view.ts` decides where it goes; this decides what it looks like.
+ */
+.lens {
+  position: fixed;
+  /*
+   * Above the sticky site header (1) and the reader's overlaid toolbar, below
+   * the toasts (100) — a transient gesture aid should not cover a message the
+   * reader is meant to act on.
+   */
+  z-index: 50;
+  /*
+   * Never a target. The finger that summons this is on a handle somewhere else,
+   * and a lens that could be pressed would be a lens that could interrupt the
+   * drag that created it.
+   */
+  pointer-events: none;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  /*
+   * The one shadow in the reader, and it earns its place: the lens is the only
+   * thing on the page that is meant to read as floating above the paper rather
+   * than drawn on it.
+   */
+  box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 25%);
+  /* A page is white in both themes, and so is what is behind the part of the
+     lens that falls past a page's edge. */
+  background-color: #ffffff;
+  /* The canvas is an inline element by default, and an inline element in a box
+     leaves a strip of line-height beneath it. */
+  line-height: 0;
+}
+
+.glass {
+  display: block;
+}

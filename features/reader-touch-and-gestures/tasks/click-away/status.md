@@ -1,14 +1,19 @@
 # Status: Click Away
 
-**State:** In progress. Third of four.
+**State:** **Merged.** Third of five.
 
 - Branch: `reader-touch-and-gestures/click-away`, from `main` at `ee54340`
   (task 2's merge).
-- Sub-issue: [**#114**](https://github.com/nicbk/nicbk-website/issues/114).
-- PR: opened once the unit tier and the browser pass are both clean.
+- Sub-issue: [**#114**](https://github.com/nicbk/nicbk-website/issues/114),
+  closed by the merge.
+- PR: [**#115**](https://github.com/nicbk/nicbk-website/pull/115), merged
+  2026-08-23 with CI green. Branch tip verified against `main` afterwards and
+  deleted.
 - ~~On merge, close this feature's parent issue by hand.~~ **That duty moved to
   [`touch-selection`](../touch-selection/status.md)** when task 4 was added
-  mid-feature; this is no longer the last task.
+  mid-feature — and on to
+  [`selection-across-pages`](../selection-across-pages/status.md) when task 5 was
+  split out of it.
 
 ## Open items, as settled
 
@@ -66,4 +71,6 @@ visible page, or exactly on top of another.
   it is last by size rather than by dependency and could move if the touch work
   needs splitting.
 - 2026-08-23 — Implemented and browser-verified (above). No defect found. The
-  close-#108 duty moved to task 4, which is now the feature's last.
+  close-#108 duty moved to task 4.
+- 2026-08-23 — Merged as PR #115, CI green. Third of what is now five tasks; the
+  close-#108 duty has since moved on again, to task 5.

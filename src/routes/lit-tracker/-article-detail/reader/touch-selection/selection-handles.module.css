@@ -1,0 +1,106 @@
+/*
+ * The grips at the ends of a touch selection.
+ *
+ * Positioned in page coordinates scaled by the zoom (`selection-handles.tsx`),
+ * so they sit on the words they bound at any magnification — but sized in fixed
+ * pixels, because a handle is a control the thumb operates, not part of the
+ * paper. A handle that grew with the zoom would be a target that got easier to
+ * hit the less it was needed.
+ */
+
+/*
+ * The colour, which is not the theme's.
+ *
+ * A handle is drawn on the *paper*, and a paper is white whichever theme the
+ * site is in — so `--color-accent` is the wrong token here twice over: in dark
+ * mode it is a pale blue picked to carry against a dark surface, which over
+ * white washes out, and against EmbedPDF's own selection tint it very nearly
+ * disappears. This is the light theme's accent, fixed, for the same reason the
+ * page itself has a fixed white behind it.
+ *
+ * The ring is what makes it work over anything at all: white paper, a blue
+ * selection, or a dark figure a hold happened to land beside.
+ */
+.handle {
+  --handle-color: #0b57d0;
+  --handle-ring: #ffffff;
+
+  /*
+   * The anchor point itself: a boundary between two glyphs, which has a height
+   * and no width. Everything visible hangs off it.
+   */
+  position: absolute;
+  width: 0;
+  /* The parts opt back in. This box spans the line, and a line-sized target
+     over the text would swallow presses meant for the paper. */
+  pointer-events: none;
+}
+
+/*
+ * The bar, on the boundary. Two pixels, centred on it — so it sits *between*
+ * the characters rather than over either of them.
+ */
+.bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  background-color: var(--handle-color);
+  /* Hairlines of white either side, so the boundary is legible where it matters
+     most: over the selection tint, which is itself blue. */
+  box-shadow: 0 0 0 1px var(--handle-ring);
+}
+
+/*
+ * The dot the thumb aims at, outside the line so it covers no text.
+ *
+ * `touch-action: none` is what makes the drag possible at all: the paper around
+ * it declares itself pannable so a thumb can scroll it, and this is the one
+ * element that says otherwise. Because the gesture *begins* here, the browser
+ * never had a claim on it — which is the whole reason the decided model
+ * extends a selection by handle rather than by dragging from the hold.
+ */
+.grip {
+  position: absolute;
+  left: 50%;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-left: -0.375rem;
+  border-radius: 50%;
+  background-color: var(--handle-color);
+  box-shadow: 0 0 0 1.5px var(--handle-ring);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+/* Above the line at the start of the selection, below it at the end — the
+   arrangement that tells the reader which end of the passage each one moves. */
+.start .grip {
+  bottom: 100%;
+  margin-bottom: 1px;
+}
+
+.end .grip {
+  top: 100%;
+  margin-top: 1px;
+}
+
+/*
+ * The target, which is nothing like the size of the dot.
+ *
+ * 44px square, centred on the graphic: the platform norm, and comfortably past
+ * the 24×24 CSS pixels WCAG 2.2 AA asks for
+ * (research/accessibility/conformance-target.md). Invisible on purpose — a
+ * visible 44px blob at each end of a phrase would be the loudest thing on the
+ * page.
+ */
+.grip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.75rem;
+  height: 2.75rem;
+  transform: translate(-50%, -50%);
+}

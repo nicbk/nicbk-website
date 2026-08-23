@@ -22,9 +22,20 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-bg-surface);
-  /* Above the selection rather than over it: the passage is what the reader is
-     looking at, and EmbedPDF anchors this to its box. */
-  transform: translateY(calc(-100% - var(--space-2xs)));
+  /*
+   * Above the selection rather than over it: the passage is what the reader is
+   * looking at, and EmbedPDF anchors this to its box.
+   *
+   * The second gap is the touch selection's start handle, whose dot hangs
+   * 13px above the first line (`touch-selection/selection-handles.module.css`).
+   * Without it this bar lands exactly on top of that dot, and the reader who
+   * reaches to adjust where their selection begins presses "copy" instead — a
+   * control covering a control, which is the dead-zone problem in reverse.
+   * Applied for every selection rather than only a touch one: a menu a few
+   * pixels further from the passage costs a pointer reader nothing, and a rule
+   * that moved would be a rule to keep in step with a stylesheet elsewhere.
+   */
+  transform: translateY(calc(-100% - var(--space-2xs) - 0.875rem));
 }
 
 .button {

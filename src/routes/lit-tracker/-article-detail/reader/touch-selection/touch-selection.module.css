@@ -1,0 +1,28 @@
+/*
+ * The layer the handles are positioned in.
+ *
+ * Fills the page exactly, like the render, selection and annotation layers it
+ * sits beside — the handles are placed in page coordinates multiplied by the
+ * zoom, so a layer of any other size would put them somewhere other than on the
+ * words they bound.
+ *
+ * It catches nothing. Every press on the paper belongs to the page beneath;
+ * only the grips themselves opt back in (`selection-handles.module.css`).
+ */
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /*
+   * Above the selection tint, below the menus.
+   *
+   * This layer is mounted *before* the selection layer because handler
+   * registration order decides which one hears a press first
+   * (`pdf-reader.tsx`), and an earlier sibling would otherwise paint beneath a
+   * later one — putting the handles under the very highlight they adjust. A
+   * small number, not a large one: EmbedPDF's own selection menu claims a far
+   * higher layer, and the copy control belongs above a handle rather than
+   * behind it.
+   */
+  z-index: 3;
+}

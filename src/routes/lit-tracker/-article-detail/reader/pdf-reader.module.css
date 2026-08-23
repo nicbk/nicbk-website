@@ -133,6 +133,23 @@
    * of a fix.
    */
   touch-action: pan-x pan-y;
+
+  /*
+   * The other half of "a long press means one thing here".
+   *
+   * iOS Safari answers a long press on an image with its own callout — copy,
+   * save, share — and raises no `contextmenu` event to decline, so the
+   * suppression Chrome needs (`onContextMenu` in `pdf-reader.tsx`) has nothing
+   * to hook. This is the lever that platform does listen to. Without it the
+   * reader gets two affordances for one gesture: the word selecting under the
+   * finger, and a sheet offering to save a picture of the page.
+   *
+   * Both properties, because the callout and the native selection UI are
+   * separate behaviours: `user-select: none` also keeps iOS from putting its
+   * own handles beside this reader's.
+   */
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .pageImage {

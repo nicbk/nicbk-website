@@ -1,7 +1,9 @@
 # Task: Touch Selection
 
-**Fourth of four**, and the only one that was not in the feature's original
-plan. Selecting a passage with a finger.
+**Fourth of five**, and the only one that was not in the feature's original
+plan. Selecting a passage with a finger, within one page —
+[task 5](../selection-across-pages/description.md) carries it across a page
+break.
 
 Task 2 gave the paper back to the browser for scrolling, and in doing so gave up
 the only way a touch user could select text. Until this ships, a reader on a
@@ -23,6 +25,12 @@ recorded in
 - From there the selection is an ordinary one: the copy control appears over it,
   ⌘C copies it, Escape drops it, and a text-markup tool applies to it.
 
+Two things the model left open were settled with the user on 2026-08-23, both
+toward what a phone already does: the handle is **iOS's shape** — a bar at the
+boundary with its dot outside the line — and extension is **character-precise
+with a magnifier** following the finger, rather than snapping to whole words.
+See [status.md](./status.md) for what each was chosen against.
+
 ## Why it exists as a task at all
 
 Because the model it replaces could not be built. "Long press, then drag" needed
@@ -39,6 +47,9 @@ the original model look plausible, is in that revision and in
   has been since #9.
 - **No selection handles for the pointer.** They are a touch affordance; a
   pointer already drags a selection directly.
+- **No selection across a page break.** A handle stops at the end of its own
+  page; task 5 adds the page hit-testing and edge auto-scroll that crossing one
+  needs.
 
 ## Exit state
 

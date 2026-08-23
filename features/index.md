@@ -69,7 +69,7 @@ need them (see Phases 2–3).
 | 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **Complete** (2026-08-17; all 6 tasks merged, #96 + #97 + #98 + #99 + #100 + #105) | #7, #8 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
-| 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **In progress** (4 tasks; 1 merged, #109) | #9 |
+| 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **In progress** (5 tasks; 3 merged, #109 + #111 + #114) | #9 |
 | 13 | Tracker navigation latency (the auth guard stops blocking) | `tracker-navigation-latency` | Not yet spec'd | #6, #8 |
 
 ## How this roadmap is spec'd out

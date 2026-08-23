@@ -184,6 +184,28 @@
 }
 
 /*
+ * The sharp part of the paper: the region on screen, drawn at the zoom the
+ * reader is using, over the base image.
+ *
+ * **Filling the page box is not decoration.** The library positions each tile
+ * absolutely, in page pixels, against this element — so it has to be the page,
+ * exactly, or every tile lands somewhere other than the piece of paper it is a
+ * picture of.
+ *
+ * **Transparent to pointers, which is what keeps the click-away working.** A
+ * press on the paper must reach the base image beneath, because that is what
+ * carries the attribute meaning "the bare page" (`blank-paper.ts`) and what the
+ * magnifier reads. It also takes the browser's image drag-and-drop off the
+ * tiles for free — the same gesture `draggable={false}` removes from the base.
+ */
+.pageTiles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/*
  * The notice states sit below the bar rather than behind it, for the same
  * reason page one does.
  */

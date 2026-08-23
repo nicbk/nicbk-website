@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { articlePdfUrl, createReaderPlugins } from './reader-plugins'
+import {
+  articlePdfUrl,
+  BASE_PAGE_SCALE,
+  createReaderPlugins,
+  TILING,
+} from './reader-plugins'
 
 /**
  * What the reader is built from.
@@ -32,12 +37,54 @@ describe('articlePdfUrl', () => {
 })
 
 describe('createReaderPlugins', () => {
-  it('registers exactly the eight the reader needs', () => {
+  it('registers exactly the nine the reader needs', () => {
     // Thumbnails, search, printing, rotation and spreads all exist and none is
     // asked for. If this count changes, it should be because a task decided to
-    // change it — task 4 was the last to, adding the annotation plugin and the
-    // two its manifest requires.
-    expect(createReaderPlugins(ARTICLE_ID)).toHaveLength(8)
+    // change it — the tiling plugin was the last to, and before it the
+    // annotation plugin with the two its manifest requires.
+    expect(createReaderPlugins(ARTICLE_ID)).toHaveLength(9)
+  })
+
+  it('registers the tiling plugin after the three it requires', () => {
+    /*
+     * Its manifest declares `requires: ['render', 'scroll', 'viewport']` — it
+     * draws with the first and asks the other two which part of which page is
+     * on screen. Registered before them, the reader is left with the one thing
+     * this feature exists to remove: a full-page image at the current zoom.
+     */
+    const ids = pluginIds()
+
+    expect(ids).toContain('tiling')
+    expect(ids.indexOf('render')).toBeLessThan(ids.indexOf('tiling'))
+    expect(ids.indexOf('scroll')).toBeLessThan(ids.indexOf('tiling'))
+    expect(ids.indexOf('viewport')).toBeLessThan(ids.indexOf('tiling'))
+  })
+
+  it('gives the tiling plugin the sizes this reader chose', () => {
+    // The config's type demands all three, so none of them can be forgotten —
+    // what this asserts is that the reader's choice reaches the plugin, since a
+    // registration that quietly dropped its config would still render, just at
+    // someone else's numbers.
+    const tiling = configOf('tiling')
+
+    expect(tiling).toEqual(TILING)
+  })
+
+  it('does not pre-render tiles outside the viewport', () => {
+    /*
+     * Pinned separately from the object above because it is the one value that
+     * would undo the point: every ring is more of exactly the rendering this
+     * feature exists to stop paying for, spent on parts of the page nobody is
+     * looking at. Raising it is a decision with a measurement attached.
+     */
+    expect(TILING.extraRings).toBe(0)
+  })
+
+  it('draws the base layer at a fixed scale, not the document’s', () => {
+    // The base is what shows while tiles arrive. Pinned, it is rendered once
+    // per page and never again; following the zoom, it would still be the
+    // 620 MB at 400% that this feature was filed to remove.
+    expect(BASE_PAGE_SCALE).toBe(1)
   })
 
   it('registers the annotation plugin’s dependencies before it', () => {
@@ -93,6 +140,17 @@ describe('createReaderPlugins', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 })
+
+/** The configuration handed to one registered plugin, by its manifest id. */
+function configOf(pluginId: string): unknown {
+  const registration = createReaderPlugins(ARTICLE_ID).find(
+    (candidate) =>
+      (candidate as { package: { manifest?: { id?: string } } }).package
+        ?.manifest?.id === pluginId,
+  ) as unknown as { config?: unknown } | undefined
+
+  return registration?.config
+}
 
 /** The registered plugins' own manifest ids, in registration order. */
 function pluginIds(): (string | undefined)[] {

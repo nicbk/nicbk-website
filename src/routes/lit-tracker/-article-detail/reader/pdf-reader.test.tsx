@@ -1,6 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
+import { BASE_PAGE_SCALE } from './reader-plugins'
 
 /**
  * The reader's own composition, with the engine mocked out.
@@ -96,11 +100,33 @@ vi.mock('@embedpdf/core/react', async () => {
   }
 })
 vi.mock('@embedpdf/plugin-scroll/react', async () => {
-  const { createElement } = await import('react')
+  const { createElement, Fragment } = await import('react')
   return {
     useScroll: () => ({ state: scrollState.current, provides: scrollScope }),
-    Scroller: ({ documentId }: { documentId: string }) =>
-      createElement('p', null, `pages:${documentId}`),
+    /*
+     * Renders one page through the callback the real scroller virtualizes with,
+     * so what a page is *made of* can be asserted — the layers over the paper,
+     * their order, and which of them a press lands on. The `pages:` marker
+     * stays because the state tests use it to say the document is drawn at all.
+     */
+    Scroller: ({
+      documentId,
+      renderPage,
+    }: {
+      documentId: string
+      renderPage: (page: {
+        pageIndex: number
+        width: number
+        height: number
+        scale: number
+      }) => React.ReactNode
+    }) =>
+      createElement(
+        Fragment,
+        null,
+        createElement('p', null, `pages:${documentId}`),
+        renderPage({ pageIndex: 0, width: 600, height: 800, scale: 1.6934 }),
+      ),
   }
 })
 vi.mock('@embedpdf/plugin-zoom/react', async () => {
@@ -136,18 +162,66 @@ vi.mock('@embedpdf/plugin-viewport/react', async () => {
       createElement('div', props, children),
   }
 })
-vi.mock('@embedpdf/plugin-render/react', () => ({ RenderLayer: () => null }))
-vi.mock('@embedpdf/plugin-annotation/react', () => ({
-  useAnnotation: () => ({
-    state: annotationState.current,
-    provides: annotationScope,
-  }),
-  useAnnotationCapability: () => ({ provides: annotationCapability }),
-  AnnotationLayer: () => null,
-}))
-vi.mock('@embedpdf/plugin-selection/react', () => ({
-  SelectionLayer: () => null,
-  useSelectionCapability: () => ({ provides: selectionScope }),
+/*
+ * The four layers a page is made of, each rendering a marker element carrying
+ * the props worth asserting. They are stood in for rather than exercised — one
+ * draws a WebAssembly-rendered bitmap and another a grid of them — but *which*
+ * layers a page has, in what order, is exactly the kind of composition that
+ * breaks silently.
+ */
+vi.mock('@embedpdf/plugin-render/react', async () => {
+  const { createElement } = await import('react')
+  return {
+    RenderLayer: ({
+      documentId: _documentId,
+      pageIndex: _pageIndex,
+      scale,
+      ...props
+    }: Record<string, unknown>) =>
+      createElement('img', {
+        ...props,
+        'data-base-layer': '',
+        'data-scale': String(scale),
+      }),
+  }
+})
+vi.mock('@embedpdf/plugin-tiling/react', async () => {
+  const { createElement } = await import('react')
+  return {
+    TilingLayer: ({
+      documentId: _documentId,
+      pageIndex: _pageIndex,
+      ...props
+    }: Record<string, unknown>) =>
+      createElement('div', { ...props, 'data-tile-layer': '' }),
+  }
+})
+vi.mock('@embedpdf/plugin-annotation/react', async () => {
+  const { createElement } = await import('react')
+  return {
+    useAnnotation: () => ({
+      state: annotationState.current,
+      provides: annotationScope,
+    }),
+    useAnnotationCapability: () => ({ provides: annotationCapability }),
+    AnnotationLayer: () => createElement('div', { 'data-mark-layer': '' }),
+  }
+})
+vi.mock('@embedpdf/plugin-selection/react', async () => {
+  const { createElement } = await import('react')
+  return {
+    SelectionLayer: () => createElement('div', { 'data-text-layer': '' }),
+    useSelectionCapability: () => ({ provides: selectionScope }),
+  }
+})
+/*
+ * The two of this reader's own components that a page mounts. Both are pointer
+ * plumbing with their own tests and their own mocked interaction manager; what
+ * this file is asserting is the paper underneath them.
+ */
+vi.mock('./click-away-guard', () => ({ ClickAwayGuard: () => null }))
+vi.mock('./touch-selection/touch-selection', () => ({
+  TouchSelection: () => null,
 }))
 vi.mock('@embedpdf/plugin-interaction-manager/react', async () => {
   const { createElement, Fragment } = await import('react')
@@ -533,6 +607,109 @@ describe('PdfReader', () => {
       const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
 
       expect(container.querySelector('[data-mark-selected]')).toBeNull()
+    })
+  })
+
+  describe('the paper, in two layers', () => {
+    /**
+     * Everything a page draws, in the order it draws it.
+     *
+     * Order is the assertion, not an accident of how the query works: these
+     * layers carry no `z-index`, so what paints over what is decided by where
+     * they sit in the document.
+     */
+    const LAYER_MARKERS = [
+      'data-base-layer',
+      'data-tile-layer',
+      'data-text-layer',
+      'data-mark-layer',
+    ]
+
+    function layersOfAPage(): string[] {
+      const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
+      const layers = container.querySelectorAll(
+        LAYER_MARKERS.map((marker) => `[${marker}]`).join(', '),
+      )
+
+      return [...layers].map(
+        (layer) =>
+          LAYER_MARKERS.find((marker) => layer.hasAttribute(marker)) ?? '',
+      )
+    }
+
+    it('draws the whole page once, and the visible part of it in tiles', () => {
+      /*
+       * The change this feature is: a single image of the page grows with the
+       * square of the zoom and is redrawn for every mounted page on every zoom
+       * change — 620 MB and 3.8 s a step at 400%, and a reloaded tab on a
+       * phone. Tiles cost what the panel costs instead.
+       */
+      const layers = layersOfAPage()
+
+      expect(layers).toContain('data-base-layer')
+      expect(layers).toContain('data-tile-layer')
+    })
+
+    it('puts the tiles over the base, and both under everything else', () => {
+      // The sharp part must cover the soft one, and neither may cover the text
+      // selection or the marks — which is what a reader interacts with.
+      expect(layersOfAPage()).toEqual([
+        'data-base-layer',
+        'data-tile-layer',
+        'data-text-layer',
+        'data-mark-layer',
+      ])
+    })
+
+    it('draws the base at a fixed scale, whatever the document is zoomed to', () => {
+      // The zoom here is 169%, from the mocked zoom state. If the base followed
+      // it, this feature would have changed nothing: that image is the whole
+      // cost.
+      const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(
+        container
+          .querySelector('[data-base-layer]')
+          ?.getAttribute('data-scale'),
+      ).toBe(String(BASE_PAGE_SCALE))
+    })
+
+    it('leaves the bare paper recognisable, on exactly one layer', () => {
+      /*
+       * `blank-paper.ts` is how the reader knows a press landed on the page
+       * rather than on something drawn over it, and two shipped behaviours rest
+       * on it: the click that deselects a mark, and the one that must not also
+       * create one. With two pictures of the page, only the one a press can
+       * reach may answer — see the stylesheet test below for the other half.
+       */
+      const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
+      const paper = container.querySelectorAll(`[${PAPER_ATTRIBUTE}]`)
+
+      expect(paper).toHaveLength(1)
+      expect(isBlankPaper(paper[0] ?? null)).toBe(true)
+      expect(paper[0]?.hasAttribute('data-base-layer')).toBe(true)
+    })
+
+    it('lets a press through the tiles to the paper beneath', () => {
+      /*
+       * The other half of the test above, and it is a stylesheet fact: the
+       * tiles cover the page image exactly, so without this every press would
+       * land on a tile, `isBlankPaper` would say no, and the click that puts a
+       * mark down would stop working — silently, since the paper would look
+       * perfectly normal. jsdom applies no stylesheets, so this is asserted
+       * where it is written (`touch-selection/selection-handles.test.tsx`
+       * checks a touch target's size the same way).
+       */
+      const stylesheet = readFileSync(
+        join(__dirname, 'pdf-reader.module.css'),
+        'utf8',
+      )
+      const tiles = stylesheet.slice(
+        stylesheet.indexOf('{', stylesheet.indexOf('.pageTiles')) + 1,
+        stylesheet.indexOf('}', stylesheet.indexOf('.pageTiles')),
+      )
+
+      expect(tiles).toMatch(/pointer-events:\s*none/)
     })
   })
 

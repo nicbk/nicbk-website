@@ -254,7 +254,21 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
     // It costs nothing in tab order: the viewport carries `tabindex="-1"` and
     // holds no focusable content, so the toolbar's controls are still the first
     // thing reached inside the reader.
-    <div className={styles.reader}>
+    <div
+      className={styles.reader}
+      /*
+       * Says that something on the paper is selected, so the stylesheet can let
+       * a finger scroll even while a tool is live (`pdf-reader.module.css`).
+       *
+       * **An attribute rather than a prop passed down**, because what it
+       * changes is `touch-action` on every page, and those pages are the
+       * library's own elements: a rule matching from here reaches all of them
+       * without this reader reaching into any. It is `undefined` rather than
+       * `false` so the attribute is absent, not present-and-empty, which is
+       * what the selector tests.
+       */
+      data-mark-selected={annotation.selectedUids.length > 0 ? '' : undefined}
+    >
       {state === 'ready' ? (
         <Viewport
           documentId={articleId}
@@ -321,12 +335,25 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                     documentId={articleId}
                     pageIndex={pageIndex}
                     className={styles.pageLayers}
-                    // Clicking away from a mark puts it down. On `pointerdown`
-                    // rather than `click` so the mark is released as the press
-                    // begins — by the time a click completes the reader may
-                    // already be dragging a new one.
+                    /*
+                     * Clicking away from a mark puts it down. On `pointerdown`
+                     * rather than `click` so the mark is released as the press
+                     * begins — by the time a click completes the reader may
+                     * already be dragging a new one.
+                     *
+                     * **A mouse only.** A finger's press cannot be answered
+                     * here, because the same press may turn out to be a scroll,
+                     * and a scroll must leave the mark exactly as it was
+                     * (decided with the user, 2026-08-24). So a finger's
+                     * deselect waits for a release that did not travel, and
+                     * `ClickAwayGuard` — which is watching the whole press
+                     * anyway — is what does it.
+                     */
                     onPointerDown={(event) => {
-                      if (isBlankPaper(event.target)) {
+                      if (
+                        event.pointerType !== 'touch' &&
+                        isBlankPaper(event.target)
+                      ) {
                         annotationScope?.deselectAnnotation()
                       }
                     }}
@@ -345,16 +372,18 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                      * and it is in the stylesheet.
                      */
                     onContextMenu={(event) => {
-                      if (pointerKind.current === 'touch') {
+                      if (pointerKind.current.kind === 'touch') {
                         event.preventDefault()
                       }
                     }}
                   >
                     {/*
-                     * Spends the click that puts a mark down on putting it
+                     * Spends the press that puts a mark down on putting it
                      * down. Renders nothing; it registers a pointer handler
                      * ahead of the live tool so the press that deselects does
-                     * not also stamp a new mark — see `click-away-guard.tsx`.
+                     * not also make a mark — and, for a finger, so the tool
+                     * never hears that press at all and the paper is free to
+                     * scroll under it. See `click-away-guard.tsx`.
                      */}
                     <ClickAwayGuard
                       documentId={articleId}
@@ -363,6 +392,8 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                         (annotationScope?.getSelectedAnnotationIds().length ??
                           0) > 0
                       }
+                      activeTool={() => annotation.activeToolId}
+                      onDeselect={() => annotationScope?.deselectAnnotation()}
                     />
                     {/*
                      * Selecting a passage with a finger: the long press, the

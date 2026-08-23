@@ -1,10 +1,12 @@
 # Status: Reader Touch and Gestures
 
-**Feature state:** **In progress** — tasks 1, 2 and 3 merged, task 4 in
-progress. **Five** tasks: three spec'd up front, one added on 2026-08-22 when
-task 2's implementation proved part of the decided touch model unbuildable, and
-one on 2026-08-23 when task 4's settled design made a single PR too large (see
-the log). Sequential, each gated by its own PR + CI + human review.
+**Feature state:** **In progress** — tasks 1 to 4 merged, task 6 in progress.
+**Six** tasks: three spec'd up front, one added on 2026-08-22 when task 2's
+implementation proved part of the decided touch model unbuildable, one on
+2026-08-23 when task 4's settled design made a single PR too large, and one on
+2026-08-24 when the user reported what task 3's fix had left behind (see the
+log). Sequential, each gated by its own PR + CI + human review. **Task 6 runs
+before task 5**: it repairs shipped behaviour, and task 5 adds some.
 
 Depends on [`article-detail-and-reader`](../article-detail-and-reader/status.md)
 (#9, Complete) for the reader itself, its plugin registration, its toolbar, and
@@ -24,8 +26,9 @@ parent when its sub-issues close.
 | [`gestures`](./tasks/gestures/status.md) ([#109](https://github.com/nicbk/nicbk-website/issues/109)) | **Merged** | [#110](https://github.com/nicbk/nicbk-website/pull/110) | Green | Merged 2026-08-22 |
 | [`touch-scrolling`](./tasks/touch-scrolling/status.md) ([#111](https://github.com/nicbk/nicbk-website/issues/111)) | **Merged** | [#113](https://github.com/nicbk/nicbk-website/pull/113) | Green | Merged 2026-08-23 |
 | [`click-away`](./tasks/click-away/status.md) ([#114](https://github.com/nicbk/nicbk-website/issues/114)) | **Merged** | [#115](https://github.com/nicbk/nicbk-website/pull/115) | Green | Merged 2026-08-23 |
-| [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | **In progress** | — | — | — |
-| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | Not started | — | — | — |
+| [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | **Merged** | [#117](https://github.com/nicbk/nicbk-website/pull/117) | Green | Merged 2026-08-23 |
+| [`deselect-without-drawing`](./tasks/deselect-without-drawing/status.md) ([#118](https://github.com/nicbk/nicbk-website/issues/118)) | **In progress** | — | — | — |
+| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | Not started, and last to merge | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -113,6 +116,14 @@ without drawing another.
   and a **magnifier** to aim with. That made task 4 four subsystems in one PR, so
   crossing a page break — and the auto-scroll it needs — became **task 5**
   (#116). The parent-closing duty moved with it.
+- 2026-08-24 — **Task 3's fix turned out to have a tail**, reported by the user:
+  the deselecting click it withholds is also the event a live tool clears its
+  in-flight state on, so a half-drawn shape followed the cursor afterwards.
+  Filed as task 6 and placed ahead of task 5. Two things came out of the
+  reading: the **sticky note commits on pointer-down**, so that guard never
+  covered it and clicking away has stamped a note since #9; and this is the
+  **third** withheld-event-leaves-state defect in this feature, which is why the
+  rule now lives in `AGENTS.md` instead of only in these notes.
 - 2026-08-23 — Task 4 implemented and browser-verified. It closed **the half of
   the original report that was thought already fixed**: task 2 gave the pan back
   to the browser, but the library went on turning a thumb's movement into a drag

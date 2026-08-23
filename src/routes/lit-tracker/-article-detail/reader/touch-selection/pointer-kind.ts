@@ -23,36 +23,51 @@ import { useEffect } from 'react'
 
 export type PointerKind = 'mouse' | 'pen' | 'touch'
 
+export interface PointerInFlight {
+  kind: PointerKind
+  /**
+   * The browser's id for it.
+   *
+   * Kept for the one thing that needs to speak to the browser *about* this
+   * pointer rather than about the press: `click-away-guard.tsx` tells a live
+   * tool its pointer was cancelled, and both the manager's translation of that
+   * and the capture it releases are keyed by the id.
+   */
+  id: number
+}
+
 /**
- * The last kind seen. A mutable box rather than state on purpose — nothing
+ * The last pointer seen. A mutable box rather than state on purpose — nothing
  * renders from it, and a re-render per pointer-down would be a re-render per
  * pointer-down.
  */
-const lastKind: { current: PointerKind } = { current: 'mouse' }
+const lastPointer: { current: PointerInFlight } = {
+  current: { kind: 'mouse', id: 1 },
+}
 
 /** How many components are currently relying on it, so the listener is installed once. */
 let listeners = 0
 
 function record(event: PointerEvent): void {
-  if (event.pointerType === 'touch' || event.pointerType === 'pen') {
-    lastKind.current = event.pointerType
-    return
-  }
-  // Anything else — including the empty string some browsers report for a
-  // synthetic event — is treated as a mouse, which is the conservative answer:
-  // it declines the touch gesture rather than offering it to a device that
-  // cannot use it.
-  lastKind.current = 'mouse'
+  const kind =
+    event.pointerType === 'touch' || event.pointerType === 'pen'
+      ? event.pointerType
+      : // Anything else — including the empty string some browsers report for a
+        // synthetic event — is treated as a mouse, which is the conservative
+        // answer: it declines the touch gesture rather than offering it to a
+        // device that cannot use it.
+        'mouse'
+
+  lastPointer.current = { kind, id: event.pointerId }
 }
 
 /**
- * Reads which kind of pointer is being used, without re-rendering when it
- * changes.
+ * Reads which pointer is being used, without re-rendering when it changes.
  *
  * The returned box is shared by every caller, which is the point: it describes
  * the device, and there is only one of those.
  */
-export function usePointerKind(): { readonly current: PointerKind } {
+export function usePointerKind(): { readonly current: PointerInFlight } {
   useEffect(() => {
     listeners += 1
     if (listeners === 1) {
@@ -70,5 +85,5 @@ export function usePointerKind(): { readonly current: PointerKind } {
     }
   }, [])
 
-  return lastKind
+  return lastPointer
 }

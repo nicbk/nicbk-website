@@ -46,17 +46,12 @@ const PAGE = 2
 const ON_THE_PAGE = { x: 120, y: 340 }
 const ON_THE_SCREEN = { x: 500, y: 700 }
 
-/**
- * A pointer event jsdom will accept.
- *
- * jsdom does not implement `PointerEvent`, so the fields this hook reads are
- * put on a plain event instead — which is exactly the shape it reads them from.
- */
+/** A press, as the browser would raise it, for the window-level listeners. */
 function pointerEvent(
   type: string,
   fields: { pointerType?: string; x?: number; y?: number } = {},
-): Event {
-  return Object.assign(new Event(type), {
+): PointerEvent {
+  return new PointerEvent(type, {
     pointerType: fields.pointerType ?? 'touch',
     clientX: fields.x ?? ON_THE_SCREEN.x,
     clientY: fields.y ?? ON_THE_SCREEN.y,

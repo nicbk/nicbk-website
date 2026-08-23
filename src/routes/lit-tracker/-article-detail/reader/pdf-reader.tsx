@@ -30,6 +30,7 @@ import { useRegisterReaderJump } from '../reader-jump'
 import { AnnotationSelectionMenu } from './annotation-selection-menu'
 import { useAnnotationSync } from './annotation-sync/use-annotation-sync'
 import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
+import { ClickAwayGuard } from './click-away-guard'
 import { canCopyText } from './copy-permission'
 import { ReaderNotice } from './reader-notice'
 import { createReaderPlugins } from './reader-plugins'
@@ -314,6 +315,20 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                       }
                     }}
                   >
+                    {/*
+                     * Spends the click that puts a mark down on putting it
+                     * down. Renders nothing; it registers a pointer handler
+                     * ahead of the live tool so the press that deselects does
+                     * not also stamp a new mark — see `click-away-guard.tsx`.
+                     */}
+                    <ClickAwayGuard
+                      documentId={articleId}
+                      pageIndex={pageIndex}
+                      isMarkSelected={() =>
+                        (annotationScope?.getSelectedAnnotationIds().length ??
+                          0) > 0
+                      }
+                    />
                     <RenderLayer
                       documentId={articleId}
                       pageIndex={pageIndex}

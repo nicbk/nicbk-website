@@ -1,6 +1,6 @@
 # Status: Reader Touch and Gestures
 
-**Feature state:** **In progress** — task 1 merged, task 2 in progress. **Four**
+**Feature state:** **In progress** — tasks 1 and 2 merged, task 3 in progress. **Four**
 tasks: three spec'd up front plus one added on 2026-08-22, when task 2's
 implementation proved part of the decided touch model unbuildable (see the log).
 Sequential, each gated by its own PR + CI + human review.
@@ -21,8 +21,8 @@ parent when its sub-issues close.
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`gestures`](./tasks/gestures/status.md) ([#109](https://github.com/nicbk/nicbk-website/issues/109)) | **Merged** | [#110](https://github.com/nicbk/nicbk-website/pull/110) | Green | Merged 2026-08-22 |
-| [`touch-scrolling`](./tasks/touch-scrolling/status.md) ([#111](https://github.com/nicbk/nicbk-website/issues/111)) | **In progress** | — | — | — |
-| [`click-away`](./tasks/click-away/status.md) | Not started | — | — | — |
+| [`touch-scrolling`](./tasks/touch-scrolling/status.md) ([#111](https://github.com/nicbk/nicbk-website/issues/111)) | **Merged** | [#113](https://github.com/nicbk/nicbk-website/pull/113) | Green | Merged 2026-08-23 |
+| [`click-away`](./tasks/click-away/status.md) ([#114](https://github.com/nicbk/nicbk-website/issues/114)) | **In progress** | — | — | — |
 | [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | Not started | — | — | — |
 
 ## Definition of Done (feature)

@@ -71,6 +71,18 @@ without drawing another.
 - **Handlers receive page coordinates, with the zoom already divided out.** So
   any threshold about how far a finger moved belongs in screen pixels
   (`clientX/clientY`), or it silently tightens as the reader zooms in.
+- **Being first among the always-registered handlers is decided by React, not
+  by the component tree.** They are walked in registration order, and the
+  selection plugin registers from an ordinary effect — so a component rendered
+  *earlier* still loses, because every layout effect runs before every ordinary
+  one. Anything here that must pre-empt the library registers in a layout
+  effect. Task 4 shipped the wrong way round first and the browser showed it.
+- **Withholding an event from the library means owning what it would have
+  done — including its bookkeeping.** Its text handler drops its anchor only on
+  pointer-up; swallowing that leaves a stale anchor which turns the *next*
+  gesture's first movement into a drag selection. This is the same family as
+  the missing `onPointerCancel` recorded above, and the same lesson: the parts
+  of a library that reset are as much its interface as the parts that act.
 - **Neither decision behind the task-3 defect is to be reversed.** The sticky
   tool and click-to-create are both wanted; what is unwanted is the third thing
   they do together.
@@ -101,3 +113,10 @@ without drawing another.
   and a **magnifier** to aim with. That made task 4 four subsystems in one PR, so
   crossing a page break — and the auto-scroll it needs — became **task 5**
   (#116). The parent-closing duty moved with it.
+- 2026-08-23 — Task 4 implemented and browser-verified. It closed **the half of
+  the original report that was thought already fixed**: task 2 gave the pan back
+  to the browser, but the library went on turning a thumb's movement into a drag
+  selection, so scrolling still dragged text along with it. Worth recording at
+  feature level because of what it says about the earlier task's evidence — task
+  2 verified the *mechanism* that decides whether the paper scrolls, which was
+  correct and was not the whole of what the user reported.

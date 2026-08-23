@@ -1,6 +1,6 @@
 import type { Position } from '@embedpdf/models'
 import { usePointerHandlers } from '@embedpdf/plugin-interaction-manager/react'
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { READING_MODE } from '../reading-mode'
 import { HOLD_DURATION_MS, hasWandered } from './hold'
 import { usePointerKind } from './pointer-kind'
@@ -20,14 +20,30 @@ import { usePointerKind } from './pointer-kind'
  * swallows exactly one pointer-up), and a hold whose timer survived the finger
  * leaving would select a word half a second after the reader let go.
  *
- * **Once the hold has fired, the rest of that press is ours.** EmbedPDF's text
- * handler takes an anchor on every pointer-down and turns it into a drag
- * selection as soon as the pointer moves three page units — about three pixels
- * of the jitter a thumb makes while lifting, which would replace the word just
- * selected with a single character. So the moves and the lift that follow a
- * hold are stopped before they reach it. This works because handlers registered
- * without a `modeId` are walked in registration order, and this one is mounted
- * ahead of the selection layer.
+ * **A finger's movement is this reader's, not the library's — but its lift is
+ * the library's.** EmbedPDF's text handler takes an anchor on every pointer-down
+ * and turns movement into a drag selection three page units later, which by
+ * decision is no longer what a finger means: a touch selects by holding and
+ * adjusts by handle. Left alone it does two visible kinds of damage — a thumb
+ * that means to scroll drags a selection along with it, and the jitter of that
+ * same thumb lifting after a hold replaces the word just selected with a single
+ * character. So every move of a touch press is stopped before it reaches that
+ * handler.
+ *
+ * **That works only because this registers first, and being first is not about
+ * where the component sits.** Handlers registered without a `modeId` are walked
+ * in the order they were registered, and the selection plugin registers its own
+ * from an ordinary effect. React runs *every* layout effect before *any* passive
+ * one, so a component earlier in the tree still loses to a library that
+ * registers in a layout effect — and wins, whatever its position, by registering
+ * in one itself. Rendering this ahead of the selection layer was not enough; the
+ * browser showed a thumb dragging out a selection anyway, and this is the line
+ * that fixed it.
+ *
+ * The pointer-up is *let through on purpose*: it is the only thing that makes
+ * that handler drop its anchor, and an anchor left behind turns the next
+ * gesture's first movement into a drag selection. Both halves were found in the
+ * browser rather than reasoned out — see the comments on the handlers below.
  *
  * **A second finger is a pinch, not a hold.** Any further press abandons the one
  * in flight rather than arming a second.
@@ -48,7 +64,8 @@ interface PressInFlight {
   from: Position
   /** The same moment, in page coordinates. */
   on: Position
-  timer: ReturnType<typeof setTimeout>
+  /** The wait for the hold, or null once it has fired or been given up on. */
+  timer: ReturnType<typeof setTimeout> | null
   /** True once the word has been selected. */
   held: boolean
   /** Stops watching the window for this press. */
@@ -74,15 +91,30 @@ export function useHoldToSelect({
 
   const press = useRef<PressInFlight | null>(null)
 
-  useEffect(() => {
-    function abandon(): void {
+  /*
+   * A layout effect, and the only reason is order: this must be in the
+   * always-registered list before the library's own text handler, because being
+   * later there means being heard later, and being heard later means stopping
+   * nothing. See the note above — it is the difference between a thumb scrolling
+   * and a thumb dragging a selection out behind it.
+   */
+  useLayoutEffect(() => {
+    /** Gives up on the hold, while the finger — and this press — carry on. */
+    function stopWaiting(): void {
       const current = press.current
-      press.current = null
-      if (!current) {
+      if (!current?.timer) {
         return
       }
       clearTimeout(current.timer)
-      current.release()
+      current.timer = null
+    }
+
+    /** Forgets the press entirely: the finger is gone, or this page is. */
+    function endPress(): void {
+      const current = press.current
+      stopWaiting()
+      press.current = null
+      current?.release()
     }
 
     function begin(on: Position, from: Position): void {
@@ -94,12 +126,14 @@ export function useHoldToSelect({
           return
         }
         if (hasWandered(current.from, { x: event.clientX, y: event.clientY })) {
-          abandon()
+          // The gesture is a scroll. The hold is off — but the press is still
+          // watched, because what it must not become is a drag selection.
+          stopWaiting()
         }
       }
 
       function whenLifted(): void {
-        abandon()
+        endPress()
       }
 
       const release = () => {
@@ -130,7 +164,7 @@ export function useHoldToSelect({
     const unregister = latest.current.register({
       onPointerDown: (position, event, modeId) => {
         const wasInFlight = press.current !== null
-        abandon()
+        endPress()
 
         // A second finger is a pinch — task 1's gesture — and never a hold.
         if (wasInFlight) {
@@ -148,28 +182,54 @@ export function useHoldToSelect({
 
         begin(position, { x: event.clientX, y: event.clientY })
       },
+      /*
+       * **Every movement of a touch press is withheld, not only the ones after
+       * a hold.** The library's text handler turns movement into a drag
+       * selection three page units after the finger lands — so a thumb that
+       * means to scroll selects a few words on its way, and the copy control
+       * pops up over the paper as the page moves under it. That is the second
+       * half of what the user reported ("trying to scroll just selects text");
+       * task 2 gave the pan back to the browser, and this stops the library
+       * selecting during it.
+       *
+       * Nothing else is listening. At page scope the annotation layer registers
+       * a pointer-*down* only, and a tool's own handlers belong to its mode,
+       * which is not this one — so what is withheld here is exactly the text
+       * handler's drag, which by decision no longer belongs to a finger:
+       * a touch selects by holding, and adjusts by handle.
+       */
       onPointerMove: (_position, event) => {
-        if (press.current?.held) {
+        if (press.current) {
           event.stopImmediatePropagation()
         }
       },
-      onPointerUp: (_position, event) => {
-        if (press.current?.held) {
-          // Cleanup is left to the window listener, which runs after this one
-          // and runs whether or not this handler was reached at all.
-          event.stopImmediatePropagation()
-        }
-      },
+      /*
+       * **The lift is let through, and that is not an oversight.**
+       *
+       * The library's text handler takes its anchor on pointer-down — including
+       * the one that becomes a hold — and drops it only on pointer-up. Swallow
+       * that up, as an earlier version of this did, and the handler is left
+       * holding an anchor from a gesture that ended: the *next* movement it
+       * hears, even one belonging to a different gesture entirely, is far enough
+       * from that stale point to start a drag selection, which replaces the word
+       * the hold just selected. Found in the browser, where the first move of a
+       * handle drag deleted the selection it was adjusting.
+       *
+       * Letting it through costs nothing: by then no drag has started, so all
+       * the handler does with it is reset — which is precisely what is wanted.
+       * Cleanup here is left to the window listener, which runs after this one
+       * and runs whether or not this handler is reached at all.
+       */
       // A press the browser took away, because it decided the gesture was a
       // scroll after all.
-      onPointerCancel: () => abandon(),
+      onPointerCancel: () => endPress(),
     })
 
     return () => {
       // Pages are virtualized: this one can be scrolled out of existence with a
       // finger still on it, and a timer left running would select a word on a
       // page that is no longer there.
-      abandon()
+      endPress()
       unregister?.()
     }
   }, [pointerKind])

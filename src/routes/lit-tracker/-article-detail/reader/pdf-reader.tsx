@@ -369,16 +369,18 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                      * handles that adjust what it caught, and the magnifier
                      * that makes a character-precise drag possible on glass.
                      *
-                     * **Before the selection layer, deliberately.** Handlers
-                     * registered without a mode are walked in the order they
-                     * were registered, and this one has to run ahead of
-                     * EmbedPDF's text handler to stop a lifting thumb's jitter
-                     * turning the word it just selected into a single
-                     * character. Mounting order is registration order, so the
-                     * position of this element in this list is load-bearing —
-                     * `use-hold-to-select.ts` explains the rest. It paints
-                     * above the selection anyway, which its own stylesheet
-                     * arranges.
+                     * **Before the selection layer, and that is the lesser
+                     * half of being first.** Handlers registered without a mode
+                     * are walked in the order they were registered, and this
+                     * one has to be ahead of EmbedPDF's text handler or a thumb
+                     * drags a selection out while trying to scroll. Position in
+                     * this list is not what settles that — React runs every
+                     * layout effect before any ordinary one, so
+                     * `use-hold-to-select.ts` registers in a layout effect and
+                     * wins regardless. This still sits here because reading
+                     * order should match the order things happen in, and
+                     * because it paints above the selection either way, which
+                     * its own stylesheet arranges.
                      */}
                     <TouchSelection
                       documentId={articleId}

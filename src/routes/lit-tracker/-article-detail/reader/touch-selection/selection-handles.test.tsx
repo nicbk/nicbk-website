@@ -143,18 +143,26 @@ describe('SelectionHandles', () => {
     expect(onDrag).not.toHaveBeenCalled()
   })
 
-  it('keeps the press away from the page beneath it', () => {
+  it('keeps the whole gesture away from the page beneath it', () => {
     /*
-     * The load-bearing detail of the whole drag. EmbedPDF's text handler clears
-     * the selection on every pointer-down it sees, on an ancestor of this
-     * element — so a press that reached it would delete the selection this
-     * handle is attached to, and the handle with it, before the drag began.
+     * The load-bearing detail of the whole drag, and it is every event rather
+     * than the first. EmbedPDF's text handler clears the selection on every
+     * pointer-down it sees, on an ancestor of this element — so a press that
+     * reached it would delete the selection this handle is attached to, and the
+     * handle with it, before the drag began. Its *moves* are worse: measured
+     * against whatever anchor that handler last took, they start a drag
+     * selection of its own over the top of the one being adjusted. Both were
+     * seen happening.
      */
     const beneath = vi.fn()
     const { container, grips } = renderHandles()
-    container.addEventListener('pointerdown', beneath)
+    for (const type of ['pointerdown', 'pointermove', 'pointerup']) {
+      container.addEventListener(type, beneath)
+    }
 
     grips[0]?.dispatchEvent(pointerEvent('pointerdown', 100, 50))
+    grips[0]?.dispatchEvent(pointerEvent('pointermove', 140, 50))
+    grips[0]?.dispatchEvent(pointerEvent('pointerup', 140, 50))
 
     expect(beneath).not.toHaveBeenCalled()
   })

@@ -104,6 +104,104 @@ not adoptable) before any code was written.
   rendered at `devicePixelRatio`, so the bitmap already holds two to three times
   the detail its CSS size shows.
 
+## Browser verification
+
+Recorded here because both Playwright tiers are suspended. Exercised against the
+Compose app with the 16-page BERT paper, in both themes, at 1400px and 500px.
+
+**How it was driven, stated plainly:** by dispatching `PointerEvent`s carrying
+`pointerType: 'touch'`, plus `TouchEvent`s and `WheelEvent`s for the pinch
+checks, and by reading computed styles and the canvas back off the running page.
+A synthetic touch cannot make a browser *pan* — it only pans for trusted events —
+so what is verified is everything this task decides, and not the platform's own
+scrolling. See *What is not verified* below.
+
+**Confirmed**
+
+- **A long press selects the word under the finger**, and both handles appear
+  with it: 12px dots, a 44×44 target apiece, the bar 2px on the boundary, the
+  start's dot above the line and the end's below it. The copy control appears
+  and copies **exactly** the passage held and extended — 1964 characters
+  beginning at the held word, checked by intercepting the clipboard write rather
+  than trusting the highlight.
+- **The selection survives the lift**, which is the whole point of withholding a
+  thumb's jitter from the library's drag handler.
+- **Dragging a handle moves that boundary and nothing else**: the end walked
+  641 → 702 → 903 while the start stayed at 572, and the lens stayed up
+  throughout. Releasing keeps the selection and takes the lens away.
+- **The magnifier shows real detail, not an upscale**: the page's bitmap is
+  2311px wide behind a 1155px element, so 2× is spending pixels that were
+  rendered. It draws the selection tint and the caret as well as the words,
+  floats above the finger, and clamps inside the panel when dragged to the
+  margin (right edge 482 against a panel ending at 488).
+- **Handles follow the zoom** — a 12px line at 76% is 32px at 244% — and the
+  selection stayed on the same word across two zoom changes.
+- **Escape drops the selection and the handles.**
+- **A mouse drag still selects and grows no handles.** Pointer selection is
+  exactly what #9 left.
+- **The browser's own long-press UI is declined for touch only**: a
+  `contextmenu` after a touch press comes back `defaultPrevented`, after a mouse
+  press it does not. `-webkit-touch-callout` is in the stylesheet and cannot be
+  read back in Chrome, which does not implement it — it is iOS Safari's lever.
+- **A live tool still owns the drag**: the page takes its inline
+  `touch-action: none`, a hold selects nothing, and a touch drag still draws —
+  counted in the database, 17 → 18, and the test mark removed again.
+- **Tasks 1 and 2 are not regressed**: `touch-action` computes to `pan-x pan-y`
+  with no inline value when no tool is live; ctrl+wheel zooms (76% → 244%,
+  `defaultPrevented`); two-finger pinch zooms and the arithmetic is still exact
+  (244% → 122% when the spread halved).
+
+## Two defects found in the browser, and fixed
+
+Both are recorded at length because the *reason* generalizes, and because
+neither was reachable by reasoning about the code alone.
+
+- **The first move of a handle drag deleted the selection it was adjusting.**
+  The hold swallowed its own pointer-up to keep a lifting thumb's jitter away
+  from the library's drag handler — and that handler drops its anchor *only* on
+  pointer-up. Left holding a point from a gesture that had ended, it measured
+  the next movement it heard against it, found it far away, and started a drag
+  selection. Fixed twice over: the lift is let through (no drag has begun, so
+  all the handler does with it is forget), and the grip now stops its whole
+  gesture rather than only its first event.
+- **A thumb drag on the paper still selected text** — the second half of what
+  the user reported on 2026-08-17, which task 2 was thought to have closed. The
+  library turns movement into a drag selection three page units after a press
+  lands, so a scroll dragged a selection along with it and raised the copy
+  control over moving paper. Now every move of a *touch* press is withheld from
+  it: by decision a finger selects by holding and adjusts by handle, so that
+  drag no longer belongs to one.
+  - **And withholding only worked after the registration moved to a layout
+    effect.** Handlers registered without a mode are walked in registration
+    order, so this had to be ahead of the selection plugin's — and rendering the
+    component earlier in the tree was not enough, because React runs *every*
+    layout effect before *any* ordinary one and the plugin registers from an
+    ordinary one. A unit test pins the ordering, since losing it fails silently.
+
+## Two design faults found in the browser, and fixed
+
+- **The handles used `--color-accent`, which is the wrong token on paper.** A
+  page is white in both themes; in dark mode that token is a pale blue chosen to
+  carry against a dark surface, and over white — against EmbedPDF's own blue
+  selection — it nearly vanished. They now use a fixed deep blue with a white
+  ring, which reads on paper, on the selection, and on a dark figure alike.
+- **The copy control sat exactly on the start handle.** Both float above the
+  first line of a selection, so the reader reaching to adjust where their
+  passage begins pressed "copy" instead. The menu now clears the handle's dot —
+  applied to every selection rather than only a touch one, because a menu a few
+  pixels further from the passage costs a pointer reader nothing and a
+  conditional rule would be a rule to keep in step from two stylesheets.
+
+## What is not verified, and is owed
+
+- **That any of this feels right under a real thumb.** Every gesture here was
+  synthesized. The thresholds especially — 500ms, 10px — are platform norms
+  rather than measurements, and the case that will judge them is the slow drag
+  that nearly holds. It needs a phone.
+- **That the browser's own panning is untouched.** Synthetic touches never pan,
+  so the mechanism was checked (the property, the value, which element carries
+  it, through a full tool cycle) rather than the scroll.
+
 ## Log
 
 - 2026-08-22 — Filed mid-feature, when task 2's implementation proved the
@@ -111,3 +209,12 @@ not adoptable) before any code was written.
   the reported scrolling fix behind it.
 - 2026-08-23 — Started. Library read first, four open items settled with the
   user (above), and the cross-page half split out as task 5.
+- 2026-08-23 — Implemented and browser-verified (above). **Four faults found by
+  looking, none by the unit tier**: two behavioural (a handle drag deleting its
+  own selection; a scrolling thumb still selecting text — the half of the
+  original report task 2 was thought to have closed) and two visual (handles
+  invisible on white paper in dark mode; the copy control sitting on top of the
+  start handle). All four fixed and re-checked. The behavioural pair share a
+  root: this reader now takes gestures the library also wants, and taking one
+  means understanding when the library resets — and being first in a list whose
+  order React, not the component tree, decides.

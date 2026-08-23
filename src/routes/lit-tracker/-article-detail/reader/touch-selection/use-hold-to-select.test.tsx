@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react'
+import { useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { HOLD_DURATION_MS, HOLD_MOVEMENT_TOLERANCE_PX } from './hold'
 
@@ -21,6 +22,8 @@ const registered = vi.hoisted(() => ({
   current: null as Record<string, (...args: unknown[]) => void> | null,
   options: null as unknown,
   unregister: vi.fn(),
+  /** Who registered, in the order they did — see the ordering test below. */
+  order: [] as string[],
 }))
 
 vi.mock('@embedpdf/plugin-interaction-manager/react', () => ({
@@ -29,6 +32,7 @@ vi.mock('@embedpdf/plugin-interaction-manager/react', () => ({
     return {
       register: (handlers: Record<string, (...args: unknown[]) => void>) => {
         registered.current = handlers
+        registered.order.push('hold')
         return registered.unregister
       },
     }
@@ -94,6 +98,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   registered.current = null
   registered.options = null
+  registered.order = []
   vi.clearAllMocks()
 })
 
@@ -116,6 +121,36 @@ describe('useHoldToSelect', () => {
       pageIndex: PAGE,
     })
     expect(registered.options).not.toHaveProperty('modeId')
+  })
+
+  it('registers before a neighbour that registers in an ordinary effect', () => {
+    /*
+     * The ordering this hook's suppression depends on, pinned because losing it
+     * fails silently: handlers registered without a mode are walked in the
+     * order they were registered, and being second means stopping nothing.
+     *
+     * The library registers its text handler from an ordinary effect. React
+     * runs *every* layout effect before *any* of those, so registering in a
+     * layout effect wins regardless of where the components sit in the tree —
+     * which is what this asserts, by putting the neighbour first in the tree
+     * and still expecting to be registered ahead of it. Rendering earlier was
+     * tried, was not enough, and the browser showed why.
+     */
+    function Neighbour() {
+      useEffect(() => {
+        registered.order.push('library')
+      }, [])
+      return null
+    }
+
+    render(
+      <>
+        <Neighbour />
+        <Harness onHold={vi.fn()} />
+      </>,
+    )
+
+    expect(registered.order).toEqual(['hold', 'library'])
   })
 
   it('selects the word under a finger that rests', () => {
@@ -227,7 +262,30 @@ describe('useHoldToSelect', () => {
     expect(onHold).not.toHaveBeenCalled()
   })
 
-  it('keeps the rest of the press away from the library once it has fired', () => {
+  it('keeps a scrolling thumb from selecting anything', () => {
+    /*
+     * The second half of what the user reported — "trying to scroll just
+     * selects text". Task 2 gave the pan back to the browser; this stops the
+     * library selecting during it. The press has already wandered here, so the
+     * hold is off, and the movement must *still* be withheld: it is a scroll,
+     * and a scroll selects nothing.
+     */
+    render(<Harness onHold={vi.fn()} />)
+
+    pressDown()
+    window.dispatchEvent(
+      pointerEvent('pointermove', {
+        y: ON_THE_SCREEN.y + HOLD_MOVEMENT_TOLERANCE_PX * 10,
+      }),
+    )
+
+    const moved = managerEvent()
+    registered.current?.['onPointerMove']?.(ON_THE_PAGE, moved, 'pointerMode')
+
+    expect(moved.stopImmediatePropagation).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the movement after a hold away from the library', () => {
     /*
      * EmbedPDF's text handler takes an anchor on every pointer-down and turns
      * it into a drag selection three page units later — about the jitter of a
@@ -241,11 +299,31 @@ describe('useHoldToSelect', () => {
 
     const moved = managerEvent()
     registered.current?.['onPointerMove']?.(ON_THE_PAGE, moved, 'pointerMode')
+
     expect(moved.stopImmediatePropagation).toHaveBeenCalledTimes(1)
+  })
+
+  it('lets the lift through, so the library drops the anchor it is holding', () => {
+    /*
+     * The other half, and the one a browser pass had to find. That handler
+     * releases its anchor on pointer-up and at no other time; swallowing the
+     * lift leaves it holding a point from a gesture that has ended, and the
+     * next movement it hears — a *different* gesture, a handle being dragged —
+     * is far enough from that stale point to start a drag selection, wiping the
+     * word the hold just selected.
+     *
+     * Nothing is risked by letting it through: no drag has started, so all the
+     * handler does with a pointer-up is forget.
+     */
+    render(<Harness onHold={vi.fn()} />)
+
+    pressDown()
+    vi.advanceTimersByTime(HOLD_DURATION_MS)
 
     const lifted = managerEvent()
     registered.current?.['onPointerUp']?.(ON_THE_PAGE, lifted, 'pointerMode')
-    expect(lifted.stopImmediatePropagation).toHaveBeenCalledTimes(1)
+
+    expect(lifted.stopImmediatePropagation).not.toHaveBeenCalled()
   })
 
   it('lets an ordinary press through untouched', () => {

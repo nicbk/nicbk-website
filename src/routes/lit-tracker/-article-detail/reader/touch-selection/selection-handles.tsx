@@ -127,10 +127,19 @@ function Handle({
       if (!held) {
         return
       }
+      /*
+       * The whole gesture stays off the page, not just its first event. With
+       * pointer capture these moves are routed here, but they still *bubble*
+       * from here to the page beneath — where the library's text handler would
+       * measure them against whatever anchor it last took and start a drag
+       * selection of its own, over the top of the one being adjusted.
+       */
+      event.stopPropagation()
       latest.current.onDrag({ x: event.clientX, y: event.clientY })
     }
 
-    function letGo(): void {
+    function letGo(event?: PointerEvent): void {
+      event?.stopPropagation()
       if (!held) {
         return
       }

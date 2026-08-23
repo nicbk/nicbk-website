@@ -9,10 +9,26 @@
  */
 
 /*
- * The anchor point itself: a boundary between two glyphs, which has a height
- * and no width. Everything visible hangs off it.
+ * The colour, which is not the theme's.
+ *
+ * A handle is drawn on the *paper*, and a paper is white whichever theme the
+ * site is in — so `--color-accent` is the wrong token here twice over: in dark
+ * mode it is a pale blue picked to carry against a dark surface, which over
+ * white washes out, and against EmbedPDF's own selection tint it very nearly
+ * disappears. This is the light theme's accent, fixed, for the same reason the
+ * page itself has a fixed white behind it.
+ *
+ * The ring is what makes it work over anything at all: white paper, a blue
+ * selection, or a dark figure a hold happened to land beside.
  */
 .handle {
+  --handle-color: #0b57d0;
+  --handle-ring: #ffffff;
+
+  /*
+   * The anchor point itself: a boundary between two glyphs, which has a height
+   * and no width. Everything visible hangs off it.
+   */
   position: absolute;
   width: 0;
   /* The parts opt back in. This box spans the line, and a line-sized target
@@ -30,7 +46,10 @@
   bottom: 0;
   left: -1px;
   width: 2px;
-  background-color: var(--color-accent);
+  background-color: var(--handle-color);
+  /* Hairlines of white either side, so the boundary is legible where it matters
+     most: over the selection tint, which is itself blue. */
+  box-shadow: 0 0 0 1px var(--handle-ring);
 }
 
 /*
@@ -49,7 +68,8 @@
   height: 0.75rem;
   margin-left: -0.375rem;
   border-radius: 50%;
-  background-color: var(--color-accent);
+  background-color: var(--handle-color);
+  box-shadow: 0 0 0 1.5px var(--handle-ring);
   pointer-events: auto;
   touch-action: none;
 }

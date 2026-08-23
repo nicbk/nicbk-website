@@ -9,7 +9,8 @@ import { usePointerKind } from './pointer-kind'
  * A finger resting on the paper, and what it takes to notice.
  *
  * `hold.ts` holds the decision — how long, how still — and this holds the
- * plumbing, which is where the sharp edges are. Three of them shaped it:
+ * plumbing, which is where the sharp edges are. Four of them shaped it, and two
+ * were only found by using the thing in a browser:
  *
  * **The press is watched at the window once it has begun.** Only its *start* is
  * taken from the interaction manager, because that is what knows which page was
@@ -40,10 +41,11 @@ import { usePointerKind } from './pointer-kind'
  * browser showed a thumb dragging out a selection anyway, and this is the line
  * that fixed it.
  *
- * The pointer-up is *let through on purpose*: it is the only thing that makes
- * that handler drop its anchor, and an anchor left behind turns the next
- * gesture's first movement into a drag selection. Both halves were found in the
- * browser rather than reasoned out — see the comments on the handlers below.
+ * **The pointer-up is let through on purpose**, which is the exception to the
+ * paragraph above. It is the only thing that makes that handler drop its
+ * anchor, and an anchor left behind turns the *next* gesture's first movement
+ * into a drag selection — the browser showed that as a handle drag deleting the
+ * very selection it was adjusting.
  *
  * **A second finger is a pinch, not a hold.** Any further press abandons the one
  * in flight rather than arming a second.

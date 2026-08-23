@@ -1,12 +1,12 @@
 # Status: Deselect Without Drawing
 
-**State:** In progress. Sixth of six, added mid-feature, and **run before task
-5** — it repairs behaviour the reader already has in front of them.
+**State:** **Merged** 2026-08-23. Sixth of seven, added mid-feature, and **run
+before task 5** — it repairs behaviour the reader already has in front of them.
 
 - Branch: `reader-touch-and-gestures/deselect-without-drawing`, from `main` at
-  `9e80674` (task 4's merge).
-- Sub-issue: [**#118**](https://github.com/nicbk/nicbk-website/issues/118).
-- PR: opened once the unit tier and the browser pass are both clean.
+  `9e80674` (task 4's merge). Merged as `33f80c4`; branch deleted.
+- Sub-issue: [**#118**](https://github.com/nicbk/nicbk-website/issues/118),
+  closed by [PR #119](https://github.com/nicbk/nicbk-website/pull/119).
 - The close-#108 duty stays with
   [`selection-across-pages`](../selection-across-pages/status.md), which is
   still the last task to merge.
@@ -146,6 +146,9 @@ the whole cycle — rather than by the paper moving.
 - 2026-08-24 — Filed, after the user reported the defect and specified the
   behaviour for both kinds of device. Placed ahead of task 5 because it repairs
   shipped behaviour.
+- 2026-08-23 — **Merged** as `33f80c4` (PR #119), closing #118. The dates in the
+  two entries above read 2026-08-24; the commits say 2026-08-23, and the commits
+  are right.
 - 2026-08-24 — Implemented and browser-verified (above). The design held; two
   details of *how* the tool is told did not, and both were found by watching the
   console rather than the page. Also corrected on the way through: four test

@@ -69,8 +69,9 @@ need them (see Phases 2–3).
 | 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **Complete** (2026-08-17; all 6 tasks merged, #96 + #97 + #98 + #99 + #100 + #105) | #7, #8 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
-| 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **In progress** (6 tasks; 4 merged, #109 + #111 + #114 + #112) | #9 |
+| 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **In progress** (7 tasks; 5 merged, #109 + #111 + #114 + #112 + #118) | #9 |
 | 13 | Tracker navigation latency (the auth guard stops blocking) | `tracker-navigation-latency` | Not yet spec'd | #6, #8 |
+| 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **In progress** (1 task, #121) | #9 |
 
 ## How this roadmap is spec'd out
 
@@ -78,8 +79,9 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 **just-in-time** rather than all at once — `app-shell-and-home` (complete),
 `about-page` (complete), `error-and-not-found` (complete), `blog` (complete),
 `projects-page` (complete), `authentication` (complete),
-`article-upload-and-extraction` (complete), `collection-view` (complete), and
-`article-detail-and-reader` (in progress) have
+`article-upload-and-extraction` (complete), `collection-view` (complete),
+`article-detail-and-reader` (complete), `reader-touch-and-gestures` (in
+progress) and `reader-zoom-performance` (in progress) have
 full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -102,15 +104,21 @@ technology was chosen, including a `committed` flag on its change events that
 the persistence design has to gate on — a detail an up-front draft written in
 July would have got wrong.
 
-**#12 and #13 came from using the finished tracker, not from the roadmap** —
-reported by the user on 2026-08-17, the day #9 completed, and spec'd against
-what that feature actually shipped. They are the first entries here that exist
-to fix built behaviour rather than to add some, which is why they are features
-rather than a "bugs" list: each is a vertical slice of user-visible behaviour
-with its own acceptance criteria, and the project has no separate defect track.
-Their causes were measured before either was spec'd — see each one's
+**#12, #13 and #14 came from using the finished tracker, not from the roadmap** —
+the first two reported by the user on 2026-08-17, the day #9 completed, and #14
+on 2026-08-23, each spec'd against what the reader actually shipped. They are the
+entries here that exist to fix built behaviour rather than to add some, which is
+why they are features rather than a "bugs" list: each is a vertical slice of
+user-visible behaviour with its own acceptance criteria, and the project has no
+separate defect track.
+
+**Their causes were measured before any of them was spec'd** — see each one's
 `research.md` — which is what split five reported symptoms into two features
-instead of five tasks.
+instead of five tasks, and then did the same again on 2026-08-23: of three
+symptoms reported in one message, the pinch that also selects text became a task
+of #12 (pointer routing during a gesture) while the lag and the phone reload
+became **#14**, because their one cause is in the render pipeline and costs a
+mouse exactly what it costs a thumb.
 
 #10 and #11 stay one-liners for the same reason. #11 inherits the failure path
 #7 deliberately leaves unresolvable, and extends the card menu #8 builds rather

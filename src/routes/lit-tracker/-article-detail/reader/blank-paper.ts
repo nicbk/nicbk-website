@@ -16,6 +16,13 @@
  * just pressed. A CSS-module class would work and would tie this to a
  * stylesheet's hashed name. The attribute is set exactly once, on the render
  * layer, and says what it is for.
+ *
+ * **There are two pictures of the page now, and only one of them answers.** At
+ * high zoom the sharp part is a layer of tiles drawn over the render layer
+ * (`reader-plugins.ts` explains why). Those tiles are transparent to pointers,
+ * so a press still lands on the layer below and this still has exactly one
+ * element to recognise — which is deliberate, and is why the tile layer carries
+ * `pointer-events: none` rather than a second copy of this attribute.
  */
 
 /** Marks the rendered page itself. Set in `pdf-reader.tsx` on the render layer. */

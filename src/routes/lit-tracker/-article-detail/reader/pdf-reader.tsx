@@ -22,6 +22,7 @@ import {
   SelectionLayer,
   useSelectionCapability,
 } from '@embedpdf/plugin-selection/react'
+import { TilingLayer } from '@embedpdf/plugin-tiling/react'
 import { Viewport } from '@embedpdf/plugin-viewport/react'
 import { useZoom, ZoomGestureWrapper } from '@embedpdf/plugin-zoom/react'
 import type { ReactNode } from 'react'
@@ -34,7 +35,7 @@ import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
 import { canCopyText } from './copy-permission'
 import { ReaderNotice } from './reader-notice'
-import { createReaderPlugins } from './reader-plugins'
+import { BASE_PAGE_SCALE, createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
 import { SelectionCopyMenu } from './selection-copy-menu'
@@ -420,12 +421,32 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                       documentId={articleId}
                       pageIndex={pageIndex}
                     />
+                    {/*
+                     * The paper, in two layers: the whole page drawn once at a
+                     * fixed scale, and the part of it that is on screen drawn
+                     * at the zoom the reader is actually using.
+                     *
+                     * **Why not one layer, as it was.** A single image of the
+                     * page grows with the square of the zoom and is redrawn for
+                     * every mounted page on every zoom change — 620 MB and 3.8
+                     * seconds a step at 400%, and a reloaded tab on a phone.
+                     * `reader-plugins.ts` holds the numbers and the reasoning.
+                     *
+                     * The base never changes, so it is rendered once and stays;
+                     * it is what shows while tiles are still arriving, and
+                     * behind the parts of the page nobody is looking at.
+                     */}
                     <RenderLayer
                       documentId={articleId}
                       pageIndex={pageIndex}
                       className={styles.pageImage}
+                      // Fixed, not the document's zoom — that is the whole
+                      // point. See `BASE_PAGE_SCALE`.
+                      scale={BASE_PAGE_SCALE}
                       // What "the reader clicked the bare paper" is recognised by
-                      // — see `blank-paper.ts`.
+                      // — see `blank-paper.ts`. It stays on this layer, and the
+                      // tiles above are transparent to pointers, so a press on
+                      // the paper lands here whatever is drawn over it.
                       {...{ [PAPER_ATTRIBUTE]: '' }}
                       // The page is an `<img>`, and dragging an image is a
                       // browser-native drag-and-drop: press and pull across a
@@ -435,6 +456,11 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                       // (user-reported). Nothing here wants that gesture: every
                       // drag over a page belongs to the reader's own tools.
                       draggable={false}
+                    />
+                    <TilingLayer
+                      documentId={articleId}
+                      pageIndex={pageIndex}
+                      className={styles.pageTiles}
                     />
                     <SelectionLayer
                       documentId={articleId}

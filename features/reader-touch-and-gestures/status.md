@@ -1,12 +1,13 @@
 # Status: Reader Touch and Gestures
 
-**Feature state:** **In progress** — tasks 1 to 4 merged, task 6 in progress.
-**Six** tasks: three spec'd up front, one added on 2026-08-22 when task 2's
+**Feature state:** **In progress** — tasks 1 to 4 and 6 merged, task 7 next.
+**Seven** tasks: three spec'd up front, one added on 2026-08-22 when task 2's
 implementation proved part of the decided touch model unbuildable, one on
-2026-08-23 when task 4's settled design made a single PR too large, and one on
-2026-08-24 when the user reported what task 3's fix had left behind (see the
-log). Sequential, each gated by its own PR + CI + human review. **Task 6 runs
-before task 5**: it repairs shipped behaviour, and task 5 adds some.
+2026-08-23 when task 4's settled design made a single PR too large, and two more
+on 2026-08-23 from user reports — task 6 for what task 3's fix had left behind,
+task 7 for a pinch that also selects (see the log). Sequential, each gated by its
+own PR + CI + human review. **Tasks 6 and 7 run before task 5**: they repair
+shipped behaviour, and task 5 adds some.
 
 Depends on [`article-detail-and-reader`](../article-detail-and-reader/status.md)
 (#9, Complete) for the reader itself, its plugin registration, its toolbar, and
@@ -27,7 +28,8 @@ parent when its sub-issues close.
 | [`touch-scrolling`](./tasks/touch-scrolling/status.md) ([#111](https://github.com/nicbk/nicbk-website/issues/111)) | **Merged** | [#113](https://github.com/nicbk/nicbk-website/pull/113) | Green | Merged 2026-08-23 |
 | [`click-away`](./tasks/click-away/status.md) ([#114](https://github.com/nicbk/nicbk-website/issues/114)) | **Merged** | [#115](https://github.com/nicbk/nicbk-website/pull/115) | Green | Merged 2026-08-23 |
 | [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | **Merged** | [#117](https://github.com/nicbk/nicbk-website/pull/117) | Green | Merged 2026-08-23 |
-| [`deselect-without-drawing`](./tasks/deselect-without-drawing/status.md) ([#118](https://github.com/nicbk/nicbk-website/issues/118)) | **In progress** | — | — | — |
+| [`deselect-without-drawing`](./tasks/deselect-without-drawing/status.md) ([#118](https://github.com/nicbk/nicbk-website/issues/118)) | **Merged** | [#119](https://github.com/nicbk/nicbk-website/pull/119) | Green | Merged 2026-08-23 |
+| [`pinch-without-selecting`](./tasks/pinch-without-selecting/status.md) ([#122](https://github.com/nicbk/nicbk-website/issues/122)) | **Not started** | — | — | — |
 | [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | Not started, and last to merge | — | — | — |
 
 ## Definition of Done (feature)
@@ -71,6 +73,11 @@ without drawing another.
   `clientX/clientY/target/…` and no `pointerType`. Anything that must behave
   differently for a finger has to learn the pointer's kind elsewhere. This is
   the third time this manager's shape has decided a design in this feature.
+- **Nothing in the pointer path knows what a second finger means.** The manager
+  translates every pointer from every finger into the page's handler chain, and
+  the zoom wrapper's pinch — which listens to `touchstart` on the viewport —
+  takes the gesture away from no one. So "two fingers always pinch" is not a
+  property the library has; it is one this feature has to impose (task 7).
 - **Handlers receive page coordinates, with the zoom already divided out.** So
   any threshold about how far a finger moved belongs in screen pixels
   (`clientX/clientY`), or it silently tightens as the reader zooms in.
@@ -124,6 +131,15 @@ without drawing another.
   covered it and clicking away has stamped a note since #9; and this is the
   **third** withheld-event-leaves-state defect in this feature, which is why the
   rule now lives in `AGENTS.md` instead of only in these notes.
+- 2026-08-23 — **Task 6 merged** (`33f80c4`, PR #119), and the user reported two
+  more things from the same reader in one message: a pinch that selects text or
+  trips the live tool, and a reader that lags at high zoom on a desktop and
+  reloads the tab on a phone. Measuring them split them the way #12 and #13 were
+  split: the pinch is **pointer routing during a gesture** and became **task 7**
+  here; the zoom cost is the **render pipeline** — it hurts a mouse as much as a
+  thumb — and became feature **#14**
+  ([`reader-zoom-performance`](../reader-zoom-performance/status.md)). Task 7
+  runs before task 5, for the reason task 6 did.
 - 2026-08-23 — Task 4 implemented and browser-verified. It closed **the half of
   the original report that was thought already fixed**: task 2 gave the pan back
   to the browser, but the library went on turning a thumb's movement into a drag

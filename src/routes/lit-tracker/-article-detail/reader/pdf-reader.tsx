@@ -23,7 +23,10 @@ import {
   useSelectionCapability,
 } from '@embedpdf/plugin-selection/react'
 import { TilingLayer } from '@embedpdf/plugin-tiling/react'
-import { Viewport } from '@embedpdf/plugin-viewport/react'
+import {
+  useViewportCapability,
+  Viewport,
+} from '@embedpdf/plugin-viewport/react'
 import { useZoom, ZoomGestureWrapper } from '@embedpdf/plugin-zoom/react'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo } from 'react'
@@ -41,6 +44,7 @@ import { BASE_PAGE_SCALE, createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
 import { SelectionCopyMenu } from './selection-copy-menu'
+import { useSelectionDrag } from './touch-selection/drag/use-selection-drag'
 import { usePointerKind } from './touch-selection/pointer-kind'
 import { READER_PANEL_ATTRIBUTE } from './touch-selection/reader-panel'
 import { TouchSelection } from './touch-selection/touch-selection'
@@ -139,6 +143,7 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
   const { provides: annotations } = useAnnotationCapability()
   const { provides: interaction } = useInteractionManagerCapability()
   const { provides: selectionScope } = useSelectionCapability()
+  const { provides: viewport } = useViewportCapability()
 
   // The marks and the rows, kept saying the same thing. Mounted here because
   // this is the first place the annotation scope exists; everything it decides
@@ -162,6 +167,22 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
    * than any page's.
    */
   usePinchRecovery({ documentId: articleId, selection: selectionScope ?? null })
+
+  /*
+   * The drag that adjusts a touch selection, and the paper that moves under it
+   * when the finger reaches the edge of the panel.
+   *
+   * **Here rather than on a page**, because a handle is unmounted the moment its
+   * boundary crosses onto the next page — which is exactly the gesture this has
+   * to survive. It also keeps the document's one subscription to what is
+   * selected. See `touch-selection/drag/use-selection-drag.ts`.
+   */
+  useSelectionDrag({
+    documentId: articleId,
+    selection: selectionScope ?? null,
+    scroll: scrollScope,
+    viewport: viewport?.forDocument(articleId) ?? null,
+  })
 
   /**
    * Which kind of pointer is in the reader's hand — see

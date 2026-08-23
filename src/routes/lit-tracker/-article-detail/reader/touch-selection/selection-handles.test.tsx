@@ -38,20 +38,10 @@ function pointerEvent(type: string, x = 0, y = 0): PointerEvent {
 function renderHandles(
   anchors: SelectionHandleAnchors = ANCHORS,
   scale = 1,
-  handlers: Partial<{
-    onGrab: (end: unknown, finger: unknown) => void
-    onDrag: (finger: unknown) => void
-    onRelease: () => void
-  }> = {},
+  onGrab: (end: unknown, finger: unknown, pointerId: unknown) => void = vi.fn(),
 ) {
   const result = render(
-    <SelectionHandles
-      anchors={anchors}
-      scale={scale}
-      onGrab={handlers.onGrab ?? vi.fn()}
-      onDrag={handlers.onDrag ?? vi.fn()}
-      onRelease={handlers.onRelease ?? vi.fn()}
-    />,
+    <SelectionHandles anchors={anchors} scale={scale} onGrab={onGrab} />,
   )
 
   /*
@@ -109,40 +99,46 @@ describe('SelectionHandles', () => {
     expect(handles).toHaveLength(1)
   })
 
-  it('reports the end that was grabbed, and where the finger was', () => {
+  it('reports the end that was grabbed, where the finger was, and which finger', () => {
+    // The pointer's id, because the drag is followed at the window from here on
+    // and a second finger landing elsewhere must not drive it.
     const onGrab = vi.fn()
-    const { grips } = renderHandles(ANCHORS, 1, { onGrab })
+    const { grips } = renderHandles(ANCHORS, 1, onGrab)
 
     grips[1]?.dispatchEvent(pointerEvent('pointerdown', 265, 55))
 
-    expect(onGrab).toHaveBeenCalledWith('end', { x: 265, y: 55 })
+    expect(onGrab).toHaveBeenCalledWith('end', { x: 265, y: 55 }, 1)
   })
 
-  it('follows the finger, and stops when it lets go', () => {
-    const onDrag = vi.fn()
-    const onRelease = vi.fn()
-    const { grips } = renderHandles(ANCHORS, 1, { onDrag, onRelease })
-    const grip = grips[0]
+  it('reports the grab and nothing else', () => {
+    /*
+     * A handle starts a drag and then only shields it. Where the finger goes is
+     * the document's business (`drag/use-selection-drag.ts`), because a handle
+     * is unmounted the moment its boundary crosses onto another page — and a
+     * report that arrived from an element being torn down is exactly what used
+     * to end the gesture there.
+     */
+    const onGrab = vi.fn()
+    const { grips } = renderHandles(ANCHORS, 1, onGrab)
 
-    grip?.dispatchEvent(pointerEvent('pointerdown', 100, 50))
-    grip?.dispatchEvent(pointerEvent('pointermove', 140, 50))
-    expect(onDrag).toHaveBeenCalledWith({ x: 140, y: 50 })
+    grips[0]?.dispatchEvent(pointerEvent('pointerdown', 100, 50))
+    grips[0]?.dispatchEvent(pointerEvent('pointermove', 140, 50))
+    grips[0]?.dispatchEvent(pointerEvent('pointerup', 140, 50))
 
-    grip?.dispatchEvent(pointerEvent('pointerup', 140, 50))
-    grip?.dispatchEvent(pointerEvent('pointermove', 180, 50))
-    expect(onDrag).toHaveBeenCalledTimes(1)
-    expect(onRelease).toHaveBeenCalledTimes(1)
+    expect(onGrab).toHaveBeenCalledTimes(1)
   })
 
-  it('ignores a finger that was never on it', () => {
+  it('lets a gesture that never touched it pass through', () => {
     // Pointer capture routes a whole gesture to this element, including one
-    // that began somewhere else entirely.
-    const onDrag = vi.fn()
-    const { grips } = renderHandles(ANCHORS, 1, { onDrag })
+    // that began somewhere else entirely — and shielding *that* would take
+    // events away from whatever is really handling it.
+    const beneath = vi.fn()
+    const { container, grips } = renderHandles()
+    container.addEventListener('pointermove', beneath)
 
     grips[0]?.dispatchEvent(pointerEvent('pointermove', 140, 50))
 
-    expect(onDrag).not.toHaveBeenCalled()
+    expect(beneath).toHaveBeenCalledTimes(1)
   })
 
   it('keeps the whole gesture away from the page beneath it', () => {
@@ -169,17 +165,27 @@ describe('SelectionHandles', () => {
     expect(beneath).not.toHaveBeenCalled()
   })
 
-  it('tells whoever is listening when it is taken away mid-drag', () => {
-    // A handle unmounts when the selection collapses or its page scrolls out of
-    // the virtualized window. Leaving a drag believed-in-flight would leave the
-    // magnifier on screen with no finger under it.
-    const onRelease = vi.fn()
-    const { grips, unmount } = renderHandles(ANCHORS, 1, { onRelease })
+  it('stops shielding once it is gone, and ends nothing', () => {
+    /*
+     * A handle unmounts when the selection collapses, when its page scrolls out
+     * of the virtualized window, and — the case this task added — when its
+     * boundary moves onto the next page. It used to end the drag on its way out;
+     * now it takes only its own listeners with it, and the gesture carries on at
+     * the window.
+     */
+    const { grips, unmount } = renderHandles()
+    const grip = grips[0]
+    grip?.dispatchEvent(pointerEvent('pointerdown', 100, 50))
 
-    grips[0]?.dispatchEvent(pointerEvent('pointerdown', 100, 50))
     unmount()
+    const beneath = vi.fn()
+    document.body.append(grip as HTMLElement)
+    document.body.addEventListener('pointermove', beneath)
+    grip?.dispatchEvent(pointerEvent('pointermove', 140, 50))
 
-    expect(onRelease).toHaveBeenCalledTimes(1)
+    expect(beneath).toHaveBeenCalledTimes(1)
+    grip?.remove()
+    document.body.removeEventListener('pointermove', beneath)
   })
 })
 

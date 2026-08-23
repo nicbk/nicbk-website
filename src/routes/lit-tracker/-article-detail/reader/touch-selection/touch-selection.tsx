@@ -1,63 +1,42 @@
 import { useDocumentState } from '@embedpdf/core/react'
-import type { PdfPageGeometry, Position, Rect } from '@embedpdf/models'
-import type {
-  SelectionCapability,
-  SelectionRangeX,
-} from '@embedpdf/plugin-selection'
-import { glyphAt } from '@embedpdf/plugin-selection'
+import type { PdfPageGeometry, Rect } from '@embedpdf/models'
+import type { SelectionCapability } from '@embedpdf/plugin-selection'
 import { useSelectionCapability } from '@embedpdf/plugin-selection/react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { PAPER_ATTRIBUTE } from '../blank-paper'
-import type { SelectionEnd } from './extend-selection'
-import { extendSelection } from './extend-selection'
 import { handleAnchors } from './handle-anchors'
 import { Magnifier } from './magnifier'
-import type { PanelBounds } from './magnifier-view'
 import { panelAround } from './reader-panel'
 import { SelectionHandles } from './selection-handles'
+import { beginDrag, markTouchApply, useTouchSelection } from './selection-state'
 import { useHoldToSelect } from './use-hold-to-select'
 import { wordAt } from './word-at'
 import styles from './touch-selection.module.css'
 
 /**
- * Selecting a passage with a finger, on one page.
+ * Selecting a passage with a finger: what each page draws, and the one gesture
+ * that begins on a page.
  *
- * Composes the three pieces of the decided model and owns the small amount of
- * state they share: **a long press selects the word under the finger**, **a
- * handle at each end adjusts it**, and **a magnifier follows the finger** while
- * one is being dragged. Every decision behind those is in the module that makes
- * it; what is here is the wiring, and the one judgement that belongs nowhere
- * else — whether the current selection is a touch selection at all.
+ * The decided model has three parts — **a long press selects the word under the
+ * finger**, **a handle at each end adjusts it**, and **a magnifier follows the
+ * finger** while one is being dragged — and each decision lives in the module
+ * that makes it. This is the wiring.
  *
- * **Why that judgement matters.** Handles are a touch affordance: a pointer
- * drags a selection directly and has never needed them, and #9's reader is not
- * to acquire them. So they are drawn only for a selection this component made —
- * by a hold, or by a handle drag — and the first mouse selection afterwards
- * takes them away again.
+ * **Rendered once per page, and it draws only what falls on its own page.** The
+ * selection itself, and the drag adjusting it, belong to the document:
+ * `selection-state.ts` holds them and `drag/use-selection-drag.ts` drives them,
+ * because a passage can span pages and a finger can drag a boundary across one.
+ * What is left here needs a page to mean anything at all — this page's geometry,
+ * this page's rendered paper, this page's coordinates.
  *
- * Rendered once per page, inside the page's pointer provider, so its geometry,
- * its handlers and its coordinates are all that page's.
+ * **The handles are a touch affordance**: a pointer drags a selection directly
+ * and has never needed them, so they are drawn only for a selection a finger
+ * made, and the first mouse selection afterwards takes them away again.
  */
 
 interface TouchSelectionProps {
   documentId: string
   pageIndex: number
-}
-
-interface DragInFlight {
-  /** The end the finger is holding, which changes if it is dragged past the other. */
-  end: SelectionEnd
-  /** Where the finger is, in client coordinates. */
-  finger: Position
-  /**
-   * The panel and the paper, resolved once when the drag begins.
-   *
-   * Neither can change while a finger is down — the reader cannot resize the
-   * panel or re-render the page mid-drag — so reading the DOM once at the start
-   * is both cheaper and steadier than reading it on every move.
-   */
-  panel: PanelBounds
-  paper: HTMLImageElement | null
 }
 
 export function TouchSelection({ documentId, pageIndex }: TouchSelectionProps) {
@@ -66,27 +45,7 @@ export function TouchSelection({ documentId, pageIndex }: TouchSelectionProps) {
   const scale = documentState?.scale ?? 1
 
   const layer = useRef<HTMLDivElement>(null)
-  const [range, setRange] = useState<SelectionRangeX | null>(null)
-  const [madeByTouch, setMadeByTouch] = useState(false)
-  const [drag, setDrag] = useState<DragInFlight | null>(null)
-
-  /**
-   * Set immediately before this component applies a selection, and read by the
-   * change event that applying it produces.
-   *
-   * A ref rather than state because it is a note passed between two moments of
-   * the same turn, not something anything renders from — and because the event
-   * arrives before a state update would.
-   */
-  const applying = useRef(false)
-
-  /** The end of the selection the finger holds, tracked between moves. */
-  const held = useRef<SelectionEnd>('end')
-
-  function apply(next: SelectionRangeX): void {
-    applying.current = true
-    selection?.setSelection(next, documentId)
-  }
+  const { range, madeByTouch, drag } = useTouchSelection()
 
   useHoldToSelect({
     documentId,
@@ -97,25 +56,16 @@ export function TouchSelection({ documentId, pageIndex }: TouchSelectionProps) {
         return
       }
       const word = wordAt(geometry, point, pageIndex)
-      if (word) {
-        apply(word)
-      }
-    },
-  })
-
-  useEffect(() => {
-    if (!selection) {
-      return
-    }
-    return selection.onSelectionChange((event) => {
-      if (event.documentId !== documentId) {
+      if (!word) {
         return
       }
-      setRange(event.selection)
-      setMadeByTouch(event.selection !== null && applying.current)
-      applying.current = false
-    })
-  }, [selection, documentId])
+      // Said before the selection is applied, and heard by the change event it
+      // produces: the library reports every selection the same way, and this is
+      // what marks this one as a finger's doing.
+      markTouchApply()
+      selection?.setSelection(word, documentId)
+    },
+  })
 
   const geometry = geometryOf(selection, documentId, pageIndex)
   const anchors =
@@ -125,13 +75,15 @@ export function TouchSelection({ documentId, pageIndex }: TouchSelectionProps) {
     anchors !== null &&
     (anchors.start !== null || anchors.end !== null)
 
-  /** The boundary the finger is dragging, for the magnifier to look at. */
-  const draggedAnchor =
-    drag && anchors
-      ? drag.end === 'start'
-        ? anchors.start
-        : anchors.end
-      : null
+  /**
+   * The boundary the finger is dragging, when it falls on *this* page.
+   *
+   * This is what carries the lens across a page break: the page holding the
+   * dragged anchor draws it, so while the finger is over the gap between two
+   * pages the lens still shows the last line a boundary could be placed on, and
+   * it moves to the next page at the moment the boundary does.
+   */
+  const draggedAnchor = drag && anchors ? anchors[drag.end] : null
 
   return (
     <div ref={layer} className={styles.layer}>
@@ -139,45 +91,27 @@ export function TouchSelection({ documentId, pageIndex }: TouchSelectionProps) {
         <SelectionHandles
           anchors={anchors}
           scale={scale}
-          onGrab={(end, finger) => {
-            held.current = end
-            setDrag({
-              end,
-              finger,
-              panel: panelAround(layer.current),
-              paper: paperOf(layer.current),
-            })
-          }}
-          onDrag={(finger) => {
-            const under = glyphUnder(finger, layer.current, scale, geometry)
-            if (under !== null && range) {
-              const outcome = extendSelection({
-                dragging: held.current,
-                range,
-                to: { page: pageIndex, index: under },
-              })
-              held.current = outcome.dragging
-              apply(outcome.range)
-            }
-            // The lens follows the finger even where there is no glyph to land
-            // on — the margins of a page, the gap below its last line — because
-            // a lens that froze there would read as the drag having ended.
-            setDrag((current) =>
-              current ? { ...current, end: held.current, finger } : null,
-            )
-          }}
-          onRelease={() => setDrag(null)}
+          onGrab={(end, finger, pointerId) =>
+            beginDrag({ end, finger, pointerId })
+          }
         />
       )}
 
       {drag && draggedAnchor && (
+        /*
+         * The paper and the panel are measured as the lens is drawn rather than
+         * captured when the drag began. They cost one measurement each per
+         * move, and a drag that crosses pages has no single page to have
+         * captured them from: this component is not even the one that started
+         * the gesture.
+         */
         <Magnifier
-          paper={drag.paper}
+          paper={paperOf(layer.current)}
           anchor={draggedAnchor}
           finger={drag.finger}
           scale={scale}
           rects={rectsOf(selection, documentId, pageIndex)}
-          panel={drag.panel}
+          panel={panelAround(layer.current)}
         />
       )}
     </div>
@@ -225,35 +159,4 @@ function paperOf(layer: HTMLElement | null): HTMLImageElement | null {
       `[${PAPER_ATTRIBUTE}]`,
     ) ?? null
   )
-}
-
-/**
- * The glyph under the finger, in this page's coordinates.
- *
- * The conversion is a subtraction and a division, and deliberately so: it is the
- * exact inverse of how the handles are placed (`selection-handles.tsx` multiplies
- * page coordinates by the zoom), and it matches how EmbedPDF's own selection
- * layer draws — scale, no rotation. This reader has no rotate control, and the
- * library's own highlight rectangles would be wrong before this was.
- */
-function glyphUnder(
-  finger: Position,
-  layer: HTMLElement | null,
-  scale: number,
-  geometry: PdfPageGeometry | null,
-): number | null {
-  if (!layer || !geometry) {
-    return null
-  }
-
-  const bounds = layer.getBoundingClientRect()
-  const onPage = {
-    x: (finger.x - bounds.left) / scale,
-    y: (finger.y - bounds.top) / scale,
-  }
-
-  const glyph = glyphAt(geometry, onPage)
-  // Past the edge of the text, or off the page entirely: the boundary stays
-  // where it was, which is what stops a handle at the end of its own page.
-  return glyph === -1 ? null : glyph
 }

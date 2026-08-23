@@ -1,6 +1,7 @@
 # Status: Reader Touch and Gestures
 
-**Feature state:** **In progress** — tasks 1 to 4 and 6 merged, task 7 next.
+**Feature state:** **In progress** — tasks 1 to 4, 6 and 7 merged; **task 5 is
+all that remains**, and it closes the feature.
 **Seven** tasks: three spec'd up front, one added on 2026-08-22 when task 2's
 implementation proved part of the decided touch model unbuildable, one on
 2026-08-23 when task 4's settled design made a single PR too large, and two more
@@ -29,8 +30,8 @@ parent when its sub-issues close.
 | [`click-away`](./tasks/click-away/status.md) ([#114](https://github.com/nicbk/nicbk-website/issues/114)) | **Merged** | [#115](https://github.com/nicbk/nicbk-website/pull/115) | Green | Merged 2026-08-23 |
 | [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | **Merged** | [#117](https://github.com/nicbk/nicbk-website/pull/117) | Green | Merged 2026-08-23 |
 | [`deselect-without-drawing`](./tasks/deselect-without-drawing/status.md) ([#118](https://github.com/nicbk/nicbk-website/issues/118)) | **Merged** | [#119](https://github.com/nicbk/nicbk-website/pull/119) | Green | Merged 2026-08-23 |
-| [`pinch-without-selecting`](./tasks/pinch-without-selecting/status.md) ([#122](https://github.com/nicbk/nicbk-website/issues/122)) | **In progress** | — | — | — |
-| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | Not started, and last to merge | — | — | — |
+| [`pinch-without-selecting`](./tasks/pinch-without-selecting/status.md) ([#122](https://github.com/nicbk/nicbk-website/issues/122)) | **Merged** | [#125](https://github.com/nicbk/nicbk-website/pull/125) | Green | Merged 2026-08-23 |
+| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | **In review**, and last to merge | [#126](https://github.com/nicbk/nicbk-website/pull/126) | Green | — |
 
 ## Definition of Done (feature)
 
@@ -147,6 +148,21 @@ without drawing another.
   thumb — and became feature **#14**
   ([`reader-zoom-performance`](../reader-zoom-performance/status.md)). Task 7
   runs before task 5, for the reason task 6 did.
+- 2026-08-23 — **Task 5 opened as PR #126**, the last of the seven, and its
+  verification found **two defects about marking a passage** that are older than
+  it: a touch selection cannot be marked at all, and a mouse drag with a markup
+  tool across a page break commits nothing. Both are in the annotation path —
+  the library's markup tools commit from the selection plugin's
+  `onEndSelection`, which its own drag raises and a programmatic selection never
+  does. Recorded in the task's status, not fixed there; they are the obvious
+  candidate for what follows this feature.
+- 2026-08-23 — **Task 7 merged** as `315073b` (PR #125). Six of seven are in;
+  only task 5 is left, and it carries the duty of closing **#108**. What the
+  task cost beyond its code is recorded in two places on purpose: `AGENTS.md`
+  gained the rule about orderings you did not choose, because a pair of this
+  project's *own* window listeners raced; and the browser-verification memory
+  gained the stale-dev-server trap, because an hour went into a defect that was
+  Vite serving `main`'s code under this branch's name.
 - 2026-08-23 — Task 4 implemented and browser-verified. It closed **the half of
   the original report that was thought already fixed**: task 2 gave the pan back
   to the browser, but the library went on turning a thumb's movement into a drag

@@ -85,6 +85,21 @@ const interactionCapability = vi.hoisted(() => ({ registerMode: vi.fn() }))
 const zoomGestureProps = vi.hoisted(() => ({
   current: null as Record<string, unknown> | null,
 }))
+/**
+ * The viewport, which the selection drag scrolls when a finger reaches the edge
+ * of the panel. Scoped to a document like every other capability here.
+ */
+const viewportScope = vi.hoisted(() => ({
+  getMetrics: vi.fn(),
+  scrollTo: vi.fn(),
+}))
+const viewportCapability = vi.hoisted(() => ({
+  forDocument: vi.fn(() => viewportScope),
+}))
+/** What the selection drag was mounted with. */
+const selectionDrag = vi.hoisted(() => ({
+  current: null as Record<string, unknown> | null,
+}))
 
 vi.mock('@embedpdf/engines/react', () => ({
   usePdfiumEngine: () => engine.current,
@@ -155,6 +170,7 @@ vi.mock('@embedpdf/plugin-zoom/react', async () => {
 vi.mock('@embedpdf/plugin-viewport/react', async () => {
   const { createElement } = await import('react')
   return {
+    useViewportCapability: () => ({ provides: viewportCapability }),
     Viewport: ({
       children,
       ...props
@@ -162,6 +178,18 @@ vi.mock('@embedpdf/plugin-viewport/react', async () => {
       createElement('div', props, children),
   }
 })
+/*
+ * The drag that adjusts a touch selection, recorded rather than driven: it lives
+ * at the window and moves the paper by the frame, and both of those are its own
+ * test's business (`touch-selection/drag/use-selection-drag.test.tsx`). What is
+ * asserted here is the wiring — that the reader mounts it once, for this
+ * document, with the three capabilities it drives.
+ */
+vi.mock('./touch-selection/drag/use-selection-drag', () => ({
+  useSelectionDrag: (given: Record<string, unknown>) => {
+    selectionDrag.current = given
+  },
+}))
 /*
  * The four layers a page is made of, each rendering a marker element carrying
  * the props worth asserting. They are stood in for rather than exercised — one
@@ -608,6 +636,27 @@ describe('PdfReader', () => {
       const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
 
       expect(container.querySelector('[data-mark-selected]')).toBeNull()
+    })
+  })
+
+  describe('the drag that crosses a page', () => {
+    it('is mounted for the document, with what it drives', () => {
+      /*
+       * Once, here, rather than once per page — a handle is unmounted the moment
+       * its boundary crosses onto the next page, and a drag owned by that
+       * handle's page would end with it. The three capabilities are what it
+       * needs: where the boundary goes, which page is under the finger, and the
+       * paper to move when the finger reaches the edge.
+       */
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(selectionDrag.current).toEqual({
+        documentId: ARTICLE_ID,
+        selection: selectionScope,
+        scroll: scrollScope,
+        viewport: viewportScope,
+      })
+      expect(viewportCapability.forDocument).toHaveBeenCalledWith(ARTICLE_ID)
     })
   })
 

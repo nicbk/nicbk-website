@@ -15,6 +15,17 @@ What this task's tests must cover. Feature-wide tiers are in
   handle dragged onto an *earlier* page, where start and end swap.
 - **Task 4's within-page behaviour is unchanged**, exercised through its own
   suite rather than duplicated here.
+- **What the document knows about a selection** — that a passage counts as
+  touch-made only when this reader said so first, that the mark is spent on one
+  change, and that a range spanning two pages is held whole. It was per-page
+  state before this task, which is precisely why the page a boundary arrived on
+  refused to draw its handle.
+- **The drag itself**, which turned out to be exercisable after all: it is driven
+  by window events and a frame loop, and jsdom raises both — so the gesture is
+  played through from the grab, including the crossing, the return, the swap, the
+  pointer it must ignore, and the auto-scroll under fake timers.
+- **A handle reports the grab and nothing else**, and unmounting no longer ends
+  anything — the regression that would silently restore the old behaviour.
 - The existing reader suite passes unchanged.
 
 ## Integration
@@ -40,5 +51,7 @@ differently from glass, and this task adds a scroll that runs *during* a gesture
 
 ## Coverage
 
-Ratchet applies. The two pure pieces — point-to-page and edge-to-rate — are what
-keep it honest; the drag loop itself is DOM code jsdom cannot exercise.
+Ratchet applies. The two pure pieces — point-to-page and edge-to-rate — carry
+the arithmetic, and the drag loop turned out to be reachable in jsdom too, so
+what is left uncovered is only what a browser has to answer: how a real finger's
+events arrive, and how the paper actually moves.

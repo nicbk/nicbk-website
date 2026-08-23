@@ -11,28 +11,32 @@ import {
 } from './test-support/page-geometry'
 
 /**
- * The wiring: that a hold becomes a selection, that a selection made by touch
- * grows handles and one made by a mouse does not, and that dragging a handle
- * moves the boundary it belongs to.
+ * What a page draws: that a hold becomes a selection, that a selection made by
+ * touch grows handles and one made by a mouse does not, and that each page draws
+ * the end of a selection that falls on it — including one that arrived from the
+ * page before.
  *
- * The library is stood in for — its selection state is a plugin over a
- * WebAssembly engine — but the *decisions* are the real ones: real geometry,
- * the real `glyphAt`, the real word expansion, the real range arithmetic. What
- * is faked is only the store they are applied to.
+ * **The drag itself is not here**, because it is no longer the page's: a handle
+ * is unmounted the moment its boundary crosses onto the next page, so the
+ * gesture is owned by the document and tested in
+ * `drag/use-selection-drag.test.tsx`. What this asserts is the drawing, and the
+ * one gesture that does begin on a page — the hold.
+ *
+ * The library is stood in for; the decisions are real — real geometry, the real
+ * word expansion, the real handle placement.
  */
 
-const PAGE = geometryFrom([
+const FIRST_PAGE = geometryFrom([
   { text: 'attention is all', y: 0 },
   { text: 'you need more', y: LINE_HEIGHT },
 ])
 
+const SECOND_PAGE = geometryFrom([{ text: 'than a recurrent', y: 0 }])
+
 const DOCUMENT_ID = '018f5b6c-0000-7000-8000-000000000001'
-const PAGE_INDEX = 0
 
 const selection = vi.hoisted(() => ({
-  range: null as unknown,
-  listeners: [] as ((event: unknown) => void)[],
-  geometry: null as unknown,
+  geometry: {} as Record<number, PdfPageGeometry | undefined>,
   setSelection: vi.fn(),
 }))
 
@@ -43,25 +47,9 @@ vi.mock('@embedpdf/core/react', () => ({
 vi.mock('@embedpdf/plugin-selection/react', () => ({
   useSelectionCapability: () => ({
     provides: {
-      getState: () => ({ geometry: { [PAGE_INDEX]: selection.geometry } }),
+      getState: () => ({ geometry: selection.geometry }),
       getHighlightRectsForPage: () => [],
-      setSelection: (range: SelectionRangeX | null) => {
-        selection.setSelection(range)
-        selection.range = range
-        // The plugin emits a change for every selection, however it was made —
-        // which is what this component listens to rather than tracking its own.
-        for (const listener of selection.listeners) {
-          listener({ documentId: DOCUMENT_ID, selection: range })
-        }
-      },
-      onSelectionChange: (listener: (event: unknown) => void) => {
-        selection.listeners.push(listener)
-        return () => {
-          selection.listeners = selection.listeners.filter(
-            (each) => each !== listener,
-          )
-        }
-      },
+      setSelection: selection.setSelection,
     },
   }),
 }))
@@ -82,29 +70,38 @@ vi.mock('./use-hold-to-select', () => ({
 }))
 
 const { TouchSelection } = await import('./touch-selection')
+const {
+  beginDrag,
+  endDrag,
+  markTouchApply,
+  noteSelection,
+  readTouchSelection,
+  resetTouchSelection,
+} = await import('./selection-state')
 
-/** A press on a handle, as the browser would raise it. */
-function pointerEvent(type: string, x = 0, y = 0): PointerEvent {
-  return new PointerEvent(type, {
-    pointerId: 1,
-    bubbles: true,
-    cancelable: true,
-    clientX: x,
-    clientY: y,
+/**
+ * Stands in for `use-selection-drag.ts`, which owns the document's one
+ * subscription to the library: applying a selection is what makes it known.
+ */
+function applied(range: SelectionRangeX | null, byTouch = true) {
+  act(() => {
+    if (byTouch) {
+      markTouchApply()
+    }
+    noteSelection(range)
   })
 }
 
-function renderPage(geometry: PdfPageGeometry | null = PAGE) {
-  selection.geometry = geometry
+function renderPage(pageIndex = 0) {
   return render(
-    <TouchSelection documentId={DOCUMENT_ID} pageIndex={PAGE_INDEX} />,
+    <TouchSelection documentId={DOCUMENT_ID} pageIndex={pageIndex} />,
   )
 }
 
 /** Selects a word by holding on it, the way the gesture would. */
 function holdOn(glyphIndex: number) {
   act(() => {
-    hold.fire?.(centreOfGlyph(PAGE, glyphIndex))
+    hold.fire?.(centreOfGlyph(FIRST_PAGE, glyphIndex))
   })
 }
 
@@ -113,18 +110,29 @@ function gripsIn(container: HTMLElement) {
     ...container.querySelectorAll<HTMLElement>(
       `[${SELECTION_HANDLE_ATTRIBUTE}]`,
     ),
-  ]
+  ].map((grip) => grip.dataset['selectionHandle'])
+}
+
+/** "attention", as the hold below selects it. */
+const A_WORD: SelectionRangeX = {
+  start: { page: 0, index: 0 },
+  end: { page: 0, index: 8 },
+}
+
+/** A passage that begins on the first page and ends on the second. */
+const ACROSS_PAGES: SelectionRangeX = {
+  start: { page: 0, index: 0 },
+  end: { page: 1, index: 6 },
 }
 
 beforeEach(() => {
-  selection.range = null
-  selection.listeners = []
-  selection.geometry = PAGE
+  resetTouchSelection()
+  selection.geometry = { 0: FIRST_PAGE, 1: SECOND_PAGE }
   hold.fire = null
   vi.clearAllMocks()
 })
 
-describe('TouchSelection', () => {
+describe('the hold', () => {
   it('selects the word a hold rested on', () => {
     renderPage()
 
@@ -132,58 +140,7 @@ describe('TouchSelection', () => {
 
     // "attention", the first nine characters — the library's own word
     // expansion, reached through this component's hold.
-    expect(selection.setSelection).toHaveBeenCalledWith({
-      start: { page: PAGE_INDEX, index: 0 },
-      end: { page: PAGE_INDEX, index: 8 },
-    })
-  })
-
-  it('grows a handle at each end of what it selected', () => {
-    const { container } = renderPage()
-
-    holdOn(4)
-
-    expect(
-      gripsIn(container).map((grip) => grip.dataset['selectionHandle']),
-    ).toEqual(['start', 'end'])
-  })
-
-  it('draws no handles for a selection it did not make', () => {
-    /*
-     * The judgement this component exists to make. A mouse drag produces the
-     * same event from the same plugin; handles are a touch affordance, and #9's
-     * pointer selection is not to acquire them.
-     */
-    const { container } = renderPage()
-
-    act(() => {
-      for (const listener of selection.listeners) {
-        listener({
-          documentId: DOCUMENT_ID,
-          selection: {
-            start: { page: PAGE_INDEX, index: 0 },
-            end: { page: PAGE_INDEX, index: 8 },
-          },
-        })
-      }
-    })
-
-    expect(gripsIn(container)).toHaveLength(0)
-  })
-
-  it('takes the handles away when the selection goes', () => {
-    // Escape, or a click on the paper: the plugin reports null, and there is
-    // nothing left for a handle to bound.
-    const { container } = renderPage()
-    holdOn(4)
-
-    act(() => {
-      for (const listener of selection.listeners) {
-        listener({ documentId: DOCUMENT_ID, selection: null })
-      }
-    })
-
-    expect(gripsIn(container)).toHaveLength(0)
+    expect(selection.setSelection).toHaveBeenCalledWith(A_WORD, DOCUMENT_ID)
   })
 
   it('holds nothing when the page has no text under the finger', () => {
@@ -196,95 +153,134 @@ describe('TouchSelection', () => {
     expect(selection.setSelection).not.toHaveBeenCalled()
   })
 
-  it('moves the boundary the dragged handle belongs to', () => {
-    /*
-     * jsdom lays nothing out, so the layer's rectangle is at the origin and a
-     * client point is a page point at 100% zoom — which is exactly what makes
-     * the arithmetic legible here: the finger is put on the glyph it means.
-     */
-    const { container } = renderPage()
+  it('holds nothing on a page whose geometry has not arrived', () => {
+    selection.geometry = {}
+    renderPage()
+
     holdOn(4)
-    const end = gripsIn(container)[1]
-
-    act(() => {
-      end?.dispatchEvent(pointerEvent('pointerdown', 90, 6))
-    })
-    act(() => {
-      end?.dispatchEvent(
-        pointerEvent('pointermove', centreOfGlyph(PAGE, 11).x, 6),
-      )
-    })
-
-    // Still anchored where the word began, now reaching the glyph under the
-    // finger — character-precise, not snapped back to a word.
-    expect(selection.setSelection).toHaveBeenLastCalledWith({
-      start: { page: PAGE_INDEX, index: 0 },
-      end: { page: PAGE_INDEX, index: 11 },
-    })
-  })
-
-  it('keeps the anchor still when a handle is dragged past the other', () => {
-    const { container } = renderPage()
-    holdOn(14)
-    const [start] = gripsIn(container)
-
-    act(() => {
-      start?.dispatchEvent(pointerEvent('pointerdown', 130, 6))
-    })
-    act(() => {
-      start?.dispatchEvent(
-        pointerEvent('pointermove', centreOfGlyph(PAGE, 22).x, LINE_HEIGHT + 6),
-      )
-    })
-
-    // "all" ends at 15; the finger is now well past it on the next line, so
-    // that end became the start and the finger holds the other one.
-    expect(selection.setSelection).toHaveBeenLastCalledWith({
-      start: { page: PAGE_INDEX, index: 15 },
-      end: { page: PAGE_INDEX, index: 22 },
-    })
-  })
-
-  it('shows the lens while a handle is held, and only then', () => {
-    /*
-     * Portalled to the document rather than drawn in the page, because it has
-     * to float above the reader's own toolbar and sidebar. jsdom paints no
-     * canvas — the component declines gracefully when there is no drawing
-     * context — so what is asserted here is that it is mounted and unmounted at
-     * the right moments, which is the part that is this project's.
-     */
-    const { container } = renderPage()
-    holdOn(4)
-    const end = gripsIn(container)[1]
-
-    expect(document.querySelector('canvas')).toBeNull()
-
-    act(() => {
-      end?.dispatchEvent(pointerEvent('pointerdown', 90, 6))
-    })
-    expect(document.querySelector('canvas')).not.toBeNull()
-
-    act(() => {
-      end?.dispatchEvent(pointerEvent('pointerup', 90, 6))
-    })
-    expect(document.querySelector('canvas')).toBeNull()
-  })
-
-  it('leaves the selection alone where there is no glyph to land on', () => {
-    // Dragging into a margin, or past the last line of the page — which is
-    // what stops a handle at the edge of its own page until task 5 lands.
-    const { container } = renderPage()
-    holdOn(4)
-    const end = gripsIn(container)[1]
-
-    act(() => {
-      end?.dispatchEvent(pointerEvent('pointerdown', 90, 6))
-    })
-    selection.setSelection.mockClear()
-    act(() => {
-      end?.dispatchEvent(pointerEvent('pointermove', 600, 900))
-    })
 
     expect(selection.setSelection).not.toHaveBeenCalled()
+  })
+})
+
+describe('the handles', () => {
+  it('grows one at each end of what a finger selected', () => {
+    const { container } = renderPage()
+
+    applied(A_WORD)
+
+    expect(gripsIn(container)).toEqual(['start', 'end'])
+  })
+
+  it('draws none for a selection it did not make', () => {
+    /*
+     * The judgement this reader exists to make. A mouse drag produces the same
+     * event from the same plugin; handles are a touch affordance, and #9's
+     * pointer selection is not to acquire them.
+     */
+    const { container } = renderPage()
+
+    applied(A_WORD, false)
+
+    expect(gripsIn(container)).toHaveLength(0)
+  })
+
+  it('takes them away when the selection goes', () => {
+    // Escape, or a click on the paper: the plugin reports null, and there is
+    // nothing left for a handle to bound.
+    const { container } = renderPage()
+    applied(A_WORD)
+
+    applied(null)
+
+    expect(gripsIn(container)).toHaveLength(0)
+  })
+
+  it('draws only the end that falls on this page', () => {
+    // The two halves of a selection that spans a break, each drawn by the page
+    // that owns it — and the second page knows the selection was a finger's,
+    // which it could not have known while that was per-page state.
+    const first = renderPage(0)
+    const second = renderPage(1)
+
+    applied(ACROSS_PAGES)
+
+    expect(gripsIn(first.container)).toEqual(['start'])
+    expect(gripsIn(second.container)).toEqual(['end'])
+  })
+})
+
+describe('the lens', () => {
+  /*
+   * Portalled to the document rather than drawn in the page, because it has to
+   * float above the reader's own toolbar and sidebar. jsdom paints no canvas —
+   * the component declines gracefully when there is no drawing context — so what
+   * is asserted is that it is mounted and unmounted at the right moments, by the
+   * right page.
+   */
+  function lens() {
+    return document.querySelector('canvas')
+  }
+
+  it('appears while a handle is held, and only then', () => {
+    renderPage()
+    applied(A_WORD)
+    expect(lens()).toBeNull()
+
+    act(() => {
+      beginDrag({ end: 'end', finger: { x: 90, y: 6 }, pointerId: 1 })
+    })
+    expect(lens()).not.toBeNull()
+
+    act(() => {
+      endDrag()
+    })
+    expect(lens()).toBeNull()
+  })
+
+  it('is drawn by the page the dragged boundary is on', () => {
+    // What carries it across a break: while the finger is over the gap the lens
+    // still shows the last line a boundary could be placed on, and it moves to
+    // the next page at the moment the boundary does.
+    renderPage(1)
+    applied(ACROSS_PAGES)
+
+    act(() => {
+      beginDrag({ end: 'end', finger: { x: 40, y: 400 }, pointerId: 1 })
+    })
+
+    expect(lens()).not.toBeNull()
+  })
+
+  it('is not drawn by a page holding the other end', () => {
+    renderPage(0)
+    applied(ACROSS_PAGES)
+
+    act(() => {
+      beginDrag({ end: 'end', finger: { x: 40, y: 400 }, pointerId: 1 })
+    })
+
+    expect(lens()).toBeNull()
+  })
+})
+
+describe('a drag that outlives the page it began on', () => {
+  it('survives the handle being unmounted by its own crossing', () => {
+    /*
+     * The failure this task exists to remove. The end handle is drawn by the
+     * first page until the boundary reaches the second, and then that handle is
+     * gone — which used to end the very gesture that moved it.
+     */
+    const { container } = renderPage(0)
+    applied(A_WORD)
+    act(() => {
+      beginDrag({ end: 'end', finger: { x: 90, y: 6 }, pointerId: 1 })
+    })
+    expect(gripsIn(container)).toEqual(['start', 'end'])
+
+    applied(ACROSS_PAGES)
+
+    expect(gripsIn(container)).toEqual(['start'])
+    expect(readTouchSelection().drag).not.toBeNull()
   })
 })

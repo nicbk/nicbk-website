@@ -31,20 +31,19 @@ interface SelectionHandlesProps {
   anchors: SelectionHandleAnchors
   /** The document's zoom: page units to CSS pixels. */
   scale: number
-  /** A handle has been taken hold of, at this point in client coordinates. */
-  onGrab: (end: SelectionEnd, finger: Position) => void
-  /** The finger has moved, in client coordinates. */
-  onDrag: (finger: Position) => void
-  /** The finger has let go. */
-  onRelease: () => void
+  /**
+   * A handle has been taken hold of, at this point in client coordinates.
+   *
+   * **The only thing a handle reports.** What the finger does afterwards belongs
+   * to the document, not to this page — see `drag/use-selection-drag.ts`.
+   */
+  onGrab: (end: SelectionEnd, finger: Position, pointerId: number) => void
 }
 
 export function SelectionHandles({
   anchors,
   scale,
   onGrab,
-  onDrag,
-  onRelease,
 }: SelectionHandlesProps) {
   return (
     <>
@@ -54,19 +53,10 @@ export function SelectionHandles({
           anchor={anchors.start}
           scale={scale}
           onGrab={onGrab}
-          onDrag={onDrag}
-          onRelease={onRelease}
         />
       )}
       {anchors.end && (
-        <Handle
-          end="end"
-          anchor={anchors.end}
-          scale={scale}
-          onGrab={onGrab}
-          onDrag={onDrag}
-          onRelease={onRelease}
-        />
+        <Handle end="end" anchor={anchors.end} scale={scale} onGrab={onGrab} />
       )}
     </>
   )
@@ -77,20 +67,13 @@ interface HandleProps extends Omit<SelectionHandlesProps, 'anchors'> {
   anchor: HandleAnchor
 }
 
-function Handle({
-  end,
-  anchor,
-  scale,
-  onGrab,
-  onDrag,
-  onRelease,
-}: HandleProps) {
+function Handle({ end, anchor, scale, onGrab }: HandleProps) {
   const grip = useRef<HTMLSpanElement>(null)
 
-  /* Rebuilt every render, so the callbacks below always see the current
+  /* Rebuilt every render, so the callback below always sees the current
      selection — the listeners themselves are attached once. */
-  const latest = useRef({ onGrab, onDrag, onRelease })
-  latest.current = { onGrab, onDrag, onRelease }
+  const latest = useRef({ onGrab })
+  latest.current = { onGrab }
 
   useEffect(() => {
     const element = grip.current
@@ -120,50 +103,58 @@ function Handle({
       // finger leaves the element.
       element?.setPointerCapture?.(event.pointerId)
       held = true
-      latest.current.onGrab(end, { x: event.clientX, y: event.clientY })
+      latest.current.onGrab(
+        end,
+        { x: event.clientX, y: event.clientY },
+        event.pointerId,
+      )
     }
 
-    function follow(event: PointerEvent): void {
+    /**
+     * Keeps the gesture off the page, and reports nothing.
+     *
+     * The whole drag stays off the page, not just its first event: with pointer
+     * capture these moves are routed here, but they still *bubble* from here to
+     * the page beneath — where the library's text handler would measure them
+     * against whatever anchor it last took and start a drag selection of its
+     * own, over the top of the one being adjusted.
+     *
+     * What the finger is *doing* is heard by `drag/use-selection-drag.ts`, at
+     * the window, on the capture phase — which is to say before this, and
+     * whether or not this element still exists.
+     */
+    function shield(event: PointerEvent): void {
       if (!held) {
         return
       }
-      /*
-       * The whole gesture stays off the page, not just its first event. With
-       * pointer capture these moves are routed here, but they still *bubble*
-       * from here to the page beneath — where the library's text handler would
-       * measure them against whatever anchor it last took and start a drag
-       * selection of its own, over the top of the one being adjusted.
-       */
       event.stopPropagation()
-      latest.current.onDrag({ x: event.clientX, y: event.clientY })
     }
 
-    function letGo(event?: PointerEvent): void {
-      event?.stopPropagation()
-      if (!held) {
-        return
-      }
+    function letGo(event: PointerEvent): void {
+      shield(event)
       held = false
-      latest.current.onRelease()
     }
 
     // Capture routes the rest of the gesture back to this element, so a finger
     // that wanders off the handle — which it does immediately — keeps dragging
     // it rather than dropping it.
     element.addEventListener('pointerdown', takeHold)
-    element.addEventListener('pointermove', follow)
+    element.addEventListener('pointermove', shield)
     element.addEventListener('pointerup', letGo)
     element.addEventListener('pointercancel', letGo)
 
     return () => {
       element.removeEventListener('pointerdown', takeHold)
-      element.removeEventListener('pointermove', follow)
+      element.removeEventListener('pointermove', shield)
       element.removeEventListener('pointerup', letGo)
       element.removeEventListener('pointercancel', letGo)
-      // A handle can be unmounted mid-drag — the selection collapses, or the
-      // page scrolls out of the virtualized window — and whoever is listening
-      // must not be left believing a finger is still down.
-      letGo()
+      /*
+       * **Unmounting no longer ends the drag, and that is this task's whole
+       * point.** A handle is unmounted the instant its boundary moves onto
+       * another page, which used to end the very gesture that moved it. The
+       * drag belongs to the document now, so a handle disappearing here means
+       * only that some other page is drawing it.
+       */
     }
   }, [end])
 

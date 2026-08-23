@@ -1,14 +1,15 @@
 # Status: Selection Across Pages
 
-**State:** **In progress.** Fifth of seven by filing order, and **last to
-merge** — tasks 6 and 7 were filed after it and run before it, being repairs
-rather than additions.
+**State:** **In review** — implemented, browser-verified, and
+[PR #126](https://github.com/nicbk/nicbk-website/pull/126) is open with CI
+green. Fifth of seven by filing order, and **last to merge** — tasks 6 and 7
+were filed after it and run before it, being repairs rather than additions.
 
 - Branch: `reader-touch-and-gestures/selection-across-pages`, from `main` at
   `315073b` — it was task 4 when this was filed, and tasks 6 and 7 were placed
   ahead of it.
 - Sub-issue: [**#116**](https://github.com/nicbk/nicbk-website/issues/116).
-- PR: opened once the unit tier and the browser pass are both clean.
+- PR: [**#126**](https://github.com/nicbk/nicbk-website/pull/126), CI green.
 - **On merge, close this feature's parent issue #108 by hand** — GitHub does not
   close a parent when its sub-issues close, and this is still the last task to
   merge.

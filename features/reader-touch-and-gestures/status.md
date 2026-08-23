@@ -31,7 +31,7 @@ parent when its sub-issues close.
 | [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | **Merged** | [#117](https://github.com/nicbk/nicbk-website/pull/117) | Green | Merged 2026-08-23 |
 | [`deselect-without-drawing`](./tasks/deselect-without-drawing/status.md) ([#118](https://github.com/nicbk/nicbk-website/issues/118)) | **Merged** | [#119](https://github.com/nicbk/nicbk-website/pull/119) | Green | Merged 2026-08-23 |
 | [`pinch-without-selecting`](./tasks/pinch-without-selecting/status.md) ([#122](https://github.com/nicbk/nicbk-website/issues/122)) | **Merged** | [#125](https://github.com/nicbk/nicbk-website/pull/125) | Green | Merged 2026-08-23 |
-| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | Not started, and last to merge | — | — | — |
+| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | **In review**, and last to merge | [#126](https://github.com/nicbk/nicbk-website/pull/126) | Green | — |
 
 ## Definition of Done (feature)
 
@@ -148,6 +148,14 @@ without drawing another.
   thumb — and became feature **#14**
   ([`reader-zoom-performance`](../reader-zoom-performance/status.md)). Task 7
   runs before task 5, for the reason task 6 did.
+- 2026-08-23 — **Task 5 opened as PR #126**, the last of the seven, and its
+  verification found **two defects about marking a passage** that are older than
+  it: a touch selection cannot be marked at all, and a mouse drag with a markup
+  tool across a page break commits nothing. Both are in the annotation path —
+  the library's markup tools commit from the selection plugin's
+  `onEndSelection`, which its own drag raises and a programmatic selection never
+  does. Recorded in the task's status, not fixed there; they are the obvious
+  candidate for what follows this feature.
 - 2026-08-23 — **Task 7 merged** as `315073b` (PR #125). Six of seven are in;
   only task 5 is left, and it carries the duty of closing **#108**. What the
   task cost beyond its code is recorded in two places on purpose: `AGENTS.md`

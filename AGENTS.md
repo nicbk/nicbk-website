@@ -123,6 +123,30 @@ rather than the tree. The general lesson is that **handing control to a library
 and then intercepting its inputs makes you a participant in its state machine**,
 whether or not you meant to be.
 
+## An order you did not choose is not an order you can rely on
+
+When two pieces of this project's own code answer the same event, register for
+the same thing, or run in the same phase, the sequence they run in is part of
+the design — and if nothing in the code decides it, it has been decided by
+something incidental: which component mounted first, which effect React ran
+first, which module was imported first.
+
+- **Prefer removing the ordering question to answering it.** Two listeners is
+  two orderings; one listener that tells both parties is none. Collapsing them
+  is usually a smaller change than the comment explaining which must win.
+- **When an order genuinely has to hold, make the code state it and a test
+  assert it** — the registration that must come first, the phase that guarantees
+  it, and the reason. "It happens to work" is a coincidence with a commit date.
+- Suspect this whenever behaviour depends on *when* something was set up rather
+  than on what it does, and especially when a defect appears only sometimes, or
+  only after an unrelated component moved.
+
+Written after two in one feature: a handler that had to be registered before a
+library's lost the race because React runs every layout effect before any
+ordinary one, and a pair of this project's own window listeners raced each other
+so that the second finger of a pinch overwrote the very state the first was
+supposed to preserve.
+
 ## Code readability and documentation
 
 All code must be highly readable to a human and well documented.

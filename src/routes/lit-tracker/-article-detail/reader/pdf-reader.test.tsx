@@ -223,6 +223,7 @@ vi.mock('./click-away-guard', () => ({ ClickAwayGuard: () => null }))
 vi.mock('./touch-selection/touch-selection', () => ({
   TouchSelection: () => null,
 }))
+vi.mock('./pinch/pinch-guard', () => ({ PinchGuard: () => null }))
 vi.mock('@embedpdf/plugin-interaction-manager/react', async () => {
   const { createElement, Fragment } = await import('react')
   return {

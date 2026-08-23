@@ -1,15 +1,21 @@
 # Plan: Reader Touch and Gestures
 
-> **Revised 2026-08-22**, then **2026-08-23.** Five tasks, not three. First,
-> task 2's implementation proved part of the decided touch model unbuildable and
-> the risk this plan names at the bottom landed. Then task 4's settled design
-> made it four subsystems in one PR, and its cross-page half became task 5. What
-> follows is the original sequence, amended where each changed it — see
-> [status.md](./status.md)'s log.
+> **Revised 2026-08-22**, then **2026-08-23**, then **2026-08-24.** Six tasks,
+> not three. First, task 2's implementation proved part of the decided touch
+> model unbuildable and the risk this plan names at the bottom landed. Then task
+> 4's settled design made it four subsystems in one PR, and its cross-page half
+> became task 5. Then the user reported what task 3's fix had left behind, and
+> that became task 6 — the first task here filed against a defect this feature
+> itself introduced. What follows is the original sequence, amended where each
+> changed it — see [status.md](./status.md)'s log.
 
-Five tasks, sequential, each gated by its own PR + CI + human review. The order
+Six tasks, sequential, each gated by its own PR + CI + human review. The order
 is not arbitrary: **task 2 can undo task 1 if it is done first**, task 3 is
 independent of both, and task 5 builds directly on task 4.
+
+**Numbers are filing order; task 6 runs before task 5.** It repairs shipped
+behaviour and task 5 adds some, so the repair goes first — renumbering an issue
+that already carries its name would be churn for its own sake.
 
 ## Task sequence
 
@@ -59,6 +65,18 @@ selection at all — is the price already agreed for shipping scrolling first.
 settled on 2026-08-23 toward what a phone already does — iOS-shaped handles,
 character-precise extension, a magnifier to aim with — and crossing a page break
 moved to task 5 so that neither PR carries four subsystems.
+
+### 6. [`deselect-without-drawing`](./tasks/deselect-without-drawing/status.md) — the press that deselects, spent
+
+Added 2026-08-24 from a user report, and **run before task 5**: it repairs
+behaviour the reader already has in front of them, which task 5 does not.
+
+Task 3 withheld the deselecting click from the live tool; the tool clears what a
+press started only on pointer-up or pointer-cancel, so withholding the up left it
+mid-draw and a shape followed the cursor. The fix tells the tool its pointer was
+cancelled, stops the press at its *start* for the one tool that creates there,
+and — on touch — suspends the tool's claim on the gesture while a mark is
+selected, so a finger pans instead of drawing.
 
 ### 5. [`selection-across-pages`](./tasks/selection-across-pages/status.md) — past the page break
 

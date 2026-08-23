@@ -65,7 +65,12 @@ const annotationCapability = vi.hoisted(() => ({
   addTool: vi.fn(),
 }))
 const annotationState = vi.hoisted(() => ({
-  current: { activeToolId: null as string | null },
+  current: {
+    activeToolId: null as string | null,
+    // What the reader reads to say a mark is selected, so a finger can scroll
+    // the paper while one is — see `pdf-reader.module.css`.
+    selectedUids: [] as string[],
+  },
 }))
 /**
  * The interaction manager, which owns `touch-action` on every page. The reader
@@ -176,7 +181,7 @@ beforeEach(() => {
   engine.current = { engine: {}, isLoading: false, error: null }
   documentState.current = { status: 'loaded', document: { pageCount: 15 } }
   scrollState.current = { currentPage: 1, totalPages: 0 }
-  annotationState.current = { activeToolId: null }
+  annotationState.current = { activeToolId: null, selectedUids: [] }
   zoomGestureProps.current = null
   vi.clearAllMocks()
 })
@@ -324,7 +329,7 @@ describe('PdfReader', () => {
       // The active tool lives in the plugin's own state, keyed by document —
       // holding a second copy here is how a toolbar starts disagreeing with the
       // thing it controls.
-      annotationState.current = { activeToolId: 'ink' }
+      annotationState.current = { activeToolId: 'ink', selectedUids: [] }
       render(<PdfReader articleId={ARTICLE_ID} />)
 
       expect(
@@ -503,6 +508,31 @@ describe('PdfReader', () => {
 
       expect(interactionCapability.registerMode).toHaveBeenCalled()
       expect(screen.queryByText(`pages:${ARTICLE_ID}`)).toBeNull()
+    })
+  })
+
+  describe('scrolling with a mark selected', () => {
+    /*
+     * A tool's mode puts `touch-action: none` on every page so a drag can draw,
+     * and the interaction manager models no "something is selected" state to
+     * write anything else for. So the reader says so itself, and the stylesheet
+     * lets a finger scroll while a mark is selected (decided with the user,
+     * 2026-08-24). `touch-action` has no behaviour in jsdom; what is checked is
+     * the state the rule keys on.
+     */
+    it('says when a mark is selected', () => {
+      annotationState.current = { activeToolId: 'square', selectedUids: ['a'] }
+      const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(container.querySelector('[data-mark-selected]')).not.toBeNull()
+    })
+
+    it('says nothing when none is', () => {
+      // Absent rather than present-and-empty, which is what the selector tests
+      // — and which is what returns the paper to the tool.
+      const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(container.querySelector('[data-mark-selected]')).toBeNull()
     })
   })
 

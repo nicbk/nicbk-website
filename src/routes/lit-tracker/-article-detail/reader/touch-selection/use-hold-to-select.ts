@@ -173,7 +173,7 @@ export function useHoldToSelect({
           return
         }
         // A mouse resting on a word is a reader thinking. Only a finger asks.
-        if (pointerKind.current !== 'touch') {
+        if (pointerKind.current.kind !== 'touch') {
           return
         }
         // A live tool owns the drag: press-and-pull draws a mark, and a hold

@@ -95,6 +95,34 @@ rather than beside it.
   decision to raise and re-decide with the user (see "Discuss before
   executing"), not to route around silently.
 
+## Intercepting a dependency's input makes you its bookkeeper
+
+Whenever this project stops an event, a call, or a message from reaching a
+library it has handed control to, it takes on responsibility for whatever that
+input would have done to the library's own state — not just for the visible
+behavior it would have caused.
+
+- Before withholding anything, find out **what the dependency resets, and when**.
+  The parts of an interface that clean up are as much its contract as the parts
+  that act, and they are usually undocumented: they live in the handler you did
+  not read because it appeared to do nothing.
+- If the input cannot be withheld without stranding state, either **do not
+  withhold it** — withhold an earlier one, so nothing starts — or **send the
+  input the dependency uses to clean up** (a cancel, a reset, an equivalent).
+  Suppressing the visible half and leaving the invisible half is the failure
+  mode, and it does not look like a bug where the suppression was written.
+- Suspect this first when a defect appears *after* a fix that suppressed
+  something, especially one reported as "it works, but then something keeps
+  happening".
+
+Written after the same mistake three times in one feature: a swallowed
+pointer-up left a text selection anchored where the reader had let go, then left
+a drawing tool sizing a shape that followed the cursor, and a component rendered
+"first" was not first because the ordering belonged to React's effect phases
+rather than the tree. The general lesson is that **handing control to a library
+and then intercepting its inputs makes you a participant in its state machine**,
+whether or not you meant to be.
+
 ## Code readability and documentation
 
 All code must be highly readable to a human and well documented.

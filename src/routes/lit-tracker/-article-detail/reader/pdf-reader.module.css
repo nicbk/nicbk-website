@@ -152,6 +152,28 @@
   user-select: none;
 }
 
+/*
+ * While a mark is selected, a finger scrolls the paper — even with a tool live.
+ *
+ * **The one state the interaction manager does not model.** It writes
+ * `touch-action` inline on every page when a mode changes, and a tool's mode
+ * asks for `none` so that a drag can draw. That is right until something is
+ * selected: the press that puts a mark down is withheld from the tool
+ * (`click-away-guard.tsx`), so the gesture belongs to the browser, and the
+ * decided behaviour is that it scrolls with the mark left alone. Drawing
+ * resumes the moment nothing is selected.
+ *
+ * **`!important` on purpose, and it is the narrow use the keyword is for**:
+ * outranking an inline value written by code this project does not own, for a
+ * state that code has no way to know about. The alternative is writing to the
+ * same inline property from here and racing the library for it on every mode
+ * change.
+ */
+.reader[data-mark-selected] .pageLayers {
+  /* biome-ignore lint/complexity/noImportantStyles: outranking an inline value written by the library — see above. There is no other way to win against one. */
+  touch-action: pan-x pan-y !important;
+}
+
 .pageImage {
   display: block;
   width: 100%;

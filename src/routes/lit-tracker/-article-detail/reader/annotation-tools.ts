@@ -104,6 +104,30 @@ export const ANNOTATION_TOOLS: readonly AnnotationToolChoice[] =
   ANNOTATION_TOOL_GROUPS.flatMap((group) => group.tools)
 
 /**
+ * The tools that make their mark on the press itself rather than on its release.
+ *
+ * **A property of the engine's tools, not of this menu, and it decides where a
+ * press can be stopped.** Everything else here draws by dragging: it starts a
+ * preview on pointer-down and commits — or does not — on pointer-up, so a press
+ * meant for something else can be taken away at its end and nothing is made.
+ * The sticky note commits *at* pointer-down, so by the time an end could be
+ * judged the note already exists. `click-away.ts` is where that matters: the
+ * press that puts a mark down has to be withheld at its start for these, and
+ * only for these, or a reader who deselects with this tool live finds a note
+ * they did not ask for (which they did, from #9 until 2026-08-24).
+ *
+ * Read out of the plugin rather than guessed: its `textHandlerFactory` and
+ * `stampHandlerFactory` implement `onPointerDown` and no `onPointerUp` at all.
+ * Only the sticky note is listed because a stamp tool is not offered here.
+ */
+const TOOLS_THAT_CREATE_ON_PRESS: readonly string[] = ['textComment']
+
+/** Whether `toolId` makes its mark the moment the pointer goes down. */
+export function createsOnPress(toolId: string): boolean {
+  return TOOLS_THAT_CREATE_ON_PRESS.includes(toolId)
+}
+
+/**
  * The value the tool menu's radio group carries when no tool is active.
  *
  * A radio group needs *some* value for "none of these", and it has to be one no

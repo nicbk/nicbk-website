@@ -24,10 +24,12 @@ const ANCHORS: SelectionHandleAnchors = {
   end: { x: 260, top: 40, bottom: 52 },
 }
 
-/** A pointer event jsdom will accept — it implements no `PointerEvent`. */
-function pointerEvent(type: string, x = 0, y = 0): Event {
-  return Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
+/** A press on a handle, as the browser would raise it. */
+function pointerEvent(type: string, x = 0, y = 0): PointerEvent {
+  return new PointerEvent(type, {
     pointerId: 1,
+    bubbles: true,
+    cancelable: true,
     clientX: x,
     clientY: y,
   })

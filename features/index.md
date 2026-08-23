@@ -71,7 +71,7 @@ need them (see Phases 2–3).
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
 | 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **In progress** (7 tasks; 5 merged, #109 + #111 + #114 + #112 + #118) | #9 |
 | 13 | Tracker navigation latency (the auth guard stops blocking) | `tracker-navigation-latency` | Not yet spec'd | #6, #8 |
-| 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **In progress** (1 task, #121) | #9 |
+| 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
 
 ## How this roadmap is spec'd out
 
@@ -81,7 +81,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `projects-page` (complete), `authentication` (complete),
 `article-upload-and-extraction` (complete), `collection-view` (complete),
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (in
-progress) and `reader-zoom-performance` (in progress) have
+progress) and `reader-zoom-performance` (complete) have
 full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

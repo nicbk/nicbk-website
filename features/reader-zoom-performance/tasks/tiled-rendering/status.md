@@ -1,6 +1,7 @@
 # Status: Tiled Rendering
 
-**State:** **In progress** — implemented and browser-verified; PR next.
+**State:** **In review** — implemented, browser-verified, and
+[PR #123](https://github.com/nicbk/nicbk-website/pull/123) is open with CI green.
 
 Issue [**#121**](https://github.com/nicbk/nicbk-website/issues/121), sub-issue of
 [#120](https://github.com/nicbk/nicbk-website/issues/120). Branch
@@ -10,9 +11,9 @@ Issue [**#121**](https://github.com/nicbk/nicbk-website/issues/121), sub-issue o
 |---|---|
 | Implementation | Done |
 | Unit tests | Green (ratchet 92.93% vs 92.88% on `main`) |
-| CI | — |
+| CI | Green ([PR #123](https://github.com/nicbk/nicbk-website/pull/123)) |
 | Browser verification | Done — see below |
-| Human review | — |
+| Human review | Waiting |
 
 ## Baseline to beat
 

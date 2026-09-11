@@ -1,20 +1,21 @@
 # Status: Selection Across Pages
 
-**State:** **In review** — implemented, browser-verified, and
-[PR #126](https://github.com/nicbk/nicbk-website/pull/126) is open with CI
-green. Fifth of seven by filing order, and **last to merge** — tasks 6 and 7
-were filed after it and run before it, being repairs rather than additions.
+**State:** **Merged** — `a8dbd4e`
+([PR #126](https://github.com/nicbk/nicbk-website/pull/126)), 2026-08-23, behind
+green CI and human review. Fifth of seven by filing order, and **the last to
+merge** — tasks 6 and 7 were filed after it and ran before it, being repairs
+rather than additions. **It closed the feature**, and #108 with it.
 
 - Branch: `reader-touch-and-gestures/selection-across-pages`, from `main` at
   `315073b` — it was task 4 when this was filed, and tasks 6 and 7 were placed
-  ahead of it.
-- Sub-issue: [**#116**](https://github.com/nicbk/nicbk-website/issues/116).
+  ahead of it; merged and deleted.
+- Sub-issue: [**#116**](https://github.com/nicbk/nicbk-website/issues/116),
+  closed by the PR.
 - PR: [**#126**](https://github.com/nicbk/nicbk-website/pull/126), CI green.
-- **On merge, close this feature's parent issue #108 by hand** — GitHub does not
-  close a parent when its sub-issues close, and this is still the last task to
-  merge.
-  (This duty moved here from task 4 when this task was split out of it, having
-  moved to task 4 from task 3 for the same reason.)
+- ~~**On merge, close this feature's parent issue #108 by hand**~~ — **done**,
+  2026-08-23. GitHub does not close a parent when its sub-issues close, and this
+  was the last task to merge. (The duty moved here from task 4 when this task
+  was split out of it, having moved to task 4 from task 3 for the same reason.)
 
 ## Why this task exists
 
@@ -164,6 +165,8 @@ and making it true is annotation-path work rather than selection work.
 
 - 2026-08-23 — Filed mid-feature, when task 4's settled design made a single PR
   too large to review well.
+- 2026-08-23 — **Merged as `a8dbd4e`**, and the feature with it: #108 closed by
+  hand.
 - 2026-08-23 — Implemented and browser-verified. The design held; the numbers
   did not, until the browser showed the auto-scroll running at half the rate the
   curve asked for (above). The verification also found two older defects about

@@ -1,7 +1,9 @@
 # Status: Reader Touch and Gestures
 
-**Feature state:** **In progress** — tasks 1 to 4, 6 and 7 merged; **task 5 is
-all that remains**, and it closes the feature.
+**Feature state:** **Complete** (2026-08-23) — all seven tasks merged behind
+green CI and human review, the last as `a8dbd4e`
+([PR #126](https://github.com/nicbk/nicbk-website/pull/126)). Parent issue
+**#108 closed by hand**, as this file's own note below requires.
 **Seven** tasks: three spec'd up front, one added on 2026-08-22 when task 2's
 implementation proved part of the decided touch model unbuildable, one on
 2026-08-23 when task 4's settled design made a single PR too large, and two more
@@ -31,7 +33,7 @@ parent when its sub-issues close.
 | [`touch-selection`](./tasks/touch-selection/status.md) ([#112](https://github.com/nicbk/nicbk-website/issues/112)) | **Merged** | [#117](https://github.com/nicbk/nicbk-website/pull/117) | Green | Merged 2026-08-23 |
 | [`deselect-without-drawing`](./tasks/deselect-without-drawing/status.md) ([#118](https://github.com/nicbk/nicbk-website/issues/118)) | **Merged** | [#119](https://github.com/nicbk/nicbk-website/pull/119) | Green | Merged 2026-08-23 |
 | [`pinch-without-selecting`](./tasks/pinch-without-selecting/status.md) ([#122](https://github.com/nicbk/nicbk-website/issues/122)) | **Merged** | [#125](https://github.com/nicbk/nicbk-website/pull/125) | Green | Merged 2026-08-23 |
-| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | **In review**, and last to merge | [#126](https://github.com/nicbk/nicbk-website/pull/126) | Green | — |
+| [`selection-across-pages`](./tasks/selection-across-pages/status.md) ([#116](https://github.com/nicbk/nicbk-website/issues/116)) | **Merged**, last of the seven | [#126](https://github.com/nicbk/nicbk-website/pull/126) | Green | Merged 2026-08-23 |
 
 ## Definition of Done (feature)
 
@@ -42,6 +44,27 @@ scrolls the paper with a thumb, pinches to zoom a figure, and long-presses to
 select a passage worth copying; a reader on a laptop pinches the trackpad and
 the paper zooms rather than the page; and clicking away from a mark puts it down
 without drawing another.
+
+**Met, with two things stated plainly rather than implied.**
+
+- **No part of this feature has met a real thumb.** Every touch claim across
+  tasks 2, 4, 5, 6 and 7 rests on the mechanism in the library's source or on
+  synthetic pointer events, and each task's status says which. What a real
+  gesture on glass does — how the browser arbitrates it, how the hold thresholds
+  and the magnifier feel, whether an iPhone agrees — is the one question a
+  desktop cannot answer, and it is owed.
+- **One acceptance line could not be met, because it was never true.** Task 5's
+  constraints say a text-markup tool marks a whole multi-page selection, "already
+  true of a pointer drag". Measuring it showed it is not: a markup tool dragged
+  across a page break draws on both pages and commits nothing. The related and
+  larger defect is that **a passage selected by touch cannot be marked at all** —
+  the library's markup tools commit from the selection plugin's `onEndSelection`,
+  which its own pointer drag raises and a programmatic `setSelection` never does,
+  so the entire touch path ends at the copy control. Both are in the annotation
+  path rather than in selection, and both are older than the task that found
+  them. They are written up in
+  [task 5's status](./tasks/selection-across-pages/status.md) and are the obvious
+  candidate for the work that follows this feature.
 
 ## Notes carried into implementation
 
@@ -115,6 +138,15 @@ without drawing another.
 
 ## Log
 
+- 2026-08-23 — **Task 5 merged as `a8dbd4e` (PR #126) and the feature is
+  complete.** #108 closed by hand. Six days, seven tasks, and the count is the
+  story: three were spec'd up front and four were added while building — one
+  because the decided model turned out to be unbuildable, one because a settled
+  design made a PR too large, and two from the user reading papers with what had
+  already shipped. What this feature produced beyond its code is **two rules in
+  `AGENTS.md`** — intercepting a dependency's input makes you its bookkeeper,
+  and an order you did not choose is not an order you can rely on — each written
+  after the same mistake happened more than once here.
 - 2026-08-18 — **Feature spec'd**, the day #9 completed, from five ergonomic
   problems the user reported after using the finished reader. Research first,
   and it changed the shape of the work twice: three of the reported symptoms

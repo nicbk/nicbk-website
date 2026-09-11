@@ -100,6 +100,10 @@ const viewportCapability = vi.hoisted(() => ({
 const selectionDrag = vi.hoisted(() => ({
   current: null as Record<string, unknown> | null,
 }))
+/** What the selection finisher was mounted with. */
+const finishSelection = vi.hoisted(() => ({
+  current: null as Record<string, unknown> | null,
+}))
 
 vi.mock('@embedpdf/engines/react', () => ({
   usePdfiumEngine: () => engine.current,
@@ -188,6 +192,17 @@ vi.mock('@embedpdf/plugin-viewport/react', async () => {
 vi.mock('./touch-selection/drag/use-selection-drag', () => ({
   useSelectionDrag: (given: Record<string, unknown>) => {
     selectionDrag.current = given
+  },
+}))
+/*
+ * Finishing a selection the library left open, recorded rather than driven: it
+ * listens at the window and reads the plugin's own state, both of which are its
+ * own test's business (`selection-finish/use-finish-selection.test.tsx`). What
+ * is asserted here is that the reader mounts it once, for this document.
+ */
+vi.mock('./selection-finish/use-finish-selection', () => ({
+  useFinishSelection: (given: Record<string, unknown>) => {
+    finishSelection.current = given
   },
 }))
 /*
@@ -657,6 +672,22 @@ describe('PdfReader', () => {
         viewport: viewportScope,
       })
       expect(viewportCapability.forDocument).toHaveBeenCalledWith(ARTICLE_ID)
+    })
+
+    it('mounts the finisher for the document, with what it acts through', () => {
+      /*
+       * Once, here, because a selection the library left open belongs to the
+       * document rather than to either of the pages that half-own the gesture.
+       * It needs the selection scope to ask and to finish, and the annotation
+       * scope to mark with whatever tool is live.
+       */
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(finishSelection.current).toEqual({
+        documentId: ARTICLE_ID,
+        selection: selectionScope,
+        annotations: annotationScope,
+      })
     })
   })
 

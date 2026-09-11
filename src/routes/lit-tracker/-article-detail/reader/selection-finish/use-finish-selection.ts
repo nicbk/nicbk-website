@@ -1,8 +1,8 @@
-import { uuidV4 } from '@embedpdf/models'
 import type { AnnotationTool } from '@embedpdf/plugin-annotation'
 import type { SelectionCapability } from '@embedpdf/plugin-selection'
 import { useEffect, useRef } from 'react'
-import { marksFor } from './markup-marks'
+import type { MarkingTools } from './mark-selection'
+import { markSelection } from './mark-selection'
 import type { SelectionSnapshot } from './unfinished-selection'
 import { isUnfinished } from './unfinished-selection'
 
@@ -40,18 +40,16 @@ interface FinishSelection {
   documentId: string
   selection: SelectionCapability | null
   /** What marks the passage, when a text tool is live. */
-  annotations: MarkingTools | null
+  annotations: LiveMarkingTools | null
 }
 
 /**
- * The part of the annotation scope this needs.
- *
- * Named structurally rather than taken as the whole capability so the unit tier
- * can hand it two functions instead of standing up a plugin registry.
+ * The part of the annotation scope this needs: `mark-selection.ts`'s, plus the
+ * live tool — which only this caller asks about, because the menu's actions name
+ * the tool they mean.
  */
-export interface MarkingTools {
+export interface LiveMarkingTools extends MarkingTools {
   getActiveTool: () => AnnotationTool | null
-  createAnnotation: (pageIndex: number, annotation: never) => void
 }
 
 export function useFinishSelection({
@@ -86,7 +84,9 @@ export function useFinishSelection({
 
       const tool = tools?.getActiveTool() ?? null
       if (tool?.interaction.textSelection) {
-        markThePassage(plugin, tools, tool, id)
+        // Marking clears the selection, and clearing resets the flag — so this
+        // branch needs no re-apply of its own.
+        markSelection({ selection: plugin, tools, tool, documentId: id })
         return
       }
 
@@ -128,53 +128,4 @@ function snapshotOf(
   } catch {
     return null
   }
-}
-
-/**
- * Marks what is selected, then clears the selection.
- *
- * **The clear is the library's own ending, not an extra.** Its markup handler
- * finishes with `selection.clear()` (`plugin-annotation/dist/index.js:4809`),
- * which is why marking with a tool on one page leaves nothing selected today.
- * Doing the same here keeps the two paths indistinguishable to the reader — and
- * clearing also resets the stuck flag, so the re-apply above is not needed on
- * this branch.
- *
- * The text is fetched first because the mark quotes it. A document that
- * withholds permission to extract text simply marks without a quote, rather
- * than not marking at all: the passage is still worth highlighting.
- */
-function markThePassage(
-  plugin: SelectionCapability,
-  tools: MarkingTools | null,
-  tool: AnnotationTool,
-  documentId: string,
-): void {
-  const formatted = plugin.getFormattedSelection(documentId)
-  if (!tools || formatted.length === 0) {
-    return
-  }
-
-  const ids = formatted.map(() => uuidV4())
-  const created = new Date()
-
-  function create(text: string | undefined): void {
-    for (const mark of marksFor({
-      tool,
-      selection: formatted,
-      text,
-      ids,
-      created,
-    })) {
-      tools?.createAnnotation(mark.pageIndex, mark.annotation as never)
-    }
-    plugin.clear(documentId)
-  }
-
-  plugin.getSelectedText(documentId).wait(
-    // Joined as the library joins it, so a mark made here quotes a passage the
-    // same way a mark made by dragging the tool does.
-    (lines) => create(lines.join('\n')),
-    () => create(undefined),
-  )
 }

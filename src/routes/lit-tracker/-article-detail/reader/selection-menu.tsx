@@ -1,10 +1,11 @@
 import type { SelectionSelectionMenuProps } from '@embedpdf/plugin-selection/react'
 import { Check, Copy, X } from 'lucide-react'
+import { TEXT_MARKUP_TOOLS } from './annotation-tools'
 import type { CopyState } from './use-selection-copy'
-import styles from './selection-copy-menu.module.css'
+import styles from './selection-menu.module.css'
 
 /**
- * What a reader can do with a passage they have selected. Today: copy it.
+ * What a reader can do with a passage they have selected: copy it, or mark it.
  *
  * **Anchored to the selection, for the reason its sibling is anchored to a
  * mark.** `annotation-selection-menu.tsx` makes the argument in full — a control
@@ -13,18 +14,43 @@ import styles from './selection-copy-menu.module.css'
  * EmbedPDF mechanism, so a reader meets one affordance in two places rather than
  * two affordances.
  *
- * **The button is not the only way in.** ⌘C does the same thing (see
- * `use-reader-copy-shortcut.ts`), because it is what a reader tries first. This
- * exists because nothing otherwise says copying is possible: the selection is
- * drawn as overlay rectangles over a canvas, and it looks like a browser text
- * selection while behaving like nothing at all.
+ * **The marking actions are here because a toolbar cannot carry them for
+ * touch.** Picking a tool from the toolbar clears the selection — leaving a mode
+ * whose configuration enables selection clears it
+ * (`plugin-selection/dist/index.js:597-601`) — and a live tool takes the long
+ * press before it can select anything. Both guards are correct and neither is
+ * being reversed, so the way through is to mark from the selection itself. This
+ * is the same reasoning that put delete beside a mark, applied once more.
+ *
+ * **Copy keeps its word; the tools carry only their glyph.** Copy reports an
+ * outcome — "copied", "could not copy" — and a control whose whole purpose is to
+ * say what happened has to say it. The tools report nothing: they act, the mark
+ * appears, and the passage stops being selected. Four more words would put this
+ * bar wider than the paper it floats over on a phone, and the toolbar already
+ * teaches the vocabulary these glyphs belong to — the same glyphs, from the same
+ * list (`annotation-tools.ts`), so a reader meets one word for one thing.
+ *
+ * **The button is not the only way in.** ⌘C does the same thing as copy (see
+ * `use-reader-copy-shortcut.ts`), because it is what a reader tries first. Copy
+ * exists as a control because nothing otherwise says copying is possible: the
+ * selection is drawn as overlay rectangles over a canvas, and it looks like a
+ * browser text selection while behaving like nothing at all.
  */
 
-interface SelectionCopyMenuProps extends SelectionSelectionMenuProps {
+interface SelectionMenuProps extends SelectionSelectionMenuProps {
   /** Whether this PDF permits its text to be extracted. See `copy-permission.ts`. */
   canCopy: boolean
+  /**
+   * Whether this PDF permits marks to be added to it.
+   *
+   * Independent of `canCopy` — a paper may allow one and refuse the other — and
+   * the two are asked separately for that reason.
+   */
+  canMark: boolean
   state: CopyState
   onCopy: () => void
+  /** Marks the selected passage with the tool of this id. */
+  onMark: (toolId: string) => void
 }
 
 const LABELS: Record<CopyState, string> = {
@@ -39,13 +65,15 @@ const ICONS: Record<CopyState, typeof Copy> = {
   failed: X,
 }
 
-export function SelectionCopyMenu({
+export function SelectionMenu({
   selected,
   menuWrapperProps,
   canCopy,
+  canMark,
   state,
   onCopy,
-}: SelectionCopyMenuProps) {
+  onMark,
+}: SelectionMenuProps) {
   // EmbedPDF renders this for the selection layer whether or not there is one.
   if (!selected) {
     return null
@@ -93,6 +121,30 @@ export function SelectionCopyMenu({
           */}
           <span className={styles.label}>{label}</span>
         </button>
+
+        {/*
+          Marking is a different kind of act from copying — one changes the
+          paper, the other takes something off it — and the rule keeps a reader
+          from pressing "highlight" while reaching for "copy".
+        */}
+        {canMark && <span className={styles.divider} aria-hidden="true" />}
+
+        {canMark &&
+          TEXT_MARKUP_TOOLS.map(({ id, label: name, icon: ToolIcon }) => (
+            <button
+              key={id}
+              type="button"
+              className={`${styles.button} ${styles.tool}`}
+              // The word, for everyone who cannot see the glyph and everyone
+              // who can but has not met it — the toolbar's own word for the
+              // same tool, so there is one vocabulary rather than two.
+              title={name}
+              aria-label={name}
+              onClick={() => onMark(id)}
+            >
+              <ToolIcon className={styles.icon} aria-hidden="true" />
+            </button>
+          ))}
       </div>
     </div>
   )

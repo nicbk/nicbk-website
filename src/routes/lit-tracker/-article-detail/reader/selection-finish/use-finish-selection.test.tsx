@@ -3,7 +3,7 @@ import type { SelectionRangeX } from '@embedpdf/plugin-selection'
 import { render } from '@testing-library/react'
 import { act } from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { MarkingTools } from './use-finish-selection'
+import type { LiveMarkingTools } from './use-finish-selection'
 import { useFinishSelection } from './use-finish-selection'
 
 /**
@@ -101,7 +101,7 @@ const selection = {
   },
 } as never
 
-const annotations: MarkingTools = {
+const annotations: LiveMarkingTools = {
   getActiveTool: () => library.activeTool,
   createAnnotation: (pageIndex, annotation) => {
     library.created.push({

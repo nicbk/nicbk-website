@@ -44,6 +44,7 @@ import { BASE_PAGE_SCALE, createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
 import { SelectionCopyMenu } from './selection-copy-menu'
+import { useFinishSelection } from './selection-finish/use-finish-selection'
 import { useSelectionDrag } from './touch-selection/drag/use-selection-drag'
 import { usePointerKind } from './touch-selection/pointer-kind'
 import { READER_PANEL_ATTRIBUTE } from './touch-selection/reader-panel'
@@ -182,6 +183,19 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
     selection: selectionScope ?? null,
     scroll: scrollScope,
     viewport: viewport?.forDocument(articleId) ?? null,
+  })
+
+  /*
+   * Finishes a selection the library left open — a drag released over a page
+   * other than the one it began on, which EmbedPDF's per-page handler never
+   * ends. Without this the reader is left with a selection that cannot be
+   * marked and has no copy control, while ⌘C goes on working, which is why it
+   * went unreported for so long. See `selection-finish/`.
+   */
+  useFinishSelection({
+    documentId: articleId,
+    selection: selectionScope ?? null,
+    annotations: annotationScope ?? null,
   })
 
   /**

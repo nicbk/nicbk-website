@@ -104,6 +104,8 @@ const selectionDrag = vi.hoisted(() => ({
 const finishSelection = vi.hoisted(() => ({
   current: null as Record<string, unknown> | null,
 }))
+/** Every marking this reader asked for, in order. */
+const marked = vi.hoisted(() => [] as Record<string, unknown>[])
 
 vi.mock('@embedpdf/engines/react', () => ({
   usePdfiumEngine: () => engine.current,
@@ -206,6 +208,17 @@ vi.mock('./selection-finish/use-finish-selection', () => ({
   },
 }))
 /*
+ * Marking, recorded rather than performed: what it builds is its own module's
+ * business (`selection-finish/markup-marks.test.ts`). What is asserted here is
+ * that choosing an action on the selection's menu reaches it with the tool the
+ * reader meant, through the scopes this reader holds.
+ */
+vi.mock('./selection-finish/mark-selection', () => ({
+  markSelection: (given: Record<string, unknown>) => {
+    marked.push(given)
+  },
+}))
+/*
  * The four layers a page is made of, each rendering a marker element carrying
  * the props worth asserting. They are stood in for rather than exercised — one
  * draws a WebAssembly-rendered bitmap and another a grid of them — but *which*
@@ -253,7 +266,26 @@ vi.mock('@embedpdf/plugin-annotation/react', async () => {
 vi.mock('@embedpdf/plugin-selection/react', async () => {
   const { createElement } = await import('react')
   return {
-    SelectionLayer: () => createElement('div', { 'data-text-layer': '' }),
+    /*
+     * Renders the menu the real layer renders for a selection, so what this
+     * reader hands that control — and what it does when one of its actions is
+     * chosen — can be asserted. The marker stays because the layer-order tests
+     * key on it.
+     */
+    SelectionLayer: ({
+      selectionMenu,
+    }: {
+      selectionMenu?: (menu: Record<string, unknown>) => React.ReactNode
+    }) =>
+      createElement(
+        'div',
+        { 'data-text-layer': '' },
+        selectionMenu?.({
+          selected: true,
+          menuWrapperProps: {},
+          rect: { origin: { x: 0, y: 0 }, size: { width: 10, height: 10 } },
+        }),
+      ),
     useSelectionCapability: () => ({ provides: selectionScope }),
   }
 })
@@ -301,6 +333,7 @@ beforeEach(() => {
   scrollState.current = { currentPage: 1, totalPages: 0 }
   annotationState.current = { activeToolId: null, selectedUids: [] }
   zoomGestureProps.current = null
+  marked.length = 0
   vi.clearAllMocks()
 })
 
@@ -688,6 +721,46 @@ describe('PdfReader', () => {
         selection: selectionScope,
         annotations: annotationScope,
       })
+    })
+  })
+
+  describe('marking from the selection', () => {
+    it('marks with the tool the reader chose', async () => {
+      /*
+       * The whole point of the second route: no tool is activated, because
+       * activating one would clear the selection being acted on. The tool is
+       * looked up for its defaults and its marks are made directly.
+       */
+      const highlight = {
+        id: 'highlight',
+        interaction: { textSelection: true },
+      }
+      annotationCapability.getTool.mockReturnValue(highlight)
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      await userEvent.click(screen.getByRole('button', { name: 'highlight' }))
+
+      expect(annotationCapability.getTool).toHaveBeenCalledWith('highlight')
+      expect(marked).toEqual([
+        {
+          selection: selectionScope,
+          tools: annotationScope,
+          tool: highlight,
+          documentId: ARTICLE_ID,
+        },
+      ])
+      expect(annotationScope.setActiveTool).not.toHaveBeenCalled()
+    })
+
+    it('marks nothing when the engine does not know the tool', () => {
+      // Unreachable with the stock plugin, and silence is right if it happens:
+      // the same judgement `use-highlight-box-tool.ts` makes.
+      annotationCapability.getTool.mockReturnValue(undefined)
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      screen.getByRole('button', { name: 'underline' }).click()
+
+      expect(marked).toHaveLength(0)
     })
   })
 

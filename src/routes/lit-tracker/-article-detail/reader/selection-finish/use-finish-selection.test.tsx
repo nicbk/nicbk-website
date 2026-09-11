@@ -286,6 +286,24 @@ describe('when the paper is closing', () => {
     expect(library.applied).toHaveLength(0)
   })
 
+  it('says nothing before the selection plugin has registered', () => {
+    // The capability arrives after the plugins register, and the reader renders
+    // before that — a pointer can be lifted in between.
+    function EarlyReader() {
+      useFinishSelection({
+        documentId: DOCUMENT_ID,
+        selection: null,
+        annotations,
+      })
+      return null
+    }
+    render(<EarlyReader />)
+    leftUnfinished()
+
+    expect(() => liftThePointer()).not.toThrow()
+    expect(library.applied).toHaveLength(0)
+  })
+
   it('stops listening when the reader unmounts', () => {
     const { unmount } = render(<Reader />)
     unmount()

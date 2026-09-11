@@ -72,6 +72,7 @@ need them (see Phases 2–3).
 | 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **Complete** (2026-08-23; all 7 tasks merged, #109 + #111 + #114 + #112 + #118 + #122 + #116) | #9 |
 | 13 | Tracker navigation latency (the auth guard stops blocking) | `tracker-navigation-latency` | Not yet spec'd | #6, #8 |
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
+| 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Spec'd** (2026-09-11; 2 tasks, not started) | #9, #12 |
 
 ## How this roadmap is spec'd out
 
@@ -80,9 +81,9 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `about-page` (complete), `error-and-not-found` (complete), `blog` (complete),
 `projects-page` (complete), `authentication` (complete),
 `article-upload-and-extraction` (complete), `collection-view` (complete),
-`article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete)
-and `reader-zoom-performance` (complete) have
-full folders today. The rest carry a one-line
+`article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
+`reader-zoom-performance` (complete) and `reader-marking-a-passage` (spec'd)
+have full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
@@ -104,13 +105,20 @@ technology was chosen, including a `committed` flag on its change events that
 the persistence design has to gate on — a detail an up-front draft written in
 July would have got wrong.
 
-**#12, #13 and #14 came from using the finished tracker, not from the roadmap** —
-the first two reported by the user on 2026-08-17, the day #9 completed, and #14
-on 2026-08-23, each spec'd against what the reader actually shipped. They are the
-entries here that exist to fix built behaviour rather than to add some, which is
-why they are features rather than a "bugs" list: each is a vertical slice of
-user-visible behaviour with its own acceptance criteria, and the project has no
-separate defect track.
+**#12, #13, #14 and #15 came from using the finished tracker, not from the
+roadmap** — the first two reported by the user on 2026-08-17, the day #9
+completed, #14 on 2026-08-23, and #15 from measurements taken while finishing
+#12. They are the entries here that exist to fix built behaviour rather than to
+add some, which is why they are features rather than a "bugs" list: each is a
+vertical slice of user-visible behaviour with its own acceptance criteria, and
+the project has no separate defect track.
+
+**#15 has a different provenance from the other three, and it is worth naming.**
+It came from a task measuring its own premise: #12's last task asserted that a
+markup tool already marks a whole multi-page selection, "already true of a
+pointer drag". It is not true, and checking turned up a second defect nobody had
+reported — a selection spanning two pages shows no copy control. **An acceptance
+criterion that describes existing behaviour is a measurement, not a given.**
 
 **Their causes were measured before any of them was spec'd** — see each one's
 `research.md` — which is what split five reported symptoms into two features

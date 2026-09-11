@@ -104,6 +104,17 @@ export const ANNOTATION_TOOLS: readonly AnnotationToolChoice[] =
   ANNOTATION_TOOL_GROUPS.flatMap((group) => group.tools)
 
 /**
+ * The four that attach to selected text, offered a second time on the
+ * selection's own floating control (`selection-menu.tsx`).
+ *
+ * **Derived from the group rather than listed again**, so the two surfaces
+ * cannot disagree about which tools mark text, what they are called, or what
+ * they look like. The group is the definition; this is a view of it.
+ */
+export const TEXT_MARKUP_TOOLS: readonly AnnotationToolChoice[] =
+  ANNOTATION_TOOL_GROUPS.find((group) => group.name === 'text')?.tools ?? []
+
+/**
  * The tools that make their mark on the press itself rather than on its release.
  *
  * **A property of the engine's tools, not of this menu, and it decides where a

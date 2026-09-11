@@ -15,9 +15,17 @@
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
-  /* Capped so the permission message cannot stretch the bar off the page over a
-     one-word selection. It is the label that gives way, not the layout. */
-  max-width: 14rem;
+  /*
+   * Capped so the permission message cannot stretch the bar off the page over a
+   * one-word selection. It is the label that gives way, not the layout.
+   *
+   * Raised from 14rem when the marking actions arrived: four glyph-only buttons
+   * and a divider need room beside the copy label, and the cap has to be the
+   * thing that lets a long *message* truncate rather than the thing that
+   * squeezes the controls. Still narrower than a 500px panel, which is the width
+   * this bar is judged at.
+   */
+  max-width: 21rem;
   padding: var(--space-2xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -78,6 +86,43 @@
   flex-shrink: 0;
   width: 1.15em;
   height: 1.15em;
+}
+
+/*
+ * Between copying and marking: one takes the passage away with you, the other
+ * changes the paper. A hairline is the quietest thing that stops a reader
+ * pressing "highlight" on the way to "copy" — the same separation the toolbar
+ * makes between its three groups, at the scale this bar can afford.
+ */
+.divider {
+  flex-shrink: 0;
+  align-self: stretch;
+  width: 1px;
+  margin: 0 var(--space-2xs);
+  background-color: var(--color-border);
+}
+
+/*
+ * What a thumb has to hit, for the glyph-only buttons.
+ *
+ * The graphic stays small because this bar floats over the reader's paper; the
+ * target is grown past it invisibly, as the selection handles' dot is
+ * (`touch-selection/selection-handles.module.css`). 2.75rem is 44px, the
+ * platform norm and comfortably past the 24px floor WCAG 2.2 AA sets for
+ * SC 2.5.8.
+ */
+.tool {
+  position: relative;
+}
+
+.tool::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.75rem;
+  height: 2.75rem;
+  transform: translate(-50%, -50%);
 }
 
 /*

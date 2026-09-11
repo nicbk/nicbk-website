@@ -1,9 +1,10 @@
 # Status: Marking From the Selection
 
-**State:** Not started. Second of two, and **last to merge**.
+**State:** **In progress** — implemented and browser-verified; PR next. Second
+of two, and **last to merge**.
 
-- Branch: `reader-marking-a-passage/marking-from-the-selection`, from `main`
-  after task 1 merges.
+- Branch: `reader-marking-a-passage/marking-from-the-selection`, from `main` at
+  `eacdc1a`, which is task 1 merged.
 - Sub-issue: [**#130**](https://github.com/nicbk/nicbk-website/issues/130).
 - PR: opened once the unit tier and the browser pass are both clean.
 - **On merge, close parent issue
@@ -19,20 +20,81 @@ the selection itself — decided with the user on 2026-09-11, and consistent wit
 `reader-annotation.md`'s existing reason for putting delete beside the mark and
 copy beside the selection.
 
-## Open items to settle before writing
+## Open items, as settled
 
-- **Whether `squiggly` earns its place.** Five actions is a wide control on a
-  500px panel. If it does not fit, which tools belong there is a decision to
-  take with the user rather than a case for letting the control overflow.
-- **Icons, words, or both.** The toolbar names these tools in words; the mark's
-  menu uses icons. Which vocabulary this control speaks is a design decision to
-  settle against `design-system.md` and the two existing menus, at realistic
-  width.
-- **What "spent" looks like.** The selection is cleared once marked; whether the
-  new mark is then selected — so its menu is immediately available for a comment
-  — follows what the toolbar flow does, and is worth checking rather than
-  assuming.
+All three were settled by what the project had already decided, rather than
+needing a fresh choice — which is what the reading was for.
+
+- **`squiggly` earns its place, because the glyphs are small enough.** The
+  control measures **217px** at 500px wide, inside a 475px panel: copy with its
+  word, a divider, four glyphs. Nothing had to be dropped, so the "which tools
+  belong here" conversation never had to happen.
+- **Glyphs for the tools, the word for copy.** Copy reports an outcome —
+  "copied", "could not copy" — and a control whose purpose is to say what
+  happened has to say it; the tools report nothing, because the mark appearing
+  *is* the report. Four more words would have made the bar wider than the paper
+  on a phone. The glyphs are the toolbar's own, from
+  `ANNOTATION_TOOL_GROUPS`'s `text` group, so there is one vocabulary rather
+  than two — and each carries the toolbar's word as its accessible name, which
+  is the same trade the mark's menu already makes.
+- **Nothing is selected after marking.** EmbedPDF's text tools carry no
+  `selectAfterCreate`, so the toolbar flow leaves nothing selected; matching it
+  keeps the two paths indistinguishable, which is this task's own acceptance
+  criterion. The selection is spent and the menu goes with it.
+
+## What the implementation added beyond the plan
+
+- **The commit path was extracted, not copied.** Task 1 had the marking inside
+  its pointer handler; it now lives in `selection-finish/mark-selection.ts` and
+  both callers use it. The plan required this ("the commit path is task 1's, not
+  a second one written here") and it is the reason this task adds no marking
+  logic at all.
+- **A second permission question.** `canAddAnnotations` sits beside
+  `canCopyText`: a PDF can permit copying and forbid marking, the annotation
+  plugin refuses such a create as silently as the selection plugin refuses a
+  copy, and four controls that do nothing would be four lies. Unlike copy —
+  which stays visible and explains itself — these are simply absent, because the
+  explanation would not fit beside a selection and there are four of them.
+- **The component was renamed.** `selection-copy-menu.tsx` →
+  `selection-menu.tsx`: it is no longer a copy control, and a name that says it
+  is would be the kind of drift that makes code lie.
+
+## Browser verification
+
+Against the Compose app, *Attention Is All You Need*, at 1400px in dark and
+500px in light, with a page break on screen.
+
+**Confirmed** — every line of [testing.md](./testing.md):
+
+- **A passage selected by touch is marked by tapping the action** — the reported
+  defect, and the thing that was impossible before. A hold, then *highlight*:
+  one row, quoting the 12 characters selected.
+- **Across a page break too**: a hold, the end handle dragged onto the next
+  page, then *underline* — **two rows**, page 0 and page 1, each quoting the
+  passage's 502 characters. Drawn on both pages.
+- **The mark matches a toolbar-made one**: all of them appear in the sidebar
+  quoting their passage, with `p. 1` / `p. 2`, and **survive a reload**.
+- **The selection is spent**: no handles, no menu, and — the point of this
+  design — **no tool was activated**, so nothing was cleared by a mode change.
+- **Keyboard**: each action is in the tab order, takes focus, and activating
+  *strikeout* from the keyboard made its mark.
+- **The toolbar's own flow is untouched**: highlight picked from the toolbar,
+  dragged over a line, one row — and the tool **stays live** afterwards, as #9
+  decided.
+- **It fits where it has least room**: 217px wide inside a 475px panel at 500px,
+  legible in light and dark.
+- Console clean apart from the theme hydration warning that predates this work.
+- The five marks made while verifying were **deleted by the ids recorded when
+  they were made**; the user's own four articles still hold 7, 3, 2 and 5.
+
+**Touch is synthetic**, as everywhere in #12 and this feature: dispatched
+pointer events with the capture calls stubbed. A real thumb is still owed. The
+*mouse* paths here were driven with the browser's own input, for the reason
+task 1's status records.
 
 ## Log
 
+- 2026-09-11 — Implemented and browser-verified. All three open items settled by
+  existing decisions; the only genuine addition beyond the plan was the second
+  permission question.
 - 2026-09-11 — Filed with the feature.

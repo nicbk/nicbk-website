@@ -36,15 +36,16 @@ import { useAnnotationSync } from './annotation-sync/use-annotation-sync'
 import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
 import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
-import { canCopyText } from './copy-permission'
+import { canAddAnnotations, canCopyText } from './copy-permission'
 import { PinchGuard } from './pinch/pinch-guard'
 import { usePinchRecovery } from './pinch/use-pinch-recovery'
 import { ReaderNotice } from './reader-notice'
 import { BASE_PAGE_SCALE, createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
-import { SelectionCopyMenu } from './selection-copy-menu'
+import { markSelection } from './selection-finish/mark-selection'
 import { useFinishSelection } from './selection-finish/use-finish-selection'
+import { SelectionMenu } from './selection-menu'
 import { useSelectionDrag } from './touch-selection/drag/use-selection-drag'
 import { usePointerKind } from './touch-selection/pointer-kind'
 import { READER_PANEL_ATTRIBUTE } from './touch-selection/reader-panel'
@@ -265,6 +266,37 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
    * the question is asked at all rather than left to fail silently.
    */
   const canCopy = canCopyText(documentState?.document?.permissions)
+
+  /**
+   * Whether this paper allows marks to be added to it — asked separately from
+   * copying, because a PDF can permit one and refuse the other.
+   */
+  const canMark = canAddAnnotations(documentState?.document?.permissions)
+
+  /**
+   * Marks the selected passage with one of the text tools, from the selection's
+   * own menu.
+   *
+   * **No tool is activated**, which is the point: activating one would clear the
+   * selection this acts on. The tool is read for its defaults and its marks are
+   * made directly, through the same path a live tool's marks take when the
+   * library leaves a selection unfinished — see `selection-finish/`.
+   */
+  const mark = useCallback(
+    (toolId: string) => {
+      const tool = annotations?.getTool(toolId)
+      if (!selectionScope || !tool || !annotationScope) {
+        return
+      }
+      markSelection({
+        selection: selectionScope,
+        tools: annotationScope,
+        tool,
+        documentId: articleId,
+      })
+    },
+    [annotations, annotationScope, selectionScope, articleId],
+  )
 
   /**
    * The way in from the sidebar's annotations list (`reader-jump.tsx`): a row
@@ -525,15 +557,17 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                     <SelectionLayer
                       documentId={articleId}
                       pageIndex={pageIndex}
-                      // What a reader can do with a passage they have selected.
-                      // The same mechanism as the mark's menu below, deliberately
-                      // — see `selection-copy-menu.tsx`.
+                      // What a reader can do with a passage they have selected:
+                      // copy it, or mark it. The same mechanism as the mark's
+                      // menu below, deliberately — see `selection-menu.tsx`.
                       selectionMenu={(menu) => (
-                        <SelectionCopyMenu
+                        <SelectionMenu
                           {...menu}
                           canCopy={canCopy}
+                          canMark={canMark}
                           state={copyState}
                           onCopy={copy}
+                          onMark={mark}
                         />
                       )}
                     />

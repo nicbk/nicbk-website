@@ -22,3 +22,22 @@ export function canCopyText(permissions: number | undefined): boolean {
   const effective = permissions ?? PdfPermissionFlag.AllowAll
   return (effective & PdfPermissionFlag.CopyContents) !== 0
 }
+
+/**
+ * Whether this PDF permits marks to be added to it.
+ *
+ * **A separate question from copying, and a separate flag.** A paper may permit
+ * one and refuse the other, and the annotation plugin checks this one the same
+ * silent way before creating anything
+ * (`plugin-annotation/dist/index.js:5272`) — so offering the marking actions on
+ * a paper that forbids them would be four controls that do nothing.
+ *
+ * Unlike the copy control, which stays visible and explains itself, these are
+ * simply absent: there are four of them, the explanation would not fit beside a
+ * selection, and a reader who never sees a control does not wonder why pressing
+ * it did nothing.
+ */
+export function canAddAnnotations(permissions: number | undefined): boolean {
+  const effective = permissions ?? PdfPermissionFlag.AllowAll
+  return (effective & PdfPermissionFlag.ModifyAnnotations) !== 0
+}

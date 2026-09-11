@@ -1,12 +1,14 @@
 # Status: Ending a Selection
 
-**State:** **In progress** — implemented and browser-verified; PR next.
-First of two.
+**State:** **Merged** — `eacdc1a`
+([PR #132](https://github.com/nicbk/nicbk-website/pull/132)), 2026-09-11, behind
+green CI and human review. First of two.
 
 - Branch: `reader-marking-a-passage/ending-a-selection`, from `main` at
   `dd34474`.
-- Sub-issue: [**#129**](https://github.com/nicbk/nicbk-website/issues/129).
-- PR: opened once the unit tier and the browser pass are both clean.
+- Sub-issue: [**#129**](https://github.com/nicbk/nicbk-website/issues/129),
+  closed by the PR.
+- PR: [**#132**](https://github.com/nicbk/nicbk-website/pull/132), CI green.
 - The close-#15-by-hand duty belongs to
   [`marking-from-the-selection`](../marking-from-the-selection/status.md), the
   last task to merge.

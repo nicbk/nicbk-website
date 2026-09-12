@@ -90,6 +90,39 @@ eventually drifts" — and then assumed a second, unverified automation on top o
 the one that was checked. The verified part worked; the assumed part drifted
 exactly as predicted.
 
+## Revision (2026-09-11): it closes itself now — check before closing by hand
+
+The behavior above changed. **A parent issue now closes when its last sub-issue
+closes**, which is what the original 2026-07-04 decision assumed and the
+2026-08-01 revision correctly found to be false at the time.
+
+Measured against this repository's own record rather than announced:
+
+| Feature | Last sub-issue closed | Parent closed | Gap |
+|---|---|---|---|
+| #14 `reader-zoom-performance` (#120) | 2026-08-23 20:16:51 | 2026-08-23 22:12:18 | ~2 hours, by hand |
+| #12 `reader-touch-and-gestures` (#108) | 2026-08-23 23:39:04 | 2026-09-11 18:29:56 | **19 days**, by hand |
+| #15 `reader-marking-a-passage` (#128) | 2026-09-11 23:36:53 | 2026-09-11 23:36:53 | **same second**, unattended |
+
+So the change landed somewhere between 2026-08-23 and 2026-09-11. #108 is the
+sharpest evidence: it sat open for nineteen days with every sub-issue closed,
+and closing it was a deliberate command.
+
+**The corrected rule, again:** finishing a feature still includes *checking* its
+parent issue, at the same moment its `status.md` is marked Complete — but the
+check will usually find it already closed, and `gh issue close` on a closed
+issue reports "already closed" rather than failing. Closing by hand remains the
+fallback, not the expectation.
+
+**Why this is a revision and not an edit.** The 2026-08-01 correction was right
+when it was written, and rewriting it to match today would erase the evidence
+that the behavior moved. What both revisions share is the method: neither was
+caught by reading documentation — GitHub's own docs were as silent this time as
+last — and both were caught by comparing timestamps in this repository. **A
+convention built on someone else's automation has to be re-checked against the
+automation, not just written down once**, because it can change in either
+direction without telling you.
+
 ## Reasoning
 
 - GitHub Issues over a separate tracker: adding a second tracker would be a

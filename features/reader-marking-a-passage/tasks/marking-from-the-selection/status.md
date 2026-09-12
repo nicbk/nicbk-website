@@ -1,15 +1,20 @@
 # Status: Marking From the Selection
 
-**State:** **In progress** — implemented and browser-verified; PR next. Second
-of two, and **last to merge**.
+**State:** **Merged** — `ef1ff81`
+([PR #133](https://github.com/nicbk/nicbk-website/pull/133)), 2026-09-11, behind
+green CI and human review. Second of two, and the last — **it closed the
+feature**.
 
 - Branch: `reader-marking-a-passage/marking-from-the-selection`, from `main` at
   `eacdc1a`, which is task 1 merged.
-- Sub-issue: [**#130**](https://github.com/nicbk/nicbk-website/issues/130).
-- PR: opened once the unit tier and the browser pass are both clean.
-- **On merge, close parent issue
-  [#128](https://github.com/nicbk/nicbk-website/issues/128) by hand** — GitHub
-  does not close a parent when its sub-issues close, and this is the last task.
+- Sub-issue: [**#130**](https://github.com/nicbk/nicbk-website/issues/130),
+  closed by the PR.
+- PR: [**#133**](https://github.com/nicbk/nicbk-website/pull/133), CI green.
+- ~~**On merge, close parent issue #128 by hand**~~ — **it closed itself**, in
+  the same second this task's sub-issue did. GitHub's behaviour changed between
+  2026-08-23 and 2026-09-11; the evidence and the corrected rule are in
+  [issue-and-pr-lifecycle.md](../../../../research/project-management-conventions/issue-and-pr-lifecycle.md)'s
+  2026-09-11 revision.
 
 ## Why this task exists
 

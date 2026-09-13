@@ -672,6 +672,114 @@ describe('annotations.delete', () => {
   })
 })
 
+describe('articles.updateDetails', () => {
+  /** A complete correction, against the fixture's own article. */
+  const CORRECTION = {
+    id: ARTICLE_A,
+    title: 'Attention Is All You Need',
+    authors: [{ name: 'Ashish Vaswani' }, { name: 'Noam Shazeer' }],
+    publicationYear: 2017,
+    venue: 'NeurIPS',
+    doi: '10.5555/3295222.3295349',
+  }
+
+  it('writes the correction to the caller’s own article', async () => {
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article).toMatchObject({
+      title: 'Attention Is All You Need',
+      authors: [{ name: 'Ashish Vaswani' }, { name: 'Noam Shazeer' }],
+      publicationYear: 2017,
+      venue: 'NeurIPS',
+      doi: '10.5555/3295222.3295349',
+    })
+  })
+
+  it('leaves every column it does not name exactly as it was', async () => {
+    // The guarantee the whole feature rests on. A correction is not a reason to
+    // disturb where the reader had got to, what they had written, what the
+    // extractor achieved, or where the PDF lives.
+    await runAs('articles.setStatus', CONTEXT_A, {
+      id: ARTICLE_A,
+      status: 'reading',
+    })
+    await runAs('articles.setNotes', CONTEXT_A, {
+      id: ARTICLE_A,
+      notes: 'read the appendix first',
+    })
+    const [before] = await articleById(ARTICLE_A)
+
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    const [after] = await articleById(ARTICLE_A)
+    expect(after?.status).toBe('reading')
+    expect(after?.notes).toBe('read the appendix first')
+    expect(after?.extractionStatus).toBe(before?.extractionStatus)
+    expect(after?.pdfObjectKey).toBe(before?.pdfObjectKey)
+    expect(after?.userId).toBe(before?.userId)
+  })
+
+  it('stores a blanked venue and DOI as null in the column itself', async () => {
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+    await runAs('articles.updateDetails', CONTEXT_A, {
+      ...CORRECTION,
+      venue: '',
+      doi: '  ',
+    })
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.venue).toBeNull()
+    expect(article?.doi).toBeNull()
+  })
+
+  it('accepts the same correction twice', async () => {
+    // Rebase safety: Zero re-runs a pending mutation against newly-arrived
+    // authoritative data, so writing the same values again must be a no-op
+    // rather than an error.
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.title).toBe('Attention Is All You Need')
+  })
+
+  it('touches no other article', async () => {
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    const [other] = await articleById(ARTICLE_B)
+    expect(other?.title).toBe(`Paper for ${USER_B}`)
+  })
+
+  it('refuses another user’s article and leaves it untouched', async () => {
+    const [before] = await articleById(ARTICLE_B)
+
+    await expect(
+      runAs('articles.updateDetails', CONTEXT_A, {
+        ...CORRECTION,
+        id: ARTICLE_B,
+      }),
+    ).rejects.toThrow()
+
+    const [victim] = await articleById(ARTICLE_B)
+    expect(victim).toEqual(before)
+  })
+
+  it('refuses an article with no authors, writing nothing', async () => {
+    const [before] = await articleById(ARTICLE_A)
+
+    await expect(
+      runAs('articles.updateDetails', CONTEXT_A, {
+        ...CORRECTION,
+        authors: [],
+      }),
+    ).rejects.toThrow()
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article).toEqual(before)
+  })
+})
+
 describe('the registry', () => {
   it('throws on a mutator name it does not hold', async () => {
     // What stops an invented name from being a silent no-op. `/mutate` relies

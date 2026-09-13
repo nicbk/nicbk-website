@@ -108,7 +108,10 @@ export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
             </NarrowScreenDrawer>
 
             <ArticleMenu
-              articleTitle={article.title}
+              article={article}
+              onSaveDetails={(details) =>
+                mutations.updateDetails(articleId, details)
+              }
               // The card's menu, unchanged in what it does — #11 adds "edit…"
               // and "delete…" to this one rather than building a second. What
               // this surface adds is the article's own details at the top, since

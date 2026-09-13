@@ -1,8 +1,10 @@
 import { useZero } from '@rocicorp/zero/react'
 import { useMemo } from 'react'
 import type { ArticleStatus } from '~/db/schema/lit-tracker'
+import type { ArticleDetails } from '~/routes/lit-tracker/-components/article-edit/article-draft'
 import { mutators } from '~/zero/mutators'
-import { useMutationRunner } from './use-mutation-runner'
+import type { MutationFailure } from './use-mutation-runner'
+import { useMutationReporter, useMutationRunner } from './use-mutation-runner'
 
 /**
  * Every write the tracker can make against an article, in the shape the UI
@@ -53,11 +55,26 @@ export interface ArticleMutations {
    * `use-synced-text.ts` for why that is the caller's job and not this one's.
    */
   setNotes: (articleId: string, notes: string) => Promise<void>
+  /**
+   * Corrects an article's bibliographic details — #11's edit form.
+   *
+   * **The one write here that answers back.** Every other returns `void` and
+   * lets a refusal become a toast, which is right for a control with no form
+   * behind it. This one has a form, and the decided rule puts an error inside
+   * the form that caused it (research/ui-ux/design-system.md) — so the failure
+   * is handed to the caller instead. It is also what tells the dialog to stay
+   * open rather than closing over a change that did not save.
+   */
+  updateDetails: (
+    articleId: string,
+    details: ArticleDetails,
+  ) => Promise<MutationFailure | null>
 }
 
 export function useArticleMutations(): ArticleMutations {
   const zero = useZero()
   const run = useMutationRunner()
+  const report = useMutationReporter()
 
   return useMemo(
     () => ({
@@ -100,8 +117,23 @@ export function useArticleMutations(): ArticleMutations {
         run(() =>
           zero.mutate(mutators.articles.setNotes({ id: articleId, notes })),
         ),
+
+      updateDetails: (articleId, details) =>
+        report(() =>
+          zero.mutate(
+            mutators.articles.updateDetails({
+              id: articleId,
+              ...details,
+              // The form hands back a readonly list, which is right for
+              // everything that reads it; the mutator's schema wants a mutable
+              // one. Copying here is the honest conversion, and it is one array
+              // of author names.
+              authors: [...details.authors],
+            }),
+          ),
+        ),
     }),
-    [run, zero],
+    [report, run, zero],
   )
 }
 

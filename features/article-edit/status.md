@@ -1,6 +1,6 @@
 # Status: Article Edit
 
-**Feature state:** **Spec'd, not started** — written 2026-09-12 against `main` at
+**Feature state:** **In progress** — task 1 implemented and in review, spec written 2026-09-12 against `main` at
 `ed65c9f`, from the interface decided 2026-07-02 and from reading the code that
 was built expecting it. Three tasks, each gated by its PR + CI + human review.
 
@@ -21,7 +21,7 @@ happens *sometimes*, so either answer is expected.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`editing-an-articles-details`](./tasks/editing-an-articles-details/status.md) | Not started | — | — | — |
+| [`editing-an-articles-details`](./tasks/editing-an-articles-details/status.md) | Implemented | [#145](https://github.com/nicbk/nicbk-website/pull/145) | — | — |
 | [`deleting-an-article`](./tasks/deleting-an-article/status.md) | Not started | — | — | — |
 | [`resolving-a-failed-upload`](./tasks/resolving-a-failed-upload/status.md) | Not started | — | — | — |
 
@@ -62,6 +62,12 @@ and answer the warning icon that has never had an answer.
 
 ## Log
 
+- 2026-09-12 — **Task 1 implemented.** The edit form, its mutator and "edit…" on
+  the existing menu. Two defects were caught before review rather than after: a
+  save control that fell below the fold of a desktop window on a paper with
+  fourteen authors, found by seeding realistic content in the browser, and a form
+  that reopened holding the draft abandoned last time, found by a test written
+  because reopening is a thing readers do.
 - 2026-09-12 — **Spec'd**, after #13 completed. Researched first: the decided
   interface, the schema doc that pinned its deferred field list, and — the part
   that changed the plan — `recordOutcome`'s real failure path, which showed that

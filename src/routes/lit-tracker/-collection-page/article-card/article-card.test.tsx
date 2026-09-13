@@ -74,6 +74,7 @@ function articleWith(
     authors: [{ name: 'Ashish Vaswani' }, { name: 'Noam Shazeer' }],
     publicationYear: 2017,
     venue: 'Advances in Neural Information Processing Systems',
+    doi: null,
     status: 'pending',
     ...overrides,
   }
@@ -101,6 +102,7 @@ function renderCard({
       onSetStatus={handlers.onSetStatus ?? vi.fn()}
       onToggleTag={handlers.onToggleTag ?? vi.fn()}
       onCreateTag={handlers.onCreateTag ?? vi.fn()}
+      onSaveDetails={vi.fn().mockResolvedValue(null)}
     />,
   )
 }

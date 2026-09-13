@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import type { EditableArticle } from '~/routes/lit-tracker/-components/article-edit/article-draft'
 import type { CollectionTag } from './article-menu'
 import { ArticleMenu, EMPTY_TAGS_MESSAGE } from './article-menu'
 
@@ -14,6 +15,16 @@ import { ArticleMenu, EMPTY_TAGS_MESSAGE } from './article-menu'
  * typed name may already exist, and which tags a filter should show.
  */
 
+/** The article every case here is about — the menu names its trigger after it. */
+const ARTICLE: EditableArticle = {
+  id: 'article-1',
+  title: 'Attention Is All You Need',
+  authors: [{ name: 'Ashish Vaswani' }],
+  publicationYear: 2017,
+  venue: 'NeurIPS',
+  doi: null,
+}
+
 const ATTENTION: CollectionTag = { id: 'tag-1', name: 'attention' }
 const SURVEY: CollectionTag = { id: 'tag-2', name: 'survey' }
 const SEQ2SEQ: CollectionTag = { id: 'tag-3', name: 'seq2seq' }
@@ -25,10 +36,11 @@ function renderMenu(
     onSetStatus: vi.fn(),
     onToggleTag: vi.fn(),
     onCreateTag: vi.fn(),
+    onSaveDetails: vi.fn().mockResolvedValue(null),
   }
   render(
     <ArticleMenu
-      articleTitle="Attention Is All You Need"
+      article={ARTICLE}
       status="pending"
       allTags={[ATTENTION, SURVEY, SEQ2SEQ]}
       appliedTagIds={new Set([ATTENTION.id])}
@@ -64,13 +76,14 @@ describe('ArticleMenu', () => {
       const user = userEvent.setup()
       const { container } = render(
         <ArticleMenu
-          articleTitle="Attention Is All You Need"
+          article={ARTICLE}
           status="pending"
           allTags={[]}
           appliedTagIds={new Set()}
           onSetStatus={vi.fn()}
           onToggleTag={vi.fn()}
           onCreateTag={vi.fn()}
+          onSaveDetails={vi.fn().mockResolvedValue(null)}
         />,
       )
       await open(user)
@@ -88,13 +101,14 @@ describe('ArticleMenu', () => {
       const user = userEvent.setup()
       const { container } = render(
         <ArticleMenu
-          articleTitle="Attention Is All You Need"
+          article={ARTICLE}
           status="pending"
           allTags={[]}
           appliedTagIds={new Set()}
           onSetStatus={vi.fn()}
           onToggleTag={vi.fn()}
           onCreateTag={vi.fn()}
+          onSaveDetails={vi.fn().mockResolvedValue(null)}
           modal
         />,
       )
@@ -111,13 +125,14 @@ describe('ArticleMenu', () => {
       const user = userEvent.setup()
       render(
         <ArticleMenu
-          articleTitle="Attention Is All You Need"
+          article={ARTICLE}
           status="pending"
           allTags={[]}
           appliedTagIds={new Set()}
           onSetStatus={vi.fn()}
           onToggleTag={vi.fn()}
           onCreateTag={vi.fn()}
+          onSaveDetails={vi.fn().mockResolvedValue(null)}
           details={<p>Ashish Vaswani et al.</p>}
         />,
       )
@@ -379,5 +394,67 @@ describe('ArticleMenu', () => {
 
     expect(screen.getByText(EMPTY_TAGS_MESSAGE)).toBeInTheDocument()
     expect(listedTags()).toEqual([])
+  })
+})
+
+describe('correcting the article', () => {
+  it('offers "edit…" alongside the everyday controls', async () => {
+    // The decided entry point: everything lands in this menu rather than beside
+    // it (research/ui-ux/pages/lit-tracker/components/article-edit.md).
+    const user = userEvent.setup()
+    renderMenu()
+    await open(user)
+
+    expect(screen.getByRole('button', { name: 'edit…' })).toBeInTheDocument()
+    // And it has not displaced what was already here.
+    expect(screen.getByRole('button', { name: 'reading' })).toBeInTheDocument()
+  })
+
+  it('opens the edit form on the article the menu is about', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+    await open(user)
+
+    await user.click(screen.getByRole('button', { name: 'edit…' }))
+
+    const form = await screen.findByRole('dialog', { name: 'edit article' })
+    expect(within(form).getByRole('textbox', { name: 'title' })).toHaveValue(
+      'Attention Is All You Need',
+    )
+  })
+
+  it('keeps the form open after the menu that launched it has closed', async () => {
+    // The dialog is the popover's sibling rather than its child for exactly
+    // this reason: rendered inside, it would be unmounted by the popover
+    // closing on the way in.
+    const user = userEvent.setup()
+    renderMenu()
+    await open(user)
+
+    await user.click(screen.getByRole('button', { name: 'edit…' }))
+
+    const form = await screen.findByRole('dialog', { name: 'edit article' })
+    expect(form).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'reading' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('hands a saved correction to the surface that owns the write', async () => {
+    const user = userEvent.setup()
+    const handlers = renderMenu()
+    await open(user)
+    await user.click(screen.getByRole('button', { name: 'edit…' }))
+    await screen.findByRole('dialog', { name: 'edit article' })
+
+    await user.click(screen.getByRole('button', { name: 'save' }))
+
+    expect(handlers.onSaveDetails).toHaveBeenCalledWith({
+      title: 'Attention Is All You Need',
+      authors: [{ name: 'Ashish Vaswani' }],
+      publicationYear: 2017,
+      venue: 'NeurIPS',
+      doi: null,
+    })
   })
 })

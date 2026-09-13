@@ -17,6 +17,7 @@ const ARTICLE = {
   authors: [{ name: 'Ashish Vaswani' }, { name: 'Noam Shazeer' }],
   publicationYear: 2017,
   venue: 'Advances in Neural Information Processing Systems',
+  doi: null,
   status: 'reading' as const,
   notes: null,
 }

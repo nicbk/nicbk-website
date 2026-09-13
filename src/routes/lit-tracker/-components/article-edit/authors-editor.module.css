@@ -1,0 +1,150 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.legend {
+  padding: 0;
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * The list scrolls, the modal does not grow. A dozen authors is an ordinary
+ * paper and would otherwise push the save control off the bottom of a phone —
+ * the cap is in `rem` so it follows the text size rather than the viewport,
+ * and the modal's own `max-height` still governs the whole.
+ */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  max-height: 13rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  /* Without this a long name makes the row — and with it the modal — wider
+     than the screen, because a flex item's default minimum is its content. */
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Standard visually-hidden pattern: the row keeps a discernible accessible
+   name ("Author 3") while the visible list shape carries the cue for sighted
+   readers. */
+.rowLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-md);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/*
+ * Small by sight, 44px to the finger. The visible glyph belongs beside a text
+ * field and would look wrong at full size, so the target is grown with a
+ * pseudo-element instead — the same trick the reader's selection menu uses for
+ * its tool buttons.
+ */
+.remove {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xs);
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.remove::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.75rem;
+  height: 2.75rem;
+  transform: translate(-50%, -50%);
+}
+
+@media (hover: hover) {
+  .remove:hover {
+    color: var(--color-error);
+  }
+}
+
+.removeIcon {
+  width: 1em;
+  height: 1em;
+}
+
+.add {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 2.75rem;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .add:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+.addIcon {
+  width: 1em;
+  height: 1em;
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}

@@ -299,8 +299,106 @@ export const mutators = defineMutators({
         await tx.mutate.articles.update({ id: args.id, notes: args.notes })
       },
     ),
+
+    /**
+     * Correct what the extractor wrote: the article's bibliographic details, by
+     * hand (research/ui-ux/pages/lit-tracker/components/article-edit.md).
+     *
+     * **The rules live here, not in the form.** A required title is a fact about
+     * the column — `articles.title` is `not null` and an article with no author
+     * is not a citable thing — so the schema below refuses it whatever the
+     * browser sent. The form says so earlier and more kindly; this is what makes
+     * it true.
+     *
+     * **Blank means absent.** Year, venue and DOI arrive as whatever the reader
+     * left in the field and are stored as `null` when that is nothing, so every
+     * reader of those columns has one question to ask rather than two. `notes`
+     * deliberately goes the other way — see `notesSchema` for why an empty
+     * string is the right shape *there* and not here.
+     *
+     * **Authors replace wholesale.** One `jsonb` value, one editor: sending the
+     * whole list is what a diff would compute anyway, and it is what makes this
+     * safe to re-run when Zero rebases a pending mutation. `given`/`family`
+     * ride along untouched on any author the reader did not retype, which is
+     * how GROBID's structured names survive an edit to somebody else's.
+     *
+     * The five named columns are the only ones written. Reading status, notes,
+     * the extraction outcome and the object key belong to other parts of the
+     * app, and a correction is not a reason to disturb them.
+     */
+    updateDetails: defineMutator(
+      z.object({
+        id: z.uuid(),
+        title: z.string().trim().min(1).max(1_000),
+        authors: z.array(authorSchema()).min(1),
+        publicationYear: publicationYearSchema(),
+        venue: optionalTextSchema(500),
+        doi: optionalTextSchema(255),
+      }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        await requireOwnedArticle(tx, session, args.id)
+        await tx.mutate.articles.update({
+          id: args.id,
+          title: args.title,
+          authors: args.authors,
+          publicationYear: args.publicationYear,
+          venue: args.venue,
+          doi: args.doi,
+        })
+      },
+    ),
   },
 })
+
+/**
+ * One author, as the edit form may submit them.
+ *
+ * `name` is the one this project actually displays everywhere, so it is the one
+ * that must be there; `given` and `family` are GROBID's structured output when
+ * it had any, carried through rather than required
+ * (research/data-modeling/article-core-schema.md). A row whose name is nothing
+ * but spaces is refused rather than stored, for the same reason a tag is: the
+ * field is free text and "  " is a plausible thing to type by accident.
+ */
+function authorSchema() {
+  return z.object({
+    name: z.string().trim().min(1).max(200),
+    given: z.string().max(200).optional(),
+    family: z.string().max(200).optional(),
+  })
+}
+
+/**
+ * A publication year, or nothing.
+ *
+ * Four digits and positive, which is as much as this can honestly check. A
+ * narrower window would be a guess about what a reader collects — the tracker
+ * has no opinion about whether a 1543 printing belongs in it — and a wider one
+ * would let a mistyped phone number through as a year.
+ */
+function publicationYearSchema() {
+  return z.number().int().min(1).max(9_999).nullable()
+}
+
+/**
+ * A field the reader may simply leave empty — venue and DOI.
+ *
+ * Blank in, absent out: the value is trimmed and an empty result becomes `null`,
+ * so clearing a field and never filling it in are the same state in the
+ * database. Doing it here rather than in the form means it is true of every
+ * caller, including the next one.
+ */
+function optionalTextSchema(max: number) {
+  return z
+    .string()
+    .max(max)
+    .nullable()
+    .transform((value) => {
+      const trimmed = value?.trim() ?? ''
+      return trimmed === '' ? null : trimmed
+    })
+}
 
 /**
  * A tag name as the user may submit it.

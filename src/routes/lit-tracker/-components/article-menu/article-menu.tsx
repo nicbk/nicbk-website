@@ -1,6 +1,13 @@
 import { Popover } from '@base-ui/react/popover'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Pencil } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useRef, useState } from 'react'
+import type {
+  ArticleDetails,
+  EditableArticle,
+} from '~/routes/lit-tracker/-components/article-edit/article-draft'
+import { ArticleEditDialog } from '~/routes/lit-tracker/-components/article-edit/article-edit-dialog'
+import type { MutationFailure } from '~/routes/lit-tracker/-hooks/use-mutation-runner'
 import type { ArticleTagControlsProps } from './article-tag-controls'
 import { ArticleTagControls } from './article-tag-controls'
 import styles from './article-menu.module.css'
@@ -10,9 +17,33 @@ import styles from './article-menu.module.css'
 export type { CollectionTag } from './article-tag-controls'
 export { EMPTY_TAGS_MESSAGE } from './article-tag-controls'
 
+/**
+ * Saving a correction, as every surface that mounts this menu must supply it.
+ *
+ * Named here rather than spelled out three times: the card and the detail page
+ * both pass it straight through from `useArticleMutations`, and a shape written
+ * out at each is a shape that can disagree at one of them.
+ */
+export type SaveArticleDetails = (
+  details: ArticleDetails,
+) => Promise<MutationFailure | null>
+
 interface ArticleMenuProps extends ArticleTagControlsProps {
-  /** Names the trigger, so twenty cards do not all announce "options". */
-  articleTitle: string
+  /**
+   * The article this menu is about — what names the trigger, so twenty cards do
+   * not all announce "options", and what "edit…" opens on.
+   *
+   * The whole editable row rather than just its title, because the menu is the
+   * decided entry point for correcting one and a second prop carrying the same
+   * article's other five fields would be the same thing said twice.
+   */
+  article: EditableArticle
+  /**
+   * Saves a correction, answering with what to tell the reader if it did not
+   * land. The dialog stays open on a failure and shows it inline, which is why
+   * this reports rather than raising a toast.
+   */
+  onSaveDetails: SaveArticleDetails
   /**
    * What the paper *is*, shown above the controls that change it.
    *
@@ -43,7 +74,9 @@ interface ArticleMenuProps extends ArticleTagControlsProps {
  * (research/ui-ux/pages/lit-tracker/components/article-edit.md), which is why
  * everything lands here — #11 adds "edit…" and "delete…" to *this* rather than
  * building a second control beside it. #9's detail page mounts this same menu
- * beside its title, for the same reason.
+ * beside its title, for the same reason. "edit…" is here now; "delete…" arrives
+ * with #11's second task and belongs below it, separated, because an
+ * irreversible action must never be one stray press from an everyday one.
  *
  * **Why a popover rather than a menu.** It was a `Menu` first, built from
  * `RadioItem`s and `CheckboxItem`s, and that was the right shape until a reader
@@ -61,35 +94,67 @@ interface ArticleMenuProps extends ArticleTagControlsProps {
  * (`article-tag-controls.tsx`); this is now the card's way of reaching them.
  */
 export function ArticleMenu({
-  articleTitle,
+  article,
+  onSaveDetails,
   details,
   modal = false,
   ...controls
 }: ArticleMenuProps) {
-  return (
-    <Popover.Root modal={modal}>
-      <Popover.Trigger
-        className={styles.trigger}
-        aria-label={`Options for ${articleTitle}`}
-      >
-        <MoreHorizontal className={styles.triggerIcon} aria-hidden="true" />
-      </Popover.Trigger>
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [editing, setEditing] = useState(false)
 
-      <Popover.Portal>
-        {/* Only in the modal case: without it the surface behind stays fully
-            lit, and nothing says the menu is the only live thing on screen. */}
-        {modal && <Popover.Backdrop className={styles.backdrop} />}
-        <Popover.Positioner
-          className={styles.positioner}
-          sideOffset={4}
-          align="end"
+  return (
+    // A fragment, and the dialog is the popover's *sibling* rather than its
+    // child. Rendered inside, it would inherit the popover's lifetime — and the
+    // popover closes on the way into the dialog, which would unmount the form
+    // the moment it opened. This is also why the dialog is told where to put
+    // focus afterwards: the button that opened it no longer exists by then, and
+    // the trigger it belongs to does.
+    <>
+      <Popover.Root modal={modal}>
+        <Popover.Trigger
+          ref={triggerRef}
+          className={styles.trigger}
+          aria-label={`Options for ${article.title}`}
         >
-          <Popover.Popup className={styles.popup}>
-            {details}
-            <ArticleTagControls {...controls} />
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+          <MoreHorizontal className={styles.triggerIcon} aria-hidden="true" />
+        </Popover.Trigger>
+
+        <Popover.Portal>
+          {/* Only in the modal case: without it the surface behind stays fully
+              lit, and nothing says the menu is the only live thing on screen. */}
+          {modal && <Popover.Backdrop className={styles.backdrop} />}
+          <Popover.Positioner
+            className={styles.positioner}
+            sideOffset={4}
+            align="end"
+          >
+            <Popover.Popup className={styles.popup}>
+              {details}
+              <ArticleTagControls {...controls} />
+
+              {/* Below the everyday controls, because correcting the record is
+                  the rarer errand — and above where #11's second task puts
+                  "delete…", which must never be one stray press from this. */}
+              <Popover.Close
+                className={styles.action}
+                onClick={() => setEditing(true)}
+              >
+                <Pencil className={styles.actionIcon} aria-hidden="true" />
+                edit…
+              </Popover.Close>
+            </Popover.Popup>
+          </Popover.Positioner>
+        </Popover.Portal>
+      </Popover.Root>
+
+      <ArticleEditDialog
+        article={article}
+        open={editing}
+        onOpenChange={setEditing}
+        onSave={onSaveDetails}
+        finalFocus={triggerRef}
+      />
+    </>
   )
 }

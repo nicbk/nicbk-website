@@ -30,6 +30,11 @@ interface RecordedWrite {
   operation: string
 }
 
+/** The same write with what it carried — for the mutators that reshape values. */
+interface RecordedPayload extends RecordedWrite {
+  values: Record<string, unknown>
+}
+
 /**
  * A transaction that writes nowhere and remembers being asked to.
  *
@@ -43,14 +48,19 @@ interface RecordedWrite {
  * Omitting `reads` answers every lookup with a row, which is the ordinary case.
  */
 function stubTransaction({ reads }: { reads?: boolean[] } = {}) {
-  const writes: RecordedWrite[] = []
+  const writes: RecordedPayload[] = []
   let readCount = 0
 
+  const record =
+    (name: string, operation: string) =>
+    async (values: Record<string, unknown> = {}) =>
+      void writes.push({ table: name, operation, values })
+
   const table = (name: string) => ({
-    insert: async () => void writes.push({ table: name, operation: 'insert' }),
-    update: async () => void writes.push({ table: name, operation: 'update' }),
-    upsert: async () => void writes.push({ table: name, operation: 'upsert' }),
-    delete: async () => void writes.push({ table: name, operation: 'delete' }),
+    insert: record(name, 'insert'),
+    update: record(name, 'update'),
+    upsert: record(name, 'upsert'),
+    delete: record(name, 'delete'),
   })
 
   const tx = {
@@ -77,6 +87,19 @@ async function run(
   options: { reads?: boolean[] } = {},
 ): Promise<RecordedWrite[]> {
   const { tx, writes } = stubTransaction(options)
+  await mutator.fn({ args, tx, ctx: CONTEXT } as never)
+  // The values are dropped here so a test that only cares *that* a row was
+  // written stays a one-line assertion; `runCapturing` is for the ones that
+  // care what was in it.
+  return writes.map(({ table, operation }) => ({ table, operation }))
+}
+
+/** The same call, keeping what each write carried. */
+async function runCapturing(
+  mutator: { fn: (input: never) => Promise<void> },
+  args: unknown,
+): Promise<RecordedPayload[]> {
+  const { tx, writes } = stubTransaction()
   await mutator.fn({ args, tx, ctx: CONTEXT } as never)
   return writes
 }
@@ -380,6 +403,146 @@ describe('articles.setStatus', () => {
 
     await expect(
       mutators.articles.setStatus.fn({ args, tx, ctx: CONTEXT } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+})
+
+describe('articles.updateDetails', () => {
+  /** A correction with every field filled in, which most cases vary from. */
+  const CORRECTION = {
+    id: ARTICLE,
+    title: 'Attention Is All You Need',
+    authors: [{ name: 'Ashish Vaswani' }, { name: 'Noam Shazeer' }],
+    publicationYear: 2017,
+    venue: 'NeurIPS',
+    doi: '10.5555/3295222.3295349',
+  }
+
+  it('accepts a well-formed correction and writes one row', async () => {
+    const writes = await run(mutators.articles.updateDetails, CORRECTION)
+
+    expect(writes).toEqual([{ table: 'articles', operation: 'update' }])
+  })
+
+  it('writes the five named columns and nothing else', async () => {
+    // The guarantee the feature rests on: a correction must not disturb reading
+    // status, notes, the extraction outcome, or the object key.
+    const [write] = await runCapturing(
+      mutators.articles.updateDetails,
+      CORRECTION,
+    )
+
+    expect(Object.keys(write?.values ?? {}).sort()).toEqual([
+      'authors',
+      'doi',
+      'id',
+      'publicationYear',
+      'title',
+      'venue',
+    ])
+  })
+
+  it('stores a blanked venue and DOI as absent, not as empty text', async () => {
+    // One representation of "no venue", so nothing downstream has to decide
+    // whether `''` and `null` mean different things.
+    const [write] = await runCapturing(mutators.articles.updateDetails, {
+      ...CORRECTION,
+      venue: '',
+      doi: '   ',
+    })
+
+    expect(write?.values).toMatchObject({ venue: null, doi: null })
+  })
+
+  it('accepts an explicit null for an optional field', async () => {
+    // What the form sends for a field the reader never filled in, as distinct
+    // from one they emptied — both end up as the same absent value.
+    const [write] = await runCapturing(mutators.articles.updateDetails, {
+      ...CORRECTION,
+      venue: null,
+      doi: null,
+    })
+
+    expect(write?.values).toMatchObject({ venue: null, doi: null })
+  })
+
+  it('trims what it stores', async () => {
+    const [write] = await runCapturing(mutators.articles.updateDetails, {
+      ...CORRECTION,
+      title: '  Attention Is All You Need  ',
+      authors: [{ name: '  Ashish Vaswani  ' }],
+      venue: '  NeurIPS  ',
+    })
+
+    expect(write?.values).toMatchObject({
+      title: 'Attention Is All You Need',
+      authors: [{ name: 'Ashish Vaswani' }],
+      venue: 'NeurIPS',
+    })
+  })
+
+  it('carries given and family names through untouched', async () => {
+    // GROBID supplies them when its TEI output had structured names, nothing
+    // displays them yet, and a save made to fix a different author's typo must
+    // not quietly destroy them.
+    const [write] = await runCapturing(mutators.articles.updateDetails, {
+      ...CORRECTION,
+      authors: [{ name: 'Ashish Vaswani', given: 'Ashish', family: 'Vaswani' }],
+    })
+
+    expect(write?.values).toMatchObject({
+      authors: [{ name: 'Ashish Vaswani', given: 'Ashish', family: 'Vaswani' }],
+    })
+  })
+
+  it('accepts an article with no year, venue or DOI at all', async () => {
+    const writes = await run(mutators.articles.updateDetails, {
+      ...CORRECTION,
+      publicationYear: null,
+      venue: null,
+      doi: null,
+    })
+
+    expect(writes).toEqual([{ table: 'articles', operation: 'update' }])
+  })
+
+  it.each([
+    ['an empty title', { ...CORRECTION, title: '' }],
+    ['a title of only whitespace', { ...CORRECTION, title: '   ' }],
+    ['a missing title', { ...CORRECTION, title: undefined }],
+    ['an empty author list', { ...CORRECTION, authors: [] }],
+    ['an author with no name', { ...CORRECTION, authors: [{ name: '' }] }],
+    [
+      'an author named only in whitespace',
+      { ...CORRECTION, authors: [{ name: '  ' }] },
+    ],
+    ['authors that are not a list', { ...CORRECTION, authors: 'Vaswani' }],
+    ['a year that is not a number', { ...CORRECTION, publicationYear: '2017' }],
+    ['a fractional year', { ...CORRECTION, publicationYear: 2017.5 }],
+    ['a five-digit year', { ...CORRECTION, publicationYear: 20_170 }],
+    ['a negative year', { ...CORRECTION, publicationYear: -2017 }],
+    ['a malformed article id', { ...CORRECTION, id: 'article-1' }],
+  ])('refuses %s without writing', async (_case, args) => {
+    const { tx, writes } = stubTransaction()
+
+    await expect(
+      mutators.articles.updateDetails.fn({ args, tx, ctx: CONTEXT } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+
+  it("refuses another reader's article without writing", async () => {
+    // The ownership lookup comes up empty, which is what a row belonging to
+    // somebody else looks like from inside a mutator.
+    const { tx, writes } = stubTransaction({ reads: [false] })
+
+    await expect(
+      mutators.articles.updateDetails.fn({
+        args: CORRECTION,
+        tx,
+        ctx: CONTEXT,
+      } as never),
     ).rejects.toThrow()
     expect(writes).toEqual([])
   })

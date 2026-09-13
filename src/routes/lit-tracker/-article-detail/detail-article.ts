@@ -1,5 +1,5 @@
-import type { Author } from '~/db/schema/lit-tracker'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
+import type { EditableArticle } from '~/routes/lit-tracker/-components/article-edit/article-draft'
 
 /**
  * The article fields this page reads, and how its publication line is written.
@@ -16,13 +16,12 @@ import type { ArticleStatus } from '~/lit-tracker/article-status'
  * `status` is typed optional by Zero because a client may create a row without
  * it even though the column is `not null`. `notes` joins them here — it is the
  * one field on this page nothing else on the site reads.
+ *
+ * The six editable fields come from `EditableArticle` rather than being listed
+ * again, because this page's three-dot menu opens #11's edit form and therefore
+ * has to carry exactly what that form edits.
  */
-export interface DetailArticle {
-  id: string
-  title: string
-  authors: readonly Author[]
-  publicationYear: number | null
-  venue: string | null
+export interface DetailArticle extends EditableArticle {
   status: ArticleStatus | null
   notes: string | null
 }

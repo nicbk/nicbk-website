@@ -135,6 +135,7 @@ export function CollectionPage() {
             : mutations.removeTag(articleId, tagId)
         }
         onCreateTag={mutations.createAndApplyTag}
+        onSaveDetails={mutations.updateDetails}
       />
     </div>
   )

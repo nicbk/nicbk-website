@@ -29,9 +29,28 @@ export type MutationRunner = (
   mutate: () => MutationResult | MutationResult[],
 ) => Promise<void>
 
-export function useMutationRunner(): MutationRunner {
-  const showError = useErrorToast()
+/**
+ * The same write, with the answer handed back instead of shown.
+ *
+ * Split out for #11's edit form, and the reason is the decided error rule rather
+ * than a preference: a failure *inside a form* is shown inline next to what
+ * caused it, and only a write with no form to attach to gets a toast
+ * (research/ui-ux/design-system.md). A form cannot follow that rule if the only
+ * way to send a write also decides how its failure is reported — and it cannot
+ * even know to stay open, since nothing here rethrows.
+ *
+ * So this resolves the outcome and says what it was; `useMutationRunner` below
+ * is this plus the toast. One answer to "did that save?", two ways of telling
+ * the reader.
+ */
+export type MutationReporter = (
+  mutate: () => MutationResult | MutationResult[],
+) => Promise<MutationFailure | null>
 
+/** What to tell the reader about a write that did not land. */
+export type MutationFailure = ErrorToast
+
+export function useMutationReporter(): MutationReporter {
   return useCallback(
     async (mutate: () => MutationResult | MutationResult[]) => {
       try {
@@ -44,17 +63,30 @@ export function useMutationRunner(): MutationRunner {
           results.map((result) => result.server),
         )
         const failure = outcomes.find((outcome) => outcome.type === 'error')
-        if (failure) {
-          showError(toastFor(failure.error))
-        }
+        return failure ? toastFor(failure.error) : null
       } catch {
         // A promise rejects, rather than resolving to an error outcome, only
         // when something went wrong before Zero could form an outcome at all.
         // Whatever it was, it is not something to put in front of a reader.
-        showError(NOT_SAVED_YET)
+        return NOT_SAVED_YET
       }
     },
-    [showError],
+    [],
+  )
+}
+
+export function useMutationRunner(): MutationRunner {
+  const report = useMutationReporter()
+  const showError = useErrorToast()
+
+  return useCallback(
+    async (mutate: () => MutationResult | MutationResult[]) => {
+      const failure = await report(mutate)
+      if (failure) {
+        showError(failure)
+      }
+    },
+    [report, showError],
   )
 }
 

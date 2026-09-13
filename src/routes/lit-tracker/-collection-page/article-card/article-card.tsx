@@ -1,9 +1,12 @@
 import { Tooltip } from '@base-ui/react/tooltip'
 import { Link, useNavigate } from '@tanstack/react-router'
 import type { MouseEvent, ReactElement } from 'react'
-import type { Author } from '~/db/schema/lit-tracker'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
-import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
+import type { EditableArticle } from '~/routes/lit-tracker/-components/article-edit/article-draft'
+import type {
+  CollectionTag,
+  SaveArticleDetails,
+} from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { ArticleMenu } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { formatAuthors } from '../authors'
 import { CardFooter } from './card-footer/card-footer'
@@ -51,6 +54,11 @@ import styles from './article-card.module.css'
 /**
  * The article fields this surface shows — deliberately not the whole row.
  *
+ * It is `EditableArticle` plus a reading status, because the card's menu is the
+ * decided entry point for correcting an article and therefore needs every field
+ * that form edits. Naming it as an extension rather than restating six fields
+ * keeps the two from drifting apart the first time one gains a field.
+ *
  * Every field but the title and authors is optional in the data, and optional in
  * the same way it is optional in real papers: a preprint has no venue, a scanned
  * document can lose its year. The card renders what is there and nothing in
@@ -62,12 +70,7 @@ import styles from './article-card.module.css'
  * and let the server fill it in. The null is therefore a fact about the sync
  * engine's types rather than about the data, and the card reads it as `pending`.
  */
-export interface CollectionArticle {
-  id: string
-  title: string
-  authors: readonly Author[]
-  publicationYear: number | null
-  venue: string | null
+export interface CollectionArticle extends EditableArticle {
   status: ArticleStatus | null
 }
 
@@ -80,6 +83,8 @@ interface ArticleCardProps {
   onSetStatus: (status: ArticleStatus) => void
   onToggleTag: (tagId: string, applied: boolean) => void
   onCreateTag: (name: string) => void
+  /** Saves a correction from the menu's edit form; see `ArticleMenu`. */
+  onSaveDetails: SaveArticleDetails
 }
 
 export function ArticleCard({
@@ -89,6 +94,7 @@ export function ArticleCard({
   onSetStatus,
   onToggleTag,
   onCreateTag,
+  onSaveDetails,
 }: ArticleCardProps) {
   const navigate = useNavigate()
   const { title, authors, publicationYear, venue } = article
@@ -167,7 +173,8 @@ export function ArticleCard({
         </Link>
 
         <ArticleMenu
-          articleTitle={title}
+          article={article}
+          onSaveDetails={onSaveDetails}
           status={status}
           allTags={allTags}
           appliedTagIds={appliedTagIds}

@@ -1,7 +1,9 @@
 import type { ArticleStatus } from '~/lit-tracker/article-status'
 import { useDebouncedValue } from '~/routes/-shared/hooks/use-debounced-value'
 import { useIncrementalReveal } from '~/routes/-shared/hooks/use-incremental-reveal'
+import type { ArticleDetails } from '~/routes/lit-tracker/-components/article-edit/article-draft'
 import type { CollectionTag } from '~/routes/lit-tracker/-components/article-menu/article-menu'
+import type { MutationFailure } from '~/routes/lit-tracker/-hooks/use-mutation-runner'
 import { TrackerLoading } from '../-components/tracker-loading/tracker-loading'
 import type { CollectionArticle } from './article-card/article-card'
 import { ArticleCard } from './article-card/article-card'
@@ -39,13 +41,22 @@ interface ArticleCollectionProps {
   /** Which tags each article carries, keyed by article id. */
   tagsByArticle: ReadonlyMap<string, readonly CollectionTag[]>
   /**
-   * The three writes a card can make. Taken as callbacks rather than as a
-   * mutations object so this component — and every card under it — stays
-   * assertable with plain spies and no Zero client.
+   * The writes a card can make. Taken as callbacks rather than as a mutations
+   * object so this component — and every card under it — stays assertable with
+   * plain spies and no Zero client.
    */
   onSetStatus: (articleId: string, status: ArticleStatus) => void
   onToggleTag: (articleId: string, tagId: string, applied: boolean) => void
   onCreateTag: (articleId: string, name: string) => void
+  /**
+   * Saves a correction made in the card menu's edit form. Unlike the three
+   * above it answers — the form shows a refusal inline rather than letting it
+   * become a toast, and has to know whether to stay open.
+   */
+  onSaveDetails: (
+    articleId: string,
+    details: ArticleDetails,
+  ) => Promise<MutationFailure | null>
 }
 
 /** Shown once the collection is known to be empty. */
@@ -94,6 +105,7 @@ export function ArticleCollection({
   onSetStatus,
   onToggleTag,
   onCreateTag,
+  onSaveDetails,
 }: ArticleCollectionProps) {
   if (state === 'error') {
     // The decided pattern for an error outside a form context is a dismissible
@@ -131,6 +143,7 @@ export function ArticleCollection({
       onSetStatus={onSetStatus}
       onToggleTag={onToggleTag}
       onCreateTag={onCreateTag}
+      onSaveDetails={onSaveDetails}
     />
   )
 }
@@ -181,6 +194,7 @@ function ArticleGrid({
   onSetStatus,
   onToggleTag,
   onCreateTag,
+  onSaveDetails,
 }: ArticleGridProps) {
   const { visibleCount, sentinelRef } = useIncrementalReveal(
     articles.length,
@@ -229,6 +243,7 @@ function ArticleGrid({
                 onToggleTag(article.id, tagId, applied)
               }
               onCreateTag={(name) => onCreateTag(article.id, name)}
+              onSaveDetails={(details) => onSaveDetails(article.id, details)}
             />
           </li>
         ))}

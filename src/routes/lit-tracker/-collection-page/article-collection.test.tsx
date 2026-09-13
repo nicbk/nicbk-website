@@ -58,6 +58,7 @@ const ARTICLES: CollectionArticle[] = [
     authors: [{ name: 'Ashish Vaswani' }, { name: 'Noam Shazeer' }],
     publicationYear: 2017,
     venue: 'Advances in Neural Information Processing Systems',
+    doi: null,
     status: 'reading',
   },
   {
@@ -66,6 +67,7 @@ const ARTICLES: CollectionArticle[] = [
     authors: [{ name: 'Claude Shannon' }],
     publicationYear: 1948,
     venue: 'Bell System Technical Journal',
+    doi: null,
     status: 'read',
   },
 ]
@@ -78,6 +80,7 @@ function manyArticles(count: number): CollectionArticle[] {
     authors: [{ name: 'A. Researcher' }],
     publicationYear: 2020,
     venue: null,
+    doi: null,
     status: 'pending' as const,
   }))
 }
@@ -103,6 +106,7 @@ function collection(
       onSetStatus={vi.fn()}
       onToggleTag={vi.fn()}
       onCreateTag={vi.fn()}
+      onSaveDetails={vi.fn().mockResolvedValue(null)}
       {...overrides}
     />
   )

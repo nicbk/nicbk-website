@@ -1,0 +1,168 @@
+/*
+ * The tracker's modal chrome, borrowed rather than copied: the upload modal is
+ * the surface this one has to look like, and a third hand-written copy of the
+ * same backdrop would be a third place for it to drift. Only `.popup` is
+ * written fresh below, because this form is genuinely wider than a file picker.
+ */
+.backdrop {
+  composes: backdrop from "../upload-modal/upload-modal.module.css";
+}
+
+.header {
+  composes: header from "../upload-modal/upload-modal.module.css";
+}
+
+.title {
+  composes: title from "../upload-modal/upload-modal.module.css";
+}
+
+.close {
+  composes: close from "../upload-modal/upload-modal.module.css";
+}
+
+.closeIcon {
+  composes: closeIcon from "../upload-modal/upload-modal.module.css";
+}
+
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  /* Wider than the upload modal's 26rem: a paper title is a sentence, and
+     wrapping one across four lines makes the field it sits in unreadable. */
+  width: 32rem;
+  max-width: calc(100vw - 2 * var(--space-lg));
+  max-height: calc(100dvh - 2 * var(--space-lg));
+  /* The popup itself never scrolls — `.fields` inside it does, which is what
+     keeps the save control on screen at any window height. */
+  overflow: hidden;
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      transform var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+}
+
+.form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-md);
+  /* A flex child's default minimum is its content — which a long unbroken DOI
+     would happily make wider than the modal, and which would stop the scroll
+     region below from ever being shorter than the fields inside it. */
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+ * Everything the reader fills in, and the only part that scrolls.
+ *
+ * Written after watching it fail the other way: with the whole modal scrolling,
+ * a paper with fourteen authors put "save" below the fold of a 1440x900 desktop
+ * window. A primary action must not need hunting for
+ * (AGENTS.md, "Keep primary actions reachable without hunting").
+ */
+.fields {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  /* Room for a focus ring on the fields at either end, which a scroll
+     container would otherwise clip. */
+  padding: var(--space-2xs);
+  margin: calc(-1 * var(--space-2xs));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--font-size-sm);
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-md);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+.buttons {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.save,
+.cancel {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .save:hover:not([data-disabled]),
+  .cancel:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/* In flight: still focusable (Base UI's `focusableWhenDisabled`), so a screen
+   reader user is not dropped by a control vanishing from the tab order
+   mid-save — but visibly not ready for a second press. */
+.save[data-disabled] {
+  color: var(--color-text-muted);
+  cursor: default;
+}

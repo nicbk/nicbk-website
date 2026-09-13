@@ -122,3 +122,43 @@
     scale: 0.98;
   }
 }
+
+/*
+ * "edit…", and — with #11's second task — "delete…" beneath it.
+ *
+ * A full-width row rather than a bordered button: the popup's other regions are
+ * rows too, and a button floating inside a menu reads as a different kind of
+ * thing. The top border is what separates the everyday controls above from the
+ * errands below, matching the rule the tag controls already draw between their
+ * own regions.
+ */
+.action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  /* 44px to the finger, and the same left inset as the rows above it. */
+  min-height: 2.75rem;
+  padding: var(--space-xs) var(--space-md);
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-sm);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .action:hover {
+    color: var(--color-accent);
+  }
+}
+
+.actionIcon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}

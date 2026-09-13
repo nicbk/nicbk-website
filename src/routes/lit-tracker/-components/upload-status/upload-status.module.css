@@ -171,6 +171,44 @@
 }
 
 /*
+ * The way out of a failed row.
+ *
+ * Shaped like `.add` in authors-editor.module.css rather than invented here:
+ * both are a small, quiet, bordered control that a reader presses once, and the
+ * site should have one idea of what that looks like. `align-self` keeps it to
+ * its own width — stretched across the popup it would outweigh the filename it
+ * belongs to, and the failure is what this row is about.
+ *
+ * An honest box at the full touch size, with no pseudo-element enlarging it.
+ * The popup scrolls, and an absolutely-positioned target inside a scroll
+ * container is overflow the container can be dragged by — the fault that had
+ * the author list drifting sideways in #142. The 1rem of popup padding is also
+ * what gives the focus ring (a 2px outline at a 2px offset) room to be drawn
+ * without becoming overflow of its own.
+ */
+.fix {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .fix:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/*
  * An indeterminate progress bar: a track with a segment travelling across it.
  * With reduced motion preferred it stays a static filled track rather than
  * disappearing, so the row still reads as "something is happening".

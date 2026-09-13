@@ -1,6 +1,9 @@
 import { Popover } from '@base-ui/react/popover'
 import { Tooltip } from '@base-ui/react/tooltip'
 import { AlertTriangle, Check, LoaderCircle } from 'lucide-react'
+import type { RefObject } from 'react'
+import { useRef, useState } from 'react'
+import { FixUploadDialog } from './fix-upload-dialog'
 import type { UploadJobRow } from './job-list'
 import { JobList } from './job-list'
 import type { UploadStatusState } from './status-state'
@@ -23,34 +26,78 @@ interface UploadStatusProps {
  *
  * Everything here is driven by live `upload_jobs` rows, so the indicator
  * changes as the pipeline works without this component polling or tracking
- * anything itself. Today nothing resolves those rows — the extract stage is
- * task 4 — so a submitted upload stays in progress, which is the intended
- * intermediate state.
+ * anything itself. A failed row is resolved from inside the popup as of #11's
+ * third task — see `FixUploadDialog` — and the row's disappearance is what
+ * changes the icon, because there is no state here to change.
+ *
+ * ## Why the whole thing is wrapped, and why one ref spans both branches
+ *
+ * Resolving the last failure does not merely shorten the list: it swaps this
+ * control. The popup's trigger is a `<button>`; with nothing left to show,
+ * `SyncedIndicator` replaces it with a `<span>`. So the element the reader
+ * opened the modal from is **destroyed by the act of succeeding**, and a
+ * `finalFocus` pointing at it would drop focus to `<body>` at the exact moment
+ * a screen-reader user most needs to be told what happened.
+ *
+ * `indicatorRef` is attached to whichever of the two is rendered, so focus
+ * returns to the same slot either way — and lands on the checkmark, whose
+ * accessible name is the outcome of what the reader just did (user-decided
+ * 2026-09-13). The dialog is this component's sibling rather than the popover's
+ * child for the reason `ArticleMenu` records: the popover closes on the way in,
+ * and a dialog inside it would unmount the instant it opened.
+ *
+ * The article id is kept after the dialog closes rather than cleared. Clearing
+ * it would unmount the dialog in the same commit that closes it, which is what
+ * makes focus restoration a race — and the cost of keeping it is one query for
+ * a row the client has already synced.
  */
 export function UploadStatus({ jobs }: UploadStatusProps) {
   const state = uploadStatusState(jobs)
-
-  if (state === 'synced') {
-    return <SyncedIndicator />
-  }
+  const indicatorRef = useRef<HTMLElement>(null)
+  const [fixingArticleId, setFixingArticleId] = useState<string | null>(null)
+  const [fixing, setFixing] = useState(false)
 
   return (
-    <Popover.Root>
-      <Popover.Trigger
-        className={styles.indicator}
-        aria-label={uploadStatusLabel(state)}
-      >
-        <StatusIcon state={state} />
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Positioner sideOffset={8} align="end">
-          <Popover.Popup className={styles.popup}>
-            <Popover.Title className={styles.popupTitle}>uploads</Popover.Title>
-            <JobList jobs={jobs} />
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+    <>
+      {state === 'synced' ? (
+        <SyncedIndicator ref={indicatorRef} />
+      ) : (
+        <Popover.Root>
+          <Popover.Trigger
+            ref={indicatorRef as RefObject<HTMLButtonElement | null>}
+            className={styles.indicator}
+            aria-label={uploadStatusLabel(state)}
+          >
+            <StatusIcon state={state} />
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Positioner sideOffset={8} align="end">
+              <Popover.Popup className={styles.popup}>
+                <Popover.Title className={styles.popupTitle}>
+                  uploads
+                </Popover.Title>
+                <JobList
+                  jobs={jobs}
+                  onFix={(articleId) => {
+                    setFixingArticleId(articleId)
+                    setFixing(true)
+                  }}
+                />
+              </Popover.Popup>
+            </Popover.Positioner>
+          </Popover.Portal>
+        </Popover.Root>
+      )}
+
+      {fixingArticleId !== null && (
+        <FixUploadDialog
+          articleId={fixingArticleId}
+          open={fixing}
+          onOpenChange={setFixing}
+          finalFocus={indicatorRef}
+        />
+      )}
+    </>
   )
 }
 
@@ -65,15 +112,29 @@ export function UploadStatus({ jobs }: UploadStatusProps) {
  * conveys is a standing fact about the collection, not an event, and a status
  * region would both announce itself unprompted and collide with the page's real
  * one while the first sync is in flight.
+ *
+ * **`tabIndex={-1}` does not undo any of that.** A negative index keeps the
+ * element out of the tab order exactly as before; what it adds is the ability to
+ * receive focus when something *puts* it here. That something is the edit modal
+ * closing after the reader resolved the last failed upload: the warning button
+ * they opened it from no longer exists, and this is what stands in its place.
+ * Landing here announces "All articles synced" — the result of what they just
+ * did — rather than dropping focus to the document body.
  */
-function SyncedIndicator() {
+function SyncedIndicator({ ref }: { ref: RefObject<HTMLElement | null> }) {
   const label = uploadStatusLabel('synced')
 
   return (
     <Tooltip.Root>
       <Tooltip.Trigger
         render={
-          <span className={styles.synced} role="img" aria-label={label} />
+          <span
+            ref={ref as RefObject<HTMLSpanElement | null>}
+            className={styles.synced}
+            role="img"
+            aria-label={label}
+            tabIndex={-1}
+          />
         }
       >
         <Check className={styles.icon} aria-hidden="true" />

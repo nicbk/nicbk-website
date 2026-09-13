@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { UploadJobRow } from './job-list'
 
 /**
@@ -8,9 +8,22 @@ import type { UploadJobRow } from './job-list'
  * client. Only the tests that open the edit modal reach them at all — a row
  * with no article renders no control, so the cases that predate this feature
  * never mount the dialog.
+ *
+ * Declared without an initial implementation on purpose: passing one to
+ * `vi.fn` pins the spy's signature to that function's parameters, so a later
+ * `mockImplementation` that reads the request would not typecheck. The default
+ * answer is set in `beforeEach` instead, which also stops one test's
+ * implementation leaking into the next.
  */
-const useQuery = vi.hoisted(() => vi.fn(() => [[], { type: 'complete' }]))
-const updateDetails = vi.hoisted(() => vi.fn(async () => null))
+const useQuery = vi.hoisted(() => vi.fn())
+const updateDetails = vi.hoisted(() => vi.fn())
+
+beforeEach(() => {
+  useQuery.mockReset()
+  useQuery.mockReturnValue([[], { type: 'complete' }])
+  updateDetails.mockReset()
+  updateDetails.mockResolvedValue(null)
+})
 
 vi.mock('@rocicorp/zero/react', () => ({ useQuery, useZero: () => ({}) }))
 vi.mock('~/routes/lit-tracker/-hooks/use-article-mutations', () => ({
@@ -248,7 +261,6 @@ describe('UploadStatus — resolving a failure', () => {
 
   it('saves the correction against the article the row named', async () => {
     const user = userEvent.setup()
-    updateDetails.mockClear()
     answerWithArticles([
       { id: ARTICLE, title: 'one.pdf' },
       { id: OTHER_ARTICLE, title: 'The Second Paper' },

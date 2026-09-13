@@ -1,18 +1,21 @@
 /*
  * The article's identity, at the top of its menu.
  *
- * Padded and ruled off like the menu's own sections, so it reads as the first
- * region of the popup rather than as text floating above the controls. The rule
- * matches `article-tag-controls.module.css`'s separator — the popup should look
- * like one surface, not two components stacked.
+ * Padded like the menu's own sections, so it reads as the first region of the
+ * popup rather than as text floating above the controls.
+ *
+ * **The rule below it belongs to the menu, not to this.** It used to be here,
+ * which was right while this text could be any height — and wrong the moment
+ * the menu capped it and made it scroll, because a separator inside a scroll
+ * region is a separator that is only visible at the bottom of the scroll. The
+ * menu draws it on the box it puts around this instead
+ * (article-menu.module.css).
  */
 .details {
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
   padding: 0 var(--space-sm) var(--space-sm);
-  margin-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--color-border);
 }
 
 .title {

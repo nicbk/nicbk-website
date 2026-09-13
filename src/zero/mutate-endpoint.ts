@@ -1,10 +1,14 @@
+import type { Transaction } from '@rocicorp/zero'
 import { mustGetMutator } from '@rocicorp/zero'
 import { handleMutateRequest } from '@rocicorp/zero/server'
 import type { AuthSession } from '~/auth/session'
+import type { JobQueue } from '~/lit-tracker/jobs/queue'
 import { hasValidApiKey } from './api-key'
+import type { ZeroContext } from './context'
 import { zeroContextFrom } from './context'
 import type { dbProvider } from './db-provider'
 import { mutators } from './mutators'
+import { runServerEffect } from './server-effects'
 
 /** What the mutate endpoint needs from the application to answer a request. */
 export interface ZeroMutateEndpointDependencies {
@@ -14,6 +18,15 @@ export interface ZeroMutateEndpointDependencies {
   getSession: (request: Request) => Promise<AuthSession>
   /** Runs mutators inside a Postgres transaction. */
   dbProvider: typeof dbProvider
+  /**
+   * The background-job queue, for the writes whose consequences are not all in
+   * Postgres — see `server-effects.ts`.
+   *
+   * Connected on demand rather than held, because the overwhelming majority of
+   * mutations never need it, and a queue reached per request is a queue a test
+   * can replace.
+   */
+  getQueue: () => Promise<JobQueue>
 }
 
 /**
@@ -33,7 +46,7 @@ export interface ZeroMutateEndpointDependencies {
  */
 export async function respondToZeroMutate(
   request: Request,
-  { apiKey, getSession, dbProvider }: ZeroMutateEndpointDependencies,
+  { apiKey, getSession, dbProvider, getQueue }: ZeroMutateEndpointDependencies,
 ): Promise<Response> {
   if (!hasValidApiKey(request, apiKey)) {
     return Response.json({ error: 'Forbidden' }, { status: 403 })
@@ -52,18 +65,46 @@ export async function respondToZeroMutate(
 
   const result = await handleMutateRequest({
     dbProvider,
-    // `mustGetMutator` throws on a name the registry does not hold, which is
-    // what makes an invented mutator name a failure rather than a silent no-op.
     // Everything inside `transact` runs in one Postgres transaction: a mutator
     // that throws — including from an ownership check — rolls back whatever it
     // had already written, which is what "fails and leaves no row" means.
     handler: (transact) =>
       transact((tx, name, args) =>
-        mustGetMutator(mutators, name).fn({ args, tx, ctx }),
+        runMutation({ ctx, getQueue }, tx, name, args),
       ),
     request,
     userID: session.user.id,
   })
 
   return Response.json(result)
+}
+
+/**
+ * One mutation, as this application performs it: the mutator, then whatever
+ * that mutator owes the world outside Postgres.
+ *
+ * Named and exported rather than written inline in the handler above, because
+ * the **order and the shared transaction are the design** and neither is
+ * visible in a closure. An effect runs *after* its mutator, so it is a
+ * consequence of a write that succeeded; it runs on the *same* `tx`, so a throw
+ * from it rolls that write back rather than leaving a row deleted and its
+ * follow-up never asked for. Both are assertable here without a database.
+ *
+ * `mustGetMutator` throws on a name the registry does not hold, which is what
+ * makes an invented mutator name a failure rather than a silent no-op.
+ */
+export async function runMutation(
+  {
+    ctx,
+    getQueue,
+  }: {
+    ctx: ZeroContext | undefined
+    getQueue: () => Promise<JobQueue>
+  },
+  tx: Transaction,
+  name: string,
+  args: unknown,
+): Promise<void> {
+  await mustGetMutator(mutators, name).fn({ args, tx, ctx } as never)
+  await runServerEffect(name, { args, ctx, tx, getQueue })
 }

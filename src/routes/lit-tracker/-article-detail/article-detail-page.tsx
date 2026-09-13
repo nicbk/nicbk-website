@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { PanelLeft } from 'lucide-react'
 import { ArticleMenu } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { NarrowScreenDrawer } from '~/routes/lit-tracker/-components/narrow-screen-drawer/narrow-screen-drawer'
@@ -61,6 +61,7 @@ interface ArticleDetailPageProps {
 export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
   const { state, article, tags, allTags } = useArticleDetail(articleId)
   const mutations = useArticleMutations()
+  const navigate = useNavigate()
 
   if (state === 'syncing') {
     return <p className={styles.notice}>{SYNCING_MESSAGE}</p>
@@ -112,7 +113,19 @@ export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
               onSaveDetails={(details) =>
                 mutations.updateDetails(articleId, details)
               }
-              // The card's menu, unchanged in what it does — #11 adds "edit…"
+              onDelete={() => {
+                // Leave first, then delete. Zero applies the delete to the
+                // local copy immediately, so staying would put this page into
+                // its own "no such article in your collection" branch — a dead
+                // end presented to the reader who just asked for it, which
+                // reads as an error rather than as the thing working. The
+                // collection is where they were before this article and the
+                // only place left to be. A refusal still arrives, as a toast,
+                // once the server has answered.
+                void navigate({ to: '/lit-tracker' })
+                void mutations.deleteArticle(articleId)
+              }}
+              // The card's menu, unchanged in what it does — #11 added "edit…"
               // and "delete…" to this one rather than building a second. What
               // this surface adds is the article's own details at the top, since
               // nothing else on the page shows them any more.

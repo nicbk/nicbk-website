@@ -26,10 +26,18 @@ vi.mock('@aws-sdk/client-s3', () => ({
   GetObjectCommand: class {
     constructor(readonly input: unknown) {}
   },
+  DeleteObjectCommand: class {
+    constructor(readonly input: unknown) {}
+  },
 }))
 
-const { getArticlePdf, openArticlePdf, putArticlePdf, PdfOwnershipError } =
-  await import('./pdf-storage')
+const {
+  deleteArticlePdf,
+  getArticlePdf,
+  openArticlePdf,
+  putArticlePdf,
+  PdfOwnershipError,
+} = await import('./pdf-storage')
 
 const OWNER = 'user-a'
 const ARTICLE = '01930000-0000-7000-8000-000000000001'
@@ -125,5 +133,40 @@ describe('putArticlePdf', () => {
       // an octet stream the browser offers to download.
       ContentType: 'application/pdf',
     })
+  })
+})
+
+describe('deleteArticlePdf', () => {
+  it('removes the object under the given key', async () => {
+    send.mockResolvedValue({})
+    const key = pdfObjectKey(OWNER, ARTICLE)
+
+    await deleteArticlePdf(key, OWNER)
+
+    const [command] = send.mock.calls[0] as [{ input: Record<string, unknown> }]
+    expect(command.input).toMatchObject({ Key: key })
+  })
+
+  it('refuses another user key without asking the store to delete it', async () => {
+    // The same guard the reads carry, and it matters more here: a mixed-up key
+    // read is a disclosure, a mixed-up key deleted is another user's paper gone
+    // for good.
+    const key = pdfObjectKey('user-b', ARTICLE)
+
+    await expect(deleteArticlePdf(key, OWNER)).rejects.toThrow(
+      PdfOwnershipError,
+    )
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('does not distinguish an object that was already gone', async () => {
+    // S3 answers 204 for a key that was never there, so the SDK resolves and
+    // nothing here has to tell the two apart. That is what makes the cleanup
+    // job safe to retry, which pg-boss will do.
+    send.mockResolvedValue({})
+
+    await expect(
+      deleteArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER),
+    ).resolves.toBeUndefined()
   })
 })

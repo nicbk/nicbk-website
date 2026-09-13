@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -7,7 +8,7 @@ import { env } from '~/env'
 import { isOwnedBy } from './object-key'
 
 /**
- * Reading and writing article PDFs in Garage.
+ * Reading, writing and removing article PDFs in Garage.
  *
  * **Server-only.** Nothing here may be imported from a component: it holds the
  * bucket credentials, and the browser is never a client of the object store.
@@ -69,10 +70,16 @@ export async function putArticlePdf(
   )
 }
 
-/** Raised when a key does not belong to the user asking for it. */
+/**
+ * Raised when a key does not belong to the user asking for it.
+ *
+ * One type for every operation, and the wording stays operation-neutral: it
+ * guarded only reads until #11 added a delete, and a message naming the wrong
+ * verb in a log is worse than one naming none.
+ */
 export class PdfOwnershipError extends Error {
   constructor(key: string) {
-    super(`Refusing to read ${key}: it does not belong to the requesting user.`)
+    super(`Refusing ${key}: it does not belong to the requesting user.`)
     this.name = 'PdfOwnershipError'
   }
 }
@@ -134,6 +141,40 @@ export async function openArticlePdf(
 ): Promise<ArticlePdfStream> {
   const { body, contentLength } = await fetchOwnedObject(key, userId)
   return { body: body.transformToWebStream(), contentLength }
+}
+
+/**
+ * Removes one article's PDF, refusing keys the named user does not own.
+ *
+ * The first operation here that takes something away — everything this project
+ * had built until #11 only ever added — and it is deliberately the last step of
+ * a deletion rather than part of it: the article row and everything cascading
+ * from it goes in one Postgres transaction, and this runs afterwards, from a
+ * queue, because object storage cannot join that transaction.
+ *
+ * **Idempotent, because the queue will run it twice.** S3's `DeleteObject`
+ * answers 204 for a key that was never there, so a retry after a partial failure
+ * is a success rather than an error to be distinguished from one. That is what
+ * lets the cleanup be retried at all.
+ *
+ * The ownership check is the same one the reads make, and it matters more here:
+ * a mixed-up key served to the wrong reader is a disclosure, while a mixed-up
+ * key deleted is another user's paper gone for good. Its caller derives the key
+ * from the same user id it passes, so today this can only pass — that is the
+ * point. It is the guard that stays behind if a later caller ever reads a key
+ * out of a row instead.
+ */
+export async function deleteArticlePdf(
+  key: string,
+  userId: string,
+): Promise<void> {
+  if (!isOwnedBy(key, userId)) {
+    throw new PdfOwnershipError(key)
+  }
+
+  await s3.send(
+    new DeleteObjectCommand({ Bucket: env.GARAGE_BUCKET, Key: key }),
+  )
 }
 
 /**

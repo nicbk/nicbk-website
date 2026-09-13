@@ -69,6 +69,20 @@ export interface ArticleMutations {
     articleId: string,
     details: ArticleDetails,
   ) => Promise<MutationFailure | null>
+  /**
+   * Removes an article, everything hanging off it, and its PDF.
+   *
+   * Back to a toast, unlike `updateDetails` directly above, and for the same
+   * rule rather than in spite of it: the confirmation closes as this is sent,
+   * because Zero has already taken the card out of the grid and there is
+   * nothing left to hold a message. An error with no form to live in is exactly
+   * what a toast is for.
+   *
+   * The PDF is not this call's doing — the server half of the same mutation
+   * enqueues that (`~/zero/server-effects.ts`), because a browser is never a
+   * client of the object store.
+   */
+  deleteArticle: (articleId: string) => Promise<void>
 }
 
 export function useArticleMutations(): ArticleMutations {
@@ -132,6 +146,9 @@ export function useArticleMutations(): ArticleMutations {
             }),
           ),
         ),
+
+      deleteArticle: (articleId) =>
+        run(() => zero.mutate(mutators.articles.delete({ id: articleId }))),
     }),
     [report, run, zero],
   )

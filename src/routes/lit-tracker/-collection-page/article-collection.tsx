@@ -57,6 +57,12 @@ interface ArticleCollectionProps {
     articleId: string,
     details: ArticleDetails,
   ) => Promise<MutationFailure | null>
+  /**
+   * Deletes an article from the card menu, once its confirmation has been
+   * passed. Back to answering nothing, like the three above: the confirmation
+   * closes as the write is sent, so a refusal has no form left to appear in.
+   */
+  onDelete: (articleId: string) => void
 }
 
 /** Shown once the collection is known to be empty. */
@@ -106,6 +112,7 @@ export function ArticleCollection({
   onToggleTag,
   onCreateTag,
   onSaveDetails,
+  onDelete,
 }: ArticleCollectionProps) {
   if (state === 'error') {
     // The decided pattern for an error outside a form context is a dismissible
@@ -144,6 +151,7 @@ export function ArticleCollection({
       onToggleTag={onToggleTag}
       onCreateTag={onCreateTag}
       onSaveDetails={onSaveDetails}
+      onDelete={onDelete}
     />
   )
 }
@@ -195,6 +203,7 @@ function ArticleGrid({
   onToggleTag,
   onCreateTag,
   onSaveDetails,
+  onDelete,
 }: ArticleGridProps) {
   const { visibleCount, sentinelRef } = useIncrementalReveal(
     articles.length,
@@ -244,6 +253,7 @@ function ArticleGrid({
               }
               onCreateTag={(name) => onCreateTag(article.id, name)}
               onSaveDetails={(details) => onSaveDetails(article.id, details)}
+              onDelete={() => onDelete(article.id)}
             />
           </li>
         ))}

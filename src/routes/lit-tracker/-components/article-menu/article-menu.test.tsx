@@ -37,6 +37,7 @@ function renderMenu(
     onToggleTag: vi.fn(),
     onCreateTag: vi.fn(),
     onSaveDetails: vi.fn().mockResolvedValue(null),
+    onDelete: vi.fn(),
   }
   render(
     <ArticleMenu
@@ -84,6 +85,7 @@ describe('ArticleMenu', () => {
           onToggleTag={vi.fn()}
           onCreateTag={vi.fn()}
           onSaveDetails={vi.fn().mockResolvedValue(null)}
+          onDelete={vi.fn()}
         />,
       )
       await open(user)
@@ -109,6 +111,7 @@ describe('ArticleMenu', () => {
           onToggleTag={vi.fn()}
           onCreateTag={vi.fn()}
           onSaveDetails={vi.fn().mockResolvedValue(null)}
+          onDelete={vi.fn()}
           modal
         />,
       )
@@ -133,6 +136,7 @@ describe('ArticleMenu', () => {
           onToggleTag={vi.fn()}
           onCreateTag={vi.fn()}
           onSaveDetails={vi.fn().mockResolvedValue(null)}
+          onDelete={vi.fn()}
           details={<p>Ashish Vaswani et al.</p>}
         />,
       )
@@ -456,5 +460,57 @@ describe('correcting the article', () => {
       venue: 'NeurIPS',
       doi: null,
     })
+  })
+
+  it('offers "delete…" below "edit…", and last', async () => {
+    // The order is the safety: the irreversible errand is furthest from the
+    // controls a reader touches every day (AGENTS.md, "an irreversible action
+    // must never be one stray press from an everyday one").
+    const user = userEvent.setup()
+    renderMenu()
+
+    const popup = await open(user)
+    const actions = within(popup)
+      .getAllByRole('button')
+      .map((button) => button.textContent)
+
+    expect(actions.slice(-2)).toEqual(['edit…', 'delete…'])
+  })
+
+  it('opens the confirmation rather than deleting on the spot', async () => {
+    const user = userEvent.setup()
+    const handlers = renderMenu()
+    await open(user)
+
+    await user.click(screen.getByRole('button', { name: 'delete…' }))
+
+    await screen.findByRole('dialog', { name: 'delete article' })
+    expect(handlers.onDelete).not.toHaveBeenCalled()
+  })
+
+  it('names the article in the confirmation it opens', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+    await open(user)
+
+    await user.click(screen.getByRole('button', { name: 'delete…' }))
+
+    const confirmation = await screen.findByRole('dialog', {
+      name: 'delete article',
+    })
+    expect(confirmation).toHaveTextContent('Attention Is All You Need')
+  })
+
+  it('hands the delete to the surface that owns the write, once confirmed', async () => {
+    const user = userEvent.setup()
+    const handlers = renderMenu()
+    await open(user)
+    await user.click(screen.getByRole('button', { name: 'delete…' }))
+    await screen.findByRole('dialog', { name: 'delete article' })
+
+    await user.type(screen.getByRole('textbox', { name: /type/ }), 'delete')
+    await user.click(screen.getByRole('button', { name: 'delete article' }))
+
+    expect(handlers.onDelete).toHaveBeenCalledTimes(1)
   })
 })

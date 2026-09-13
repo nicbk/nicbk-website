@@ -28,11 +28,14 @@ vi.mock('@rocicorp/zero/react', () => ({
   useZero: () => ({ mutate }),
 }))
 
+const navigate = vi.hoisted(() => vi.fn())
+
 vi.mock('@tanstack/react-router', async () => {
   const { createElement } = await import('react')
   return {
     Link: ({ to, children }: { to: string; children: ReactNode }) =>
       createElement('a', { href: to }, children),
+    useNavigate: () => navigate,
     // Stands in for the real boundary by rendering only its fallback, which is
     // what the server pass does. That keeps PDFium's WebAssembly out of jsdom,
     // and it is deliberately not a pass-through: a `ClientOnly` that rendered
@@ -89,6 +92,7 @@ function renderPage() {
 beforeEach(() => {
   useQuery.mockReset()
   mutate.mockClear()
+  navigate.mockClear()
 })
 
 describe('ArticleDetailPage', () => {
@@ -262,6 +266,27 @@ describe('ArticleDetailPage', () => {
       )
 
       await waitFor(() => expect(mutate).toHaveBeenCalledTimes(2))
+    })
+
+    it('leaves for the collection when the article being read is deleted', async () => {
+      // Zero applies the delete to the local copy at once, so staying would
+      // drop this page into its own "no such article" branch — a dead end
+      // shown to the reader who just asked for the deletion, which reads as an
+      // error rather than as the thing working.
+      await openMenu()
+      await userEvent.click(screen.getByRole('button', { name: 'delete…' }))
+      await screen.findByRole('dialog', { name: 'delete article' })
+
+      await userEvent.type(
+        screen.getByRole('textbox', { name: /type/ }),
+        'delete',
+      )
+      await userEvent.click(
+        screen.getByRole('button', { name: 'delete article' }),
+      )
+
+      expect(navigate).toHaveBeenCalledWith({ to: '/lit-tracker' })
+      await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1))
     })
   })
 })

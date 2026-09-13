@@ -1,0 +1,162 @@
+/*
+ * The tracker's modal chrome again, borrowed from the same place the edit
+ * dialog borrows it: the upload modal is the surface every modal here has to
+ * look like, and a third hand-written backdrop would be a third place for it to
+ * drift.
+ */
+.backdrop {
+  composes: backdrop from "../upload-modal/upload-modal.module.css";
+}
+
+.header {
+  composes: header from "../upload-modal/upload-modal.module.css";
+}
+
+.title {
+  composes: title from "../upload-modal/upload-modal.module.css";
+}
+
+.close {
+  composes: close from "../upload-modal/upload-modal.module.css";
+}
+
+.closeIcon {
+  composes: closeIcon from "../upload-modal/upload-modal.module.css";
+}
+
+/*
+ * Narrower than the edit dialog's 32rem, and on purpose: this holds a warning,
+ * one short field and two buttons. A box sized for a form the reader is not
+ * filling in would make the decision look bigger than the typing it asks for,
+ * and an over-wide paragraph is harder to read than the one thing here that
+ * must actually be read.
+ */
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 26rem;
+  max-width: calc(100vw - 2 * var(--space-lg));
+  max-height: calc(100dvh - 2 * var(--space-lg));
+  overflow-y: auto;
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      transform var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+/*
+ * What is about to happen, in ordinary text rather than muted.
+ *
+ * The other explanations on this site are secondary to a control; this one is
+ * the reason the control is there, and a reader who skims it is the reader this
+ * dialog exists for. The title inside it is emphasised because it is the part
+ * that answers "which paper?" — and it wraps, because a paper title that
+ * overflows is a warning the reader cannot finish.
+ */
+.warning {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--font-size-sm);
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-md);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.destructive,
+.cancel {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+/*
+ * The one control here that cannot be undone: the error colour, so the eye
+ * catches the difference before the label is read, while the label still
+ * carries the meaning for anyone who cannot distinguish the colour (WCAG 1.4.1).
+ */
+.destructive {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+@media (hover: hover) {
+  /* A destructive control must not brighten to the accent on hover, or it would
+     look like an ordinary action for as long as the pointer sits there. */
+  .destructive:hover:not([data-disabled]) {
+    background-color: var(--color-bg-surface);
+  }
+
+  .cancel:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/* Inert — the typed word does not match yet. Muted, so it does not advertise
+   itself as ready, while staying focusable and announcing that it is disabled. */
+.destructive[data-disabled] {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: default;
+}

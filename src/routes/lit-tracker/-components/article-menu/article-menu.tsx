@@ -1,7 +1,8 @@
 import { Popover } from '@base-ui/react/popover'
-import { MoreHorizontal, Pencil } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useRef, useState } from 'react'
+import { ArticleDeleteDialog } from '~/routes/lit-tracker/-components/article-delete/article-delete-dialog'
 import type {
   ArticleDetails,
   EditableArticle,
@@ -44,6 +45,17 @@ interface ArticleMenuProps extends ArticleTagControlsProps {
    * this reports rather than raising a toast.
    */
   onSaveDetails: SaveArticleDetails
+  /**
+   * Deletes the article, once the reader has confirmed.
+   *
+   * Returns nothing, unlike `onSaveDetails`: the confirmation closes as the
+   * write is sent rather than waiting for it (see `ArticleDeleteDialog`), so
+   * there is no form left for a refusal to be shown in and the shared runner's
+   * toast is where it goes. The two surfaces do differ in what they do *next* —
+   * the detail page has to leave the page it is on — which is why this is a
+   * callback rather than something this menu performs itself.
+   */
+  onDelete: () => void
   /**
    * What the paper *is*, shown above the controls that change it.
    *
@@ -96,12 +108,14 @@ interface ArticleMenuProps extends ArticleTagControlsProps {
 export function ArticleMenu({
   article,
   onSaveDetails,
+  onDelete,
   details,
   modal = false,
   ...controls
 }: ArticleMenuProps) {
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   return (
     // A fragment, and the dialog is the popover's *sibling* rather than its
@@ -130,18 +144,34 @@ export function ArticleMenu({
             align="end"
           >
             <Popover.Popup className={styles.popup}>
-              {details}
+              {/* Wrapped rather than styled in place: the height limit belongs
+                  to this menu, not to any page's idea of what an article's
+                  details are. */}
+              {details !== undefined && (
+                <div className={styles.details}>{details}</div>
+              )}
               <ArticleTagControls {...controls} />
 
               {/* Below the everyday controls, because correcting the record is
-                  the rarer errand — and above where #11's second task puts
-                  "delete…", which must never be one stray press from this. */}
+                  the rarer errand. */}
               <Popover.Close
                 className={styles.action}
                 onClick={() => setEditing(true)}
               >
                 <Pencil className={styles.actionIcon} aria-hidden="true" />
                 edit…
+              </Popover.Close>
+
+              {/* Last, alone, and in the error colour. It is the only
+                  irreversible thing on this menu, so it is the furthest from
+                  the controls a reader touches every day and never shares a
+                  hairline with one of them. */}
+              <Popover.Close
+                className={styles.destructiveAction}
+                onClick={() => setDeleting(true)}
+              >
+                <Trash2 className={styles.actionIcon} aria-hidden="true" />
+                delete…
               </Popover.Close>
             </Popover.Popup>
           </Popover.Positioner>
@@ -153,6 +183,14 @@ export function ArticleMenu({
         open={editing}
         onOpenChange={setEditing}
         onSave={onSaveDetails}
+        finalFocus={triggerRef}
+      />
+
+      <ArticleDeleteDialog
+        articleTitle={article.title}
+        open={deleting}
+        onOpenChange={setDeleting}
+        onDelete={onDelete}
         finalFocus={triggerRef}
       />
     </>

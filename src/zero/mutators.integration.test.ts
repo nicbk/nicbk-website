@@ -60,6 +60,10 @@ const NEW_TAG = '0199a1b2-c3d4-7e5f-8a9b-00000000c001'
 const NEW_LINK = '0199a1b2-c3d4-7e5f-8a9b-00000000c002'
 const OTHER_LINK = '0199a1b2-c3d4-7e5f-8a9b-00000000c003'
 const NEW_MARK = '0199a1b2-c3d4-7e5f-8a9b-00000000c004'
+const NEW_LINK_B = '0199a1b2-c3d4-7e5f-8a9b-00000000c005'
+const EDGE_FROM_A = '0199a1b2-c3d4-7e5f-8a9b-00000000c006'
+const EDGE_TO_A = '0199a1b2-c3d4-7e5f-8a9b-00000000c007'
+const SECOND_ARTICLE_A = '0199a1b2-c3d4-7e5f-8a9b-00000000c008'
 
 let testDatabase: TestDatabase
 let database: DatabaseHandle
@@ -152,6 +156,9 @@ const articleById = (id: string) =>
     .select()
     .from(drizzleSchema.articles)
     .where(eq(drizzleSchema.articles.id, id))
+const allArticles = () => database.db.select().from(drizzleSchema.articles)
+const allUploadJobs = () => database.db.select().from(drizzleSchema.uploadJobs)
+const allEdges = () => database.db.select().from(drizzleSchema.citationEdges)
 
 describe('the fixture', () => {
   it('gives both users rows, so the refusals below are not vacuous', async () => {
@@ -777,6 +784,149 @@ describe('articles.updateDetails', () => {
 
     const [article] = await articleById(ARTICLE_A)
     expect(article).toEqual(before)
+  })
+})
+
+describe('articles.delete', () => {
+  /**
+   * Everything an article can have hanging off it, for the one test that has to
+   * prove all of it goes.
+   *
+   * Written directly rather than through mutators because half of it has no
+   * mutator — `upload_jobs` rows are the pipeline's, and citation edges are
+   * extraction's. What this fixture is for is the *cascade*, which belongs to
+   * the schema whichever code path created the row.
+   */
+  async function giveArticleAEverything(): Promise<void> {
+    await database.db.insert(drizzleSchema.articleTags).values({
+      id: NEW_LINK,
+      articleId: ARTICLE_A,
+      tagId: TAG_A,
+    })
+    await database.db.insert(drizzleSchema.uploadJobs).values({
+      id: ARTICLE_A,
+      userId: USER_A,
+      filename: 'paper.pdf',
+      status: 'failed',
+      failureReason: "couldn't find authors",
+      articleId: ARTICLE_A,
+      pdfObjectKey: `lit-tracker/${USER_A}/${ARTICLE_A}/source.pdf`,
+    })
+    // A second paper of A's, so there is an edge pointing *at* the article
+    // being deleted from somewhere that is not itself deleted.
+    await database.db.insert(drizzleSchema.articles).values({
+      id: SECOND_ARTICLE_A,
+      userId: USER_A,
+      title: 'A paper that cites the first',
+      authors: [{ name: 'Ada Lovelace' }],
+      pdfObjectKey: `lit-tracker/${USER_A}/${SECOND_ARTICLE_A}/source.pdf`,
+    })
+    await database.db.insert(drizzleSchema.citationEdges).values([
+      {
+        id: EDGE_FROM_A,
+        userId: USER_A,
+        citingArticleId: ARTICLE_A,
+        title: 'Something the deleted paper cites',
+        authors: [{ name: 'Grace Hopper' }],
+      },
+      {
+        id: EDGE_TO_A,
+        userId: USER_A,
+        citingArticleId: SECOND_ARTICLE_A,
+        citedArticleId: ARTICLE_A,
+        title: `Paper for ${USER_A}`,
+        authors: [{ name: 'Ada Lovelace' }],
+      },
+    ])
+  }
+
+  it('removes the article and everything that was only about it', async () => {
+    await giveArticleAEverything()
+
+    await runAs('articles.delete', CONTEXT_A, { id: ARTICLE_A })
+
+    expect(await articleById(ARTICLE_A)).toEqual([])
+    // Each of these is a separate `ON DELETE CASCADE`, and none of them is
+    // written by the mutator — which is the point. A mutator deleting them by
+    // hand would be four more windows for a half-deleted article to exist in.
+    expect(await annotationById(MARK_A)).toEqual([])
+    expect((await allLinks()).map((link) => link.id)).not.toContain(NEW_LINK)
+    expect(await allUploadJobs()).toEqual([])
+    expect((await allEdges()).map((edge) => edge.id)).not.toContain(EDGE_FROM_A)
+  })
+
+  it('clears a failed upload’s job row, which is how its warning goes away', async () => {
+    // The reason this task and #11's third are the same feature: a failed
+    // extraction still produced an article, and its `upload_jobs` row is what
+    // keeps reporting the failure. Deleting the article takes the warning with
+    // it, free, by the FK.
+    await giveArticleAEverything()
+
+    await runAs('articles.delete', CONTEXT_A, { id: ARTICLE_A })
+
+    expect(await allUploadJobs()).toEqual([])
+  })
+
+  it('leaves a citing paper’s bibliography entry standing, unresolved', async () => {
+    // `cited_article_id` is `set null`, not cascade, and the difference is a
+    // decision rather than an oversight: the other paper still cited this work.
+    // Erasing the entry would rewrite a bibliography that really exists.
+    await giveArticleAEverything()
+
+    await runAs('articles.delete', CONTEXT_A, { id: ARTICLE_A })
+
+    const [edge] = (await allEdges()).filter((row) => row.id === EDGE_TO_A)
+    expect(edge).toBeDefined()
+    expect(edge?.citedArticleId).toBeNull()
+    expect(edge?.title).toBe(`Paper for ${USER_A}`)
+  })
+
+  it('refuses another user’s article and leaves all of it standing', async () => {
+    await database.db.insert(drizzleSchema.articleTags).values({
+      id: NEW_LINK_B,
+      articleId: ARTICLE_B,
+      tagId: TAG_B,
+    })
+    const [before] = await articleById(ARTICLE_B)
+
+    await expect(
+      runAs('articles.delete', CONTEXT_A, { id: ARTICLE_B }),
+    ).rejects.toThrow()
+
+    const [victim] = await articleById(ARTICLE_B)
+    expect(victim).toEqual(before)
+    // The refusal rolls back, so what hangs off it is untouched too — which is
+    // the half that a check-then-delete written in the wrong order would fail.
+    expect(await annotationById(MARK_B)).toHaveLength(1)
+    expect((await allLinks()).map((link) => link.id)).toContain(NEW_LINK_B)
+  })
+
+  it('refuses an article that does not exist, rather than succeeding quietly', async () => {
+    // "No such row" and "not yours" are deliberately one answer: telling them
+    // apart would confirm that a given id exists in somebody else's collection.
+    await expect(
+      runAs('articles.delete', CONTEXT_A, {
+        id: '0199a1b2-c3d4-7e5f-8a9b-00000000dead',
+      }),
+    ).rejects.toThrow()
+  })
+
+  it('refuses a request carrying no session', async () => {
+    await expect(
+      runAs('articles.delete', undefined, { id: ARTICLE_A }),
+    ).rejects.toThrow()
+
+    expect(await articleById(ARTICLE_A)).toHaveLength(1)
+  })
+
+  it('leaves the other user’s collection alone', async () => {
+    await runAs('articles.delete', CONTEXT_A, { id: ARTICLE_A })
+
+    expect((await allArticles()).map((article) => article.id)).toEqual([
+      ARTICLE_B,
+    ])
+    expect(await annotationById(MARK_B)).toHaveLength(1)
+    expect(await allTags()).toHaveLength(2)
   })
 })
 

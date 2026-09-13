@@ -166,6 +166,43 @@ Worth noting for what it says about the earlier task: this was *already* true of
 because the article it was checked against had a shorter title. The layout only
 fails on content nobody had seeded yet.
 
+## What review found, and what changed because of it
+
+Three spacing and overflow faults, reported 2026-09-13 after the PR was opened.
+Two were this task's, one was older and this task made it reachable.
+
+- **A stray gap below "delete…".** The popup's padding was symmetric, `sm` top
+  and bottom, which is right for a region of text and wrong for a full-bleed
+  action row that brings its own 44px. It is `padding-top` only now, and the
+  last row sits flush to the popup's edge.
+- **The rows either side of "edit…" were spaced differently.** `sm` above its
+  rule, `2xs` below its bottom, so the section did not read as one thing. The
+  `2xs` is gone: the two actions stack directly, one hairline each, and the
+  section is set off from the controls above by a single margin. That 4px had
+  been put there as protection against a press landing low — which it never
+  was, on a 44px row. The protection is the confirmation dialog.
+- **The author list scrolled sideways and rubber-banded, with the fields
+  looking cut off.** Two causes, and the second predates this task:
+  - The remove button was a small box with a 2.75rem `::after` centred on it, a
+    pattern borrowed from the reader's selection menu where the control floats
+    over a document and has nothing to overflow. Inside a scroll container an
+    absolutely-positioned box is still overflow — about 10px of it, which is
+    what the list could be dragged sideways by. **The same 10px on the other
+    side sat over the end of the author's own input**, so aiming at the last
+    few characters of a name pressed "remove". It is an honest 2.75rem box now;
+    the glyph is sized by `.removeIcon` and looks identical.
+  - The list had no room for a focus ring. The site's ring is a 2px outline at
+    a 2px offset, so a focused input overflowed its scroll container by 4px on
+    every side — which `overflow-y: auto` turns into a horizontal scrollbar as
+    well. It now uses the same padding-and-negative-margin allowance `.fields`
+    already documents, so the fields still line up with the title and venue
+    inputs above them.
+
+Re-checked in Chrome at 1440px dark and 560px light: with an author field
+focused, the list's horizontal overflow is zero, the remove button's right edge
+lands exactly on the list's content edge, and the author inputs share a left
+edge with the title input to the pixel.
+
 ## What the coverage gate found, and what changed because of it
 
 The ratchet caught a real gap rather than a number: the new lines at the mutate

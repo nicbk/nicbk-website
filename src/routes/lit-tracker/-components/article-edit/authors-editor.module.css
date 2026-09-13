@@ -18,6 +18,17 @@
  * paper and would otherwise push the save control off the bottom of a phone —
  * the cap is in `rem` so it follows the text size rather than the viewport,
  * and the modal's own `max-height` still governs the whole.
+ *
+ * **The padding is what stops it scrolling sideways.** A scroll container is
+ * scrolled by anything that sticks out of it, and a focused input sticks out:
+ * the site's ring is a 2px outline at a 2px offset (globals.css), so it needs
+ * 4px of room on every side. Without it the ring became overflow, `overflow-y:
+ * auto` made the horizontal axis scrollable to match, and the list drifted and
+ * rubber-banded under the pointer with the fields looking cut off at the edge.
+ * The negative inline margin cancels the inset again so the author fields still
+ * line up with the title and venue inputs above them; on the block axis the
+ * inset is simply part of the list's own breathing room. Same trick, same
+ * reason as `.fields` in article-edit-dialog.module.css.
  */
 .list {
   display: flex;
@@ -25,8 +36,11 @@
   gap: var(--space-2xs);
   max-height: 13rem;
   overflow-y: auto;
-  margin: 0;
-  padding: 0;
+  /* A nested scroll region: reaching its end should stop, not start scrolling
+     the field list behind it. */
+  overscroll-behavior: contain;
+  padding: var(--space-2xs);
+  margin: 0 calc(-1 * var(--space-2xs));
   list-style: none;
 }
 
@@ -76,32 +90,33 @@
 }
 
 /*
- * Small by sight, 44px to the finger. The visible glyph belongs beside a text
- * field and would look wrong at full size, so the target is grown with a
- * pseudo-element instead — the same trick the reader's selection menu uses for
- * its tool buttons.
+ * Small by sight, 44px to the finger — and the box is the target rather than a
+ * pseudo-element pretending to be one.
+ *
+ * It was written the other way first: a small button with a 2.75rem `::after`
+ * centred on it, borrowed from the reader's selection menu, where the control
+ * floats over a document and has nothing to overflow. In a row inside a scroll
+ * container it broke two things at once. An absolutely-positioned box still
+ * counts as overflow, so the ~10px it stuck out past the button was ~10px the
+ * list could be scrolled sideways; and the ~10px it stuck out to the *left*
+ * covered the last few pixels of the author's own input, so aiming at the end
+ * of a name pressed "remove" instead.
+ *
+ * A transparent box the size of the target has neither problem, and looks
+ * identical: the glyph is sized by `.removeIcon`, not by the button.
  */
 .remove {
-  position: relative;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  padding: var(--space-2xs);
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
   border: none;
   background: none;
   color: var(--color-text-muted);
   cursor: pointer;
-}
-
-.remove::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 2.75rem;
-  height: 2.75rem;
-  transform: translate(-50%, -50%);
 }
 
 @media (hover: hover) {

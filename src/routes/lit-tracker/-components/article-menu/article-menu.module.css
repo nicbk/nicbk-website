@@ -116,7 +116,14 @@
    */
   max-height: var(--available-height);
   overflow-y: auto;
-  padding: var(--space-sm) 0;
+  /*
+   * Top only, and the asymmetry is the point: the first region in here is text
+   * that needs an inset from the edge, while the last is a full-bleed action
+   * row that already carries its own height. Padding underneath that row does
+   * not read as the popup breathing — it reads as a stray gap below the final
+   * control, which is exactly how it was reported.
+   */
+  padding-top: var(--space-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-bg-surface);
@@ -200,12 +207,16 @@
 /*
  * The only irreversible row on this menu.
  *
- * Two things separate it from "edit…" directly above, and it needs both: the
- * error colour, which the eye catches before the label is read, and a real gap
- * rather than the shared hairline, so a press that lands a few pixels low hits
- * nothing at all instead of hitting this (AGENTS.md, "an irreversible action
- * must never be one stray press from an everyday one"). The label still says
- * "delete…", for anyone who cannot distinguish the colour — WCAG 1.4.1.
+ * **What separates it is the error colour, its position last, and the
+ * confirmation behind it** — not spacing. It shipped with an extra 4px above it
+ * as well, on the theory that a gap protects against a press landing a few
+ * pixels low. That was reported as awkward and the report was right twice over:
+ * 4px is not protection on a 44px row, and between two otherwise identical rows
+ * it reads as a mistake rather than as intent. The real guard against a stray
+ * press is that this opens a dialog asking the reader to type a word.
+ *
+ * The label still says "delete…", for anyone who cannot distinguish the
+ * colour — WCAG 1.4.1.
  *
  * The override is written as `.popup .destructiveAction`, not plain
  * `.destructiveAction`, and that is load-bearing: `composes` emits `.action`
@@ -219,7 +230,10 @@
 }
 
 .popup .destructiveAction {
-  margin-top: var(--space-2xs);
+  /* Stacked directly under "edit…", so the two rows keep one rhythm: the
+     section is set off from the controls above it by `.action`'s own
+     `margin-top`, and inside it one hairline per row and nothing else. */
+  margin-top: 0;
   color: var(--color-error);
 }
 

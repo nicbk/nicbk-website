@@ -1,16 +1,16 @@
 # Status: Resolving a Failed Upload
 
-**State:** Implemented, awaiting review. Task 3 of 3 — last because it points at
+**State:** **Merged** 2026-09-13. Task 3 of 3 — last because it points at
 task 1's modal and relies on task 2's cascade for its other route.
 
 - Branch: `article-edit/resolving-a-failed-upload`, from `main` at `006796a`
   with tasks 1 and 2 merged.
 - Sub-issue: [**#143**](https://github.com/nicbk/nicbk-website/issues/143).
 - PR: [**#147**](https://github.com/nicbk/nicbk-website/pull/147).
-- **On merge this completes #11** — check parent issue
-  [#140](https://github.com/nicbk/nicbk-website/issues/140) and close it by hand
-  if it has not closed itself (2026-09-12 addendum in
-  [issue-and-pr-lifecycle.md](../../../../research/project-management-conventions/issue-and-pr-lifecycle.md)).
+- **This completed #11.** Parent issue
+  [#140](https://github.com/nicbk/nicbk-website/issues/140) did not close itself
+  and was closed by hand — another data point for that document's 2026-09-12
+  addendum, which says the auto-close happens only *sometimes*.
 
 ## Why this task exists
 

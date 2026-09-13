@@ -1,7 +1,8 @@
 # Status: Article Edit
 
-**Feature state:** **In progress** — tasks 1 and 2 merged, task 3 implemented
-and in review. Spec written 2026-09-12 against `main` at `ed65c9f`, from the interface decided 2026-07-02 and from reading the code that
+**Feature state:** **Complete** (2026-09-13) — all three tasks merged behind
+green CI and human review, and parent issue #140 closed by hand. Spec written
+2026-09-12 against `main` at `ed65c9f`, from the interface decided 2026-07-02 and from reading the code that
 was built expecting it. Three tasks, each gated by its PR + CI + human review.
 
 Depends on [`article-upload-and-extraction`](../article-upload-and-extraction/status.md)
@@ -12,10 +13,11 @@ hangs from.
 Feature parent issue: [**#140**](https://github.com/nicbk/nicbk-website/issues/140),
 with one sub-issue per task, per
 [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md).
-The roadmap entry is **#11** in [../index.md](../index.md). Its parent issue
-should be **checked** when the feature completes, and closed by hand if it has
-not closed itself — as of that document's 2026-09-12 addendum the auto-close
-happens *sometimes*, so either answer is expected.
+The roadmap entry is **#11** in [../index.md](../index.md). Its parent issue was
+**checked** on completion and **had not closed itself** despite all three
+sub-issues closing with their PRs — so it was closed by hand. That is a second
+data point for the 2026-09-12 addendum in the lifecycle document: the auto-close
+happens only sometimes, and the check is worth keeping.
 
 ## Task states
 
@@ -23,7 +25,7 @@ happens *sometimes*, so either answer is expected.
 |---|---|---|---|---|
 | [`editing-an-articles-details`](./tasks/editing-an-articles-details/status.md) | **Merged** | [#145](https://github.com/nicbk/nicbk-website/pull/145) | green | approved |
 | [`deleting-an-article`](./tasks/deleting-an-article/status.md) | **Merged** | [#146](https://github.com/nicbk/nicbk-website/pull/146) | green | approved |
-| [`resolving-a-failed-upload`](./tasks/resolving-a-failed-upload/status.md) | Implemented | [#147](https://github.com/nicbk/nicbk-website/pull/147) | — | — |
+| [`resolving-a-failed-upload`](./tasks/resolving-a-failed-upload/status.md) | **Merged** | [#147](https://github.com/nicbk/nicbk-website/pull/147) | green | approved |
 
 ## Definition of Done (feature)
 
@@ -65,6 +67,15 @@ and answer the warning icon that has never had an answer.
 
 ## Log
 
+- 2026-09-13 — **Feature complete.** #147 merged, #140 closed by hand. A reader
+  can now correct what the extractor wrote, remove a paper and its bytes, and
+  answer a failed upload without deleting the article — the three things the
+  tracker could not do. Worth recording across the three tasks: **each one's
+  research changed something the spec had asserted.** Task 1 found the save
+  control below the fold on a realistic paper; task 2 found that the
+  commit-to-enqueue window it was filed to solve does not exist; task 3 found
+  that two of its three open questions had already been answered by the tasks
+  before it. Spec'ing late did not prevent this — reading the code did.
 - 2026-09-13 — **Task 3 implemented**, completing the feature's code. The
   correction now retires the `upload_jobs` row in the same transaction that
   saves the metadata, and the failed row in the popup finally has a control that

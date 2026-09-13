@@ -1,12 +1,12 @@
 # Status: Deleting an Article
 
-**State:** In progress. Task 2 of 3.
+**State:** Implemented, awaiting review. Task 2 of 3.
 
 - Branch: `article-edit/deleting-an-article`, from `main` at `23a6db9` with task
   1 merged — the two touch the same popover, and sequencing them is cheaper than
   resolving it twice.
 - Sub-issue: [**#142**](https://github.com/nicbk/nicbk-website/issues/142).
-- PR: opened once the unit and integration tiers and the browser pass are clean.
+- PR: [**#146**](https://github.com/nicbk/nicbk-website/pull/146).
 
 ## Why this task exists
 
@@ -196,4 +196,5 @@ pipeline still owns its own wiring.
 
 - 2026-09-12 — Filed with the feature.
 - 2026-09-13 — Researched; the pg-boss premise corrected, the two remaining open
-  items decided with the user, implemented.
+  items decided with the user, implemented, unit + integration + browser
+  verified, PR opened.

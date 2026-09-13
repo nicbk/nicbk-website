@@ -70,7 +70,7 @@ need them (see Phases 2–3).
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
 | 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **Complete** (2026-08-23; all 7 tasks merged, #109 + #111 + #114 + #112 + #118 + #122 + #116) | #9 |
-| 13 | Tracker navigation latency (the auth guard stops blocking) | `tracker-navigation-latency` | Not yet spec'd | #6, #8 |
+| 13 | Tracker navigation latency (the auth guard stops blocking) | [`tracker-navigation-latency`](./tracker-navigation-latency/description.md) | **Spec'd** (2026-09-12; 1 task, not started) | #6, #8 |
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
 | 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Complete** (2026-09-11; both tasks merged, #129 + #130) | #9, #12 |
 
@@ -82,8 +82,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `projects-page` (complete), `authentication` (complete),
 `article-upload-and-extraction` (complete), `collection-view` (complete),
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
-`reader-zoom-performance` (complete) and `reader-marking-a-passage` (complete)
-have full folders today. The rest carry a one-line
+`reader-zoom-performance` (complete), `reader-marking-a-passage` (complete) and
+`tracker-navigation-latency` (spec'd) have full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative

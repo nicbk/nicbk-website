@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { authClient } from '~/auth/auth-client'
+import { forgetSession } from '~/auth/session-cache'
 import { SIGN_OUT_FAILED_MESSAGE } from './account-action-error'
 import { DeleteAccount } from './delete-account'
 import styles from './user-settings.module.css'
@@ -76,6 +77,10 @@ export function UserSettings({
       return
     }
 
+    // Signing out does not reload the page, so the route guard's cached session
+    // would outlive the session itself and let the reader walk back into a
+    // shell with no data behind it.
+    forgetSession()
     onSignedOut?.()
   }
 

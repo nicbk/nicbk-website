@@ -1,7 +1,7 @@
 # Status: Tracker Navigation Latency
 
-**Feature state:** **Spec'd, not started** — written 2026-09-12 against `main`
-at `72c4abd`, from measurements taken the same day. One task, gated by its PR +
+**Feature state:** **Implemented, awaiting review** — spec'd and built on
+2026-09-12, from measurements taken the same day. One task, gated by its PR +
 CI + human review.
 
 Depends on [`authentication`](../authentication/status.md) (#6, Complete) for
@@ -21,7 +21,7 @@ by hand is now the fallback rather than the expectation.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`session-resolved-once`](./tasks/session-resolved-once/status.md) | Not started | — | — | — |
+| [`session-resolved-once`](./tasks/session-resolved-once/status.md) | Implemented | [#138](https://github.com/nicbk/nicbk-website/pull/138) | — | — |
 
 ## Definition of Done (feature)
 
@@ -61,6 +61,12 @@ a round trip to re-answer a question the browser already had.
 
 ## Log
 
+- 2026-09-12 — **Implemented.** The session is resolved once per page load and
+  read thereafter; five client navigations now make one RPC instead of five.
+  Both of the task's open questions were answered rather than deferred — the
+  first navigation still pays (SSR's answer does not reach the browser), and the
+  clearing calls stayed at the two sign-out sites because the alternative would
+  have put Better Auth's browser client in the server bundle.
 - 2026-09-12 — **Spec'd**, after #15 completed. Measured before written, as #12,
   #14 and #15 were: the count of round trips per navigation, the server-side cost
   of the answer, and the deployed host's RTT — three numbers that between them

@@ -5,13 +5,18 @@ import { DeleteAccount } from './delete-account'
 
 // Better Auth's client is the boundary: one call really would delete an
 // account, and the re-authentication path really would navigate to Google.
-const { deleteUser, signInSocial } = vi.hoisted(() => ({
+const { deleteUser, signInSocial, forgetSession } = vi.hoisted(() => ({
   deleteUser: vi.fn(),
   signInSocial: vi.fn(),
+  forgetSession: vi.fn(),
 }))
 vi.mock('~/auth/auth-client', () => ({
   authClient: { deleteUser, signIn: { social: signInSocial } },
 }))
+// The route guard's session cache is the other thing a successful deletion has
+// to reach. Mocked rather than exercised here: what this component owes it is a
+// call, and the cache has its own tests for what the call does.
+vi.mock('~/auth/session-cache', () => ({ forgetSession }))
 
 const EMAIL = 'reader@example.com'
 const DELETE_BUTTON = { name: 'delete account' }
@@ -32,6 +37,7 @@ beforeEach(() => {
   deleteUser.mockResolvedValue({ data: null, error: null })
   signInSocial.mockReset()
   signInSocial.mockResolvedValue({ data: null, error: null })
+  forgetSession.mockReset()
 })
 
 describe('DeleteAccount', () => {
@@ -97,6 +103,9 @@ describe('DeleteAccount', () => {
     await waitFor(() => {
       expect(onDeleted).toHaveBeenCalledTimes(1)
     })
+    // Nothing reloads the page, so the guard's cached session would otherwise
+    // still be letting a deleted account into the tracker's shell.
+    expect(forgetSession).toHaveBeenCalledTimes(1)
   })
 
   it('backs out cleanly on cancel, forgetting what was typed', async () => {
@@ -132,6 +141,9 @@ describe('DeleteAccount', () => {
       )
     })
     expect(onDeleted).not.toHaveBeenCalled()
+    // The account is still there, so the session still stands: a failed attempt
+    // must not throw away an answer that is still true.
+    expect(forgetSession).not.toHaveBeenCalled()
     // The typed confirmation survives, so retrying is one click and not a
     // whole transcription again.
     expect(screen.getByRole('textbox')).toHaveValue(EMAIL)

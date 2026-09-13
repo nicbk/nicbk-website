@@ -6,13 +6,17 @@ import { UserSettings } from './user-settings'
 // Better Auth's client is the boundary: the real one would fire requests at a
 // server jsdom has no way to reach. Everything else here is the real
 // component, including Base UI's dialog behavior.
-const { signOut, deleteUser } = vi.hoisted(() => ({
+const { signOut, deleteUser, forgetSession } = vi.hoisted(() => ({
   signOut: vi.fn(),
   deleteUser: vi.fn(),
+  forgetSession: vi.fn(),
 }))
 vi.mock('~/auth/auth-client', () => ({
   authClient: { signOut, deleteUser, signIn: { social: vi.fn() } },
 }))
+// The route guard's session cache: a successful log-out owes it a call, and the
+// cache's own tests cover what that call does.
+vi.mock('~/auth/session-cache', () => ({ forgetSession }))
 
 const EMAIL = 'reader@example.com'
 const TRIGGER = { name: 'Account settings' }
@@ -40,6 +44,7 @@ beforeEach(() => {
   signOut.mockResolvedValue({ data: null, error: null })
   deleteUser.mockReset()
   deleteUser.mockResolvedValue({ data: null, error: null })
+  forgetSession.mockReset()
 })
 
 describe('UserSettings', () => {
@@ -143,6 +148,9 @@ describe('UserSettings', () => {
     await waitFor(() => {
       expect(onSignedOut).toHaveBeenCalledTimes(1)
     })
+    // Logging out does not reload the page, so the guard's cached session has
+    // to be forgotten here or it outlives the session it stands for.
+    expect(forgetSession).toHaveBeenCalledTimes(1)
   })
 
   it('reports a failed log-out inline and leaves the modal usable', async () => {
@@ -159,6 +167,9 @@ describe('UserSettings', () => {
       )
     })
     expect(onSignedOut).not.toHaveBeenCalled()
+    // The session survived the failed request, so the cached answer is still
+    // the right one.
+    expect(forgetSession).not.toHaveBeenCalled()
     // Still there to try again — the failure was in the request, not the
     // session.
     expect(screen.getByRole('button', { name: 'log out' })).toBeInTheDocument()

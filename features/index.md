@@ -68,7 +68,7 @@ need them (see Phases 2–3).
 | 8 | Collection view (card grid, tags, reading status, filtering, live search) | [`collection-view`](./collection-view/description.md) | **Complete** (2026-08-09; all 4 tasks merged, #86 + #88 + #90 + #92) | #7 |
 | 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **Complete** (2026-08-17; all 6 tasks merged, #96 + #97 + #98 + #99 + #100 + #105) | #7, #8 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
-| 11 | Article edit (correcting what the extractor got wrong, deleting an article) | [`article-edit`](./article-edit/description.md) | **Spec'd** (2026-09-12; 3 tasks, not started) | #7, #8 |
+| 11 | Article edit (correcting what the extractor got wrong, deleting an article) | [`article-edit`](./article-edit/description.md) | **Complete** (2026-09-13; all 3 tasks merged, #141 + #142 + #143) | #7, #8 |
 | 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **Complete** (2026-08-23; all 7 tasks merged, #109 + #111 + #114 + #112 + #118 + #122 + #116) | #9 |
 | 13 | Tracker navigation latency (the auth guard stops blocking) | [`tracker-navigation-latency`](./tracker-navigation-latency/description.md) | **Complete** (2026-09-12; its one task merged, #136) | #6, #8 |
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |

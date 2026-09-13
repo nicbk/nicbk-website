@@ -73,6 +73,7 @@ need them (see Phases 2–3).
 | 13 | Tracker navigation latency (the auth guard stops blocking) | [`tracker-navigation-latency`](./tracker-navigation-latency/description.md) | **Complete** (2026-09-12; its one task merged, #136) | #6, #8 |
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
 | 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Complete** (2026-09-11; both tasks merged, #129 + #130) | #9, #12 |
+| 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Spec'd** (2026-09-13; 2 tasks, not started) | #8, #9 |
 
 ## How this roadmap is spec'd out
 
@@ -143,6 +144,19 @@ for free through a cascade, while **editing it clears nothing**, which is a whol
 task and would have been a defect in a spec written earlier. It also gave a
 decision back to #10: reference editing, which the decided interface puts in this
 modal, waits for the Citations tab that displays references.
+
+**#16 came from using the finished tracker too, and it is the first one a
+Chrome-only browser pass could never have found.** It was filed on 2026-09-13
+from a list of sixteen reported items, whose causes were measured before any
+grouping — which is what showed that two of them share one: an order the code
+never states, left to the engine's defaults. The collection toolbar's half is
+**Safari-only**; Chrome renders that page correctly at every width tested, which
+is why the defect has been live in production unnoticed. Two hypotheses were
+tested and rejected on the way to it (the row's deliberate transparency, and
+`container-type` forming the offending stacking context), and the third was
+found only by driving Safari — something this project had never done. The
+feature therefore also carries the change to how browser verification works,
+which is the part that outlives the two fixes.
 
 #10 stays a one-liner for the same reason #11 did. It inherits a populated
 citation graph plus a

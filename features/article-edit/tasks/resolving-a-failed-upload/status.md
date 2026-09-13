@@ -6,7 +6,7 @@ task 1's modal and relies on task 2's cascade for its other route.
 - Branch: `article-edit/resolving-a-failed-upload`, from `main` at `006796a`
   with tasks 1 and 2 merged.
 - Sub-issue: [**#143**](https://github.com/nicbk/nicbk-website/issues/143).
-- PR: opened once the unit and integration tiers and the browser pass are clean.
+- PR: [**#147**](https://github.com/nicbk/nicbk-website/pull/147).
 - **On merge this completes #11** — check parent issue
   [#140](https://github.com/nicbk/nicbk-website/issues/140) and close it by hand
   if it has not closed itself (2026-09-12 addendum in

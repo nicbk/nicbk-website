@@ -23,7 +23,7 @@ happens *sometimes*, so either answer is expected.
 |---|---|---|---|---|
 | [`editing-an-articles-details`](./tasks/editing-an-articles-details/status.md) | **Merged** | [#145](https://github.com/nicbk/nicbk-website/pull/145) | green | approved |
 | [`deleting-an-article`](./tasks/deleting-an-article/status.md) | **Merged** | [#146](https://github.com/nicbk/nicbk-website/pull/146) | green | approved |
-| [`resolving-a-failed-upload`](./tasks/resolving-a-failed-upload/status.md) | Implemented | — | — | — |
+| [`resolving-a-failed-upload`](./tasks/resolving-a-failed-upload/status.md) | Implemented | [#147](https://github.com/nicbk/nicbk-website/pull/147) | — | — |
 
 ## Definition of Done (feature)
 

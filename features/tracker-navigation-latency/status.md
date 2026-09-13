@@ -1,8 +1,8 @@
 # Status: Tracker Navigation Latency
 
-**Feature state:** **Implemented, awaiting review** — spec'd and built on
-2026-09-12, from measurements taken the same day. One task, gated by its PR +
-CI + human review.
+**Feature state:** **Complete** — spec'd, built and merged on 2026-09-12, from
+measurements taken the same day. Its one task went through its own PR + CI +
+human review.
 
 Depends on [`authentication`](../authentication/status.md) (#6, Complete) for
 the guard this makes cheaper, and on
@@ -12,16 +12,19 @@ navigation that pays for it.
 Feature parent issue: [**#135**](https://github.com/nicbk/nicbk-website/issues/135),
 with one sub-issue for the task, per
 [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md).
-The roadmap entry is **#13** in [../index.md](../index.md). Its parent issue
-should be **checked** when the feature completes — as of that document's
-2026-09-11 revision GitHub closes it when the last sub-issue closes, and closing
-by hand is now the fallback rather than the expectation.
+The roadmap entry is **#13** in [../index.md](../index.md). Its parent issue was
+**checked** when the feature completed, and had *not* closed itself — #136's
+merge left #135 open, and it was closed by hand. That contradicted the previous
+day's revision and is now recorded as its
+[2026-09-12 addendum](../../research/project-management-conventions/issue-and-pr-lifecycle.md):
+the auto-close happens sometimes, so the check is the rule and either answer is
+expected.
 
 ## Task states
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`session-resolved-once`](./tasks/session-resolved-once/status.md) | Implemented | [#138](https://github.com/nicbk/nicbk-website/pull/138) | — | — |
+| [`session-resolved-once`](./tasks/session-resolved-once/status.md) | **Merged** | [#138](https://github.com/nicbk/nicbk-website/pull/138) | green | approved |
 
 ## Definition of Done (feature)
 
@@ -61,6 +64,10 @@ a round trip to re-answer a question the browser already had.
 
 ## Log
 
+- 2026-09-12 — **Complete.** PR #138 merged behind green CI and review, closing
+  #136. The last of the five symptoms the user reported on 2026-08-17 after
+  using the finished tracker, and the only one whose cause was outside the
+  reader.
 - 2026-09-12 — **Implemented.** The session is resolved once per page load and
   read thereafter; five client navigations now make one RPC instead of five.
   Both of the task's open questions were answered rather than deferred — the

@@ -1,15 +1,16 @@
 # Status: Session Resolved Once
 
-**State:** Implemented, awaiting review. The feature's only task.
+**State:** **Merged.** The feature's only task, and the feature is complete.
 
 - Branch: `tracker-navigation-latency/session-resolved-once`, from `main` at
   `3e426bc`.
 - Sub-issue: [**#136**](https://github.com/nicbk/nicbk-website/issues/136).
-- PR: [**#138**](https://github.com/nicbk/nicbk-website/pull/138).
-- **On merge, check the feature's parent issue** — as of 2026-09-11 GitHub
-  closes a parent when its last sub-issue closes, so closing by hand is the
-  fallback rather than the expectation
-  ([issue-and-pr-lifecycle.md](../../../../research/project-management-conventions/issue-and-pr-lifecycle.md)).
+- PR: [**#138**](https://github.com/nicbk/nicbk-website/pull/138) — merged
+  2026-09-12 behind green CI and review, as `9e23bd9`.
+- Parent issue **#135** was checked on merge and had not closed itself; it was
+  closed by hand. That is a counter-example to the previous day's revision and
+  is recorded as the 2026-09-12 addendum in
+  [issue-and-pr-lifecycle.md](../../../../research/project-management-conventions/issue-and-pr-lifecycle.md).
 
 ## Why this task exists
 
@@ -78,3 +79,5 @@ unchanged.
 
 - 2026-09-12 — Filed with the feature.
 - 2026-09-12 — Implemented, unit + browser verified, PR opened.
+- 2026-09-12 — **Merged.** CI green: Biome/typecheck/unit, integration, PR
+  title; both e2e tiers skipping while suspended.

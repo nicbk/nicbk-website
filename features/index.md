@@ -70,7 +70,7 @@ need them (see Phases 2–3).
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
 | 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
 | 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **Complete** (2026-08-23; all 7 tasks merged, #109 + #111 + #114 + #112 + #118 + #122 + #116) | #9 |
-| 13 | Tracker navigation latency (the auth guard stops blocking) | [`tracker-navigation-latency`](./tracker-navigation-latency/description.md) | **In review** (2026-09-12; its one task implemented, #136) | #6, #8 |
+| 13 | Tracker navigation latency (the auth guard stops blocking) | [`tracker-navigation-latency`](./tracker-navigation-latency/description.md) | **Complete** (2026-09-12; its one task merged, #136) | #6, #8 |
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
 | 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Complete** (2026-09-11; both tasks merged, #129 + #130) | #9, #12 |
 
@@ -83,7 +83,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `article-upload-and-extraction` (complete), `collection-view` (complete),
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete) and
-`tracker-navigation-latency` (spec'd) have full folders today. The rest carry a one-line
+`tracker-navigation-latency` (complete) have full folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
@@ -111,7 +111,10 @@ completed, #14 on 2026-08-23, and #15 from measurements taken while finishing
 #12. They are the entries here that exist to fix built behaviour rather than to
 add some, which is why they are features rather than a "bugs" list: each is a
 vertical slice of user-visible behaviour with its own acceptance criteria, and
-the project has no separate defect track.
+the project has no separate defect track. **All four are complete as of
+2026-09-12**, and #13 was the last of them: the only one of the five reported
+symptoms whose cause was not in the reader, and the only one whose fix was a
+round trip removed rather than a behaviour rebuilt.
 
 **#15 has a different provenance from the other three, and it is worth naming.**
 It came from a task measuring its own premise: #12's last task asserted that a

@@ -68,7 +68,7 @@ need them (see Phases 2–3).
 | 8 | Collection view (card grid, tags, reading status, filtering, live search) | [`collection-view`](./collection-view/description.md) | **Complete** (2026-08-09; all 4 tasks merged, #86 + #88 + #90 + #92) | #7 |
 | 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **Complete** (2026-08-17; all 6 tasks merged, #96 + #97 + #98 + #99 + #100 + #105) | #7, #8 |
 | 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
-| 11 | Article edit | `article-edit` | Not yet spec'd | #7 |
+| 11 | Article edit (correcting what the extractor got wrong, deleting an article) | [`article-edit`](./article-edit/description.md) | **Spec'd** (2026-09-12; 3 tasks, not started) | #7, #8 |
 | 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **Complete** (2026-08-23; all 7 tasks merged, #109 + #111 + #114 + #112 + #118 + #122 + #116) | #9 |
 | 13 | Tracker navigation latency (the auth guard stops blocking) | [`tracker-navigation-latency`](./tracker-navigation-latency/description.md) | **Complete** (2026-09-12; its one task merged, #136) | #6, #8 |
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
@@ -82,8 +82,9 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `projects-page` (complete), `authentication` (complete),
 `article-upload-and-extraction` (complete), `collection-view` (complete),
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
-`reader-zoom-performance` (complete), `reader-marking-a-passage` (complete) and
-`tracker-navigation-latency` (complete) have full folders today. The rest carry a one-line
+`reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
+`tracker-navigation-latency` (complete) and `article-edit` (spec'd) have full
+folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
@@ -131,9 +132,20 @@ of #12 (pointer routing during a gesture) while the lag and the phone reload
 became **#14**, because their one cause is in the render pipeline and costs a
 mouse exactly what it costs a thumb.
 
-#10 and #11 stay one-liners for the same reason. #11 inherits the failure path
-#7 deliberately leaves unresolvable, and extends the card menu #8 builds rather
-than adding a second one; #10 inherits a populated citation graph plus a
+**#11 was spec'd this way on 2026-09-12**, and both halves of what it was
+predicted to inherit turned out to be true — with a detail the one-liner could
+not have known. It does extend #8's card menu rather than adding a second
+control: `ArticleMenu`'s own doc comment names this feature and says where its
+two items go. And it does inherit #7's unresolvable failure path — but reading
+`recordOutcome` showed the path is not quite the shape the line above assumed. A
+failed extraction *does* create the article, so deleting it clears the warning
+for free through a cascade, while **editing it clears nothing**, which is a whole
+task and would have been a defect in a spec written earlier. It also gave a
+decision back to #10: reference editing, which the decided interface puts in this
+modal, waits for the Citations tab that displays references.
+
+#10 stays a one-liner for the same reason #11 did. It inherits a populated
+citation graph plus a
 measured list of what is still wrong with it (see
 [#7's task status](./article-upload-and-extraction/tasks/semantic-scholar-enrichment/status.md)) —
 the graph's accuracy is deliberately #10's problem, not #7's. #10 also inherits

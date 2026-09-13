@@ -1,7 +1,8 @@
 # Status: Surface Layering
 
 **Feature state:** **Spec'd** (2026-09-13), not started. Two tasks, each gated by
-its own PR + CI + human review.
+its own PR + CI + human review. The spec itself is
+[PR #152](https://github.com/nicbk/nicbk-website/pull/152).
 
 Spec written against `main` at `947d2c2`, from causes measured in **both Chrome
 and Safari** rather than from the code's own comments — two of which turned out

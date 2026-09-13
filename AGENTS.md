@@ -216,8 +216,8 @@ with a decided document is raised with the user rather than resolved silently.
 
 Every visual/interactive feature must be verified against what it is actually
 for — the experience it is meant to deliver and the reference it is meant to
-match — by exercising it in Chrome the way a user would. "It renders without
-errors" is not verification; it is the absence of one failure mode. Decide up
+match — by exercising it in a real browser the way a user would. "It renders
+without errors" is not verification; it is the absence of one failure mode. Decide up
 front what success looks like (the intended behavior, plus the mockup or spec
 if one exists) and check the running feature against *that*, rather than
 accepting any plausible-looking result. This cannot be inferred from the code,
@@ -247,8 +247,27 @@ overflow, and interaction problems.
   and dark themes, and a spread of browser widths (narrow/mobile, mid, and
   wide) for anything responsive. Layout bugs are frequently width-dependent
   and invisible at the one size you happened to test.
+- **Whatever the code leaves to a default, check in more than one engine.**
+  Browsers agree on what a stylesheet *says* and diverge on what it *omits* —
+  paint order under `z-index: auto`, which elements form stacking contexts,
+  sticky positioning, hit-testing. Anywhere the code relies on those rather than
+  stating an order, one engine's answer is evidence about that engine only. This
+  is not a general instruction to test everything twice: it is specific to
+  behaviour nobody wrote down, and the cure is usually to write it down.
+- **Assert the geometry; do not read it off a picture.** For any claim of the
+  form "A is above B" or "the press lands on A", get both rectangles, **check
+  they actually overlap**, then hit-test the middle of the overlap and report
+  which element answered. A screenshot cannot distinguish "on top" from "not
+  overlapping yet", and a probe that misses must fail rather than pass quietly.
 - When viewing surfaces a problem, fix it and re-view to confirm, and add or
   extend an automated test that locks the fix in.
+
+Written after a card was found painting over the collection's sticky toolbar in
+Safari while Chrome drew the same page correctly at every width tested. The
+defect was live in production, had passed review, and was invisible to the
+process because the process only ever looked in one engine — and because two
+earlier attempts to explain it reasoned from the code's own comments instead of
+measuring.
 
 ## Fix recurring mistakes at the level of the principle
 

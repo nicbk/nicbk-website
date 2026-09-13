@@ -25,6 +25,24 @@
   width: 100%;
 
   /*
+   * A stacking context, so the toolbar's `z-index` cannot reach outside this
+   * page.
+   *
+   * **This half is the reason the other half is safe**, and the two are one
+   * change — see `.toolbar` in collection-toolbar.module.css, which carries the
+   * rest of the reasoning. Briefly: the row needs to outrank the cards, and a
+   * bare `z-index` on it was tried before and reverted because it also
+   * outranked every portalled menu and dialog on the page, which render at the
+   * end of the document with no z-index of their own.
+   *
+   * Isolating here confines the row's layer to this subtree. Inside it the row
+   * wins; outside it this whole element competes as one `z-index: auto` box,
+   * which a later-painting portal beats. Deleting this line does not tidy
+   * anything — it restores two defects that were already shipped once.
+   */
+  isolation: isolate;
+
+  /*
    * Gives the panel's top inset to the toolbar, which is sticky and needs it.
    *
    * A sticky element cannot be positioned outside its containing block, and that

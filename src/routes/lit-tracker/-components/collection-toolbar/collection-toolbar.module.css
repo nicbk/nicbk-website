@@ -51,16 +51,30 @@
    * moving. The page cancels the panel's own top inset to make room
    * (collection-page.module.css).
    *
-   * **No `z-index`.** It needs to sit above the cards and nothing else, and
-   * being positioned is already enough for that — positioned elements paint
-   * after in-flow content regardless. A `z-index: 1` here (the first draft) also
-   * lifted it above every portalled popup on the page, which render at the end
-   * of the document with no z-index of their own: menus and dialogs opened
-   * *underneath* the row, and the modal backdrop dimmed the whole page except
-   * this one strip of it.
+   * **What this row beats, and what beats it.** It must paint above the cards
+   * scrolling under it, and below every portalled surface — menus, dialogs,
+   * backdrops, toasts.
+   *
+   * The `z-index` buys the first. The second is bought by `isolation: isolate`
+   * on `.page` (collection-page.module.css), **and only by that** — the two
+   * lines are one change. A bare `z-index: 1` was tried first and reverted,
+   * because portals render at the end of the document with no z-index of their
+   * own: menus and dialogs opened *underneath* this row, and the modal backdrop
+   * dimmed the whole page except this one strip. Isolation confines the layer
+   * to the page, so the row outranks the cards without ever being compared
+   * against a portal.
+   *
+   * **Why an explicit order at all**, when the first draft argued none was
+   * needed: that argument was *"positioned elements paint after in-flow content
+   * regardless"*, and it is not something the code gets to assume. Safari drew
+   * the cards over this row — over the search pill itself — while Chrome drew
+   * it correctly at every width tested, and the defect was live in production
+   * for as long as it took someone to look in the other engine. An order left
+   * to a default is an order the engine chooses (AGENTS.md).
    */
   position: sticky;
   top: calc(-1 * var(--space-lg));
+  z-index: 1;
   padding-block: var(--space-lg);
 }
 

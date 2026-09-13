@@ -4,6 +4,7 @@ import { Input } from '@base-ui/react/input'
 import { useId, useState } from 'react'
 import { authClient } from '~/auth/auth-client'
 import { sanitizeReturnTo } from '~/auth/return-to'
+import { forgetSession } from '~/auth/session-cache'
 import {
   deleteFailedMessage,
   isStaleSessionError,
@@ -96,6 +97,9 @@ export function DeleteAccount({ email, onDeleted }: DeleteAccountProps) {
       return
     }
 
+    // Same reason as signing out: the page is not reloading, so the route
+    // guard's cached session has to be told that the account behind it is gone.
+    forgetSession()
     onDeleted?.()
   }
 

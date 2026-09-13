@@ -1,11 +1,11 @@
 # Status: Session Resolved Once
 
-**State:** Not started. The feature's only task.
+**State:** Implemented, awaiting review. The feature's only task.
 
 - Branch: `tracker-navigation-latency/session-resolved-once`, from `main` at
-  `72c4abd` or later.
+  `3e426bc`.
 - Sub-issue: [**#136**](https://github.com/nicbk/nicbk-website/issues/136).
-- PR: opened once the unit tier and the browser pass are both clean.
+- PR: [**#138**](https://github.com/nicbk/nicbk-website/pull/138).
 - **On merge, check the feature's parent issue** — as of 2026-09-11 GitHub
   closes a parent when its last sub-issue closes, so closing by hand is the
   fallback rather than the expectation
@@ -18,18 +18,63 @@ blocks on one session RPC — 211 ms, 380 ms and 172 ms locally, with no network
 at all — while the server-side work behind it costs 8–19 ms. On the deployed
 host that trip is about one RTT, ~110–130 ms, in front of every move.
 
-## Open items to settle while writing
+## What shipped
 
-- **Whether the first client navigation can be free too.** SSR resolves the
-  session on the server; whether that answer reaches the browser without a
-  second ask depends on what TanStack Start serializes into the client. The
-  acceptance criteria promise *at most one per page load* precisely because this
-  is unknown until tried — if it comes free, say so; if not, say that.
-- **Where the clearing call belongs.** At each success site (`signOut`,
-  `deleteUser`) is the plan; the alternative is for the cache to subscribe to
-  Better Auth's own store, which is fewer call sites and one more dependency
-  between modules. The smaller answer wins if both work.
+`src/auth/session-cache.ts` — one module, two exports. `resolveSession()` holds
+the *promise* of the first resolution, so a burst of navigations joins one ask
+rather than starting several; `forgetSession()` drops it. `requireAuth` resolves
+through it instead of calling the server function directly, and `requireSession`
+is untouched. Outside a browser it caches nothing and calls straight through.
+
+## Open items, settled
+
+- **The first client navigation still pays.** Counted in Chrome: five client
+  navigations (collection → article → back → article → back → article) made
+  **one** session RPC, and it was the first. The server's own answer from the
+  SSR pass does not reach the browser — route context is not among what
+  TanStack Start serializes — so the honest outcome is what the acceptance
+  criteria promised, *at most one per page load*, not zero. Getting that last
+  one would mean serializing a session into the document, which is a different
+  decision than this feature made.
+- **Clearing lives at the two success sites**, as planned — and the alternative
+  turned out to be unavailable rather than merely larger. For the cache to
+  subscribe to Better Auth's store it would have to import `auth-client`, and
+  the cache is imported by `require-auth.ts`, which runs on the server: that
+  would pull the browser auth client into the server bundle to save two call
+  sites. The smaller answer was also the only safe one.
+
+## Browser verification — 2026-09-12, Chrome, local Compose stack
+
+Counted rather than timed, per the feature's testing.md. `window.fetch` patched
+to count `_serverFn` requests, signed in as marketpluscorp@gmail.com.
+
+- **Five client navigations, one session RPC** — the first. Before this change
+  each of the five would have made its own; the three measured for the research
+  took 211 ms, 380 ms and 172 ms.
+- **A full page load re-validates**: the article page renders from the server's
+  own resolution, as it did before.
+- **Signing out forgets it.** Logged out from the article page — which navigates
+  to `/` through the router, not a reload — then went back to the article URL in
+  the same document: landed on
+  `/sign-in?returnTo=%2Flit-tracker%2F01a091cf-…`, not on an empty shell. Document
+  continuity was checked separately (a marker set on one page survived a
+  back/forward pair), so this is the cache being cleared and not a reload doing
+  the work.
+- **A signed-out visitor opening a tracker URL directly** is still redirected,
+  `returnTo` intact including its search string.
+- **Console:** one pre-existing `data-theme` hydration mismatch on the root
+  document, present identically with the change stashed. Unrelated to this
+  feature, and worth its own look later.
+
+## Deviation from the written tests
+
+`require-auth.test.ts` was not left untouched, as
+[testing.md](./testing.md) expected: its cases share one jsdom document, so the
+cache carries an answer from one to the next. `beforeEach` now calls
+`forgetSession()` — the same call sign-out makes. The guard's assertions are
+unchanged.
 
 ## Log
 
 - 2026-09-12 — Filed with the feature.
+- 2026-09-12 — Implemented, unit + browser verified, PR opened.

@@ -1,7 +1,7 @@
 import { redirect } from '@tanstack/react-router'
-import { fetchSession } from './fetch-session'
 import { DEFAULT_RETURN_TO, sanitizeReturnTo } from './return-to'
 import type { AuthSession } from './session'
+import { resolveSession } from './session-cache'
 
 /** A session that is definitely present — what a protected route is handed. */
 export type SignedInSession = NonNullable<AuthSession>
@@ -47,6 +47,10 @@ export function requireSession(
  * The drop-in route guard: resolves the session for the current request, then
  * applies {@link requireSession}.
  *
+ * The resolution goes through {@link resolveSession} rather than straight to
+ * the server function, so a browser pays for it once per page load instead of
+ * once per navigation.
+ *
  * Meant to be used unchanged as a route's `beforeLoad`. Attaching it to a group
  * layout rather than to each page is what makes it cover routes added later:
  *
@@ -65,5 +69,5 @@ export async function requireAuth({
 }: {
   location: GuardedLocation
 }): Promise<SignedInSession> {
-  return requireSession(await fetchSession(), location)
+  return requireSession(await resolveSession(), location)
 }

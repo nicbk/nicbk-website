@@ -2,6 +2,7 @@ import { isRedirect } from '@tanstack/react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SignedInSession } from './require-auth'
 import { requireAuth, requireSession } from './require-auth'
+import { forgetSession } from './session-cache'
 
 // The guard's only dependency on the server is the session lookup, so that is
 // the boundary the test replaces — the alternative would drag the database
@@ -33,6 +34,10 @@ function captureRedirect(run: () => unknown) {
 
 beforeEach(() => {
   fetchSession.mockReset()
+  // The guard resolves through the session cache, which lives for a page load
+  // — and in jsdom, a page load is the whole file. Each case starts from a
+  // browser that has not asked yet, using the same call sign-out makes.
+  forgetSession()
 })
 
 describe('requireSession', () => {

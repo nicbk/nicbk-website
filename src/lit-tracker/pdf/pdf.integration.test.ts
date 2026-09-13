@@ -54,6 +54,8 @@ let database: DatabaseHandle
 
 let respondWithArticlePdf: typeof import('./pdf-endpoint').respondWithArticlePdf
 let putArticlePdf: typeof import('~/storage/pdf-storage').putArticlePdf
+let runPdfCleanupStage: typeof import('./cleanup-stage').runPdfCleanupStage
+let productionPdfCleanupServices: typeof import('./cleanup-stage').productionPdfCleanupServices
 
 /** A small but genuine PDF: a header, a marker, and an EOF. */
 function pdf(marker: string): Uint8Array {
@@ -75,6 +77,9 @@ beforeAll(async () => {
 
   putArticlePdf = (await import('~/storage/pdf-storage')).putArticlePdf
   respondWithArticlePdf = (await import('./pdf-endpoint')).respondWithArticlePdf
+  const cleanup = await import('./cleanup-stage')
+  runPdfCleanupStage = cleanup.runPdfCleanupStage
+  productionPdfCleanupServices = cleanup.productionPdfCleanupServices
 }, 300_000)
 
 afterAll(async () => {
@@ -227,5 +232,68 @@ describe('serving an article PDF, against real containers', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('location')).toBeNull()
     expect(JSON.stringify([...response.headers])).not.toContain(garage.endpoint)
+  })
+})
+
+/**
+ * #11's cleanup against the real bucket.
+ *
+ * A mocked S3 client can show which key the stage names; only this tier can
+ * show that the object is actually gone afterwards, and that Garage answers a
+ * second delete the way the retry policy assumes it does.
+ */
+describe('the PDF cleanup job', () => {
+  it('removes the object for the article it names', async () => {
+    await plantArticle(OWNED_ARTICLE, OWNER)
+    expect(await garage.has(pdfObjectKey(OWNER, OWNED_ARTICLE))).toBe(true)
+
+    await runPdfCleanupStage(
+      { userId: OWNER, articleId: OWNED_ARTICLE },
+      productionPdfCleanupServices(),
+    )
+
+    expect(await garage.has(pdfObjectKey(OWNER, OWNED_ARTICLE))).toBe(false)
+  })
+
+  it('succeeds when the object is already gone', async () => {
+    // The retry case, against the real store rather than a stub that was told
+    // to resolve: pg-boss will run this again after any partial failure, and
+    // the whole policy rests on a second run being a success.
+    await plantArticle(OWNED_ARTICLE, OWNER)
+    const job = { userId: OWNER, articleId: OWNED_ARTICLE }
+
+    await runPdfCleanupStage(job, productionPdfCleanupServices())
+    await expect(
+      runPdfCleanupStage(job, productionPdfCleanupServices()),
+    ).resolves.toBeUndefined()
+  })
+
+  it('never deletes an object outside the named user’s prefix', async () => {
+    // The key is derived from the job's two fields, so a job naming another
+    // user's article can only ever point at a key that does not exist. Their
+    // real object is untouched.
+    await plantArticle(OTHERS_ARTICLE, OTHER)
+
+    await runPdfCleanupStage(
+      { userId: OWNER, articleId: OTHERS_ARTICLE },
+      productionPdfCleanupServices(),
+    )
+
+    expect(await garage.has(pdfObjectKey(OTHER, OTHERS_ARTICLE))).toBe(true)
+  })
+
+  it('leaves the article unreadable through the route afterwards', async () => {
+    // What a reader would see if a row somehow outlived its object — and the
+    // reason the row is deleted first: this state is the one deletion must
+    // never leave behind on purpose.
+    await plantArticle(OWNED_ARTICLE, OWNER)
+    await runPdfCleanupStage(
+      { userId: OWNER, articleId: OWNED_ARTICLE },
+      productionPdfCleanupServices(),
+    )
+
+    const response = await ask(OWNED_ARTICLE, OWNER)
+
+    expect(response.status).toBe(500)
   })
 })

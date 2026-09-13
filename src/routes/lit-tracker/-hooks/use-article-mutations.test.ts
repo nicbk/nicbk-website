@@ -95,6 +95,80 @@ describe('the mutation each action names', () => {
     expect(requested()).toEqual([{ name: 'tags.delete', args: { id: TAG } }])
   })
 
+  it('deletes an article', async () => {
+    await mutations().deleteArticle(ARTICLE)
+
+    // One mutation, naming only the id. What goes with the article — its
+    // annotations, tags, edges and job row — is the database's cascades, and
+    // its PDF is the server half's follow-up (`~/zero/server-effects.ts`).
+    expect(requested()).toEqual([
+      { name: 'articles.delete', args: { id: ARTICLE } },
+    ])
+  })
+
+  it('corrects an article’s details', async () => {
+    const failure = await mutations().updateDetails(ARTICLE, {
+      title: 'Attention Is All You Need',
+      authors: [{ name: 'Ashish Vaswani' }],
+      publicationYear: 2017,
+      venue: 'NeurIPS',
+      doi: null,
+    })
+
+    expect(failure).toBeNull()
+    expect(requested()).toEqual([
+      {
+        name: 'articles.updateDetails',
+        args: {
+          id: ARTICLE,
+          title: 'Attention Is All You Need',
+          authors: [{ name: 'Ashish Vaswani' }],
+          publicationYear: 2017,
+          venue: 'NeurIPS',
+          doi: null,
+        },
+      },
+    ])
+  })
+
+  it('hands a refused correction back rather than raising a toast', async () => {
+    // The one write here that answers: the edit form shows an error inside
+    // itself (research/ui-ux/design-system.md), which it cannot do if the
+    // failure has already become a toast somewhere else.
+    mutate.mockImplementation(() =>
+      refused({
+        type: 'app',
+        message: 'that item is not available to this account.',
+      }),
+    )
+
+    const failure = await mutations().updateDetails(ARTICLE, {
+      title: 'Attention Is All You Need',
+      authors: [{ name: 'Ashish Vaswani' }],
+      publicationYear: null,
+      venue: null,
+      doi: null,
+    })
+
+    expect(failure?.message).toBe('that item is not available to this account.')
+    expect(showError).not.toHaveBeenCalled()
+  })
+
+  it('raises a toast for a refused delete, which has no form left to show one', async () => {
+    // The confirmation closes as the write is sent, so by the time the server
+    // answers there is nowhere inline for the message to go.
+    mutate.mockImplementation(() =>
+      refused({
+        type: 'app',
+        message: 'that item is not available to this account.',
+      }),
+    )
+
+    await mutations().deleteArticle(ARTICLE)
+
+    await waitFor(() => expect(showError).toHaveBeenCalledTimes(1))
+  })
+
   it('creates a tag and applies it, as two mutations against one new id', async () => {
     // Two writes rather than a bespoke "create and attach" mutator, which would
     // need its own authorization path for a case these two already cover. What

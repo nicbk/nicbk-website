@@ -1,26 +1,16 @@
 // @vitest-environment node
 import type { PgBoss } from 'pg-boss'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { ExtractionServices } from './services'
+import { registerExtractionHandlers } from './worker'
 
 /**
- * The wiring: which queue runs which stage, and the fact that the worker keeps
- * trying to start.
+ * The wiring: which queue runs which stage.
  *
- * Both are invisible when wrong — every queue exists, every handler runs, and
- * the only symptom is uploads that never resolve. The stages themselves are
- * tested in their own files.
+ * Invisible when wrong — every queue exists, every handler runs, and the only
+ * symptom is uploads that never resolve. The stages themselves are tested in
+ * their own files, and that a worker starts at all is `jobs/worker.test.ts`.
  */
-
-const getQueue = vi.hoisted(() => vi.fn())
-vi.mock('~/lit-tracker/jobs/queue', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('~/lit-tracker/jobs/queue')>()),
-  getQueue,
-}))
-
-const { registerExtractionHandlers, startExtractionWorker } = await import(
-  './worker'
-)
 
 describe('registerExtractionHandlers', () => {
   it('binds a handler to every queue in the chain', async () => {
@@ -71,46 +61,5 @@ describe('registerExtractionHandlers', () => {
     ])
 
     expect(deleted).toHaveLength(2)
-  })
-})
-
-describe('startExtractionWorker', () => {
-  afterEach(() => {
-    vi.useRealTimers()
-    vi.restoreAllMocks()
-  })
-
-  it('keeps trying until the queue is reachable', async () => {
-    // The behaviour the whole feature rests on when a deploy brings the app up
-    // before Postgres: a worker that gave up after one failed connection would
-    // look exactly like a working one, until an upload never resolved.
-    vi.useFakeTimers()
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-    vi.spyOn(console, 'log').mockImplementation(() => {})
-    const work = vi.fn(async (_name: string, _handler: unknown) => 'worker-id')
-    getQueue
-      .mockRejectedValueOnce(
-        Object.assign(new Error(''), { code: 'ECONNREFUSED' }),
-      )
-      .mockResolvedValue({ work })
-
-    const started = startExtractionWorker()
-    // The retry is scheduled, not immediate; nothing is bound yet.
-    expect(work).not.toHaveBeenCalled()
-
-    await vi.advanceTimersByTimeAsync(5_000)
-    await started
-
-    expect(getQueue).toHaveBeenCalledTimes(2)
-    expect(work).toHaveBeenCalledTimes(5)
-  })
-
-  it('starts only once, however many times it is called', async () => {
-    // The dev server re-evaluates the entry on reload, and duplicate workers
-    // would each hold a connection and fetch from the same queues.
-    const first = startExtractionWorker()
-
-    expect(startExtractionWorker()).toBe(first)
-    await first
   })
 })

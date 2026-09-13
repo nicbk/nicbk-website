@@ -15,10 +15,14 @@ const respondToZeroMutate = vi.hoisted(() =>
 )
 const getSession = vi.hoisted(() => vi.fn())
 const dbProvider = vi.hoisted(() => ({ transaction: vi.fn() }))
+const getQueue = vi.hoisted(() => vi.fn())
 
 vi.mock('~/zero/mutate-endpoint', () => ({ respondToZeroMutate }))
 vi.mock('~/auth/auth', () => ({ getSession }))
 vi.mock('~/zero/db-provider', () => ({ dbProvider }))
+// Mocked for the same reason as the db provider: importing it connects to
+// Postgres from the validated environment.
+vi.mock('~/lit-tracker/jobs/queue', () => ({ getQueue }))
 
 const { Route } = await import('./mutate')
 
@@ -31,7 +35,7 @@ describe('the /api/zero/mutate mount', () => {
     expect(Object.keys(handlers ?? {})).toEqual(['POST'])
   })
 
-  it('passes the request through with the configured key, session reader, and database', async () => {
+  it('passes the request through with the configured key, session reader, database, and queue', async () => {
     const handlers = Route.options.server?.handlers as unknown as {
       POST: (opts: { request: Request }) => Promise<Response>
     }
@@ -45,6 +49,7 @@ describe('the /api/zero/mutate mount', () => {
       apiKey: expect.any(String),
       getSession,
       dbProvider,
+      getQueue,
     })
     expect(await response.text()).toBe('ok')
   })

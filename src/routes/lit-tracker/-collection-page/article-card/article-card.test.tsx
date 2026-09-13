@@ -103,6 +103,7 @@ function renderCard({
       onToggleTag={handlers.onToggleTag ?? vi.fn()}
       onCreateTag={handlers.onCreateTag ?? vi.fn()}
       onSaveDetails={vi.fn().mockResolvedValue(null)}
+      onDelete={vi.fn()}
     />,
   )
 }

@@ -136,6 +136,7 @@ export function CollectionPage() {
         }
         onCreateTag={mutations.createAndApplyTag}
         onSaveDetails={mutations.updateDetails}
+        onDelete={mutations.deleteArticle}
       />
     </div>
   )

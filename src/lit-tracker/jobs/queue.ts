@@ -41,6 +41,19 @@ export const ENRICH_QUEUE = 'lit-tracker.enrich'
 export const FINALIZE_QUEUE = 'lit-tracker.finalize'
 
 /**
+ * Removes a deleted article's PDF from the object store.
+ *
+ * **Not part of the chain above**, and the only queue here that is not: the
+ * other three run one after another to turn an upload into an article, while
+ * this one runs once, at the other end of that life, when #11 deletes the
+ * article again. It is a job rather than a line in the mutator for a reason the
+ * mutator cannot get around — every mutator on this site runs in the browser
+ * too, and a browser has no business holding bucket credentials
+ * (research/security-privacy/pdf-and-annotation-data-protection.md).
+ */
+export const PDF_CLEANUP_QUEUE = 'lit-tracker.pdf-cleanup'
+
+/**
  * Where an extract job lands once its retries are exhausted.
  *
  * Without this a transient failure that never stopped being transient — GROBID
@@ -97,6 +110,20 @@ export interface FinalizeJob {
 }
 
 /**
+ * What a PDF cleanup job carries: who owned the article, and which one.
+ *
+ * **Not the object key**, though the sender has it. The key is a pure function
+ * of these two values (`storage/object-key.ts`), so deriving it in the handler
+ * means a cleanup job can only ever name an object inside its own user's
+ * prefix — a key carried in the payload could name any object in the bucket, and
+ * this row is written by the same request that a client initiated.
+ */
+export interface PdfCleanupJob {
+  userId: string
+  articleId: string
+}
+
+/**
  * What the upload path actually needs from pg-boss.
  *
  * Narrower than `PgBoss` so a caller can see, from the type alone, that
@@ -145,6 +172,23 @@ const ENRICH_RETRY_POLICY = {
 } as const
 
 /**
+ * How hard the cleanup tries before an object is left behind.
+ *
+ * **No dead-letter queue**, unlike the two stages above, because there is
+ * nothing for a handler of last resort to do. An exhausted extract has a user
+ * waiting on a row that must be resolved one way or the other; an exhausted
+ * cleanup has a user whose article is already gone from every surface they can
+ * see, and the only remaining consequence is a few megabytes nobody reads. So it
+ * retries generously against the one failure that is real — Garage restarting
+ * under a deploy — and then stops, loudly, in pg-boss's own failed-job table.
+ */
+const PDF_CLEANUP_RETRY_POLICY = {
+  retryLimit: 5,
+  retryDelay: 30,
+  retryBackoff: true,
+} as const
+
+/**
  * Connects to the queue and makes sure its schema and queues exist.
  *
  * `start()` creates and migrates the `pgboss` schema, and `createQueue` is
@@ -170,6 +214,7 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
   await boss.createQueue(FINALIZE_QUEUE)
   await boss.createQueue(EXTRACT_QUEUE, EXTRACT_RETRY_POLICY)
   await boss.createQueue(ENRICH_QUEUE, ENRICH_RETRY_POLICY)
+  await boss.createQueue(PDF_CLEANUP_QUEUE, PDF_CLEANUP_RETRY_POLICY)
   // `createQueue` is a no-op on a queue that already exists — including its
   // options — so a database that already carries the extract queue from an
   // earlier version would keep that version's retry policy. Applying it again
@@ -177,6 +222,7 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
   // create it.
   await boss.updateQueue(EXTRACT_QUEUE, EXTRACT_RETRY_POLICY)
   await boss.updateQueue(ENRICH_QUEUE, ENRICH_RETRY_POLICY)
+  await boss.updateQueue(PDF_CLEANUP_QUEUE, PDF_CLEANUP_RETRY_POLICY)
   return boss
 }
 

@@ -107,6 +107,7 @@ function collection(
       onToggleTag={vi.fn()}
       onCreateTag={vi.fn()}
       onSaveDetails={vi.fn().mockResolvedValue(null)}
+      onDelete={vi.fn()}
       {...overrides}
     />
   )

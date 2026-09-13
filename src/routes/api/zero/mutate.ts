@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getSession } from '~/auth/auth'
 import { env } from '~/env'
+import { getQueue } from '~/lit-tracker/jobs/queue'
 import { dbProvider } from '~/zero/db-provider'
 import { respondToZeroMutate } from '~/zero/mutate-endpoint'
 
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/api/zero/mutate')({
           apiKey: env.ZERO_MUTATE_API_KEY,
           getSession,
           dbProvider,
+          getQueue,
         }),
     },
   },

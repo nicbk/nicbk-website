@@ -100,12 +100,49 @@
      edges. */
   width: 16rem;
   max-width: calc(100vw - 2 * var(--space-md));
+  /*
+   * Never taller than the space the positioner found for it.
+   *
+   * Found in the browser: an article whose title runs to a paragraph — the
+   * detail page's menu shows the whole title — grew this popup past the bottom
+   * of a 1440x900 window and took "delete…" with it. Unbounded, the actions at
+   * the foot of this menu are only reachable on a short enough article.
+   *
+   * The cap alone does not fix it; `.details` below is the region that gives
+   * way, so what the cap removes is the overflow rather than the controls. The
+   * scroll here is the last resort under it, for a window short enough that even
+   * the capped content does not fit — clipping silently would be worse than a
+   * popup that scrolls.
+   */
+  max-height: var(--available-height);
+  overflow-y: auto;
   padding: var(--space-sm) 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-bg-surface);
   color: var(--color-text);
   outline: none;
+}
+
+/*
+ * The article's own details, when a surface supplies them.
+ *
+ * It is the region that can be arbitrarily tall — a title is a sentence and
+ * sometimes a paragraph — so it is the region that gives way. Capped at about
+ * five lines and scrolled, which shows enough to identify the paper while
+ * leaving the controls below it on screen.
+ */
+.details {
+  flex-shrink: 1;
+  min-height: 0;
+  max-height: 9rem;
+  overflow-y: auto;
+  /* The separator lives out here rather than inside the scrolling text, where
+     it would only be visible once the reader had scrolled to the end of a long
+     title. It matches `article-tag-controls.module.css`'s — the popup should
+     look like one surface, not several components stacked. */
+  margin-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -124,7 +161,7 @@
 }
 
 /*
- * "edit…", and — with #11's second task — "delete…" beneath it.
+ * "edit…", and "delete…" beneath it.
  *
  * A full-width row rather than a bordered button: the popup's other regions are
  * rows too, and a button floating inside a menu reads as a different kind of
@@ -136,6 +173,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+  /* Never the region that gives way when the popup is capped: these are the
+     controls the cap exists to keep on screen. */
+  flex-shrink: 0;
   width: 100%;
   /* 44px to the finger, and the same left inset as the rows above it. */
   min-height: 2.75rem;
@@ -154,6 +194,41 @@
 @media (hover: hover) {
   .action:hover {
     color: var(--color-accent);
+  }
+}
+
+/*
+ * The only irreversible row on this menu.
+ *
+ * Two things separate it from "edit…" directly above, and it needs both: the
+ * error colour, which the eye catches before the label is read, and a real gap
+ * rather than the shared hairline, so a press that lands a few pixels low hits
+ * nothing at all instead of hitting this (AGENTS.md, "an irreversible action
+ * must never be one stray press from an everyday one"). The label still says
+ * "delete…", for anyone who cannot distinguish the colour — WCAG 1.4.1.
+ *
+ * The override is written as `.popup .destructiveAction`, not plain
+ * `.destructiveAction`, and that is load-bearing: `composes` emits `.action`
+ * alongside this class at identical specificity, so which one wins would
+ * otherwise be whichever the bundler emitted last (see
+ * delete-account.module.css, where exactly that silently rendered a destructive
+ * button in ordinary text colour).
+ */
+.destructiveAction {
+  composes: action;
+}
+
+.popup .destructiveAction {
+  margin-top: var(--space-2xs);
+  color: var(--color-error);
+}
+
+@media (hover: hover) {
+  /* Not the accent: a destructive control that brightens to the everyday
+     action colour on hover is pretending to be one. */
+  .popup .destructiveAction:hover {
+    color: var(--color-error);
+    background-color: var(--color-bg);
   }
 }
 

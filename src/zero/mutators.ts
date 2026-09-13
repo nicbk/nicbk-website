@@ -348,6 +348,46 @@ export const mutators = defineMutators({
         })
       },
     ),
+
+    /**
+     * Remove an article, and with it everything that was only ever about that
+     * article.
+     *
+     * **The database does the removing.** Annotations, tag applications, the
+     * edges this paper's own bibliography produced, and its `upload_jobs` row
+     * all carry `ON DELETE CASCADE` to here, so this is one statement in one
+     * transaction rather than five writes with windows between them. Deleting a
+     * failed upload is therefore also how its warning clears — the job row that
+     * was reporting the failure was hanging off the article all along.
+     *
+     * One thing deliberately does **not** cascade: an edge from someone else's
+     * paper that had graduated to point at this one has
+     * `cited_article_id ON DELETE SET NULL`, so it reverts to an unresolved
+     * reference rather than disappearing. The citing paper still lists this work
+     * in its bibliography; that fact is not this user's to delete
+     * (research/data-modeling/citation-graph-schema.md).
+     *
+     * **The PDF is not deleted here, and cannot be.** A copy of this mutator
+     * runs in the browser to apply the delete optimistically, and the browser is
+     * never a client of the object store. The server half of the same request
+     * enqueues that work — `~/zero/server-effects.ts` — which is also why this
+     * module still imports nothing that could not be bundled for a browser.
+     *
+     * **Re-running it.** Like every guarded write here, a second delete of the
+     * same id is refused rather than silently succeeding: `requireOwnedArticle`
+     * cannot tell a row that is gone from a row that was never yours, and
+     * answering differently for the two would be the one place on this site that
+     * confirms another account's id exists. Rebase is unaffected — Zero rolls
+     * the optimistic delete back before re-running, so the row is there again.
+     */
+    delete: defineMutator(
+      z.object({ id: z.uuid() }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        await requireOwnedArticle(tx, session, args.id)
+        await tx.mutate.articles.delete({ id: args.id })
+      },
+    ),
   },
 })
 

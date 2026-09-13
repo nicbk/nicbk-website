@@ -547,3 +547,61 @@ describe('articles.updateDetails', () => {
     expect(writes).toEqual([])
   })
 })
+
+describe('articles.delete', () => {
+  it('deletes the article and nothing else', async () => {
+    // One write, not five. Annotations, tag links, citation edges and the
+    // `upload_jobs` row are the database's job — cascades, in the same
+    // statement — and a mutator deleting them by hand would be four more
+    // windows for a half-deleted article to exist in.
+    const writes = await run(mutators.articles.delete, { id: ARTICLE })
+
+    expect(writes).toEqual([{ table: 'articles', operation: 'delete' }])
+  })
+
+  it('deletes the article it was given', async () => {
+    const [write] = await runCapturing(mutators.articles.delete, {
+      id: ARTICLE,
+    })
+
+    expect(write?.values).toEqual({ id: ARTICLE })
+  })
+
+  it("refuses another reader's article without writing", async () => {
+    const { tx, writes } = stubTransaction({ reads: [false] })
+
+    await expect(
+      mutators.articles.delete.fn({
+        args: { id: ARTICLE },
+        tx,
+        ctx: CONTEXT,
+      } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+
+  it.each([
+    ['a malformed id', { id: 'article-1' }],
+    ['no id at all', {}],
+  ])('refuses %s without writing', async (_case, args) => {
+    const { tx, writes } = stubTransaction()
+
+    await expect(
+      mutators.articles.delete.fn({ args, tx, ctx: CONTEXT } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+
+  it('refuses a request carrying no session', async () => {
+    const { tx, writes } = stubTransaction()
+
+    await expect(
+      mutators.articles.delete.fn({
+        args: { id: ARTICLE },
+        tx,
+        ctx: undefined,
+      } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+})

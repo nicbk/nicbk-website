@@ -85,6 +85,8 @@ interface ArticleCardProps {
   onCreateTag: (name: string) => void
   /** Saves a correction from the menu's edit form; see `ArticleMenu`. */
   onSaveDetails: SaveArticleDetails
+  /** Deletes this article from the menu, once its confirmation is passed. */
+  onDelete: () => void
 }
 
 export function ArticleCard({
@@ -95,6 +97,7 @@ export function ArticleCard({
   onToggleTag,
   onCreateTag,
   onSaveDetails,
+  onDelete,
 }: ArticleCardProps) {
   const navigate = useNavigate()
   const { title, authors, publicationYear, venue } = article
@@ -175,6 +178,7 @@ export function ArticleCard({
         <ArticleMenu
           article={article}
           onSaveDetails={onSaveDetails}
+          onDelete={onDelete}
           status={status}
           allTags={allTags}
           appliedTagIds={appliedTagIds}

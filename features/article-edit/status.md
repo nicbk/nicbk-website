@@ -1,7 +1,7 @@
 # Status: Article Edit
 
-**Feature state:** **In progress** — task 1 implemented and in review, spec written 2026-09-12 against `main` at
-`ed65c9f`, from the interface decided 2026-07-02 and from reading the code that
+**Feature state:** **In progress** — task 1 merged, task 2 implemented and in
+review. Spec written 2026-09-12 against `main` at `ed65c9f`, from the interface decided 2026-07-02 and from reading the code that
 was built expecting it. Three tasks, each gated by its PR + CI + human review.
 
 Depends on [`article-upload-and-extraction`](../article-upload-and-extraction/status.md)
@@ -21,8 +21,8 @@ happens *sometimes*, so either answer is expected.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`editing-an-articles-details`](./tasks/editing-an-articles-details/status.md) | Implemented | [#145](https://github.com/nicbk/nicbk-website/pull/145) | — | — |
-| [`deleting-an-article`](./tasks/deleting-an-article/status.md) | Not started | — | — | — |
+| [`editing-an-articles-details`](./tasks/editing-an-articles-details/status.md) | **Merged** | [#145](https://github.com/nicbk/nicbk-website/pull/145) | green | approved |
+| [`deleting-an-article`](./tasks/deleting-an-article/status.md) | Implemented | — | — | — |
 | [`resolving-a-failed-upload`](./tasks/resolving-a-failed-upload/status.md) | Not started | — | — | — |
 
 ## Definition of Done (feature)
@@ -47,8 +47,11 @@ and answer the warning icon that has never had an answer.
   article.
 - **A mutator cannot delete a blob.** Every mutator here also runs in the
   browser. The row delete stays a mutator; the object delete is a pg-boss job the
-  server half enqueues — decided with the user on 2026-09-12, with the
-  commit-to-enqueue window named rather than hidden.
+  server half enqueues — decided with the user on 2026-09-12. The
+  commit-to-enqueue window this spec worried about **does not exist**: pg-boss 12
+  sends on a supplied connection, and `extract-stage.ts` has been doing so since
+  #7, so the enqueue is inside the deleting transaction. See task 2's status for
+  the correction and what it changed.
 - **Reference editing is deferred to #10**, with the Citations tab that displays
   references and the matching logic that graduates them. Decided with the user
   the same day, and recorded in the feature's own files so the deferral does not
@@ -62,6 +65,13 @@ and answer the warning icon that has never had an answer.
 
 ## Log
 
+- 2026-09-13 — **Task 2 implemented.** The delete mutator on the database's own
+  cascades, the first delete `pdf-storage.ts` has ever had, a cleanup queue, and
+  the server-only effect seam that lets a shared mutator have a consequence the
+  browser must not. The research corrected the premise the task was filed on —
+  there is no commit-to-enqueue window — and two decisions were settled with the
+  user first: the confirmation phrase is `delete` rather than the paper's title,
+  and the detail page leaves for the collection as the write is sent.
 - 2026-09-12 — **Task 1 implemented.** The edit form, its mutator and "edit…" on
   the existing menu. Two defects were caught before review rather than after: a
   save control that fell below the fold of a desktop window on a paper with

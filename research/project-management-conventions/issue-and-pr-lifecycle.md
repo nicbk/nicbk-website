@@ -114,6 +114,30 @@ check will usually find it already closed, and `gh issue close` on a closed
 issue reports "already closed" rather than failing. Closing by hand remains the
 fallback, not the expectation.
 
+*(Superseded the next day — see the addendum below.)*
+
+## Addendum (2026-09-12): once is not a rule
+
+The very next feature contradicted it. **#13 `tracker-navigation-latency`
+(#135)**: its only sub-issue #136 closed at 04:29:19Z with the merge of PR #138,
+and the parent was still open ten minutes later. It was closed by hand.
+
+| Feature | Last sub-issue closed | Parent closed | Gap |
+|---|---|---|---|
+| #13 `tracker-navigation-latency` (#135) | 2026-09-12 04:29:19 | 2026-09-12 04:40 | ~11 minutes, by hand |
+
+So the behavior is not "it closes itself now" but **it sometimes closes
+itself** — one auto-close and one miss, one day apart, with nothing visibly
+different between them except that #128 had two sub-issues and #135 had one.
+That difference is a guess, not a finding, and it is written down as a guess.
+
+**The rule this leaves:** check the parent when the feature's `status.md` is
+marked Complete, and expect either answer. `gh issue close` on an already-closed
+issue reports "already closed" rather than failing, so the check costs one
+command and never does harm. What would do harm is trusting a single observation
+of someone else's automation — which is the same lesson the paragraph below
+draws, arriving one day later at this document's own expense.
+
 **Why this is a revision and not an edit.** The 2026-08-01 correction was right
 when it was written, and rewriting it to match today would erase the evidence
 that the behavior moved. What both revisions share is the method: neither was

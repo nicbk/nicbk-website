@@ -6,6 +6,7 @@ import { z } from 'zod'
 // dialect.
 import { ANNOTATION_TYPES } from '~/lit-tracker/annotation-type'
 import { ARTICLE_STATUSES } from '~/lit-tracker/article-status'
+import type { ZeroContext } from './context'
 import {
   requireOwnedAnnotation,
   requireOwnedArticle,
@@ -325,6 +326,12 @@ export const mutators = defineMutators({
      * The five named columns are the only ones written. Reading status, notes,
      * the extraction outcome and the object key belong to other parts of the
      * app, and a correction is not a reason to disturb them.
+     *
+     * **A failed upload is resolved by this, in the same breath.** See
+     * `retireResolvedUpload` — the row that was reporting the failure is what
+     * stops being true when a human supplies what the extractor could not, and
+     * retiring it here rather than in a second call is what stops a reader
+     * ending up with a fixed article and a warning that outlives it.
      */
     updateDetails: defineMutator(
       z.object({
@@ -346,6 +353,7 @@ export const mutators = defineMutators({
           venue: args.venue,
           doi: args.doi,
         })
+        await retireResolvedUpload(tx, session, args.id)
       },
     ),
 
@@ -390,6 +398,59 @@ export const mutators = defineMutators({
     ),
   },
 })
+
+/**
+ * Retires the `upload_jobs` row of an article whose failed extraction a human
+ * has just corrected.
+ *
+ * **Why this is part of the edit rather than a step after it.** The job row is
+ * the only thing telling a reader an upload still needs them
+ * (research/ui-ux/pages/lit-tracker/components/upload-status.md, which has said
+ * since 2026-07-02 that a failed row disappears once the problem is resolved).
+ * It is not a second fact that happens to become stale — it *is* the claim
+ * "this upload needs you", and saving the metadata is what makes that claim
+ * false. Written in the same transaction, the two cannot disagree; written as a
+ * second round trip, a reader whose network dropped between them would be left
+ * with a corrected article still flagged as broken, and no way to try again.
+ *
+ * **Only a failed job.** An article edited while its extraction is still
+ * `processing` keeps its row: the upload has not resolved, and a reader
+ * impatiently correcting a title early does not make it so. The filter is on
+ * `status` for exactly that reason, not as a convenience.
+ *
+ * **`articles.extraction_status` is deliberately untouched.** That column
+ * records what extraction *achieved*, which is a historical fact a later human
+ * correction does not revise — the paper's metadata really did have to be typed
+ * in by hand. What changes is whether anyone still needs to act, and that is
+ * what this row means.
+ *
+ * Addressed through `articleId` rather than through the ids being equal. They
+ * are — `upload_jobs.id` is the pre-allocated article id (`schema/lit-tracker.ts`)
+ * — but the foreign key is what actually states the relationship, and a lookup
+ * that silently depends on an equality documented elsewhere is one schema change
+ * away from deleting the wrong row.
+ *
+ * Owner-filtered like every other read behind a write, so the job it finds is
+ * the caller's. Safe to re-run: a second pass finds no failed row and does
+ * nothing, which is what Zero's rebase needs from it.
+ */
+async function retireResolvedUpload(
+  tx: Transaction,
+  ctx: ZeroContext,
+  articleId: string,
+): Promise<void> {
+  const [job] = await tx.run(
+    zql.uploadJobs
+      .where('articleId', articleId)
+      .where('userId', ctx.id)
+      .where('status', 'failed')
+      .limit(1),
+  )
+  if (!job) {
+    return
+  }
+  await tx.mutate.uploadJobs.delete({ id: job.id })
+}
 
 /**
  * One author, as the edit form may submit them.

@@ -44,6 +44,8 @@ interface RecordedPayload extends RecordedWrite {
  * ownership check finding nothing, and the already-applied check finding
  * nothing — which a single "does the database have rows" switch cannot express.
  * `attach` and `detach` both read three times: article, tag, then the link.
+ * `updateDetails` reads twice: the article, then the failed upload job it
+ * retires — so `[true, false]` is "your article, and nothing was wrong with it".
  *
  * Omitting `reads` answers every lookup with a row, which is the ordinary case.
  */
@@ -74,6 +76,7 @@ function stubTransaction({ reads }: { reads?: boolean[] } = {}) {
       articleTags: table('articleTags'),
       articles: table('articles'),
       annotations: table('annotations'),
+      uploadJobs: table('uploadJobs'),
     },
   }
 
@@ -420,7 +423,11 @@ describe('articles.updateDetails', () => {
   }
 
   it('accepts a well-formed correction and writes one row', async () => {
-    const writes = await run(mutators.articles.updateDetails, CORRECTION)
+    // No failed upload behind this article — the ordinary case, and the one
+    // that must stay a single write.
+    const writes = await run(mutators.articles.updateDetails, CORRECTION, {
+      reads: [true, false],
+    })
 
     expect(writes).toEqual([{ table: 'articles', operation: 'update' }])
   })
@@ -497,14 +504,67 @@ describe('articles.updateDetails', () => {
   })
 
   it('accepts an article with no year, venue or DOI at all', async () => {
-    const writes = await run(mutators.articles.updateDetails, {
-      ...CORRECTION,
-      publicationYear: null,
-      venue: null,
-      doi: null,
-    })
+    const writes = await run(
+      mutators.articles.updateDetails,
+      {
+        ...CORRECTION,
+        publicationYear: null,
+        venue: null,
+        doi: null,
+      },
+      { reads: [true, false] },
+    )
 
     expect(writes).toEqual([{ table: 'articles', operation: 'update' }])
+  })
+
+  it('retires the failed upload job in the same mutation', async () => {
+    // The whole of task 3's server half: the row that was reporting the
+    // failure goes in the write that makes the failure untrue, not in a second
+    // call that could fail on its own.
+    const writes = await run(mutators.articles.updateDetails, CORRECTION, {
+      reads: [true, true],
+    })
+
+    expect(writes).toEqual([
+      { table: 'articles', operation: 'update' },
+      { table: 'uploadJobs', operation: 'delete' },
+    ])
+  })
+
+  it('retires the job only after the article has been saved', async () => {
+    // Order, stated rather than assumed: a reader whose correction was refused
+    // must keep the warning that tells them it still needs them.
+    const writes = await run(mutators.articles.updateDetails, CORRECTION, {
+      reads: [true, true],
+    })
+
+    expect(writes.map(({ table }) => table)).toEqual(['articles', 'uploadJobs'])
+  })
+
+  it('leaves a job that is not failed alone', async () => {
+    // An article edited while extraction is still `processing` keeps its row:
+    // the lookup filters on `status`, so the second read finds nothing and
+    // there is no second write. Impatience is not resolution.
+    const writes = await run(mutators.articles.updateDetails, CORRECTION, {
+      reads: [true, false],
+    })
+
+    expect(writes.map(({ table }) => table)).not.toContain('uploadJobs')
+  })
+
+  it('never writes the extraction status while retiring a job', async () => {
+    // `extraction_status` records what extraction achieved, which a human
+    // correction does not revise. What changes is whether anyone still needs
+    // to act, and that is the job row.
+    const writes = await runCapturing(
+      mutators.articles.updateDetails,
+      CORRECTION,
+    )
+
+    for (const write of writes) {
+      expect(Object.keys(write.values)).not.toContain('extractionStatus')
+    }
   })
 
   it.each([

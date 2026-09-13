@@ -785,6 +785,96 @@ describe('articles.updateDetails', () => {
     const [article] = await articleById(ARTICLE_A)
     expect(article).toEqual(before)
   })
+
+  /**
+   * The other half of #11's third task: a correction is what resolves a failed
+   * upload, and the job row is what the resolution removes.
+   *
+   * Seeded directly, because `upload_jobs` rows belong to the pipeline and have
+   * no mutator. The id is the article's own — the pre-allocated id every
+   * upload is stored under — so this is the shape `recordOutcome` really
+   * leaves behind, including for a failure.
+   */
+  async function giveArticleAnUpload(
+    articleId: string,
+    userId: string,
+    status: 'processing' | 'failed',
+  ): Promise<void> {
+    await database.db.insert(drizzleSchema.uploadJobs).values({
+      id: articleId,
+      userId,
+      filename: 'paper.pdf',
+      status,
+      failureReason: status === 'failed' ? "couldn't find authors" : null,
+      articleId,
+      pdfObjectKey: `lit-tracker/${userId}/${articleId}/source.pdf`,
+    })
+  }
+
+  it('retires the job row of a failed upload it has just corrected', async () => {
+    await giveArticleAnUpload(ARTICLE_A, USER_A, 'failed')
+
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    // The row is deleted rather than marked — the popup lists only uploads
+    // still needing attention, and keeps no history of resolved ones.
+    expect(await allUploadJobs()).toEqual([])
+  })
+
+  it('leaves the extraction status saying the extraction failed', async () => {
+    // The column records what extraction achieved, which is still true: the
+    // metadata really did have to be typed in by hand. What stops being true
+    // is that somebody needs to act, and that was the job row.
+    await database.db
+      .update(drizzleSchema.articles)
+      .set({ extractionStatus: 'failed' })
+      .where(eq(drizzleSchema.articles.id, ARTICLE_A))
+    await giveArticleAnUpload(ARTICLE_A, USER_A, 'failed')
+
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.extractionStatus).toBe('failed')
+  })
+
+  it('leaves a still-processing upload’s job row in place', async () => {
+    // Correcting a title while extraction is still running does not make the
+    // upload resolved, and the row is the only thing that would say so.
+    await giveArticleAnUpload(ARTICLE_A, USER_A, 'processing')
+
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    const jobs = await allUploadJobs()
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0]?.status).toBe('processing')
+  })
+
+  it('cannot retire another user’s job row', async () => {
+    // Both readers have a failed upload. A's correction must reach exactly one
+    // of them, and the filter that decides which is the owner check — not the
+    // article id, which a caller supplies.
+    await giveArticleAnUpload(ARTICLE_A, USER_A, 'failed')
+    await giveArticleAnUpload(ARTICLE_B, USER_B, 'failed')
+
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    const jobs = await allUploadJobs()
+    expect(jobs).toHaveLength(1)
+    expect(jobs[0]?.userId).toBe(USER_B)
+  })
+
+  it('is still safe to run twice once the job has gone', async () => {
+    // Rebase safety again, now that the mutation has a second effect: the
+    // repeat finds no failed row and does nothing, rather than throwing.
+    await giveArticleAnUpload(ARTICLE_A, USER_A, 'failed')
+
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+    await runAs('articles.updateDetails', CONTEXT_A, CORRECTION)
+
+    expect(await allUploadJobs()).toEqual([])
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.title).toBe('Attention Is All You Need')
+  })
 })
 
 describe('articles.delete', () => {

@@ -1,7 +1,7 @@
 # Status: Article Edit
 
-**Feature state:** **In progress** — task 1 merged, task 2 implemented and in
-review. Spec written 2026-09-12 against `main` at `ed65c9f`, from the interface decided 2026-07-02 and from reading the code that
+**Feature state:** **In progress** — tasks 1 and 2 merged, task 3 implemented
+and in review. Spec written 2026-09-12 against `main` at `ed65c9f`, from the interface decided 2026-07-02 and from reading the code that
 was built expecting it. Three tasks, each gated by its PR + CI + human review.
 
 Depends on [`article-upload-and-extraction`](../article-upload-and-extraction/status.md)
@@ -22,8 +22,8 @@ happens *sometimes*, so either answer is expected.
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`editing-an-articles-details`](./tasks/editing-an-articles-details/status.md) | **Merged** | [#145](https://github.com/nicbk/nicbk-website/pull/145) | green | approved |
-| [`deleting-an-article`](./tasks/deleting-an-article/status.md) | Implemented | [#146](https://github.com/nicbk/nicbk-website/pull/146) | — | — |
-| [`resolving-a-failed-upload`](./tasks/resolving-a-failed-upload/status.md) | Not started | — | — | — |
+| [`deleting-an-article`](./tasks/deleting-an-article/status.md) | **Merged** | [#146](https://github.com/nicbk/nicbk-website/pull/146) | green | approved |
+| [`resolving-a-failed-upload`](./tasks/resolving-a-failed-upload/status.md) | Implemented | [#147](https://github.com/nicbk/nicbk-website/pull/147) | — | — |
 
 ## Definition of Done (feature)
 
@@ -65,6 +65,17 @@ and answer the warning icon that has never had an answer.
 
 ## Log
 
+- 2026-09-13 — **Task 3 implemented**, completing the feature's code. The
+  correction now retires the `upload_jobs` row in the same transaction that
+  saves the metadata, and the failed row in the popup finally has a control that
+  opens task 1's modal. Two of the task's three open items turned out to be
+  **already answered by tasks 1 and 2** — the field to focus, and whether the
+  popup closes — which is a result worth naming: the work was to find the
+  decision, not to make it twice. The third was real and sharper than the spec
+  said: resolving the last failure *destroys the control the modal was opened
+  from*, because the indicator swaps from a button to a non-focusable span. The
+  checkmark takes `tabIndex={-1}` so focus lands on the outcome rather than on
+  the document body.
 - 2026-09-13 — **Task 2 implemented.** The delete mutator on the database's own
   cascades, the first delete `pdf-storage.ts` has ever had, a cleanup queue, and
   the server-only effect seam that lets a shared mutator have a consequence the

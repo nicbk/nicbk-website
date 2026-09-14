@@ -89,15 +89,23 @@ function signedInAs(userId: string | null) {
   return async () => userId
 }
 
-function requestFor(articleId: string): Request {
+function requestFor(
+  articleId: string,
+  headers: Record<string, string> = {},
+): Request {
   return new Request(
     `https://nicbk.com/api/lit-tracker/articles/${articleId}/pdf`,
+    { headers },
   )
 }
+
+const TAG = '"18e1b007a1dab45b30cc861ba2dfda25"'
 
 /** Answers with a stream, the way `openArticlePdf` does. */
 function servesBytes(bytes: Uint8Array) {
   return async () => ({
+    kind: 'body' as const,
+    etag: TAG,
     body: new ReadableStream<Uint8Array>({
       start(controller) {
         controller.enqueue(bytes)
@@ -222,6 +230,7 @@ describe('serving an article PDF', () => {
     expect(openArticlePdf).toHaveBeenCalledWith(
       keyFor(OWNED_ARTICLE, OWNER),
       OWNER,
+      { ifNoneMatch: null },
     )
   })
 
@@ -268,12 +277,16 @@ describe('serving an article PDF', () => {
 
     expect(response.headers.get('x-content-type-options')).toBe('nosniff')
     expect(response.headers.get('content-disposition')).toBe('inline')
-    expect(response.headers.get('cache-control')).toBe('private, no-store')
+    // `private` is the "not publicly" half, and it has not changed. `no-cache`
+    // replaced `no-store` in #21: kept, but asked about before every use.
+    expect(response.headers.get('cache-control')).toBe('private, no-cache')
   })
 
   it('omits the length when the store did not report one', async () => {
     const { database } = fakeDatabase()
     openArticlePdf.mockImplementation(async () => ({
+      kind: 'body',
+      etag: null,
       body: new ReadableStream<Uint8Array>({
         start(controller) {
           controller.enqueue(PDF_BYTES)
@@ -314,6 +327,137 @@ describe('serving an article PDF', () => {
       error: 'The file could not be read.',
     })
     expect(logged).toHaveBeenCalled()
+    logged.mockRestore()
+  })
+})
+
+/** Answers the way `openArticlePdf` does when Garage said 304. */
+async function unchanged() {
+  return { kind: 'not-modified' as const, etag: TAG }
+}
+
+describe('revalidating a paper the browser already has', () => {
+  it('sends the object’s tag with a paper, and asks to be asked', async () => {
+    const { database } = fakeDatabase()
+
+    const response = await respondWithArticlePdf(requestFor(OWNED_ARTICLE), {
+      articleId: OWNED_ARTICLE,
+      getUserId: signedInAs(OWNER),
+      database,
+    })
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('etag')).toBe(TAG)
+    expect(response.headers.get('cache-control')).toBe('private, no-cache')
+  })
+
+  it('answers an unchanged paper with a 304 and no body', async () => {
+    const { database } = fakeDatabase()
+    openArticlePdf.mockImplementation(unchanged)
+
+    const response = await respondWithArticlePdf(
+      requestFor(OWNED_ARTICLE, { 'if-none-match': TAG }),
+      { articleId: OWNED_ARTICLE, getUserId: signedInAs(OWNER), database },
+    )
+
+    expect(response.status).toBe(304)
+    expect(response.body).toBeNull()
+    expect(response.headers.get('content-length')).toBeNull()
+    expect(response.headers.get('content-type')).toBeNull()
+    expect(response.headers.get('etag')).toBe(TAG)
+    expect(response.headers.get('cache-control')).toBe('private, no-cache')
+  })
+
+  it('hands storage the validated condition, weak prefix removed', async () => {
+    const { database } = fakeDatabase()
+
+    await respondWithArticlePdf(
+      requestFor(OWNED_ARTICLE, { 'if-none-match': `W/${TAG}` }),
+      { articleId: OWNED_ARTICLE, getUserId: signedInAs(OWNER), database },
+    )
+
+    expect(openArticlePdf).toHaveBeenCalledWith(
+      keyFor(OWNED_ARTICLE, OWNER),
+      OWNER,
+      { ifNoneMatch: TAG },
+    )
+  })
+
+  it('serves the whole paper for a condition it cannot read', async () => {
+    const { database } = fakeDatabase()
+
+    const response = await respondWithArticlePdf(
+      requestFor(OWNED_ARTICLE, { 'if-none-match': 'not a tag' }),
+      { articleId: OWNED_ARTICLE, getUserId: signedInAs(OWNER), database },
+    )
+
+    expect(openArticlePdf).toHaveBeenCalledWith(
+      keyFor(OWNED_ARTICLE, OWNER),
+      OWNER,
+      { ifNoneMatch: null },
+    )
+    expect(response.status).toBe(200)
+  })
+
+  // The three below are the security property. A 304 is a successful read, so
+  // a matching tag must change nothing about who is refused, or how.
+
+  it('refuses an anonymous request with a matching tag, before any lookup', async () => {
+    const { database, queries } = fakeDatabase()
+    openArticlePdf.mockImplementation(unchanged)
+
+    const response = await respondWithArticlePdf(
+      requestFor(OWNED_ARTICLE, { 'if-none-match': TAG }),
+      { articleId: OWNED_ARTICLE, getUserId: signedInAs(null), database },
+    )
+
+    expect(response.status).toBe(401)
+    expect(queries).toHaveLength(0)
+    expect(openArticlePdf).not.toHaveBeenCalled()
+  })
+
+  it("refuses another user's article with a matching tag, exactly as without one", async () => {
+    const { database } = fakeDatabase()
+    openArticlePdf.mockImplementation(unchanged)
+    const ask = (articleId: string, headers: Record<string, string>) =>
+      respondWithArticlePdf(requestFor(articleId, headers), {
+        articleId,
+        getUserId: signedInAs(OWNER),
+        database,
+      })
+
+    const withTag = await ask(OTHERS_ARTICLE, { 'if-none-match': TAG })
+    const notThere = await ask(NO_SUCH_ARTICLE, {})
+
+    expect(withTag.status).toBe(404)
+    expect(openArticlePdf).not.toHaveBeenCalled()
+    expect(await withTag.text()).toBe(await notThere.text())
+  })
+
+  it('refuses an article that does not exist with a matching tag', async () => {
+    const { database } = fakeDatabase()
+    openArticlePdf.mockImplementation(unchanged)
+
+    const response = await respondWithArticlePdf(
+      requestFor(NO_SUCH_ARTICLE, { 'if-none-match': TAG }),
+      { articleId: NO_SUCH_ARTICLE, getUserId: signedInAs(OWNER), database },
+    )
+
+    expect(response.status).toBe(404)
+    expect(openArticlePdf).not.toHaveBeenCalled()
+  })
+
+  it('still fails cleanly for a missing object when a tag is sent', async () => {
+    const { database } = fakeDatabase()
+    openArticlePdf.mockRejectedValue(new Error('NoSuchKey'))
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const response = await respondWithArticlePdf(
+      requestFor(OWNED_ARTICLE, { 'if-none-match': TAG }),
+      { articleId: OWNED_ARTICLE, getUserId: signedInAs(OWNER), database },
+    )
+
+    expect(response.status).toBe(500)
     logged.mockRestore()
   })
 })

@@ -6,6 +6,7 @@ import {
   describe,
   expect,
   it,
+  vi,
 } from 'vitest'
 import type { DatabaseHandle } from '~/db/create-database'
 import { createDatabase } from '~/db/create-database'
@@ -136,9 +137,15 @@ async function plantArticle(
 }
 
 /** Asks the route for an article, as the given user or as nobody. */
-function ask(articleId: string, userId: string | null): Promise<Response> {
+function ask(
+  articleId: string,
+  userId: string | null,
+  headers: Record<string, string> = {},
+): Promise<Response> {
   return respondWithArticlePdf(
-    new Request(`https://nicbk.com/api/lit-tracker/articles/${articleId}/pdf`),
+    new Request(`https://nicbk.com/api/lit-tracker/articles/${articleId}/pdf`, {
+      headers,
+    }),
     {
       articleId,
       getUserId: async () => userId,
@@ -242,6 +249,101 @@ describe('serving an article PDF, against real containers', () => {
  * show that the object is actually gone afterwards, and that Garage answers a
  * second delete the way the retry policy assumes it does.
  */
+/** The tag a response carried; a response without one fails the test here. */
+function tagOf(response: Response): string {
+  const tag = response.headers.get('etag')
+  if (tag === null) {
+    throw new Error('Expected the response to carry an ETag.')
+  }
+  return tag
+}
+
+describe('revalidating a paper, against real Garage', () => {
+  // Where Garage's own conditional behaviour is proven, and with it the SDK's
+  // habit of throwing on a 304 — the unit tier can only assert both of a stub.
+
+  it('answers a second read that sends the first read’s tag with a 304', async () => {
+    await plantArticle(OWNED_ARTICLE, OWNER)
+
+    const first = await ask(OWNED_ARTICLE, OWNER)
+    await first.arrayBuffer()
+    const tag = tagOf(first)
+    expect(tag).toMatch(/^"[^"]+"$/)
+
+    const second = await ask(OWNED_ARTICLE, OWNER, { 'if-none-match': tag })
+
+    expect(second.status).toBe(304)
+    expect(second.body).toBeNull()
+    expect(second.headers.get('etag')).toBe(tag)
+    expect(second.headers.get('cache-control')).toBe('private, no-cache')
+  })
+
+  it('revalidates a weakened copy of the tag too', async () => {
+    // Garage alone would answer this with the whole paper; measured.
+    await plantArticle(OWNED_ARTICLE, OWNER)
+    const first = await ask(OWNED_ARTICLE, OWNER)
+    await first.arrayBuffer()
+
+    const second = await ask(OWNED_ARTICLE, OWNER, {
+      'if-none-match': `W/${tagOf(first)}`,
+    })
+
+    expect(second.status).toBe(304)
+  })
+
+  it('serves the whole paper for a tag that is not the object’s', async () => {
+    const body = await plantArticle(OWNED_ARTICLE, OWNER)
+
+    const response = await ask(OWNED_ARTICLE, OWNER, {
+      'if-none-match': '"not-this-object"',
+    })
+
+    expect(response.status).toBe(200)
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(body)
+  })
+
+  it('gives different papers different tags', async () => {
+    await plantArticle(OWNED_ARTICLE, OWNER, { body: pdf('one paper') })
+    await plantArticle(OTHERS_ARTICLE, OTHER, { body: pdf('another paper') })
+
+    const mine = await ask(OWNED_ARTICLE, OWNER)
+    const theirs = await ask(OTHERS_ARTICLE, OTHER)
+    await Promise.all([mine.arrayBuffer(), theirs.arrayBuffer()])
+
+    expect(mine.headers.get('etag')).not.toBe(theirs.headers.get('etag'))
+  })
+
+  it("refuses another user's article even with its real tag", async () => {
+    await plantArticle(OTHERS_ARTICLE, OTHER)
+    const theirs = await ask(OTHERS_ARTICLE, OTHER)
+    await theirs.arrayBuffer()
+
+    const response = await ask(OTHERS_ARTICLE, OWNER, {
+      'if-none-match': tagOf(theirs),
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  it('does not answer 304 for a paper whose object is gone', async () => {
+    await plantArticle(OWNED_ARTICLE, OWNER)
+    const first = await ask(OWNED_ARTICLE, OWNER)
+    await first.arrayBuffer()
+    await runPdfCleanupStage(
+      { userId: OWNER, articleId: OWNED_ARTICLE },
+      productionPdfCleanupServices(),
+    )
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const response = await ask(OWNED_ARTICLE, OWNER, {
+      'if-none-match': tagOf(first),
+    })
+
+    expect(response.status).toBe(500)
+    logged.mockRestore()
+  })
+})
+
 describe('the PDF cleanup job', () => {
   it('removes the object for the article it names', async () => {
     await plantArticle(OWNED_ARTICLE, OWNER)

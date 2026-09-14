@@ -19,6 +19,14 @@ blob store and the multi-tenant `user_id` scoping already enforced in
   presigned/signed Garage URLs are issued to clients.** The app server
   authenticates the request and checks `user_id` ownership before
   streaming the object to or from Garage.
+- **Browsers may keep a PDF, but must ask before every use** (added
+  2026-09-14, feature #21 `a-paper-downloads-once`). The route answers
+  `cache-control: private, no-cache` with the object's `ETag`; an unchanged
+  paper is a 304 with no body. The revalidating request passes the same
+  session and ownership checks as a full read, so the rule above holds for
+  every open — `immutable`, which would skip the request, was declined for
+  exactly that reason. Accepted consequence: the bytes sit in the browser's
+  private disk cache, and signing out does not clear them.
 - **Annotations need no new mechanism.** They already live in Postgres and
   already inherit the existing `user_id`-scoped enforcement in the app
   server's `/query`/`/mutate` handlers — this topic only concerns the PDF

@@ -1,8 +1,12 @@
 import { and, eq } from 'drizzle-orm'
 import type { DatabaseHandle } from '~/db/create-database'
 import { articles } from '~/db/schema'
-import type { ArticlePdfStream } from '~/storage/pdf-storage'
+import type {
+  ArticlePdfNotModified,
+  ArticlePdfStream,
+} from '~/storage/pdf-storage'
 import { openArticlePdf } from '~/storage/pdf-storage'
+import { entityTagsToForward } from './if-none-match'
 
 /**
  * Serving one article's PDF, separated from how it is mounted.
@@ -37,6 +41,21 @@ import { openArticlePdf } from '~/storage/pdf-storage'
  * An **anonymous** request is answered 401 instead, which reveals nothing: that
  * decision is made before the id is so much as looked at, so it is identical
  * for a real id and an invented one.
+ *
+ * ## A reopened paper is revalidated, not re-downloaded
+ *
+ * Every response carries the object's `ETag` and `private, no-cache`: the
+ * browser keeps its copy, and asks before every use of it. When the copy is
+ * current the answer is **304 with no body** — for the largest paper in the
+ * collection, the difference between 13.4 MB and a few hundred bytes on every
+ * visit (measured on `nicbk.com`, 2026-09-14).
+ *
+ * **A 304 is a successful read, so it is reachable only where a 200 is.** The
+ * condition is not looked at until the session is known and the row is proven
+ * the requester's; a matching tag with no session is still a 401, and with
+ * someone else's article still the same 404. That is also why the check reaches
+ * storage at all rather than being answered from the row: Garage, which holds
+ * the object, decides whether it is unchanged.
  */
 
 /** What every refusal says. One shape, so no case can drift from another. */
@@ -100,9 +119,11 @@ export async function respondWithArticlePdf(
     return notFound()
   }
 
-  let pdf: ArticlePdfStream
+  let pdf: ArticlePdfStream | ArticlePdfNotModified
   try {
-    pdf = await openArticlePdf(article.pdfObjectKey, userId)
+    pdf = await openArticlePdf(article.pdfObjectKey, userId, {
+      ifNoneMatch: entityTagsToForward(request.headers.get('if-none-match')),
+    })
   } catch (error) {
     // Reached when the row exists but the object behind it does not, or Garage
     // is unreachable. The requester owns this article — the row said so — so
@@ -114,20 +135,31 @@ export async function respondWithArticlePdf(
   }
 
   const headers = new Headers({
-    'content-type': 'application/pdf',
     // Nothing else: the body is a PDF, and a browser that sniffs it into
     // something scriptable would be reading a file another user uploaded.
     'x-content-type-options': 'nosniff',
-    // Shown rather than downloaded — this route feeds the reader, and no
-    // download control is decided. Without a filename: the moment one is
-    // wanted, it belongs to whatever control asks for the download.
-    'content-disposition': 'inline',
-    // A per-user document, so no shared cache is invited to keep a copy.
-    // `no-store` rather than a revalidating policy because nothing has decided
-    // that PDFs should be cached at all; if the reader turns out to want it,
-    // that is a decision to make then.
-    'cache-control': 'private, no-store',
+    // `private`: one user's document, so no shared cache is invited to keep a
+    // copy. `no-cache`: the browser may keep one, but must ask before every use
+    // — which is what keeps the checks above true for every open, and not only
+    // the first. Decided with the user, 2026-09-14, over `immutable`, which
+    // would skip the request entirely and so let a deleted article, or a
+    // signed-out session, still open a paper from disk.
+    'cache-control': 'private, no-cache',
   })
+  if (pdf.etag !== null) {
+    headers.set('etag', pdf.etag)
+  }
+
+  if (pdf.kind === 'not-modified') {
+    // No body and no length: the browser serves the copy it already has.
+    return new Response(null, { status: 304, headers })
+  }
+
+  headers.set('content-type', 'application/pdf')
+  // Shown rather than downloaded — this route feeds the reader, and no
+  // download control is decided. Without a filename: the moment one is
+  // wanted, it belongs to whatever control asks for the download.
+  headers.set('content-disposition', 'inline')
   if (pdf.contentLength !== null) {
     headers.set('content-length', String(pdf.contentLength))
   }

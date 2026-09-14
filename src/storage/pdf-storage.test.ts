@@ -41,6 +41,25 @@ const {
 
 const OWNER = 'user-a'
 const ARTICLE = '01930000-0000-7000-8000-000000000001'
+const TAG = '"18e1b007a1dab45b30cc861ba2dfda25"'
+
+/**
+ * What the AWS SDK throws when Garage answers 304, as measured against Garage
+ * on 2026-09-14: an `S3ServiceException` named `Unknown`, whose raw response
+ * rides along as a **non-enumerable** `$response` carrying the tag.
+ */
+function sdkNotModified(etag: string): Error {
+  const error = Object.assign(new Error('UnknownError'), {
+    name: 'Unknown',
+    $fault: 'client',
+    $metadata: { httpStatusCode: 304 },
+  })
+  Object.defineProperty(error, '$response', {
+    value: { statusCode: 304, headers: { etag } },
+    enumerable: false,
+  })
+  return error
+}
 
 beforeEach(() => {
   send.mockReset()
@@ -91,21 +110,77 @@ describe('openArticlePdf', () => {
     send.mockResolvedValue({
       Body: { transformToWebStream: () => body },
       ContentLength: 4_812_390,
+      ETag: TAG,
     })
 
     // Unread on purpose: buffering the paper here would put the server's memory
     // at the mercy of how many readers have a tab open.
     await expect(
       openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER),
-    ).resolves.toEqual({ body, contentLength: 4_812_390 })
+    ).resolves.toEqual({
+      kind: 'body',
+      body,
+      contentLength: 4_812_390,
+      etag: TAG,
+    })
   })
 
-  it('reports no length rather than a wrong one when the store gives none', async () => {
+  it('reports no length or tag rather than wrong ones when the store gives none', async () => {
     send.mockResolvedValue({ Body: { transformToWebStream: () => null } })
 
     const opened = await openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER)
 
-    expect(opened.contentLength).toBeNull()
+    expect(opened).toMatchObject({
+      kind: 'body',
+      contentLength: null,
+      etag: null,
+    })
+  })
+
+  it('reads unconditionally when given no condition', async () => {
+    send.mockResolvedValue({ Body: { transformToWebStream: () => null } })
+
+    await openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER)
+
+    expect(send.mock.calls[0]?.[0].input).not.toHaveProperty('IfNoneMatch')
+  })
+
+  it('hands the condition to the store with the read', async () => {
+    send.mockResolvedValue({ Body: { transformToWebStream: () => null } })
+
+    await openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER, {
+      ifNoneMatch: TAG,
+    })
+
+    expect(send.mock.calls[0]?.[0].input).toMatchObject({ IfNoneMatch: TAG })
+  })
+
+  it('turns the SDK’s thrown 304 into a result carrying the tag', async () => {
+    send.mockRejectedValue(sdkNotModified(TAG))
+
+    await expect(
+      openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER, { ifNoneMatch: TAG }),
+    ).resolves.toEqual({ kind: 'not-modified', etag: TAG })
+  })
+
+  it('still refuses another user key when a condition is given', async () => {
+    const key = pdfObjectKey('user-b', ARTICLE)
+
+    await expect(
+      openArticlePdf(key, OWNER, { ifNoneMatch: TAG }),
+    ).rejects.toThrow(PdfOwnershipError)
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('lets every other storage failure through as a failure', async () => {
+    const missing = Object.assign(new Error('NoSuchKey'), {
+      $metadata: { httpStatusCode: 404 },
+    })
+    send.mockRejectedValue(missing)
+
+    await expect(
+      openArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER, { ifNoneMatch: TAG }),
+    ).rejects.toBe(missing)
   })
 
   it('raises rather than returning nothing when the store answers with no body', async () => {

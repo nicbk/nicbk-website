@@ -113,8 +113,8 @@ export function ArticleCard({
    * Four things are left alone, and each is a real case rather than a
    * precaution:
    *
-   * - **Clicks that never happened inside this card.** See below — this one is
-   *   not the tautology it looks like.
+   * - **Clicks that never happened inside this card.** Not the tautology it
+   *   looks like — see `arrivedThroughAPortal`.
    * - **Clicks inside a control.** The three-dot menu is the one on the card
    *   today and #11 adds more; matching by role rather than by name means they
    *   do not each have to remember to stop propagation.
@@ -129,29 +129,9 @@ export function ArticleCard({
     if (event.defaultPrevented) {
       return
     }
-    /*
-     * **Not redundant, however much it reads like it.**
-     *
-     * This handler is on the card, so "was the click inside the card?" looks
-     * like a question that cannot be answered no. It can, because **React
-     * propagates synthetic events along the React tree rather than the DOM
-     * tree** — and everything this card portals is a React child of it while
-     * being a DOM child of `document.body`.
-     *
-     * Measured, not theorised (features/a-popup-keeps-its-clicks): with the
-     * menu open, the popup's DOM ancestry is `popup → positioner → div → body`,
-     * passing through no `<article>` at all — and clicking its padding still
-     * navigated here, opening the article behind the menu. The same reached the
-     * edit dialog and the delete confirmation, both mounted from that menu, so
-     * clicking a label while correcting metadata left the form.
-     *
-     * `contains` puts the DOM's answer back in charge of an event React routed
-     * by its own tree. It covers every surface the card portals — menu, both
-     * dialogs, both tooltips — and the next one somebody adds, which is why the
-     * fix lives here rather than as a `stopPropagation` in each of them: five
-     * call sites today is five chances to forget the sixth, silently.
-     */
-    if (!event.currentTarget.contains(event.target as Node)) {
+    // A click from something this card portals — its menu, either dialog, the
+    // tooltips in its footer — is not a click on the card. See the helper.
+    if (arrivedThroughAPortal(event)) {
       return
     }
     const target = event.target as Element
@@ -186,6 +166,27 @@ export function ArticleCard({
           to="/lit-tracker/$articleId"
           params={{ articleId: article.id }}
           aria-label={title}
+          /*
+           * **The second handler with the same flaw, and the one an audit by
+           * grep cannot find.** The three tooltips below are React children of
+           * this link, and TanStack's `<Link>` navigates from a click handler of
+           * its own inside the library — so a click on a portalled tooltip bubbled
+           * into it and opened the article, even with the card's own guard in
+           * place. Found in the browser after that guard shipped
+           * (features/a-popup-keeps-its-clicks), by clicking a tooltip rather
+           * than assuming the card's fix reached it.
+           *
+           * The library runs a caller's `onClick` first and skips its own when the
+           * event is already prevented (`composeHandlers([onClick, handleClick])`
+           * in @tanstack/react-router's link.js, checked), so preventing the
+           * default here is what stops it. A click that really lands on the link
+           * is untouched.
+           */
+          onClick={(event) => {
+            if (arrivedThroughAPortal(event)) {
+              event.preventDefault()
+            }
+          }}
         >
           <ElidedText text={title}>
             <h2 className={styles.title}>{title}</h2>
@@ -218,6 +219,33 @@ export function ArticleCard({
       <CardFooter status={status} tags={tags} />
     </article>
   )
+}
+
+/**
+ * Whether a click reached this handler from something rendered elsewhere in the
+ * DOM, rather than from inside the element the handler is on.
+ *
+ * **Not the tautology it reads as.** A handler on an element surely only hears
+ * clicks inside that element — except that **React propagates synthetic events
+ * along the React tree, not the DOM tree.** Anything a component portals is a
+ * React child of it and a DOM child of `document.body`, so its clicks bubble into
+ * handlers they are nowhere near on screen.
+ *
+ * Measured, not theorised (features/a-popup-keeps-its-clicks). With a card's
+ * menu open, the popup's DOM ancestry was `popup → positioner → div → body`,
+ * passing through no `<article>` — and clicking its padding still opened the
+ * article behind it. The same reached both dialogs mounted from that menu, so
+ * clicking a label while correcting metadata left the form; and it reached the
+ * tooltips on the title, author and venue lines through the title's `<Link>`,
+ * which navigates from a handler inside the router library.
+ *
+ * `contains` puts the DOM's answer back in charge of an event React routed by its
+ * own tree. It lives in the handlers that can be wrong rather than as a
+ * `stopPropagation` in every popup, because the popups are the surfaces that
+ * multiply: each new one would be another place to forget, silently.
+ */
+function arrivedThroughAPortal(event: MouseEvent<HTMLElement>): boolean {
+  return !event.currentTarget.contains(event.target as Node)
 }
 
 interface ElidedTextProps {

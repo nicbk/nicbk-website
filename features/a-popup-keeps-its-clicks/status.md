@@ -1,7 +1,9 @@
 # Status: A Popup Keeps Its Clicks
 
-**Feature state:** **In progress** (2026-09-14) — the task is implemented and
-awaiting review.
+**Feature state:** **In progress** (2026-09-14) — the card's guard is merged
+(#176); a **second handler**, on the title `<Link>`, was found in the browser after
+that merge and is fixed in a follow-up. Parent #173 stays open until it lands, since
+the tooltip route is still live on `main`.
 
 Spec written against `main` at `f512c18`, from a reproduction taken on
 `nicbk.com` before anything was written. See [research.md](./research.md).
@@ -45,7 +47,8 @@ reproduces, and clicking a card still opens the article.
 - **A portal test can pass for the wrong reason.** If the portalled node ends up
   inside the card's own subtree, `contains` is true and the assertion means
   nothing. The test must assert the node is outside the card in the DOM.
-- **Only the card has a container-level click handler.** Verified across `src/`:
+- **~~Only the card has a container-level click handler.~~ Wrong — see the task's
+  status.** The title `<Link>` has one inside the router library. Verified across `src/`:
   every other `onClick` is on a real control. One site, not a class of them.
 
 ## Log

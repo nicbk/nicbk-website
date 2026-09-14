@@ -1,0 +1,62 @@
+/*
+ * The one header row on this site. Both headers render it; neither declares any
+ * of it.
+ *
+ * Nothing here positions the row — see header-row.tsx for why that is the
+ * component's one refusal.
+ */
+.row {
+  display: flex;
+  align-items: center;
+
+  /*
+   * Horizontal rhythm (the row gap and the inline padding) shrinks with the
+   * viewport so a single row fits the narrowest phones (~320px) without
+   * wrapping, mirroring the font-size clamp below. This is not precautionary:
+   * fixed --space-lg spacing pinned the site header's intrinsic width at ~374px
+   * and forced horizontal page scroll under that. The ceiling equals
+   * --space-lg, so desktop spacing is unchanged; the floor keeps items from
+   * touching on the smallest screens.
+   *
+   * **Custom properties cascade, and both headers' items rely on it** — the site
+   * header's `.nav` takes its gap from this value, and it is declared here
+   * rather than there so the gaps between nav links shrink in lockstep with the
+   * row's own spacing.
+   */
+  --header-inline-space: clamp(0.5rem, 2.5vw, 1.5rem);
+  gap: var(--header-inline-space);
+  padding-inline: var(--header-inline-space);
+
+  /*
+   * **The height, declared rather than derived — the whole point of this file.**
+   *
+   * It used to be a sum: each header's padding-block plus whatever its tallest
+   * item happened to be. The two sums landed 1.6px apart (58.59px on the
+   * personal site, 57.00px in the tracker) and nothing in the project said they
+   * should agree. Worse, the site header's value was *fractional*, which two
+   * engines need not round the same way — Chrome computed 58.59px where Safari
+   * reported a flat 58.
+   *
+   * 3.5rem holds the tracker's 32px account avatar — the tallest thing either
+   * header contains — with room on both sides, and the 1px border sits inside it
+   * (box-sizing is border-box globally).
+   *
+   * `min-height` rather than `height`: if an item ever exceeds this, the row
+   * should grow and look wrong rather than clip the control. `padding-block` is
+   * the floor for that case and does nothing in the normal one.
+   */
+  min-height: 3.5rem;
+  padding-block: var(--space-2xs);
+
+  background-color: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+
+  /*
+   * A single row at every width — no wrapping and no hamburger, on either
+   * header. The spacing above and the font size here shrink on very narrow
+   * screens instead.
+   */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  font-size: clamp(0.75rem, 2.5vw, 1rem);
+}

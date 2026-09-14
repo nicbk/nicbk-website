@@ -147,6 +147,39 @@ convention built on someone else's automation has to be re-checked against the
 automation, not just written down once**, because it can change in either
 direction without telling you.
 
+## Second addendum (2026-09-13): three misses, and the guess is dead
+
+Two more features completed on the same day, and **neither parent closed
+itself**:
+
+| Feature | Last sub-issue closed | Parent closed | Gap |
+|---|---|---|---|
+| #11 `article-edit` (#140) | 2026-09-13 21:16:48Z (#143) | 2026-09-13 21:17:09Z | ~21 seconds, by hand |
+| #16 `surface-layering` (#149) | 2026-09-14 01:20:22Z (#151) | 2026-09-14 01:30:32Z | ~10 minutes, by hand |
+
+The #140 gap is short because the check was *made* immediately — it is not
+evidence of the parent nearly closing on its own. Both were verified open before
+`gh issue close` ran.
+
+**This kills the guess the addendum above wrote down as a guess.** That one
+observed that #128 (auto-closed) had two sub-issues and #135 (missed) had one,
+and offered the count as the only visible difference. **#149 has two sub-issues
+and did not close.** #140 has three and did not close. The count is not the
+variable, and no replacement hypothesis is offered here — the record now reads:
+one auto-close, three misses, all four within three weeks.
+
+**The rule is unchanged, and is now the cheap one it always should have been:**
+check the parent when the feature's `status.md` is marked Complete, and expect to
+close it. `gh issue close` on an already-closed issue reports "already closed"
+rather than failing, so the check never costs more than one command.
+
+What is worth taking from three revisions on one paragraph of someone else's
+behavior: **the convention's value was never in predicting the automation — it
+was in the check being unconditional.** Every version of this document that tried
+to predict it was wrong within weeks; the instruction to look was right every
+time. When a rule depends on an external system, write the *check* into the
+process and let the prediction be a footnote.
+
 ## Reasoning
 
 - GitHub Issues over a separate tracker: adding a second tracker would be a

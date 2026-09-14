@@ -1,14 +1,16 @@
 # Status: Annotation Box Above the Toolbar
 
-**State:** Implemented, awaiting review. Task 2 of 2.
+**State:** **Merged** (2026-09-13), behind green CI and human review. Task 2
+of 2, and the last of the feature.
 
 - Branch: `surface-layering/annotation-box-above-the-toolbar`, from `main` at
-  `0e927c7` with task 1 merged.
-- Sub-issue: [**#151**](https://github.com/nicbk/nicbk-website/issues/151).
+  `0e927c7` with task 1 merged. Merged as `37d29f6`; branch deleted.
+- Sub-issue: [**#151**](https://github.com/nicbk/nicbk-website/issues/151),
+  closed with the merge.
 - PR: [**#154**](https://github.com/nicbk/nicbk-website/pull/154).
-- **On merge this completes #16** — check the parent issue
-  [#149](https://github.com/nicbk/nicbk-website/issues/149) and close it by hand
-  if it has not closed itself (#140's did not).
+- **This completed #16.** The parent issue
+  [#149](https://github.com/nicbk/nicbk-website/issues/149) was checked and had
+  **not** closed itself — same as #140's — so it was closed by hand.
 
 ## Why this task exists
 
@@ -124,6 +126,9 @@ it runs on `nicbk.com` after deploy.
 
 ## Log
 
+- 2026-09-13 — **Merged** (#154), completing feature #16. CI green: Biome +
+  typecheck + 1605 unit tests, and the integration suite; coverage 93.77%
+  against a 93.71% baseline. Parent #149 closed by hand.
 - 2026-09-13 — Measured, decided with the user, implemented. The measurement
   ruled out the layer remedy outright; the browser then found three defects the
   unit tier could not, including one that the first browser check itself

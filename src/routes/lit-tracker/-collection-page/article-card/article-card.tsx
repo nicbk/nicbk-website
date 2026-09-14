@@ -110,9 +110,11 @@ export function ArticleCard({
   /**
    * Open the article, unless the click was meant for something else on the card.
    *
-   * Three things are left alone, and each is a real case rather than a
+   * Four things are left alone, and each is a real case rather than a
    * precaution:
    *
+   * - **Clicks that never happened inside this card.** See below — this one is
+   *   not the tautology it looks like.
    * - **Clicks inside a control.** The three-dot menu is the one on the card
    *   today and #11 adds more; matching by role rather than by name means they
    *   do not each have to remember to stop propagation.
@@ -125,6 +127,31 @@ export function ArticleCard({
    */
   function openUnlessControl(event: MouseEvent<HTMLElement>) {
     if (event.defaultPrevented) {
+      return
+    }
+    /*
+     * **Not redundant, however much it reads like it.**
+     *
+     * This handler is on the card, so "was the click inside the card?" looks
+     * like a question that cannot be answered no. It can, because **React
+     * propagates synthetic events along the React tree rather than the DOM
+     * tree** — and everything this card portals is a React child of it while
+     * being a DOM child of `document.body`.
+     *
+     * Measured, not theorised (features/a-popup-keeps-its-clicks): with the
+     * menu open, the popup's DOM ancestry is `popup → positioner → div → body`,
+     * passing through no `<article>` at all — and clicking its padding still
+     * navigated here, opening the article behind the menu. The same reached the
+     * edit dialog and the delete confirmation, both mounted from that menu, so
+     * clicking a label while correcting metadata left the form.
+     *
+     * `contains` puts the DOM's answer back in charge of an event React routed
+     * by its own tree. It covers every surface the card portals — menu, both
+     * dialogs, both tooltips — and the next one somebody adds, which is why the
+     * fix lives here rather than as a `stopPropagation` in each of them: five
+     * call sites today is five chances to forget the sixth, silently.
+     */
+    if (!event.currentTarget.contains(event.target as Node)) {
       return
     }
     const target = event.target as Element

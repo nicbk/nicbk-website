@@ -1,6 +1,7 @@
 # Status: A Popup Keeps Its Clicks
 
-**Feature state:** **Spec'd** (2026-09-14) — one task, not started.
+**Feature state:** **In progress** (2026-09-14) — the task is implemented and
+awaiting review.
 
 Spec written against `main` at `f512c18`, from a reproduction taken on
 `nicbk.com` before anything was written. See [research.md](./research.md).
@@ -19,7 +20,7 @@ The roadmap entry is **#20** in [../index.md](../index.md). Its parent issue is
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`clicks-stay-inside-the-popup`](./tasks/clicks-stay-inside-the-popup/status.md) | Not started ([#174](https://github.com/nicbk/nicbk-website/issues/174)) | — | — | — |
+| [`clicks-stay-inside-the-popup`](./tasks/clicks-stay-inside-the-popup/status.md) | Implemented ([#174](https://github.com/nicbk/nicbk-website/issues/174)) | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -49,6 +50,13 @@ reproduces, and clicking a card still opens the article.
 
 ## Log
 
+- 2026-09-14 — **Implemented.** One condition, a comment several times longer
+  than it, and two guidelines. Worth recording: **the unit tier could prove this
+  one**, because jsdom models React's synthetic events exactly as a browser does
+  — the test opens a real menu, clicks its surface rather than an item, and fails
+  with `navigate` called twice when the condition is removed. Most of this week's
+  defects needed a browser precisely because they were about paint and layout;
+  this one is about event routing, which is not.
 - 2026-09-14 — **Spec'd**, after the item was finally reproduced. It had resisted
   two earlier attempts, and the reason was instructive: the card's guard already
   skips every control, so clicking menu *items* — the obvious thing to click —

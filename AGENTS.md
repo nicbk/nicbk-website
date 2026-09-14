@@ -290,6 +290,12 @@ still bubbles into the `onClick` of whatever component rendered it.
   a tautology to anyone who has not met this behaviour, which makes it the first
   casualty of a later cleanup. The comment explaining why it is not is part of
   the fix.
+- **An audit by search only finds the handlers you wrote.** Library components
+  carry their own — a router's `<Link>` navigates from a click handler inside the
+  package — and no search of the repository will list them. The audit for this
+  defect concluded there was one site; clicking every named surface afterwards
+  found a second, a tooltip inside a link, with the first fix already shipped.
+  Treat "found by grep" as a floor, and click the surfaces.
 
 ## An exception list is a map of where a bug cannot be
 

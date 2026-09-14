@@ -51,14 +51,18 @@ Everything rendered inside that `<article>` in the React tree:
 The dialogs are the ones that matter beyond annoyance: clicking a label while
 correcting an article's metadata navigates away from the form.
 
-The card is the **only** container-level click handler in the app today — every
-other `onClick` sits on a real control — so there is one site, not a class of
-them. The *shape* can recur, which is what the guideline is for.
+**Two handlers, not one — and the second was found only by clicking.** The spec
+said the card was the only container-level click handler, because a search for
+`onClick=` found no other. But the title, author and venue tooltips are React
+children of the title's `<Link>`, and the router's Link navigates from a handler
+*inside the library*, where no search of this repository can see it. With the
+card's guard shipped, clicking a tooltip still opened the article. Both handlers
+now ask the same question.
 
 ## What it delivers
 
-- **A card that only answers clicks physically inside it**, so nothing it
-  portals can reach it.
+- **A card and a title link that only answer clicks physically inside them**, so
+  nothing either portals can reach it.
 - **A test that fails if the guard loses that**, phrased against a portalled
   click rather than against the implementation.
 - **The general lesson written down**: handing rendering to a library and then

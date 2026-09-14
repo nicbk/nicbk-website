@@ -45,7 +45,8 @@ reproduces, and clicking a card still opens the article.
 - **A portal test can pass for the wrong reason.** If the portalled node ends up
   inside the card's own subtree, `contains` is true and the assertion means
   nothing. The test must assert the node is outside the card in the DOM.
-- **Only the card has a container-level click handler.** Verified across `src/`:
+- **~~Only the card has a container-level click handler.~~ Wrong — see the task's
+  status.** The title `<Link>` has one inside the router library. Verified across `src/`:
   every other `onClick` is on a real control. One site, not a class of them.
 
 ## Log

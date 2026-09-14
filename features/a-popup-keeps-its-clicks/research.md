@@ -72,10 +72,17 @@ Everything inside the `<article>` in the React tree — read from
 | title / author / meta tooltips | `ElidedText` | `Tooltip.Portal` |
 | status / tag tooltips | `CardFooter` | `Tooltip.Portal` |
 
-**And nothing else in the app.** Every other `onClick` in `src/` is on a real
-control — button, link, or menu item — so no other container can receive a
-portalled click. The reader's tool and zoom menus and the rail's delete-tag
-dialog were checked specifically: none has a clickable ancestor.
+**Correction, found during implementation: not the only handler.** The paragraph
+first written here said every other `onClick` in `src/` sits on a real control,
+so the card was the only site. That search was sound as far as it went, and it
+could not go far enough: **TanStack's `<Link>` navigates from a click handler of
+its own, inside the library**, and the title, author and venue tooltips are its
+React children. With the card's guard in place, clicking the venue tooltip on the
+running page still navigated — every probe assertion holding: inside the tooltip,
+not a control, outside the card and outside the link in the DOM.
+
+The reader's tool and zoom menus and the rail's delete-tag dialog were
+re-checked with that in mind — none sits inside a link or a clickable ancestor.
 
 ## The remedy, and why not the obvious one
 

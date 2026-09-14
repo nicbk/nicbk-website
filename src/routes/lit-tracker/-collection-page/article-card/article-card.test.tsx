@@ -368,4 +368,67 @@ describe('a popup keeps its clicks', () => {
 
     expect(navigate).not.toHaveBeenCalled()
   })
+
+  it('stops a tooltip’s click from following the title link', async () => {
+    /*
+     * The second site, found in the browser *after* the card's guard shipped.
+     *
+     * The title, author and venue tooltips are React children of the title's
+     * `<Link>`, and the router's Link navigates from a click handler of its own
+     * inside the library — so a click on a tooltip opened the article with the
+     * card's guard fully in place. An audit grepping for `onClick=` could not
+     * see that handler, which is how it was missed.
+     *
+     * The router mock below is a plain `<a>` that never navigates, so asserting
+     * "did not navigate" would pass whether or not the fix exists. What is
+     * asserted instead is the contract the real library keys on: the click that
+     * reaches the anchor is *prevented*. TanStack's Link runs a caller's onClick
+     * first and skips its own navigation when the event is already prevented
+     * (`composeHandlers([onClick, handleClick])` in its link.js).
+     */
+    const article = articleWith()
+    renderCard({ article })
+    const link = screen.getByRole('link')
+
+    await userEvent.hover(within(link).getByText(article.title))
+    // Waits for a match *outside* the link. `findAllByText` alone resolves at
+    // once, because the trigger itself already carries the same text — it would
+    // return before the tooltip's hover delay has elapsed and find no popup.
+    const tooltip = await waitFor(
+      () => {
+        const popup = screen
+          .getAllByText(article.title)
+          .find((node) => !link.contains(node))
+        expect(popup).toBeDefined()
+        return popup
+      },
+      { timeout: 2000 },
+    )
+
+    // Without this, a tooltip rendered inside the anchor's own subtree would
+    // make `contains` true and the prevented-click assertion meaningless.
+    expect(tooltip).toBeDefined()
+    expect(link.contains(tooltip as Node)).toBe(false)
+
+    const fromTooltip = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    })
+    ;(tooltip as HTMLElement).dispatchEvent(fromTooltip)
+
+    expect(fromTooltip.defaultPrevented).toBe(true)
+  })
+
+  it('leaves a real click on the title link alone', () => {
+    // The guard must narrow what reaches the link, not disable it. A click that
+    // actually lands on the anchor is left for the router to follow.
+    const article = articleWith()
+    renderCard({ article })
+    const title = within(screen.getByRole('link')).getByText(article.title)
+
+    const onTitle = new MouseEvent('click', { bubbles: true, cancelable: true })
+    title.dispatchEvent(onTitle)
+
+    expect(onTitle.defaultPrevented).toBe(false)
+  })
 })

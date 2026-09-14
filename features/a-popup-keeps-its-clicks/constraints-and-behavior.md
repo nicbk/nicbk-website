@@ -42,7 +42,7 @@ definition.
 
 ### Nothing else gets "fixed" alongside
 
-Only the card has a container-level click handler. The reader's tool and zoom
+Only the card and its title link have handlers that portalled content can reach — the second one inside the router library, and found by clicking rather than by searching. The reader's tool and zoom
 menus, the rail's delete-tag dialog, the toaster and the settings modal all
 portal too, and none sits inside a clickable ancestor — verified. Touching them
 would be changing code that has no defect.

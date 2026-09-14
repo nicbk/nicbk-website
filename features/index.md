@@ -75,7 +75,7 @@ need them (see Phases 2–3).
 | 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Complete** (2026-09-11; both tasks merged, #129 + #130) | #9, #12 |
 | 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Complete** (2026-09-13; both tasks merged, #153 + #154) | #8, #9 |
 | 17 | One header row (the site's header and the tracker's become one row with two sets of items, at one declared height) | [`one-header-row`](./one-header-row/description.md) | **Complete** (2026-09-13; its one task merged, #157) | #1, #8 |
-| 18 | Controls look like controls (a filter reads as pressable; the upload controls are finished) | [`controls-look-like-controls`](./controls-look-like-controls/description.md) | **Spec'd** (2026-09-13; 2 tasks, not started) | #4, #7, #8 |
+| 18 | Controls look like controls (a filter reads as pressable; the upload controls are finished) | [`controls-look-like-controls`](./controls-look-like-controls/description.md) | **Complete** (2026-09-14; both tasks merged, #162 + #163) | #4, #7, #8 |
 
 ## How this roadmap is spec'd out
 
@@ -88,7 +88,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
 `tracker-navigation-latency` (complete), `article-edit` (complete),
 `surface-layering` (complete), `one-header-row` (complete) and
-`controls-look-like-controls` (spec'd) have full
+`controls-look-like-controls` (complete) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -192,6 +192,16 @@ it found that **the blog carries the same heading-versus-toggle collision as the
 tracker**, invisible only because the blog's tags are prefixed `#`. The remedy's
 direction was then forced rather than chosen: the label is already at the 4.5:1
 contrast floor, so the control is the only thing that can move.
+
+**It also produced the session's clearest result on a question nobody could
+measure.** The spinner's fractional box shipped as *one candidate* rather than a
+cure, with a composited-layer fallback deliberately held back — and the user
+confirmed the wobble gone, which settled the cause instead of leaving two changes
+and a shrug. Where a fix can only be judged by someone else's eyes, one change per
+round is the difference between a finding and a guess. The feature's other lesson
+came from a rejection: its picker met the acceptance criterion — "a dotted
+boundary" — without designing anything, because the criterion named a visual
+property instead of an outcome.
 
 **Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
 measurement ruled out the remedy its own spec had assumed — the menu sits inside

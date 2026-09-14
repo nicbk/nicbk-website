@@ -1,7 +1,11 @@
 # Status: Controls Look Like Controls
 
-**Feature state:** **In progress** (2026-09-13) — task 1 merged, task 2
-implemented and awaiting review.
+**Feature state:** **Complete** (2026-09-14) — both tasks merged behind green CI
+and human review, and parent issue #161 closed by hand.
+
+**The spinner wobble is confirmed fixed** (user, 2026-09-14), which turns this
+feature's most uncertain change into its most useful finding: see
+[research.md](./research.md).
 
 Spec written against `main` at `6290ca8`, from measurements taken on the running
 page before anything was written. See [research.md](./research.md).
@@ -15,16 +19,17 @@ the shared toggle's other consumer, and
 Feature parent issue: [**#161**](https://github.com/nicbk/nicbk-website/issues/161),
 with one sub-issue per task, per
 [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md).
-The roadmap entry is **#18** in [../index.md](../index.md). Its parent issue is
-**checked** when the feature completes and **closed by hand** — four of the last
-five did not close themselves, so expect to.
+The roadmap entry is **#18** in [../index.md](../index.md). Its parent issue was
+**checked** on completion and had **not** closed itself, so it was closed by
+hand — the fifth in a row (#135, #140, #149, #156, #161) against the one feature
+that closed itself.
 
 ## Task states
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`pressable-things-look-pressable`](./tasks/pressable-things-look-pressable/status.md) | **Merged** ([#162](https://github.com/nicbk/nicbk-website/issues/162)) | [#165](https://github.com/nicbk/nicbk-website/pull/165) | green | approved |
-| [`the-upload-controls-look-finished`](./tasks/the-upload-controls-look-finished/status.md) | Implemented ([#163](https://github.com/nicbk/nicbk-website/issues/163)) | — | — | — |
+| [`the-upload-controls-look-finished`](./tasks/the-upload-controls-look-finished/status.md) | **Merged** ([#163](https://github.com/nicbk/nicbk-website/issues/163)) | [#166](https://github.com/nicbk/nicbk-website/pull/166) | green | approved |
 
 ## Definition of Done (feature)
 
@@ -59,6 +64,16 @@ put a file, and the spinner's box is a whole number of pixels.
 
 ## Log
 
+- 2026-09-14 — **Feature complete**, and the uncertain change turned out to be
+  the informative one. **The user confirms the spinner wobble is gone**, which
+  settles a cause that could not be measured from this side: the icon's art was
+  proved centred, the box was measured fractional, and moving the pivot from
+  9.2px onto 9px fixed it. Holding back the composited-layer fallback is what
+  made that an *answer* rather than two changes and a shrug — worth repeating
+  whenever a fix has to be judged by someone else's eyes. Also worth carrying
+  forward: task 2's picker was rejected on review for satisfying its acceptance
+  criterion without designing anything, because the criterion named a visual
+  property ("a dotted boundary") instead of an outcome.
 - 2026-09-13 — **Task 2 implemented.** The "+" is 39.5 × 39.5 (aspect 1.000)
   with the row's `align-items: stretch` untouched, the picker has a dashed
   boundary that deliberately stops short of promising a drop it cannot accept,

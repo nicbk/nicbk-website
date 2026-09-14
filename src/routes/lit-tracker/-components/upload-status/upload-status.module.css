@@ -69,18 +69,20 @@
  * some. `1.125rem` is 18px against the default root — integral, and the pivot
  * lands on 9px.
  *
- * **This is one measured candidate, not a proven cure.** A frozen-phase probe —
- * two spinners, 18.4px and 24px, each on a fixed centre mark — could not resolve
- * sub-pixel drift at the magnification available, so the user judges the result
- * (user-decided 2026-09-13). If it still wobbles, the next thing to try is
- * promoting it to its own composited layer (`will-change: transform`), which
- * removes this class of jitter independently of the box size — deliberately not
- * done at the same time, so that whichever change works is the one that gets the
- * credit.
+ * **Confirmed by the user, 2026-09-14: the wobble is gone.** It shipped as one
+ * measured candidate rather than a cure — a frozen-phase probe, two spinners at
+ * 18.4px and 24px on fixed centre marks, could not resolve sub-pixel drift at the
+ * magnification available, so the reader who could see it judged the result. The
+ * composited-layer fallback (`will-change: transform`) was deliberately held back
+ * so that a single change would answer the question instead of two changes
+ * leaving it open. It did.
  *
- * The other icons keep `1.15em`, the value every control in the tracker uses. A
- * static glyph is rasterized once and does not judder; only rotation makes a
- * fractional box show.
+ * **So this is now a known hazard, not a one-off.** Any icon in this project that
+ * *rotates* needs a box that lands on whole pixels; `1.15em` — the value every
+ * other control here uses — cannot, because the surfaces it sits on clamp their
+ * own font-size. The other icons in this file keep it and are right to: a static
+ * glyph is rasterized once and does not judder. Only rotation makes a fractional
+ * box show.
  */
 .iconSpinning {
   width: 1.125rem;

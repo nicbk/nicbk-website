@@ -1,14 +1,15 @@
 # Status: The Upload Controls Look Finished
 
-**State:** Implemented, awaiting review. Task 2 of 2.
+**State:** **Merged** (2026-09-14), behind green CI and human review. Task 2 of 2.
 
 - Branch: `controls-look-like-controls/the-upload-controls-look-finished`, from
   `main` at `cdcf60b` with task 1 merged.
 - Sub-issue: [**#163**](https://github.com/nicbk/nicbk-website/issues/163).
-- PR: **TBD**.
-- **On merge this completes #18** — check the parent issue
-  [#161](https://github.com/nicbk/nicbk-website/issues/161) and close it by hand,
-  which four of the last five features have needed.
+- PR: [**#166**](https://github.com/nicbk/nicbk-website/pull/166). Merged as
+  `1319f0a`; branch deleted.
+- **This completed #18.** The parent issue
+  [#161](https://github.com/nicbk/nicbk-website/issues/161) was checked, had not
+  closed itself, and was closed by hand — the fifth in a row.
 
 ## Why this task exists
 
@@ -93,13 +94,12 @@ No upload was performed, so **no test data was created and none needed deleting*
   and exercising it means uploading a real PDF. Its box was measured by applying
   the rule's own class to a probe element rather than by watching one turn, so
   what is confirmed is the geometry, not the motion.
-- **Whether the wobble is gone.** By design: the artifact is below what the agent
-  can resolve, and the user judges. **If it persists**, the next thing to try is
-  promoting the element to its own composited layer (`will-change: transform`),
-  which removes this class of jitter independently of the box size — recorded in
-  the stylesheet so the next attempt does not start from scratch. It was
-  deliberately not done at the same time, so whichever change works gets the
-  credit.
+- ~~**Whether the wobble is gone.**~~ **Answered: the user confirms it is**
+  (2026-09-14). The fractional box was the cause, and holding back the
+  composited-layer fallback is what made a single change answer the question.
+  The stylesheet now records it as a known hazard rather than a hypothesis:
+  anything that *rotates* needs a whole-pixel box, and `1.15em` cannot give one
+  on a surface whose font-size is clamped.
 - **Phone width.** Chrome's minimum window width stops the resize at ~500px, and
   the checks above were taken at 1440. `aspect-ratio` and a dashed border do not
   depend on width, and the row's behaviour below the breakpoint is #8's and
@@ -114,6 +114,9 @@ that indicator ever gains a box.
 
 ## Log
 
+- 2026-09-14 — **Merged** (#166), completing #18. **The user confirms the spinner
+  wobble is gone** — the one change whose effect could not be measured from this
+  side turned out to be the one that settled a cause.
 - 2026-09-14 — **Picker redesigned after review.** The first version satisfied
   the written requirement — "a dotted boundary" — and failed the actual one. The
   user's words: *don't just throw up a dotted line boundary to satisfy the

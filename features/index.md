@@ -78,6 +78,7 @@ need them (see Phases 2–3).
 | 18 | Controls look like controls (a filter reads as pressable; the upload controls are finished) | [`controls-look-like-controls`](./controls-look-like-controls/description.md) | **Complete** (2026-09-14; both tasks merged, #162 + #163) | #4, #7, #8 |
 | 19 | The site fits a phone (fields stop zooming iOS; code fits a narrow column) | [`the-site-fits-a-phone`](./the-site-fits-a-phone/description.md) | **Complete** (2026-09-14; its one task merged, #169; the user's phone check passed) | #4, #8, #9, #11 |
 | 20 | A popup keeps its clicks (clicking a menu stops opening the card behind it) | [`a-popup-keeps-its-clicks`](./a-popup-keeps-its-clicks/description.md) | **Complete** (2026-09-14; its one task merged in two PRs, #174 — #176 + #177) | #8, #11 |
+| 21 | A paper downloads once (reopening a paper revalidates instead of re-downloading it) | [`a-paper-downloads-once`](./a-paper-downloads-once/description.md) | **Spec'd** (2026-09-14; 1 task, not started) | #7, #9 |
 
 ## How this roadmap is spec'd out
 
@@ -90,8 +91,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
 `tracker-navigation-latency` (complete), `article-edit` (complete),
 `surface-layering` (complete), `one-header-row` (complete),
-`controls-look-like-controls` (complete), `the-site-fits-a-phone` (in progress)
-and `a-popup-keeps-its-clicks` (spec'd) have full
+`controls-look-like-controls` (complete), `the-site-fits-a-phone` (complete),
+`a-popup-keeps-its-clicks` (complete) and `a-paper-downloads-once` (spec'd) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -237,6 +238,15 @@ navigates from a handler inside the router library that no search of this
 repository can find — the venue tooltip still navigated until it was clicked in
 the browser. The scroll overshoot reported in the same list is no longer seen by
 the user and is dropped.
+
+**#21 is the first of that list's three new capabilities, and it turned out to be
+a deferred decision rather than a missing feature.** The PDF route's
+`no-store` was written as a placeholder — its comment says so — and the reader
+has re-downloaded every paper on every visit since: 13.4 MB twice in a row for
+the largest, measured on `nicbk.com`. The user chose revalidation over
+`immutable` to keep the per-read authorization the security decision promises,
+and Garage was probed first: it answers conditional reads itself, so an
+unchanged paper costs a 304 and no storage read.
 
 **Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
 measurement ruled out the remedy its own spec had assumed — the menu sits inside

@@ -1,16 +1,16 @@
 # Status: Type That Fits a Phone
 
-**State:** Implemented, awaiting review **and the user's phone check**. Task 1
-of 1.
+**State:** **Merged** (2026-09-14) behind green CI and human review — but the
+feature is **not complete**: the user's phone check is outstanding. Task 1 of 1.
 
 - Branch: `the-site-fits-a-phone/type-that-fits-a-phone`, from `main` at
   `eb10a70` with the feature spec merged.
 - Sub-issue: [**#169**](https://github.com/nicbk/nicbk-website/issues/169).
-- PR: **TBD**.
-- **On merge this completes #19** — check the parent issue
-  [#168](https://github.com/nicbk/nicbk-website/issues/168) and close it by hand,
-  which five of the last six features have needed. But the feature is **not done
-  at merge**: the phone check is part of the definition of done.
+- PR: [**#171**](https://github.com/nicbk/nicbk-website/pull/171). Merged as
+  `1b902ca`; branch deleted.
+- **#168 is deliberately still open.** Not the usual auto-close miss — the
+  feature's definition of done includes the phone check, and closing it early
+  would make that clause decorative. It closes when step 1 below passes.
 
 ## Why this task exists
 
@@ -93,6 +93,7 @@ code splitting doing its job rather than a defect — both routes were checked.
 
 ## Log
 
+- 2026-09-14 — **Merged** (#171). Parent #168 held open for the phone check.
 - 2026-09-14 — Implemented. 1643 unit tests pass (1627 + 16). Both changes were
   checked by reproducing their bug — removing one control's coarse rule and
   reverting the clamp — and confirming the tests fail.

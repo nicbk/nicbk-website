@@ -1,8 +1,9 @@
 # Status: The Site Fits a Phone
 
-**Feature state:** **In progress** (2026-09-14) — the task is implemented and
-awaiting review **and the user's phone check**, which is part of the definition
-of done rather than a follow-up.
+**Feature state:** **In progress** (2026-09-14) — its one task is **merged**, and
+the feature is waiting on the **user's phone check**, which is part of the
+definition of done rather than a follow-up. Parent issue #168 is held open for
+it.
 
 Spec written against `main` at `44300c7`, from measurements taken in a **real
 375px viewport** before anything was written. See [research.md](./research.md).
@@ -23,7 +24,7 @@ close themselves.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`type-that-fits-a-phone`](./tasks/type-that-fits-a-phone/status.md) | Implemented ([#169](https://github.com/nicbk/nicbk-website/issues/169)) | — | — | — |
+| [`type-that-fits-a-phone`](./tasks/type-that-fits-a-phone/status.md) | **Merged** ([#169](https://github.com/nicbk/nicbk-website/issues/169)) | [#171](https://github.com/nicbk/nicbk-website/pull/171) | green | approved |
 
 ## Definition of Done (feature)
 
@@ -56,6 +57,8 @@ confirmed from here.
 
 ## Log
 
+- 2026-09-14 — **Task merged** (#171). Everything checkable from here is done;
+  #168 stays open until the phone confirms the zoom is gone.
 - 2026-09-14 — **Implemented.** The code block went from 34 characters to **40**
   at 375px, with overflow down from 214px to 139px and the document still not
   scrolling sideways; the clamp reaches its 14px ceiling exactly at 768px, so

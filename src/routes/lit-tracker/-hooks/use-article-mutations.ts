@@ -1,6 +1,7 @@
 import { useZero } from '@rocicorp/zero/react'
 import { useMemo } from 'react'
 import type { ArticleStatus } from '~/db/schema/lit-tracker'
+import type { ReadingPosition } from '~/routes/lit-tracker/-article-detail/reader/reading-position'
 import type { ArticleDetails } from '~/routes/lit-tracker/-components/article-edit/article-draft'
 import { mutators } from '~/zero/mutators'
 import type { MutationFailure } from './use-mutation-runner'
@@ -55,6 +56,19 @@ export interface ArticleMutations {
    * `use-synced-text.ts` for why that is the caller's job and not this one's.
    */
   setNotes: (articleId: string, notes: string) => Promise<void>
+  /**
+   * Remembers where in the paper the reader is.
+   *
+   * **The one write here that stays quiet when refused.** It is not something
+   * the reader did, so a toast would be news about nothing they asked for — and
+   * the one refusal it can plausibly meet is right after deleting the article,
+   * when the reader's last position is flushed on the way out behind the
+   * delete. Still awaited through the server's answer, like every other.
+   */
+  setReadingPosition: (
+    articleId: string,
+    position: ReadingPosition,
+  ) => Promise<void>
   /**
    * Corrects an article's bibliographic details — #11's edit form.
    *
@@ -131,6 +145,18 @@ export function useArticleMutations(): ArticleMutations {
         run(() =>
           zero.mutate(mutators.articles.setNotes({ id: articleId, notes })),
         ),
+
+      setReadingPosition: async (articleId, { page, offset }) => {
+        await report(() =>
+          zero.mutate(
+            mutators.articles.setReadingPosition({
+              id: articleId,
+              page,
+              offset,
+            }),
+          ),
+        )
+      },
 
       updateDetails: (articleId, details) =>
         report(() =>

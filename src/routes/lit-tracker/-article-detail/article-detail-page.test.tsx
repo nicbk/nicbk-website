@@ -45,7 +45,9 @@ vi.mock('@tanstack/react-router', async () => {
   }
 })
 
-const { ArticleDetailPage } = await import('./article-detail-page')
+const { ArticleDetailPage, readingPositionOf } = await import(
+  './article-detail-page'
+)
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
@@ -288,5 +290,27 @@ describe('ArticleDetailPage', () => {
       expect(navigate).toHaveBeenCalledWith({ to: '/lit-tracker' })
       await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1))
     })
+  })
+})
+
+describe('readingPositionOf', () => {
+  it('is the stored page and offset', () => {
+    expect(readingPositionOf({ readingPage: 7, readingOffset: 412.5 })).toEqual(
+      { page: 7, offset: 412.5 },
+    )
+  })
+
+  it('is none for a paper not yet read, or half a position', () => {
+    // Offset 0 is a real position, the top of a page — only null means none.
+    expect(readingPositionOf({ readingPage: 3, readingOffset: 0 })).toEqual({
+      page: 3,
+      offset: 0,
+    })
+    expect(
+      readingPositionOf({ readingPage: null, readingOffset: null }),
+    ).toBeNull()
+    expect(
+      readingPositionOf({ readingPage: 4, readingOffset: null }),
+    ).toBeNull()
   })
 })

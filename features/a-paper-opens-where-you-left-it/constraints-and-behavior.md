@@ -28,15 +28,16 @@
 
 - On the scroll capability's `onLayoutReady` for this document with
   `isInitial: true`, once.
-- Through one helper that scrolls to a page point **correcting for the
-  viewport gap** (`y − viewportGap / scale`). #22's "go to" uses the same helper.
+- By `scrollToPage` with the stored page point, as it is: the scroll itself is
+  exact (measured, research §4a).
 - A saved page beyond the paper's page count is ignored, not clamped to the
   last page.
 
 ### Saved
 
 - From `onScroll` metrics: the top visible page's `pageNumber` and
-  `original.pageY`.
+  `original.pageY` **less `viewportGap / scale`** — the reported offset overstates
+  the real one by the viewport padding (research §4a) — clamped at 0.
 - **Only after the restore has run** (or been skipped for having nothing to
   restore).
 - Debounced; not written when the value has not moved by more than a line's
@@ -54,6 +55,6 @@
 5. Opening the paper with no saved position starts at page 1.
 6. A second window reading elsewhere does not move an open reader; opening the
    paper afterwards starts at the second window's position.
-7. #22's "go to p. N" lands the entry at the intended distance below the toolbar,
-   with the gap corrected.
+7. #22's "go to p. N" lands the entry at the intended distance below the toolbar
+   — unchanged: its scroll was measured exact (research §4a).
 8. Chrome and Safari.

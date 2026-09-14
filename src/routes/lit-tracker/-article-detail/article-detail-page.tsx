@@ -5,7 +5,9 @@ import { NarrowScreenDrawer } from '~/routes/lit-tracker/-components/narrow-scre
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { ArticleDetails } from './article-details'
 import { ArticleSidebar, SIDEBAR_LABEL } from './article-sidebar'
+import type { DetailArticle } from './detail-article'
 import { ArticleReader } from './reader/article-reader'
+import type { ReadingPosition } from './reader/reading-position'
 import { useArticleDetail } from './use-article-detail'
 import styles from './article-detail-page.module.css'
 
@@ -97,6 +99,10 @@ export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
 
       <ArticleReader
         articleId={articleId}
+        readingPosition={readingPositionOf(article)}
+        onReadingPositionChange={(position) =>
+          mutations.setReadingPosition(articleId, position)
+        }
         actions={
           <>
             <NarrowScreenDrawer label={SIDEBAR_LABEL} icon={PanelLeft}>
@@ -151,4 +157,17 @@ export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
       />
     </div>
   )
+}
+
+/**
+ * The article's stored reading position, or `null` when it has none — both
+ * columns are written together, so one without the other is treated as none.
+ */
+export function readingPositionOf(
+  article: Pick<DetailArticle, 'readingPage' | 'readingOffset'>,
+): ReadingPosition | null {
+  if (article.readingPage == null || article.readingOffset == null) {
+    return null
+  }
+  return { page: article.readingPage, offset: article.readingOffset }
 }

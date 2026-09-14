@@ -70,6 +70,17 @@ describe('the mutation each action names', () => {
     ])
   })
 
+  it('remembers a reading position', async () => {
+    await mutations().setReadingPosition(ARTICLE, { page: 7, offset: 412.5 })
+
+    expect(requested()).toEqual([
+      {
+        name: 'articles.setReadingPosition',
+        args: { id: ARTICLE, page: 7, offset: 412.5 },
+      },
+    ])
+  })
+
   it('applies a tag, generating the join row’s id', async () => {
     await mutations().applyTag(ARTICLE, TAG)
 
@@ -282,6 +293,19 @@ describe('what the reader is told', () => {
       title: 'not saved yet',
       message: expect.stringContaining('queued'),
     })
+  })
+
+  it('says nothing when a reading position is refused', async () => {
+    // Not something the reader did: the plausible refusal is the position
+    // flushed on the way out behind a delete, and a toast there is news about
+    // nothing they asked for.
+    mutate.mockImplementation(() =>
+      refused({ type: 'app', message: 'Article not found' }),
+    )
+
+    await mutations().setReadingPosition(ARTICLE, { page: 2, offset: 0 })
+
+    expect(showError).not.toHaveBeenCalled()
   })
 
   it('says nothing when the server accepted the write', async () => {

@@ -75,6 +75,7 @@ need them (see Phases 2–3).
 | 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Complete** (2026-09-11; both tasks merged, #129 + #130) | #9, #12 |
 | 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Complete** (2026-09-13; both tasks merged, #153 + #154) | #8, #9 |
 | 17 | One header row (the site's header and the tracker's become one row with two sets of items, at one declared height) | [`one-header-row`](./one-header-row/description.md) | **Complete** (2026-09-13; its one task merged, #157) | #1, #8 |
+| 18 | Controls look like controls (a filter reads as pressable; the upload controls are finished) | [`controls-look-like-controls`](./controls-look-like-controls/description.md) | **Spec'd** (2026-09-13; 2 tasks, not started) | #4, #7, #8 |
 
 ## How this roadmap is spec'd out
 
@@ -86,7 +87,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
 `tracker-navigation-latency` (complete), `article-edit` (complete),
-`surface-layering` (complete) and `one-header-row` (complete) have full
+`surface-layering` (complete), `one-header-row` (complete) and
+`controls-look-like-controls` (spec'd) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -180,6 +182,16 @@ what let the user decide that, and it is the reason a 1px cosmetic report turned
 into deleting a duplicated computation. Every header on the site now measures
 56.00px in **both** engines, where the old site header was fractional and the two
 engines disagreed about it.
+
+**#18 is the third from that list, and it found a defect nobody reported.** Four
+items were measured before grouping, and the measurement did two things a spec
+written from the report could not. It **ruled out the obvious cause** of the
+spinner wobble — lucide's arc is drawn on the viewBox centre, so the art is not
+off-centre — leaving a fractional 18.4px box as the one measured candidate. And
+it found that **the blog carries the same heading-versus-toggle collision as the
+tracker**, invisible only because the blog's tags are prefixed `#`. The remedy's
+direction was then forced rather than chosen: the label is already at the 4.5:1
+contrast floor, so the control is the only thing that can move.
 
 **Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
 measurement ruled out the remedy its own spec had assumed — the menu sits inside

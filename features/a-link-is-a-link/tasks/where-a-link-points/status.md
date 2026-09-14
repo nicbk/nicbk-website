@@ -1,6 +1,7 @@
 # Status: Where a Link Points
 
-**State:** **Implemented**, in review. Task 2 of 3.
+**State:** **Merged** (2026-09-14) as `f4e5a9b`. Task 2 of 3. Two rules were
+added by task 3's browser pass — see that task's status.
 
 - Branch: `a-link-is-a-link/where-a-link-points`, from `main` at `dd0d9b1` with
   task 1 merged.

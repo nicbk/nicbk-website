@@ -6,7 +6,7 @@ import {
   PdfAnnotationSubtype,
   PdfZoomMode,
 } from '@embedpdf/models'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '~/routes/-shared/components/toast/toaster'
@@ -70,7 +70,7 @@ function toastTitled(title: string) {
 function renderLink(target: PdfLinkTarget | undefined) {
   const { container } = render(
     <Toaster>
-      <LinkTarget link={link(target)} />
+      <LinkTarget link={link(target)} documentId="article-1" />
     </Toaster>,
   )
   const hitArea = container.querySelector('[data-link-action]')
@@ -126,7 +126,7 @@ describe('LinkTarget', () => {
     )
   })
 
-  it('does not copy anything for a citation, which is inert until it previews', async () => {
+  it('opens the preview for a citation, and copies nothing', async () => {
     const user = userEvent.setup()
     const hitArea = renderLink(CITATION_TARGET)
     const writeText = stubClipboard(async () => {})
@@ -135,8 +135,47 @@ describe('LinkTarget', () => {
 
     expect(hitArea.getAttribute('data-link-action')).toBe('internal')
     expect(writeText).not.toHaveBeenCalled()
-    expect(screen.queryAllByRole('alertdialog', { hidden: true })).toHaveLength(
-      0,
+    // Outside every provider the lookup never starts, so it stays at its first
+    // state — which is enough to see the popover is open.
+    expect(await screen.findByText('finding it…')).toBeTruthy()
+  })
+
+  it('keeps the preview open when a click lands inside it', async () => {
+    // The popover is portalled out of the link in the DOM, but React routes its
+    // clicks back through the link's handler. Without the guard, any click in
+    // the preview would toggle it shut (#20's lesson).
+    const user = userEvent.setup()
+    const hitArea = renderLink(CITATION_TARGET)
+    await user.click(hitArea)
+    const inside = await screen.findByText('finding it…')
+    expect(hitArea.contains(inside)).toBe(false)
+
+    // What this can and cannot show: measured, one click on the portalled
+    // popup reaches the link's handler *twice* in jsdom, so without the guard
+    // two toggles cancel out and this still passes. It pins the outcome; the
+    // guard itself is argued in `link-target.tsx`, not proven here.
+    fireEvent.click(inside)
+
+    // Read from the document, not from the element found before the click: a
+    // detached popup keeps its attributes after it is gone.
+    expect(
+      document.querySelector('[data-preview]')?.hasAttribute('data-open'),
+    ).toBe(true)
+  })
+
+  it('closes the preview on a second click on the link', async () => {
+    const user = userEvent.setup()
+    const hitArea = renderLink(CITATION_TARGET)
+    await user.click(hitArea)
+    await screen.findByText('finding it…')
+
+    await user.click(hitArea)
+
+    await waitFor(() =>
+      expect(
+        document.querySelector('[data-preview]')?.hasAttribute('data-open') ??
+          false,
+      ).toBe(false),
     )
   })
 

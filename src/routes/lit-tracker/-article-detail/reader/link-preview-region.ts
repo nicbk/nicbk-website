@@ -84,6 +84,8 @@ const COLUMN_PROBE_DEPTH = 40
 const HANGING_INDENT = 20
 /** A vertical gap this many line pitches wide ends a block of text. */
 const PARAGRAPH_GAP = 1.8
+/** A line that opens a table's or figure's caption. */
+const CAPTION = /^\s*(?:Table|Figure|Fig\.?)\s*\d/i
 /** A landing this close in x is in the same column. */
 const SAME_COLUMN = 30
 /** Height when nothing below bounds the entry: the measured last-entry case. */
@@ -283,12 +285,28 @@ function snapToLabel({
   return null
 }
 
-/** Runs on the line at `top`, starting at or right of it. */
+/** Runs on the line at `top` that reach the target or start right of it. */
 function runsOnLine(page: PageText, top: Point): TextRun[] {
   return page.runs.filter(
     (run) =>
       Math.abs(run.rect.origin.y - top.y) <= LINE_TOLERANCE &&
-      run.rect.origin.x >= top.x - LEFT_SLACK,
+      reachesTarget(run, top),
+  )
+}
+
+/**
+ * Whether a run belongs to the text at or right of the target: it starts no
+ * further left than a hanging label, or it **crosses** the target.
+ *
+ * The second half was found in the browser. A LaTeX table link lands partway
+ * along its caption's first line, and that line is one run starting well to
+ * the left — ignored, the column was measured from the lines below and the
+ * crop cut "Table 3:" off one side and the caption's end off the other.
+ */
+function reachesTarget(run: TextRun, top: Point): boolean {
+  return (
+    run.rect.origin.x >= top.x - LEFT_SLACK ||
+    run.rect.origin.x + run.rect.size.width > top.x
   )
 }
 
@@ -318,7 +336,7 @@ function columnAt(page: PageText, top: Point): { left: number; right: number } {
 
   for (const line of byLine.values()) {
     const sorted = line
-      .filter((run) => run.rect.origin.x >= top.x - LEFT_SLACK)
+      .filter((run) => reachesTarget(run, top))
       .sort((a, b) => a.rect.origin.x - b.rect.origin.x)
     const [first] = sorted
     // A line that starts beyond a hanging indent is the other column's, even
@@ -405,6 +423,11 @@ function entryBottom({
  * - **a line returning to the left edge** after indented ones — the next entry
  *   of a hanging-indent reference list, which is how author–year lists are set.
  *
+ * **Except under a caption.** A block that opens "Table 3:" is a caption, and
+ * the table it names is below it *after* a gap — ended there, the preview of a
+ * table link was its caption alone (found in the browser). A caption's block
+ * runs to the height cap instead.
+ *
  * With no lines at all, `FALLBACK_HEIGHT`.
  */
 function blockBottom(
@@ -441,6 +464,15 @@ function blockBottom(
   const [first, second] = ordered
   if (!first) {
     return top + FALLBACK_HEIGHT
+  }
+
+  const firstText = page.runs
+    .filter((run) => Math.abs(run.rect.origin.y - first.y) <= LINE_TOLERANCE)
+    .sort((a, b) => a.rect.origin.x - b.rect.origin.x)
+    .map((run) => run.text)
+    .join('')
+  if (CAPTION.test(firstText)) {
+    return top + MAX_HEIGHT
   }
 
   const pitch = second ? second.y - first.y : first.bottom - first.y

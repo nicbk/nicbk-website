@@ -156,6 +156,7 @@ Three more features completed on the same day, and **no parent closed itself**:
 | #11 `article-edit` (#140) | 2026-09-13 21:16:48Z (#143) | 2026-09-13 21:17:09Z | ~21 seconds, by hand |
 | #16 `surface-layering` (#149) | 2026-09-14 01:20:22Z (#151) | 2026-09-14 01:30:32Z | ~10 minutes, by hand |
 | #17 `one-header-row` (#156) | 2026-09-14 02:22:31Z (#157) | 2026-09-14 02:30Z | ~8 minutes, by hand |
+| #18 `controls-look-like-controls` (#161) | 2026-09-14 (#163) | 2026-09-14 | by hand |
 
 The #140 gap is short because the check was *made* immediately — it is not
 evidence of the parent nearly closing on its own. Both were verified open before
@@ -166,8 +167,8 @@ observed that #128 (auto-closed) had two sub-issues and #135 (missed) had one,
 and offered the count as the only visible difference. **#149 has two sub-issues
 and did not close.** #140 has three and did not close; #156 has one, like #135,
 and did not close either. The count is not the variable, and no replacement
-hypothesis is offered here — the record now reads: **one auto-close and four
-misses**, all five within three weeks, at every sub-issue count from one to
+hypothesis is offered here — the record now reads: **one auto-close and five
+misses**, all six within three weeks, at every sub-issue count from one to
 three.
 
 With the sample at five, the honest summary is no longer "it sometimes closes

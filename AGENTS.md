@@ -269,6 +269,49 @@ process because the process only ever looked in one engine — and because two
 earlier attempts to explain it reasoned from the code's own comments instead of
 measuring.
 
+## A requirement that names a look can be met without designing anything
+
+A request phrased as a visual property — "a dotted outline", "make it bigger",
+"add a border" — is usually the *description* of a fix someone has already
+pictured, not the fix itself. Implementing the property literally satisfies the
+words and can miss the whole point, and no acceptance criterion written in the
+same terms will catch it.
+
+- **Work out what the property was standing in for**, and build that. "A dotted
+  outline on the file input" meant *a field you press*; what shipped first was a
+  dashed rectangle drawn around the platform's own two-part control, with its
+  grey button still jammed against "No file chosen" inside the border. Every
+  stated criterion passed.
+- **Write acceptance criteria as outcomes, not properties.** "The field reads as
+  somewhere to put a file" is checkable against the running page; "has a dashed
+  border" is checkable against a stylesheet and is satisfied by a rectangle.
+- Suspect this whenever the work feels like a one-line style change, and
+  especially when the change is exactly as large as the sentence that asked for
+  it.
+
+Written after a picker was rebuilt on review, with the user's own summary of what
+had gone wrong: *don't just throw up a dotted line boundary to satisfy the
+request.*
+
+## When a fix can only be judged by someone else, change one thing
+
+Some defects are below what this project's tooling can resolve — a sub-pixel
+wobble, a perceived colour difference, anything whose evidence is "it looks
+wrong". The user is then the measuring instrument, and that changes how many
+changes may ship at once: **one candidate per round**, so their answer identifies
+a cause instead of only relieving a symptom.
+
+- **Rule out what you can first, by measurement**, and say what you ruled out.
+  The spinner's art was proved centred by reading the icon's path before its box
+  was ever touched, which is what left exactly one candidate to test.
+- **Hold back the fallback, even when it would probably also work.** A
+  compositing hint would have cured the same judder by another route; shipping it
+  alongside the box change would have fixed the spinner and taught nothing. Kept
+  back, the single change confirmed that a fractional box is a real defect for
+  anything that rotates — which now applies to every future spinner.
+- **Say plainly that it is a candidate.** A PR that claims a fix nobody has
+  verified spends the user's trust on a guess.
+
 ## Fix recurring mistakes at the level of the principle
 
 When a mistake — especially a repeated one — reveals a gap in this guidance,

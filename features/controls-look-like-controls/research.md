@@ -78,9 +78,25 @@ the same rule measures 18.4 × 18.4. A fractional box puts the rotation centre a
 18.4px and 24px, each on a fixed centre mark, with `animation-play-state: paused`
 and a negative delay to pick the phase — but the available screenshot zoom tops
 out at 2×, which cannot resolve a sub-pixel drift. The user can see the artifact
-and the agent cannot, so the integer box ships as the one measured candidate and
-**the user judges the result** (user-decided 2026-09-13). This is the same
+and the agent cannot, so the integer box shipped as the one measured candidate
+and **the user judged the result** (user-decided 2026-09-13). This is the same
 division of labour that settled #17: the user's eye is the instrument.
+
+**Confirmed 2026-09-14: the wobble is gone.** `1.15em` → `1.125rem`, moving the
+pivot from 9.2px onto 9px, was the whole of it.
+
+Two things follow, and they outlive this spinner:
+
+- **A fractional box is a real defect for anything that rotates**, not a
+  theoretical one. `1.15em` is this project's house icon size and appears in
+  eleven stylesheets; it cannot be integral on any surface whose font-size is
+  clamped, which is most of them. Any *future* spinner needs a whole-pixel box.
+- **Shipping one candidate at a time is what made this an answer.** The
+  composited-layer fallback (`will-change: transform`) would have fixed the same
+  symptom by a different route, and shipping both would have left the cause
+  unknown and the house value unindicted. Where a fix can only be judged by
+  someone else's eyes, one change per round is the difference between a finding
+  and a shrug.
 
 ## A note on how these were verified
 

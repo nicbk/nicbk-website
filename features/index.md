@@ -74,6 +74,7 @@ need them (see Phases 2–3).
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
 | 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Complete** (2026-09-11; both tasks merged, #129 + #130) | #9, #12 |
 | 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Complete** (2026-09-13; both tasks merged, #153 + #154) | #8, #9 |
+| 17 | One header row (the site's header and the tracker's become one row with two sets of items, at one declared height) | [`one-header-row`](./one-header-row/description.md) | **Spec'd** (2026-09-13; 1 task, not started) | #1, #8 |
 
 ## How this roadmap is spec'd out
 
@@ -84,8 +85,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `article-upload-and-extraction` (complete), `collection-view` (complete),
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
-`tracker-navigation-latency` (complete), `article-edit` (complete) and
-`surface-layering` (complete) have full
+`tracker-navigation-latency` (complete), `article-edit` (complete),
+`surface-layering` (complete) and `one-header-row` (spec'd) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -158,6 +159,18 @@ tested and rejected on the way to it (the row's deliberate transparency, and
 found only by driving Safari — something this project had never done. The
 feature therefore also carries the change to how browser verification works,
 which is the part that outlives the two fixes.
+
+**#17 came out of the same list, and out of #16's own habit.** Item 8 reported
+the tracker's header as a different height from the site's. Measuring it first —
+the practice #16 wrote into `AGENTS.md` — showed the report was not quite right:
+the rows differ by 1–1.6px at desktop, are *identical* at 500px, and the tracker
+is the **shorter** of the two. Shown the numbers, the user confirmed the single
+pixel is what they see, which makes it a real defect and also a useful
+calibration. The fix they chose is a merge rather than two reconciled numbers,
+because the pixel is a symptom: two stylesheets computing a height independently
+had no reason to agree and no test holding them. That reverses a decided spec
+from 2026-07-04, which is why both header documents carry a revision rather than
+an edit.
 
 **Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
 measurement ruled out the remedy its own spec had assumed — the menu sits inside

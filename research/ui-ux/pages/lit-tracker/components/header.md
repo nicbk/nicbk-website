@@ -4,7 +4,8 @@ Status: Decided 2026-07-04.
 
 A separate component from the
 [site header](../../site-wide/components/header.md) (not a variant of it) —
-each sub-application gets its own header. Rough shape visible in
+each sub-application gets its own header. *(Revised 2026-09-13 — the row is now
+shared and only the items differ; see the last section.)* Rough shape visible in
 [../../../sample-mockups/literature-tracker-sample.png](../../../sample-mockups/literature-tracker-sample.png):
 app name ("Literature Tracker") on the left, breadcrumb-style path indicator
 (`↳/nicbk_home`) and user avatar on the right. Used as page context by both
@@ -143,3 +144,34 @@ Either the hops extend the breadcrumb and the two coexist, or the title slot
 grows into the trail. That is a decision for the feature that introduces
 traversal, and it should be made against a working graph rather than in advance —
 which is the same reasoning that produced this revision.
+
+## Revision (2026-09-13): the row is shared with the site header
+
+**Decided with the user**, reversing the opening line of this document. The two
+headers become **one row component rendered with two sets of items** rather than
+two separate implementations.
+
+Everything this document decides about the tracker header's *contents* stands
+unchanged: the app name as the tracker's home link, the article beside it behind
+a rule, the breadcrumb rooted at the personal site, the account avatar opening the
+shared settings modal, the theme toggle at the far end. Those are the items, and
+the items are the part that was ever sub-application-specific.
+
+**The layout model also stands.** The bullet above — fixed app-shell edge, not a
+sticky page header — is still correct and is still what most distinguishes this
+header from the site's. The shared row therefore **positions nothing**; where the
+row sits remains each caller's decision, `LitTrackerShell`'s here and `SiteShell`'s
+there.
+
+**What is actually being reversed** is the claim that the two must be separate
+*implementations*. They were separate implementations of the same row, and the
+predictable happened: each computed its own height and the two disagreed. Measured
+at desktop, **57.00px here against the site header's 58.59px** — identical at
+500px, and different by a pixel the user can see. The tracker's smaller
+`padding-block` existed to compensate for its 32px avatar, which is to say the
+disagreement came from a compensation, not from a decision.
+
+The original "each sub-application gets its own header" was about **identity**,
+and identity survives intact: the two headers still share not one item.
+
+Tracked as **#17 `one-header-row`** in `features/index.md`.

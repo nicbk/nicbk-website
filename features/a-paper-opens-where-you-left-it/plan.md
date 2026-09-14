@@ -3,7 +3,7 @@
 | # | Task | Sub-issue | Delivers |
 |---|---|---|---|
 | 1 | [`the-position-is-saved`](./tasks/the-position-is-saved/description.md) | [#195](https://github.com/nicbk/nicbk-website/issues/195) | Columns, migration, Zero schema, `articles.setReadingPosition` |
-| 2 | [`the-reader-returns-to-it`](./tasks/the-reader-returns-to-it/description.md) | [#196](https://github.com/nicbk/nicbk-website/issues/196) | Restore on open, save while reading, the gap-corrected scroll helper |
+| 2 | [`the-reader-returns-to-it`](./tasks/the-reader-returns-to-it/description.md) | [#196](https://github.com/nicbk/nicbk-website/issues/196) | Restore on open; save while reading, with the gap-corrected offset |
 
 Task 1 first: the reader has nothing to write to without it, and a schema change
 is its own review.
@@ -22,4 +22,4 @@ is its own review.
 
 ## Dependencies
 
-#9 (reader), #8 (article model and mutators). #22's go-to is adjusted by task 2.
+#9 (reader), #8 (article model and mutators). #22's go-to was measured exact and is not changed (research §4a).

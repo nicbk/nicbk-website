@@ -1,6 +1,6 @@
 # Status: A Paper Opens Where You Left It
 
-**Feature state:** **In progress** (2026-09-14) — task 1 in review.
+**Feature state:** **In progress** (2026-09-14) — task 1 merged (#198), task 2 in review.
 
 Spec written against `main` at `109c2fb`, from a restore-timing probe in the
 local reader. See [research.md](./research.md).
@@ -17,8 +17,8 @@ completion.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-position-is-saved`](./tasks/the-position-is-saved/status.md) | In review ([#195](https://github.com/nicbk/nicbk-website/issues/195)) | pending | pending | pending |
-| [`the-reader-returns-to-it`](./tasks/the-reader-returns-to-it/status.md) | Not started ([#196](https://github.com/nicbk/nicbk-website/issues/196)) | — | — | — |
+| [`the-position-is-saved`](./tasks/the-position-is-saved/status.md) | Complete ([#195](https://github.com/nicbk/nicbk-website/issues/195)) | [#198](https://github.com/nicbk/nicbk-website/pull/198) | Pass | Merged |
+| [`the-reader-returns-to-it`](./tasks/the-reader-returns-to-it/status.md) | In review ([#196](https://github.com/nicbk/nicbk-website/issues/196)) | pending | pending | pending |
 
 ## Definition of Done (feature)
 
@@ -28,7 +28,8 @@ reload check run in Safari on `nicbk.com`.
 ## Notes carried into implementation
 
 - **Synced, same spot, applied on open only** — decided with the user.
-- **Correct for the viewport gap**, or every open drifts ~7pt (measured).
+- **Correct the reported offset for the viewport gap**, or every open drifts
+  ~7pt (measured; the scroll itself is exact — research §4a).
 - **No save before the restore**, or every open writes page 1.
 - **Don't touch `updated_at`.**
 
@@ -38,3 +39,4 @@ reload check run in Safari on `nicbk.com`.
   holds through FitWidth, and found the 10px viewport gap that makes a naive
   round trip creep — and that #22's go-to carries the same error.
 - 2026-09-14 — Task 1 `the-position-is-saved` implemented; PR open.
+- 2026-09-14 — #198 merged. Task 2 implemented; the gap correction moved to the reading side after a DOM measurement (research §4a).

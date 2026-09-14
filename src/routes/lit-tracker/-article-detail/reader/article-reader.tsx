@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { lazy, Suspense } from 'react'
 import { ReaderNotice } from './reader-notice'
 import { InertReaderToolbar } from './reader-toolbar'
+import type { ReadingPosition } from './reading-position'
 import styles from './pdf-reader.module.css'
 
 /**
@@ -44,9 +45,18 @@ interface ArticleReaderProps {
    * the engine does: neither has anything to do with the document.
    */
   actions?: ReactNode
+  /** Where the paper was left. Read once, when the paper opens. */
+  readingPosition?: ReadingPosition | null
+  /** Called, at most about once a second, as the reader moves through it. */
+  onReadingPositionChange?: (position: ReadingPosition) => void
 }
 
-export function ArticleReader({ articleId, actions }: ArticleReaderProps) {
+export function ArticleReader({
+  articleId,
+  actions,
+  readingPosition,
+  onReadingPositionChange,
+}: ArticleReaderProps) {
   // The same frame the loaded reader has, so the panel's shape is settled from
   // the first paint and only its contents change. `starting` is the honest
   // description of both moments it covers: the server render, and the wait for
@@ -64,7 +74,12 @@ export function ArticleReader({ articleId, actions }: ArticleReaderProps) {
   return (
     <ClientOnly fallback={frame}>
       <Suspense fallback={frame}>
-        <PdfReader articleId={articleId} actions={actions} />
+        <PdfReader
+          articleId={articleId}
+          actions={actions}
+          readingPosition={readingPosition}
+          onReadingPositionChange={onReadingPositionChange}
+        />
       </Suspense>
     </ClientOnly>
   )

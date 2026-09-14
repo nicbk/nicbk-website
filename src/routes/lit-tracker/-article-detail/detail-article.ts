@@ -24,6 +24,9 @@ import type { EditableArticle } from '~/routes/lit-tracker/-components/article-e
 export interface DetailArticle extends EditableArticle {
   status: ArticleStatus | null
   notes: string | null
+  /** Where the reader left off; both null until the paper is first read. */
+  readingPage: number | null
+  readingOffset: number | null
 }
 
 /**

@@ -17,7 +17,11 @@ import {
   useInteractionManagerCapability,
 } from '@embedpdf/plugin-interaction-manager/react'
 import { RenderLayer } from '@embedpdf/plugin-render/react'
-import { Scroller, useScroll } from '@embedpdf/plugin-scroll/react'
+import {
+  Scroller,
+  useScroll,
+  useScrollCapability,
+} from '@embedpdf/plugin-scroll/react'
 import {
   SelectionLayer,
   useSelectionCapability,
@@ -44,6 +48,7 @@ import { ReaderNotice } from './reader-notice'
 import { BASE_PAGE_SCALE, createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
+import type { ReadingPosition } from './reading-position'
 import { markSelection } from './selection-finish/mark-selection'
 import { useFinishSelection } from './selection-finish/use-finish-selection'
 import { SelectionMenu } from './selection-menu'
@@ -54,6 +59,7 @@ import { TouchSelection } from './touch-selection/touch-selection'
 import { useHighlightBoxTool } from './use-highlight-box-tool'
 import { useReaderCopyShortcut } from './use-reader-copy-shortcut'
 import { useReadingMode } from './use-reading-mode'
+import { useReadingPosition } from './use-reading-position'
 import { useSelectionCopy } from './use-selection-copy'
 import { absoluteAssetUrl } from './wasm-url'
 import styles from './pdf-reader.module.css'
@@ -80,9 +86,18 @@ interface PdfReaderProps {
   articleId: string
   /** The page's own controls, for the end of the toolbar. See `ReaderToolbar`. */
   actions?: ReactNode
+  /** Where the paper was left. Read once, when the paper opens. */
+  readingPosition?: ReadingPosition | null
+  /** Called as the reader moves through the paper. See `useReadingPosition`. */
+  onReadingPositionChange?: (position: ReadingPosition) => void
 }
 
-export function PdfReader({ articleId, actions }: PdfReaderProps) {
+export function PdfReader({
+  articleId,
+  actions,
+  readingPosition,
+  onReadingPositionChange,
+}: PdfReaderProps) {
   const {
     engine,
     isLoading: isEngineLoading,
@@ -125,7 +140,12 @@ export function PdfReader({ articleId, actions }: PdfReaderProps) {
 
   return (
     <EmbedPDF engine={engine} plugins={plugins}>
-      <ReaderDocument articleId={articleId} actions={actions} />
+      <ReaderDocument
+        articleId={articleId}
+        actions={actions}
+        readingPosition={readingPosition}
+        onReadingPositionChange={onReadingPositionChange}
+      />
     </EmbedPDF>
   )
 }
@@ -137,7 +157,12 @@ export function PdfReader({ articleId, actions }: PdfReaderProps) {
  * its provider — this is the first place the document's state, its pages, and
  * its zoom can be read at all.
  */
-function ReaderDocument({ articleId, actions }: PdfReaderProps) {
+function ReaderDocument({
+  articleId,
+  actions,
+  readingPosition = null,
+  onReadingPositionChange,
+}: PdfReaderProps) {
   const documentState = useDocumentState(articleId)
   const { state: scroll, provides: scrollScope } = useScroll(articleId)
   const { state: zoom, provides: zoomScope } = useZoom(articleId)
@@ -147,6 +172,7 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
   const { provides: interaction } = useInteractionManagerCapability()
   const { provides: selectionScope } = useSelectionCapability()
   const { provides: viewport } = useViewportCapability()
+  const { provides: scrollCapability } = useScrollCapability()
 
   // The marks and the rows, kept saying the same thing. Mounted here because
   // this is the first place the annotation scope exists; everything it decides
@@ -319,6 +345,19 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
     [scrollScope, totalPages],
   )
   useRegisterReaderJump(jumpToPage)
+
+  /*
+   * Opens the paper where it was left, and keeps note of where that is. See
+   * `use-reading-position.ts` — including why a position synced from another
+   * window while this one is open changes nothing.
+   */
+  useReadingPosition({
+    documentId: articleId,
+    scroll: scrollCapability,
+    viewportGap: viewport?.getViewportGap() ?? 0,
+    saved: readingPosition,
+    save: (position) => onReadingPositionChange?.(position),
+  })
 
   return (
     // The document comes first and the toolbar second, which is the opposite of

@@ -1,6 +1,6 @@
 # Status: The Position Is Saved
 
-**State:** In review.
+**State:** Complete — merged in #198.
 
 ## Log
 

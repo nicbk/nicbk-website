@@ -60,8 +60,27 @@ Need*, Chrome, 152% FitWidth:
   the viewport's `viewportGap` (10px by default) to the position it scrolls to,
   and the reported page offset excludes it. Subtracting `viewportGap / scale`
   makes the round trip exact.
-- **#22's "go to p. N" has the same 10px error** — it passes page coordinates
-  through the same call. A shared scroll-to-point helper corrects both.
+- ~~**#22's "go to p. N" has the same 10px error**~~ — wrong; see §4a.
+
+### 4a. Correction, measured during task 2: the error is in the reading
+
+Measured against the DOM rather than against the metrics (Chrome, 152%,
+p. 5):
+
+| `scrollToPage` asked for | page actually at (DOM) | `original.pageY` reported |
+|---|---|---|
+| 0 pt | 0.12 pt | 6.71 pt |
+| 400 pt | 399.86 pt | 406.45 pt |
+
+The viewport element has `padding: viewportGap`. `getScrollPositionForPage`
+counts it, so **the scroll is exact**. `calculatePageVisibility` compares
+`scrollTop` with page positions that leave it out, so **the reported offset is
+`viewportGap / scale` too far down the page**. The correction therefore belongs
+where the position is read: the stored offset is the true one, it restores
+exactly at any zoom (a restore-side correction would be off by
+`gap/s₁ − gap/s₂` at a different width), and #22's go-to — which scrolls to
+coordinates from the page's text, not from the metrics — was already right.
+Decided with the user.
 
 ## 5. The first scroll is the reader's, not the user's
 

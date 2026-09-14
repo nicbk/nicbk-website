@@ -95,6 +95,16 @@ const viewportScope = vi.hoisted(() => ({
 }))
 const viewportCapability = vi.hoisted(() => ({
   forDocument: vi.fn(() => viewportScope),
+  getViewportGap: () => 10,
+}))
+/** The scroll capability, which only the reading position is handed. */
+const scrollCapability = vi.hoisted(() => ({ onScroll: vi.fn() }))
+/** What the reading position was mounted with. */
+const readingPosition = vi.hoisted(() => ({
+  current: null as {
+    saved?: unknown
+    save?: (position: { page: number; offset: number }) => void
+  } | null,
 }))
 /** What the selection drag was mounted with. */
 const selectionDrag = vi.hoisted(() => ({
@@ -124,6 +134,7 @@ vi.mock('@embedpdf/plugin-scroll/react', async () => {
   const { createElement, Fragment } = await import('react')
   return {
     useScroll: () => ({ state: scrollState.current, provides: scrollScope }),
+    useScrollCapability: () => ({ provides: scrollCapability }),
     /*
      * Renders one page through the callback the real scroller virtualizes with,
      * so what a page is *made of* can be asserted — the layers over the paper,
@@ -191,6 +202,17 @@ vi.mock('@embedpdf/plugin-viewport/react', async () => {
  * asserted here is the wiring — that the reader mounts it once, for this
  * document, with the three capabilities it drives.
  */
+/*
+ * Restoring and saving the reading position, recorded rather than driven — its
+ * order of events is `use-reading-position.test.ts`'s business. What is
+ * asserted here is the wiring: this document, the scroller, the viewport's gap,
+ * and the page's position in and out.
+ */
+vi.mock('./use-reading-position', () => ({
+  useReadingPosition: (given: typeof readingPosition.current) => {
+    readingPosition.current = given
+  },
+}))
 vi.mock('./touch-selection/drag/use-selection-drag', () => ({
   useSelectionDrag: (given: Record<string, unknown>) => {
     selectionDrag.current = given
@@ -695,6 +717,37 @@ describe('PdfReader', () => {
       const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
 
       expect(container.querySelector('[data-mark-selected]')).toBeNull()
+    })
+  })
+
+  describe('the reading position', () => {
+    it('is kept for this document, from the page’s position, through the page', () => {
+      const onReadingPositionChange = vi.fn()
+      render(
+        <PdfReader
+          articleId={ARTICLE_ID}
+          readingPosition={{ page: 9, offset: 400 }}
+          onReadingPositionChange={onReadingPositionChange}
+        />,
+      )
+
+      expect(readingPosition.current).toMatchObject({
+        documentId: ARTICLE_ID,
+        scroll: scrollCapability,
+        viewportGap: 10,
+        saved: { page: 9, offset: 400 },
+      })
+      readingPosition.current?.save?.({ page: 3, offset: 12 })
+      expect(onReadingPositionChange).toHaveBeenCalledWith({
+        page: 3,
+        offset: 12,
+      })
+    })
+
+    it('has nothing saved when the page passes none', () => {
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(readingPosition.current?.saved).toBeNull()
     })
   })
 

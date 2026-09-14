@@ -20,6 +20,8 @@ const ARTICLE = {
   doi: null,
   status: 'reading' as const,
   notes: null,
+  readingPage: null,
+  readingOffset: null,
 }
 
 describe('formatPublication', () => {

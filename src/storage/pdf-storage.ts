@@ -102,6 +102,7 @@ export async function getArticlePdf(
 
 /** One article's PDF, unread, with what Garage said about it. */
 export interface ArticlePdfStream {
+  kind: 'body'
   /**
    * The object's bytes as a web stream.
    *
@@ -115,6 +116,34 @@ export interface ArticlePdfStream {
    * cannot, so it is passed through rather than recomputed.
    */
   contentLength: number | null
+  /**
+   * Garage's `ETag` for the object, verbatim, or `null` if it sent none.
+   *
+   * Garage's rather than one derived from the article id, although the id would
+   * serve today — a stored PDF is never replaced. The object's own tag changes
+   * with its bytes, so a later feature that did replace one could not leave a
+   * browser trusting a stale copy.
+   */
+  etag: string | null
+}
+
+/**
+ * The requester's copy is current: Garage answered 304 to `ifNoneMatch`.
+ *
+ * Nothing was read, and there is nothing to consume.
+ */
+export interface ArticlePdfNotModified {
+  kind: 'not-modified'
+  /** The object's tag as Garage sent it with the 304, or `null`. */
+  etag: string | null
+}
+
+export interface OpenArticlePdfOptions {
+  /**
+   * An `If-None-Match` condition for Garage to evaluate — already validated by
+   * the caller. `null` or absent reads the object unconditionally.
+   */
+  ifNoneMatch?: string | null
 }
 
 /**
@@ -134,13 +163,69 @@ export interface ArticlePdfStream {
  * refused signature raises **here** — before a response exists to be half-sent.
  * That is what makes "a missing object fails cleanly" implementable at all: an
  * error discovered after the first chunk is already a truncated 200.
+ *
+ * ## Unchanged is a result, not an error
+ *
+ * With `ifNoneMatch`, Garage compares the condition with the object and may
+ * answer 304. **The AWS SDK throws on that 304** — an `S3ServiceException` named
+ * `Unknown`, measured 2026-09-14 — as it does for any response it has no model
+ * for. It is turned into a value here, so that no caller has to know the SDK
+ * does this, and so that a caller's general "storage failed" handling cannot
+ * swallow it into a 500. The ownership check still runs first: the condition is
+ * an argument to the fetch it guards, not a way around it.
  */
 export async function openArticlePdf(
   key: string,
   userId: string,
-): Promise<ArticlePdfStream> {
-  const { body, contentLength } = await fetchOwnedObject(key, userId)
-  return { body: body.transformToWebStream(), contentLength }
+  { ifNoneMatch = null }: OpenArticlePdfOptions = {},
+): Promise<ArticlePdfStream | ArticlePdfNotModified> {
+  try {
+    const { body, contentLength, etag } = await fetchOwnedObject(
+      key,
+      userId,
+      ifNoneMatch,
+    )
+    return {
+      kind: 'body',
+      body: body.transformToWebStream(),
+      contentLength,
+      etag,
+    }
+  } catch (error) {
+    if (isNotModified(error)) {
+      return { kind: 'not-modified', etag: etagOfNotModified(error) }
+    }
+    throw error
+  }
+}
+
+/**
+ * Whether a thrown value is the SDK's rendering of a 304.
+ *
+ * Keyed on the status alone, and on nothing looser: the error's name is
+ * `Unknown`, which the SDK uses for every response it cannot model.
+ */
+function isNotModified(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (error as { $metadata?: { httpStatusCode?: number } }).$metadata
+      ?.httpStatusCode === 304
+  )
+}
+
+/**
+ * The `ETag` Garage sent with its 304.
+ *
+ * It is on the raw response the SDK attaches to the error, as a
+ * non-enumerable `$response` — present, measured, but not part of the
+ * exception's typed shape, hence the defensive read.
+ */
+function etagOfNotModified(error: unknown): string | null {
+  const headers = (
+    error as { $response?: { headers?: Record<string, string | undefined> } }
+  ).$response?.headers
+  return headers?.['etag'] ?? null
 }
 
 /**
@@ -188,16 +273,28 @@ export async function deleteArticlePdf(
  * not a replacement for either: this is the last point at which a mixed-up row
  * can still be caught.
  */
-async function fetchOwnedObject(key: string, userId: string) {
+async function fetchOwnedObject(
+  key: string,
+  userId: string,
+  ifNoneMatch: string | null = null,
+) {
   if (!isOwnedBy(key, userId)) {
     throw new PdfOwnershipError(key)
   }
 
   const object = await s3.send(
-    new GetObjectCommand({ Bucket: env.GARAGE_BUCKET, Key: key }),
+    new GetObjectCommand({
+      Bucket: env.GARAGE_BUCKET,
+      Key: key,
+      ...(ifNoneMatch === null ? {} : { IfNoneMatch: ifNoneMatch }),
+    }),
   )
   if (!object.Body) {
     throw new Error(`Garage returned no body for ${key}.`)
   }
-  return { body: object.Body, contentLength: object.ContentLength ?? null }
+  return {
+    body: object.Body,
+    contentLength: object.ContentLength ?? null,
+    etag: object.ETag ?? null,
+  }
 }

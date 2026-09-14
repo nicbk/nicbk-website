@@ -1,6 +1,6 @@
 # Status: A Paper Downloads Once
 
-**Feature state:** **Spec'd** (2026-09-14) — 1 task, not started.
+**Feature state:** **In progress** (2026-09-14) — its one task is implemented and in review.
 
 Spec written against `main` at `ef4b3c1`, from a reproduction on `nicbk.com` and a
 probe of Garage's conditional reads, both taken before anything was written. See
@@ -21,7 +21,7 @@ The roadmap entry is **#21** in [../index.md](../index.md). Its parent issue is
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`unchanged-papers-answer-304`](./tasks/unchanged-papers-answer-304/status.md) | Not started ([#181](https://github.com/nicbk/nicbk-website/issues/181)) | — | — | — |
+| [`unchanged-papers-answer-304`](./tasks/unchanged-papers-answer-304/status.md) | Implemented ([#181](https://github.com/nicbk/nicbk-website/issues/181)) | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -43,6 +43,8 @@ WebKit, and production is where Caddy and the host's Garage sit.
 
 ## Log
 
+- 2026-09-14 — **Implemented.** Garage turned out not to compare weak tags, so
+  the route strips `W/` before forwarding — found by probing before writing.
 - 2026-09-14 — **Spec'd.** Item 2 of the user's list turned out to be one
   placeholder header: `no-store`, whose own comment deferred the decision "if the
   reader turns out to want it". The same 13.4 MB paper downloaded in full twice

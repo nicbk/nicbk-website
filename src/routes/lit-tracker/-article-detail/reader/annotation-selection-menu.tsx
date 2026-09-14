@@ -3,6 +3,7 @@ import type { AnnotationSelectionMenuProps } from '@embedpdf/plugin-annotation/r
 import { MessageSquare, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { AnnotationNoteEditor } from './annotation-note-editor'
+import { useMenuPlacement } from './menu-placement'
 import styles from './annotation-selection-menu.module.css'
 
 /**
@@ -55,6 +56,9 @@ export function AnnotationSelectionMenu({
    * otherwise be waiting, open, the next time this mark was picked up.
    */
   const [writing, setWriting] = useState(false)
+  // Also before the early return, and for the same reason. It measures nothing
+  // until the menu it is given actually appears.
+  const { ref: menuRef, placement } = useMenuPlacement()
   useEffect(() => {
     if (!selected) {
       setWriting(false)
@@ -87,7 +91,11 @@ export function AnnotationSelectionMenu({
     <div {...menuWrapperProps}>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: not an interaction — this stops one, keeping the page from acting on a press meant for the button inside. The button is the control and carries its own semantics. */}
       <div
+        ref={menuRef}
         className={styles.menu}
+        // Above the mark by default, below it when the toolbar would cover it
+        // there. The bar cannot be painted over — see `menu-placement.ts`.
+        data-placement={placement}
         /*
          * The press must not reach the page.
          *

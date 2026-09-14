@@ -1,6 +1,6 @@
 # Status: Surface Layering
 
-**Feature state:** **In progress** — task 1 implemented, task 2 not started.
+**Feature state:** **In progress** — task 1 merged, task 2 implemented.
 Two tasks, each gated by
 its own PR + CI + human review. The spec itself is
 [PR #152](https://github.com/nicbk/nicbk-website/pull/152).
@@ -25,8 +25,8 @@ not closed itself — #11's did not.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`toolbar-above-the-collection`](./tasks/toolbar-above-the-collection/status.md) | Implemented ([#150](https://github.com/nicbk/nicbk-website/issues/150)) | [#153](https://github.com/nicbk/nicbk-website/pull/153) | — | — |
-| [`annotation-box-above-the-toolbar`](./tasks/annotation-box-above-the-toolbar/status.md) | Not started ([#151](https://github.com/nicbk/nicbk-website/issues/151)) | — | — | — |
+| [`toolbar-above-the-collection`](./tasks/toolbar-above-the-collection/status.md) | **Merged** ([#150](https://github.com/nicbk/nicbk-website/issues/150)) | [#153](https://github.com/nicbk/nicbk-website/pull/153) | green | approved |
+| [`annotation-box-above-the-toolbar`](./tasks/annotation-box-above-the-toolbar/status.md) | Implemented ([#151](https://github.com/nicbk/nicbk-website/issues/151)) | [#154](https://github.com/nicbk/nicbk-website/pull/154) | — | — |
 
 ## Definition of Done (feature)
 

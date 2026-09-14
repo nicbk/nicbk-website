@@ -328,3 +328,44 @@ describe('ArticleCard', () => {
     expect(navigate).not.toHaveBeenCalled()
   })
 })
+
+describe('a popup keeps its clicks', () => {
+  /*
+   * The defect this guards, reproduced on nicbk.com before it was fixed:
+   * clicking the open menu's own surface — its padding, not any item — opened
+   * the article behind it.
+   *
+   * The cause is not visible in the DOM. React propagates synthetic events
+   * along the *React* tree, and `ArticleMenu` is a React child of the
+   * `<article>` carrying the card's `onClick`, even though everything it
+   * portals lands under `document.body`.
+   *
+   * jsdom models React's event system exactly as a browser does, so unlike most
+   * of this project's recent visual work, the unit tier can prove this one.
+   */
+  it('does not open the article when the menu’s own surface is clicked', async () => {
+    renderCard()
+    await userEvent.click(screen.getByRole('button'))
+
+    const edit = await screen.findByText('edit…')
+    // The popup's surface rather than an item on it. Clicking an item proves
+    // nothing: the handler has always skipped controls, which is exactly why
+    // this defect survived three attempts to reproduce it.
+    const surface = edit.parentElement
+    const card = screen.getByRole('article')
+
+    /*
+     * The assertion that stops this test passing for the wrong reason. If the
+     * menu were rendered inside the card's own subtree, `contains` in the
+     * handler would be true, the click would be an ordinary one, and the test
+     * below would pass while testing nothing at all.
+     */
+    expect(surface).not.toBeNull()
+    expect(card.contains(surface)).toBe(false)
+
+    navigate.mockClear()
+    await userEvent.click(surface as HTMLElement)
+
+    expect(navigate).not.toHaveBeenCalled()
+  })
+})

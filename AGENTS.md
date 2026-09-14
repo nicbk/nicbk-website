@@ -269,6 +269,45 @@ process because the process only ever looked in one engine — and because two
 earlier attempts to explain it reasoned from the code's own comments instead of
 measuring.
 
+## The rendered tree is not always the tree events travel
+
+When a library renders part of your UI somewhere else — a portal, a teleport, a
+layer mounted at the document root — the DOM you can inspect stops describing how
+events reach your handlers. React is the case this project hit: **synthetic
+events propagate along the React tree**, so a popup mounted under `document.body`
+still bubbles into the `onClick` of whatever component rendered it.
+
+- **Do not reason about event flow from the inspected DOM.** A popup whose
+  ancestry runs `popup → positioner → div → body` cannot reach a card by native
+  bubbling — and did, every time. The DOM ruled out the wrong mechanism
+  convincingly enough to send two investigations down a blind alley.
+- **Fix it where the handler is, not in each thing that reaches it.** Stopping
+  propagation in every popup is one call site per component forever, and the
+  failure mode of missing one is silent. A handler that asks *was this click
+  actually inside me* is one condition and covers the surface nobody has built
+  yet.
+- **Expect the fix to look redundant.** `currentTarget.contains(target)` reads as
+  a tautology to anyone who has not met this behaviour, which makes it the first
+  casualty of a later cleanup. The comment explaining why it is not is part of
+  the fix.
+
+## An exception list is a map of where a bug cannot be
+
+When a guard already excludes certain targets — controls, links, a particular
+state — those exclusions are precisely where a bug in that guard **cannot**
+show. Probing them proves nothing while feeling like a thorough check.
+
+- **Test the complement.** A card's click guard skipped every control, so
+  clicking menu items behaved correctly; the defect lived on the popup's
+  padding. Three attempts clicked the items, because items are what a menu
+  appears to be made of.
+- **"Could not reproduce" is a claim about where you looked.** Before concluding
+  a report is stale or environment-specific, list what the code already handles
+  and check whether every attempt landed inside that list.
+- Beware reaching for a cause that was recently true elsewhere. Two engine-specific
+  defects in one week made "it must be Safari" the reflex, and it was wrong here —
+  the mechanism was framework behaviour, identical in every browser.
+
 ## A requirement that names a look can be met without designing anything
 
 A request phrased as a visual property — "a dotted outline", "make it bigger",

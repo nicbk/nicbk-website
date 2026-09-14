@@ -113,19 +113,14 @@ Every claim by hit-test or rect comparison, with the overlap asserted first.
 The narrow case also exercises the re-measurement path: the anchor moved under a
 stationary bar and the placement followed.
 
-## Open item: Safari
+## Safari
 
-**Not verified in Safari.** It has no session on `localhost:3000` and signing in
-is not something the agent may do — the same gap task 1 carried. The placement
-logic is geometry, not paint order, so it is far less engine-sensitive than the
-defect that started this feature; but that is an argument, not a measurement,
-and this feature exists because an argument like it was wrong.
-
-Either sign into `localhost:3000` in Safari and the check runs before merge, or
-it runs on `nicbk.com` after deploy.
+**Verified 2026-09-14 on `nicbk.com`** — see the feature's
+[Safari pass](../../status.md#safari-pass-2026-09-14).
 
 ## Log
 
+- 2026-09-14 — Safari pass on `nicbk.com`: holds. See the feature status.
 - 2026-09-13 — **Merged** (#154), completing feature #16. CI green: Biome +
   typecheck + 1605 unit tests, and the integration suite; coverage 93.77%
   against a 93.71% baseline. Parent #149 closed by hand.

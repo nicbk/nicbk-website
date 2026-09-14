@@ -76,6 +76,7 @@ need them (see Phases 2–3).
 | 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Complete** (2026-09-13; both tasks merged, #153 + #154) | #8, #9 |
 | 17 | One header row (the site's header and the tracker's become one row with two sets of items, at one declared height) | [`one-header-row`](./one-header-row/description.md) | **Complete** (2026-09-13; its one task merged, #157) | #1, #8 |
 | 18 | Controls look like controls (a filter reads as pressable; the upload controls are finished) | [`controls-look-like-controls`](./controls-look-like-controls/description.md) | **Complete** (2026-09-14; both tasks merged, #162 + #163) | #4, #7, #8 |
+| 19 | The site fits a phone (fields stop zooming iOS; code fits a narrow column) | [`the-site-fits-a-phone`](./the-site-fits-a-phone/description.md) | **Spec'd** (2026-09-14; 1 task, not started) | #4, #8, #9, #11 |
 
 ## How this roadmap is spec'd out
 
@@ -87,8 +88,9 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
 `tracker-navigation-latency` (complete), `article-edit` (complete),
-`surface-layering` (complete), `one-header-row` (complete) and
-`controls-look-like-controls` (complete) have full
+`surface-layering` (complete), `one-header-row` (complete),
+`controls-look-like-controls` (complete) and `the-site-fits-a-phone` (spec'd)
+have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -202,6 +204,17 @@ round is the difference between a finding and a guess. The feature's other lesso
 came from a rejection: its picker met the acceptance criterion — "a dotted
 boundary" — without designing anything, because the criterion named a visual
 property instead of an outcome.
+
+**#19 is the last of the measured clusters from that list, and it removed a
+limitation rather than working around one.** Several earlier tasks recorded "320px
+not verified", because Chrome refuses to resize its window below roughly 500px —
+so this feature was very nearly accepted as one the agent could not check at all.
+**Safari accepts arbitrary window bounds by AppleScript**, which produced a real
+375px viewport and with it the numbers the spec is built on: a code block showing
+34 of its 62-character lines with 214px of overflow, and four text controls —
+not the one the report implied — sitting below the 16px iOS zoom threshold. The
+two halves pull opposite ways, fields up and code down, which is why they are
+specified together with the reasoning written down.
 
 **Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
 measurement ruled out the remedy its own spec had assumed — the menu sits inside

@@ -1,6 +1,7 @@
 # Status: Controls Look Like Controls
 
-**Feature state:** **Spec'd** (2026-09-13) — two tasks, not started.
+**Feature state:** **In progress** (2026-09-13) — task 1 implemented and
+awaiting review, task 2 not started.
 
 Spec written against `main` at `6290ca8`, from measurements taken on the running
 page before anything was written. See [research.md](./research.md).
@@ -22,7 +23,7 @@ five did not close themselves, so expect to.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`pressable-things-look-pressable`](./tasks/pressable-things-look-pressable/status.md) | Not started ([#162](https://github.com/nicbk/nicbk-website/issues/162)) | — | — | — |
+| [`pressable-things-look-pressable`](./tasks/pressable-things-look-pressable/status.md) | Implemented ([#162](https://github.com/nicbk/nicbk-website/issues/162)) | — | — | — |
 | [`the-upload-controls-look-finished`](./tasks/the-upload-controls-look-finished/status.md) | Not started ([#163](https://github.com/nicbk/nicbk-website/issues/163)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -58,6 +59,14 @@ put a file, and the spinner's box is a whole number of pixels.
 
 ## Log
 
+- 2026-09-13 — **Task 1 implemented.** One declaration, and the browser
+  confirmed three separated states on both surfaces in both themes: heading
+  `rgb(89,89,89)`, resting `rgb(31,31,31)`, pressed `rgb(11,87,208)` + weight
+  700 in light, and the dark-theme equivalents. The rail now reads as grey
+  labels over near-black controls. Two things could not be measured and are
+  named in the task's status rather than glossed: the narrow-screen drawer (the
+  tab never hydrates, so nothing responds to a click) and the axe scans (in the
+  deferred Playwright suites).
 - 2026-09-13 — **Spec'd**, the same day #17 completed. Filed from four items of
   the user's list of sixteen, measured first. The measurement ruled out the
   obvious cause of the spinner wobble (off-centre art — the path is an arc of a

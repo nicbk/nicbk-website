@@ -10,7 +10,24 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--color-text-muted);
+  /*
+   * **Full text colour at rest, so the control outranks the label above it.**
+   *
+   * This was `--color-text-muted`, and so are the headings over both lists that
+   * use this toggle — the tracker's `.groupLabel` and the blog's `.heading`.
+   * Measured on the running page, a heading and a resting toggle came out
+   * identical: rgb(89, 89, 89), 14px, weight 400, with "tags" and "read" even
+   * rendering at the same 33.6px wide. A reader could not see which words did
+   * anything. The blog escaped it only because its tags carry a `#`.
+   *
+   * **The direction was forced.** `--color-text-muted` is the quietest colour
+   * that still clears 4.5:1 against the page (src/styles/contrast.test.ts holds
+   * that line, and fading the heading further already failed a light-theme axe
+   * scan), so the label cannot recede — the control has to advance.
+   * (features/controls-look-like-controls — user-decided 2026-09-13, on both
+   * surfaces knowingly.)
+   */
+  color: var(--color-text);
   font-family: inherit;
   font-size: var(--font-size-sm);
   text-align: left;
@@ -50,6 +67,12 @@
  * WCAG 1.4.1 (use of color): a selected tag is the accent color AND bold,
  * distinguishing it from an unselected tag for readers who don't perceive the
  * hue difference.
+ *
+ * **The weight became load-bearing when the resting colour rose.** Against a
+ * muted resting state, accent-plus-bold was belt-and-braces; against full text
+ * colour the two are one hue apart (#1f1f1f vs #0b57d0 in light, #ececec vs
+ * #8ab4f8 in dark), so the bold is what a reader who does not separate those
+ * hues actually has. Do not drop it to "simplify" this rule.
  */
 .toggle[data-pressed] {
   color: var(--color-accent);

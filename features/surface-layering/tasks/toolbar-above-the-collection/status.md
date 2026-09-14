@@ -1,11 +1,13 @@
 # Status: Toolbar Above the Collection
 
-**State:** Implemented, awaiting review. Task 1 of 2 — first because its remedy
-was already measured and verified, while task 2's is not.
+**State:** **Merged** (2026-09-13), behind green CI and human review. Task 1 of
+2 — first because its remedy was already measured and verified, while task 2's
+was not.
 
 - Branch: `surface-layering/toolbar-above-the-collection`, from `main` at
-  `eb8531d` with the feature spec merged.
-- Sub-issue: [**#150**](https://github.com/nicbk/nicbk-website/issues/150).
+  `eb8531d` with the feature spec merged. Merged as `0e927c7`; branch deleted.
+- Sub-issue: [**#150**](https://github.com/nicbk/nicbk-website/issues/150),
+  closed with the merge.
 - PR: [**#153**](https://github.com/nicbk/nicbk-website/pull/153).
 
 ## Why this task exists
@@ -99,8 +101,15 @@ not.
 If the user signs into `localhost:3000` in Safari, the local check can be run
 before merge instead.
 
+**Merged without it.** So the Safari check on the shipped code is outstanding and
+now happens on `nicbk.com` after deploy, per the feature's
+[open item](../../status.md#open-the-safari-pass).
+
 ## Log
 
+- 2026-09-13 — **Merged** (#153). The Safari pass on the built code did not
+  happen — see above; the verification that gated the fix was of the *rule*, on
+  production, not of this branch.
 - 2026-09-13 — Implemented. Cause and remedy had already been measured in both
   engines while the feature was spec'd, so this was writing down a verified
   answer, replacing a comment that was confidently wrong, and proving the test

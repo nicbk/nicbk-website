@@ -73,7 +73,7 @@ need them (see Phases 2–3).
 | 13 | Tracker navigation latency (the auth guard stops blocking) | [`tracker-navigation-latency`](./tracker-navigation-latency/description.md) | **Complete** (2026-09-12; its one task merged, #136) | #6, #8 |
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
 | 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Complete** (2026-09-11; both tasks merged, #129 + #130) | #9, #12 |
-| 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Spec'd** (2026-09-13; 2 tasks, not started) | #8, #9 |
+| 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Complete** (2026-09-13; both tasks merged, #153 + #154) | #8, #9 |
 
 ## How this roadmap is spec'd out
 
@@ -84,7 +84,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `article-upload-and-extraction` (complete), `collection-view` (complete),
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
-`tracker-navigation-latency` (complete) and `article-edit` (spec'd) have full
+`tracker-navigation-latency` (complete), `article-edit` (complete) and
+`surface-layering` (complete) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -157,6 +158,17 @@ tested and rejected on the way to it (the row's deliberate transparency, and
 found only by driving Safari — something this project had never done. The
 feature therefore also carries the change to how browser verification works,
 which is the part that outlives the two fixes.
+
+**Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
+measurement ruled out the remedy its own spec had assumed — the menu sits inside
+two nested stacking contexts whose outer one exists *because* the paper once
+painted over the toolbar, so no layer value frees it — and the feature had to be
+re-decided with the user mid-task rather than implemented as written. The
+browser then found three defects the unit tier could not, **one of which the
+first browser check itself reported as a pass**, because HMR had re-rendered a
+menu that was already on screen. That is the sharpest available argument for the
+reload-before-verifying habit: the verification step had a false-positive mode of
+its own.
 
 #10 stays a one-liner for the same reason #11 did. It inherits a populated
 citation graph plus a

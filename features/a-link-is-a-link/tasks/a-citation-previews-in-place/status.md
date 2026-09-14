@@ -1,6 +1,7 @@
 # Status: A Citation Previews in Place
 
-**State:** **Implemented**, in review. Task 3 of 3 — the last of #22.
+**State:** **Merged** (2026-09-14) as `5accf7d`, and verified in Safari on
+`nicbk.com`. Task 3 of 3 — the last of #22.
 
 - Branch: `a-link-is-a-link/a-citation-previews-in-place`, from `main` at
   `f4e5a9b` with task 2 merged.
@@ -85,7 +86,12 @@ Items 3 and 4 were rerun over the four real papers: numbered citations still
 - **PLOS, BERT and the NeurIPS paper in the browser.** Only *Attention* is an
   article on the local stack. The resolver was run over all four in Node against
   the real module; the popover itself is paper-independent.
-- **Safari.** Checked on `nicbk.com` after deploy.
+- **Safari — verified after deploy.** On *Discover, Explain, Improve*: three
+  internal links each opened a ready preview (p. 13 and p. 14 at one column,
+  268 CSS px on a 536px bitmap; p. 2 a larger block), none scrolled the reader,
+  and **go to p. 2** closed the popover and landed on page 2. The crop's content
+  was not inspected visually in Safari — screen capture is avoided on this
+  machine — so what each shows rests on the Chrome check and the Node run.
 - **Dark theme.** The crop is drawn on white by decision, so it looks like the
   paper; not screenshotted.
 

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -366,5 +368,50 @@ describe('UploadStatus — resolving a failure', () => {
     expect(
       screen.getByRole('img', { name: 'All articles synced' }),
     ).toHaveAttribute('tabindex', '-1')
+  })
+})
+
+/*
+ * The spinner's box, which is the one icon in this file sized differently from
+ * every other control in the tracker — and the reason is worth a test rather
+ * than only a comment, because "make these consistent" is a plausible edit.
+ */
+describe('the spinner’s box', () => {
+  function code(): string {
+    return readFileSync(
+      join(__dirname, 'upload-status.module.css'),
+      'utf8',
+    ).replace(/\/\*[\s\S]*?\*\//g, '')
+  }
+
+  it('is a whole number of pixels, unlike the icons that do not turn', () => {
+    /*
+     * The user reported this spinner wobbling. The off-centre-art explanation
+     * was checked and ruled out — lucide's `LoaderCircle` is an arc of a circle
+     * drawn on the viewBox centre — leaving the box: `1.15em` is 18.4px at the
+     * toolbar's 16px, putting the rotation pivot on 9.2px, off the pixel grid.
+     * `em` could never fix it here, because the toolbar's own font-size is
+     * clamped and 1.15em is fractional at essentially every width.
+     *
+     * The static icons keep `1.15em`, the tracker's house value: a glyph that is
+     * rasterized once and never turns does not judder.
+     */
+    const css = code()
+    const start = css.indexOf('\n.iconSpinning {')
+    const spinning = css.slice(start, css.indexOf('}', start))
+
+    expect(spinning).toMatch(/width:\s*1\.125rem/)
+    expect(spinning).toMatch(/height:\s*1\.125rem/)
+    expect(spinning).not.toMatch(/\dem\b/)
+  })
+
+  it('keeps the animation behind the reduced-motion gate', () => {
+    // Motion is opt-in project-wide (src/styles/motion.css).
+    const gate = code().match(
+      /@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*?\n\}/,
+    )?.[0]
+
+    expect(gate).toBeDefined()
+    expect(gate).toMatch(/animation:\s*spin/)
   })
 })

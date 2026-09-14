@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -178,5 +180,55 @@ describe('UploadModal', () => {
     await user.keyboard('{Escape}')
 
     expect(screen.getByRole('button', { name: 'Add articles' })).toHaveFocus()
+  })
+})
+
+/*
+ * How the two controls are drawn. jsdom lays nothing out and resolves no custom
+ * properties, so what a unit test can hold is the declaration — the rendered
+ * geometry is measured in a browser and recorded in the task's status.
+ *
+ * Comments are stripped before matching: a comment naming a property otherwise
+ * satisfies the assertion looking for it (collection-toolbar.test.tsx).
+ */
+const MODAL_CSS = readFileSync(
+  join(__dirname, 'upload-modal.module.css'),
+  'utf8',
+)
+const TOOLBAR_CSS = readFileSync(
+  join(__dirname, '../collection-toolbar/collection-toolbar.module.css'),
+  'utf8',
+)
+
+function declarationsOf(stylesheet: string, selector: string): string {
+  const css = stylesheet.replace(/\/\*[\s\S]*?\*\//g, '')
+  const start = css.indexOf(`\n${selector} {`)
+  if (start === -1) {
+    throw new Error(`No \`${selector}\` rule in the stylesheet.`)
+  }
+  return css.slice(css.indexOf('{', start) + 1, css.indexOf('}', start))
+}
+
+describe('the shape of the add-articles controls', () => {
+  it('makes the trigger square without opting out of the row', () => {
+    /*
+     * It measured 28.4 × 39.5px: an intrinsic width against a height the row
+     * handed it through `align-items: stretch`. That stretch is itself a fix —
+     * three controls sized to their own contents looked ragged side by side — so
+     * squaring the button must not be bought by removing it. `aspect-ratio`
+     * keeps both: the row sets the height, the button stays square at it.
+     */
+    expect(declarationsOf(MODAL_CSS, '.trigger')).toMatch(/aspect-ratio:\s*1\b/)
+    expect(declarationsOf(TOOLBAR_CSS, '.controls')).toMatch(
+      /align-items:\s*stretch\b/,
+    )
+  })
+
+  it('draws the picker with a dash rather than a solid box', () => {
+    // Dashed marks it as where files come from; solid would read as a text
+    // field, which is the one thing it is not.
+    expect(declarationsOf(MODAL_CSS, '.picker')).toMatch(
+      /border:\s*1px\s+dashed\b/,
+    )
   })
 })

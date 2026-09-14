@@ -16,6 +16,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /*
+   * **Square, whatever height the row hands it.**
+   *
+   * Measured at 28.4 × 39.5px: the width is what this button needs (an
+   * `--space-2xs` either side of a glyph, plus the border) while the height came
+   * from `.controls { align-items: stretch }` matching it to the search field
+   * beside it. That stretch is a fix in its own right — three controls from
+   * three components each sized to their own contents and looked ragged in a row
+   * (collection-toolbar.module.css) — so it stays, and `aspect-ratio` is what
+   * keeps both properties: the row still decides the height, and the button is
+   * square at whatever height that turns out to be.
+   */
+  aspect-ratio: 1;
   padding: var(--space-2xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -159,6 +172,31 @@
   max-width: 100%;
   font: inherit;
   color: inherit;
+  /*
+   * **A dashed boundary, and deliberately not a drop zone.**
+   *
+   * The field was drawn as nothing at all — no border, no background, no
+   * padding, no radius — in a modal where every other surface is drawn. The
+   * dashes mark it as the place files come from, and the dash is the right
+   * weight for it: a solid border would make it read as a text field, which is
+   * the one thing it is not.
+   *
+   * It stops short of the full dropped-file look — no large empty target, no
+   * "drag files here" — because **this control does not accept drops**. A box
+   * that invites a drag and then ignores it is worse than the bare input it
+   * replaced. If drag-and-drop is built later, this is where the look grows into
+   * it (features/controls-look-like-controls).
+   */
+  padding: var(--space-xs);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+}
+
+@media (hover: hover) {
+  .picker:hover {
+    border-color: var(--color-accent);
+  }
 }
 
 .errors {

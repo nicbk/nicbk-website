@@ -1,16 +1,16 @@
 # Status: Type That Fits a Phone
 
-**State:** **Merged** (2026-09-14) behind green CI and human review — but the
-feature is **not complete**: the user's phone check is outstanding. Task 1 of 1.
+**State:** **Complete** (2026-09-14) — merged behind green CI and human review,
+and the user's phone check passed. Task 1 of 1.
 
 - Branch: `the-site-fits-a-phone/type-that-fits-a-phone`, from `main` at
   `eb10a70` with the feature spec merged.
 - Sub-issue: [**#169**](https://github.com/nicbk/nicbk-website/issues/169).
 - PR: [**#171**](https://github.com/nicbk/nicbk-website/pull/171). Merged as
   `1b902ca`; branch deleted.
-- **#168 is deliberately still open.** Not the usual auto-close miss — the
-  feature's definition of done includes the phone check, and closing it early
-  would make that clause decorative. It closes when step 1 below passes.
+- **#168 was held open for the phone check**, then closed by hand once it
+  passed — not the usual auto-close miss: closing it at merge would have made
+  that clause of the definition of done decorative.
 
 ## Why this task exists
 
@@ -77,13 +77,21 @@ code splitting doing its job rather than a defect — both routes were checked.
 **Is the desktop unchanged?** Each class applied to a probe element on a
 `pointer: fine` machine: **all four still 14px.**
 
+## The phone check
+
+**Passed, on the user's iPhone (2026-09-14).** Focusing the **tag search box in
+the filters drawer** no longer zooms the page. That is the right control to have
+checked: it is one of the four that were at 14px, so it proves `pointer: coarse`
+matched on the device and the rule took effect. The collection's article search,
+which the user also tried, had always been 16px and could not have proved
+anything on its own.
+
 ## What is not verified, and why
 
-- **Whether iOS actually stops zooming.** Platform behaviour on hardware. The
-  agent can show the rule ships and that 16px is what it sets; the phone is what
-  confirms `pointer: coarse` matched and the zoom is gone. **This was the
-  arrangement before the feature was accepted** and it is why the definition of
-  done includes a step the agent cannot take.
+- **The other three controls on the phone** — the card menu's tag filter, the
+  notes panel and the reader's note editor. They carry the identical rule, which
+  the served CSSOM shows, so one confirmed control confirms the mechanism; each
+  was not tapped individually.
 - **Whether 12px reads comfortably.** Chosen from character counts, not from
   reading it. The clamp's floor is one number if it is wrong.
 - **The annotation note editor at a larger font.** Its menu is sized from its
@@ -93,6 +101,8 @@ code splitting doing its job rather than a defect — both routes were checked.
 
 ## Log
 
+- 2026-09-14 — **Complete.** The user confirmed on an iPhone that the drawer's
+  tag search box no longer zooms. #168 closed by hand.
 - 2026-09-14 — **Merged** (#171). Parent #168 held open for the phone check.
 - 2026-09-14 — Implemented. 1643 unit tests pass (1627 + 16). Both changes were
   checked by reproducing their bug — removing one control's coarse rule and

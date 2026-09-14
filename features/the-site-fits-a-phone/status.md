@@ -1,9 +1,8 @@
 # Status: The Site Fits a Phone
 
-**Feature state:** **In progress** (2026-09-14) — its one task is **merged**, and
-the feature is waiting on the **user's phone check**, which is part of the
-definition of done rather than a follow-up. Parent issue #168 is held open for
-it.
+**Feature state:** **Complete** (2026-09-14) — its one task merged (#171), and the
+**user's phone check passed**: the drawer's tag search box no longer zooms iOS.
+Parent issue #168 closed by hand after that check, not at merge.
 
 Spec written against `main` at `44300c7`, from measurements taken in a **real
 375px viewport** before anything was written. See [research.md](./research.md).
@@ -24,7 +23,7 @@ close themselves.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`type-that-fits-a-phone`](./tasks/type-that-fits-a-phone/status.md) | **Merged** ([#169](https://github.com/nicbk/nicbk-website/issues/169)) | [#171](https://github.com/nicbk/nicbk-website/pull/171) | green | approved |
+| [`type-that-fits-a-phone`](./tasks/type-that-fits-a-phone/status.md) | **Complete** ([#169](https://github.com/nicbk/nicbk-website/issues/169)) | [#171](https://github.com/nicbk/nicbk-website/pull/171) | green | approved |
 
 ## Definition of Done (feature)
 
@@ -57,6 +56,11 @@ confirmed from here.
 
 ## Log
 
+- 2026-09-14 — **Complete.** The phone check passed on the tag search box in the
+  filters drawer — one of the four controls that were below 16px, so it tests the
+  change rather than a control that was always safe. #168 closed by hand. Also
+  settled with the user the same day: the **scroll overshoot** reported alongside
+  these items is no longer seen, and is dropped rather than carried as a task.
 - 2026-09-14 — **Task merged** (#171). Everything checkable from here is done;
   #168 stays open until the phone confirms the zoom is gone.
 - 2026-09-14 — **Implemented.** The code block went from 34 characters to **40**

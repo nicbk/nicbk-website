@@ -1,9 +1,9 @@
 # Status: A Popup Keeps Its Clicks
 
-**Feature state:** **In progress** (2026-09-14) — the card's guard is merged
-(#176); a **second handler**, on the title `<Link>`, was found in the browser after
-that merge and is fixed in a follow-up. Parent #173 stays open until it lands, since
-the tooltip route is still live on `main`.
+**Feature state:** **Complete** (2026-09-14) — both fixes merged: the card's guard
+(#176), and the same guard on the title `<Link>` (#177), whose handler was found in
+the browser after the first merge. The #177 tip was diffed against `main` after
+merge; nothing dropped. Parent #173 closed by hand.
 
 Spec written against `main` at `f512c18`, from a reproduction taken on
 `nicbk.com` before anything was written. See [research.md](./research.md).
@@ -22,7 +22,7 @@ The roadmap entry is **#20** in [../index.md](../index.md). Its parent issue is
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`clicks-stay-inside-the-popup`](./tasks/clicks-stay-inside-the-popup/status.md) | Implemented ([#174](https://github.com/nicbk/nicbk-website/issues/174)) | — | — | — |
+| [`clicks-stay-inside-the-popup`](./tasks/clicks-stay-inside-the-popup/status.md) | **Complete** ([#174](https://github.com/nicbk/nicbk-website/issues/174)) | [#176](https://github.com/nicbk/nicbk-website/pull/176), [#177](https://github.com/nicbk/nicbk-website/pull/177) | green | approved |
 
 ## Definition of Done (feature)
 
@@ -53,6 +53,11 @@ reproduces, and clicking a card still opens the article.
 
 ## Log
 
+- 2026-09-14 — **Complete.** #177 merged; #173 closed by hand. The feature took two
+  PRs where the plan had one, because the spec's audit searched for `onClick=` and
+  the second handler lives inside the router library — found by clicking the
+  venue tooltip, not by reading. Still unverified: the footer's own tooltips (none
+  elided on local data) and a Safari after-check.
 - 2026-09-14 — **Implemented.** One condition, a comment several times longer
   than it, and two guidelines. Worth recording: **the unit tier could prove this
   one**, because jsdom models React's synthetic events exactly as a browser does

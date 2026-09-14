@@ -76,8 +76,8 @@ need them (see Phases 2–3).
 | 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Complete** (2026-09-13; both tasks merged, #153 + #154) | #8, #9 |
 | 17 | One header row (the site's header and the tracker's become one row with two sets of items, at one declared height) | [`one-header-row`](./one-header-row/description.md) | **Complete** (2026-09-13; its one task merged, #157) | #1, #8 |
 | 18 | Controls look like controls (a filter reads as pressable; the upload controls are finished) | [`controls-look-like-controls`](./controls-look-like-controls/description.md) | **Complete** (2026-09-14; both tasks merged, #162 + #163) | #4, #7, #8 |
-| 19 | The site fits a phone (fields stop zooming iOS; code fits a narrow column) | [`the-site-fits-a-phone`](./the-site-fits-a-phone/description.md) | **In progress** (2026-09-14; task merged, #169; awaiting the user's phone check) | #4, #8, #9, #11 |
-| 20 | A popup keeps its clicks (clicking a menu stops opening the card behind it) | [`a-popup-keeps-its-clicks`](./a-popup-keeps-its-clicks/description.md) | **Spec'd** (2026-09-14; 1 task, not started) | #8, #11 |
+| 19 | The site fits a phone (fields stop zooming iOS; code fits a narrow column) | [`the-site-fits-a-phone`](./the-site-fits-a-phone/description.md) | **Complete** (2026-09-14; its one task merged, #169; the user's phone check passed) | #4, #8, #9, #11 |
+| 20 | A popup keeps its clicks (clicking a menu stops opening the card behind it) | [`a-popup-keeps-its-clicks`](./a-popup-keeps-its-clicks/description.md) | **Complete** (2026-09-14; its one task merged in two PRs, #174 — #176 + #177) | #8, #11 |
 
 ## How this roadmap is spec'd out
 
@@ -228,6 +228,15 @@ everything a card portals reaches the card's handler even though none of it is a
 DOM descendant. The blast radius is larger than reported — the edit and delete
 dialogs are mounted from that menu, so clicking a label while correcting metadata
 navigates away from the form.
+
+**#19 and #20 both completed 2026-09-14, each with a step past the merge.** #19's
+definition of done included the user's phone, and its parent stayed open until
+the drawer's tag search box stopped zooming iOS. #20 needed a second PR: its spec
+audited click handlers by searching for `onClick=`, and the title `<Link>`
+navigates from a handler inside the router library that no search of this
+repository can find — the venue tooltip still navigated until it was clicked in
+the browser. The scroll overshoot reported in the same list is no longer seen by
+the user and is dropped.
 
 **Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
 measurement ruled out the remedy its own spec had assumed — the menu sits inside

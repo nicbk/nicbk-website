@@ -58,15 +58,40 @@ A second probe against Garage, before writing the storage change:
 | treat the SDK's 304 as an ordinary failure | storage unit test; 2 integration tests |
 | drop the condition from `GetObjectCommand` | storage unit test; 2 integration tests |
 
+### Chrome, local Compose stack
+
+The user reconnected the extension after the PR opened.
+
+| Check | Result |
+|---|---|
+| the served build is this branch | 200 carries `private, no-cache` and `ETag: "18e1b0…da25"`; the same tag sent by hand → **304**, empty body, no length |
+| open the paper in the reader, go back, open it again | every PDF request after the first: **`transferSize` 300 bytes**, `decodedBodySize` 2,215,244 — served from the browser's copy |
+| the paper renders from the revalidated copy | yes, both opens |
+
+### Found on the way: two PDF requests per open, in development only
+
+Each open issued **two** requests 1–2ms apart. Stacks put both in EmbedPDF's
+`PluginRegistry.initialize`, run from the provider's `useEffect` on
+`[engine, plugins]` — and a temporary probe (removed, not committed) showed
+`mount → unmount → mount` of the **same** component instance within 1ms, with one
+engine. That is React StrictMode's double effect, which TanStack Start's default
+client entry turns on (`react-start/dist/plugin/default-entry/client.tsx`). It
+does not run in a production build, so it is not a defect here — but on a cold
+cache in development both requests download the whole paper, since neither has
+finished when the other starts. **The production count is checked on
+`nicbk.com`** alongside the Safari check.
+
 ## Not verified
 
-- **The local Chrome check.** The browser extension was not connected. The
-  integration tier proves the route against real Garage; what it cannot prove is
-  that the browser's cache stores the body and sends `If-None-Match` — which the
-  Safari check on `nicbk.com` answers anyway, for the harder case.
+- **Safari, and production.** Whether WebKit keeps the 13.4 MB paper, whether
+  Caddy on the host passes the ETag through untouched, and that production opens
+  a paper with one request. All three are the feature's definition of done, on
+  `nicbk.com` after deploy.
 
 ## Log
 
+- 2026-09-14 — Chrome check run: reopening transfers 300 bytes. Traced the
+  doubled request to StrictMode, development only.
 - 2026-09-14 — Implemented. 1676 unit and 16 integration tests pass; three
   mutations each caught.
 - 2026-09-14 — Spec'd.

@@ -101,12 +101,13 @@ not.
 If the user signs into `localhost:3000` in Safari, the local check can be run
 before merge instead.
 
-**Merged without it.** So the Safari check on the shipped code is outstanding and
-now happens on `nicbk.com` after deploy, per the feature's
-[open item](../../status.md#open-the-safari-pass).
+**Merged without it**, and run on `nicbk.com` after deploy instead — **passed
+2026-09-14**, including both regressions. See the feature's
+[Safari pass](../../status.md#safari-pass-2026-09-14).
 
 ## Log
 
+- 2026-09-14 — Safari pass on `nicbk.com`: holds. See the feature status.
 - 2026-09-13 — **Merged** (#153). The Safari pass on the built code did not
   happen — see above; the verification that gated the fix was of the *rule*, on
   production, not of this branch.

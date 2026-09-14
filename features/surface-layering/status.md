@@ -5,14 +5,10 @@ and human review, and parent issue #149 closed by hand. Two tasks, each gated by
 its own PR + CI + human review. The spec itself is
 [PR #152](https://github.com/nicbk/nicbk-website/pull/152).
 
-**One check is still outstanding, and it is the one this feature is about.**
-Neither task's build has been run in Safari — `localhost:3000` has no session
-there and signing in is not the agent's to do — so both fixes were verified in
-Chrome only. Task 1's *rule* was verified in Safari beforehand, on `nicbk.com`,
-including both regressions; task 2's placement is geometry rather than paint
-order, so it is far less engine-sensitive. Both of those are arguments, and this
-feature exists because an argument exactly like them was wrong. See
-[Open: the Safari pass](#open-the-safari-pass) below.
+**The Safari pass has run (2026-09-14), on `nicbk.com`, and both fixes hold.**
+It had been the one outstanding check, and the one this feature is about — both
+tasks were first verified in Chrome only. See
+[Safari pass](#safari-pass-2026-09-14) below.
 
 Spec written against `main` at `947d2c2`, from causes measured in **both Chrome
 and Safari** rather than from the code's own comments — two of which turned out
@@ -95,26 +91,41 @@ wrong in a way that cost a re-decision:
   *when* the measurement happens and *what* it is given, which is the part that
   can regress silently.
 
-## Open: the Safari pass
+## Safari pass (2026-09-14)
 
-Neither task's build has run in Safari. `localhost:3000` carries no session
-there, and signing in is outside what the agent may do.
+Run on `nicbk.com` against the deployed build, in the user's signed-in Safari, in
+a dedicated window. Every result is a hit-test with the overlap asserted first.
+Nothing was created or changed: menus and the modal were dismissed, and the
+paper's mark count read 35 before and after.
 
-What that leaves for each:
+**Task 1 — toolbar above the collection.** The served build carries the rule
+(`.toolbar` `z-index: 1`, its parent `isolation: isolate`). The window was
+shortened so the collection scrolls under the row.
 
-- **Task 1** — its *rule* was verified in Safari before it was written, on
-  `nicbk.com`: three probes over the row hit a card before, the toolbar after; a
-  card menu overlapping the row still won; the modal backdrop still covered it.
-  What has not run in Safari is the merged code expressing that rule.
-- **Task 2** — placement is geometry, computed from rectangles, so it does not
-  depend on the paint-order defaults that differ between engines. That is a good
-  argument and it is still an argument.
+| Check | Result |
+|---|---|
+| 3 probes over the row, a card beneath each | all hit the **toolbar** |
+| regression: a card menu overlapping the row by 88px | probe in the overlap hits the **menu** |
+| regression: "Add articles" modal open, probes at both ends of the row | both hit the **backdrop** |
 
-Either is closed by signing into `localhost:3000` in Safari once — which closes
-it for every check after this one too — or by checking `nicbk.com` after deploy.
+**Task 2 — a mark's controls above the reader toolbar.** On a paper with existing
+marks; the toolbar's groups measured 88–124.
+
+| Check | Result |
+|---|---|
+| mark 30px under the bar (154–175) | `below`, menu 179–216: clear of the bar, not over the mark, reachable at its centre |
+| mark lower on the page (372–395) | `above`, menu 331–367: the ordinary placement is unchanged |
+| regression: paper under the toolbar | probe over the bar with a page beneath hits the **toolbar** |
+
+**Worth knowing for next time:** a Safari window behind another one reports
+`visibilityState: hidden`, and the reader sat at "loading…" until it was brought
+forward — the same no-sync-when-hidden behaviour recorded for Chrome tabs. That
+needs the user's go-ahead, since it takes focus from what they are doing.
 
 ## Log
 
+- 2026-09-14 — **Safari pass run on `nicbk.com`; both fixes hold**, including all
+  three regressions. Nothing about the feature's outcome is unverified now.
 - 2026-09-13 — **Feature complete.** #154 merged, #149 closed by hand. The
   collection's search row now stays above the cards in both engines and the
   reader's mark controls are reachable, with both orders written down instead of

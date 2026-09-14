@@ -1,6 +1,6 @@
 # Status: A Link Is a Link
 
-**Feature state:** **In progress** (2026-09-14) — task 1 implemented, in review.
+**Feature state:** **In progress** (2026-09-14) — task 1 merged (#190), task 2 implemented, in review.
 
 Spec written against `main` at `917e224`, from a local reproduction and a
 measurement of five papers' links with the reader's own engine. See
@@ -18,8 +18,8 @@ hand** on completion.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`links-stay-put`](./tasks/links-stay-put/status.md) | Implemented ([#186](https://github.com/nicbk/nicbk-website/issues/186)) | — | — | — |
-| [`where-a-link-points`](./tasks/where-a-link-points/status.md) | Not started ([#187](https://github.com/nicbk/nicbk-website/issues/187)) | — | — | — |
+| [`links-stay-put`](./tasks/links-stay-put/status.md) | **Merged** ([#186](https://github.com/nicbk/nicbk-website/issues/186)) | [#190](https://github.com/nicbk/nicbk-website/pull/190) | green | approved |
+| [`where-a-link-points`](./tasks/where-a-link-points/status.md) | Implemented ([#187](https://github.com/nicbk/nicbk-website/issues/187)) | — | — | — |
 | [`a-citation-previews-in-place`](./tasks/a-citation-previews-in-place/status.md) | Not started ([#188](https://github.com/nicbk/nicbk-website/issues/188)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -42,6 +42,12 @@ Safari.
 
 ## Log
 
+- 2026-09-14 — **Task 2 implemented** and run over the real papers: 76/77 and 62/62
+  numbered citations preview their own entry. The papers added three rules the
+  spec lacked — see the task status.
+- 2026-09-14 — **Task 1 merged** (#190). Safari on `nicbk.com`: links locked,
+  a citation click does nothing, no menu. The clipboard copy needs a real click
+  in Safari, which a script cannot give; left for the user to try.
 - 2026-09-14 — **Task 1 implemented.** Links locked, URLs copy. Two browser
   findings: an inherited `pointer-events: none` made links unclickable (fixed),
   and a drag cannot start on a link (accepted with the user). Inside a mark, a

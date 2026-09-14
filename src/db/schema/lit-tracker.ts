@@ -1,5 +1,6 @@
 import { relations, sql } from 'drizzle-orm'
 import {
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -107,6 +108,18 @@ export const articles = pgTable(
       .$type<ArticleExtractionStatus>()
       .notNull()
       .default('pending'),
+
+    /**
+     * Where the reader left off: the page at the top of the reader, 1-based as
+     * the scroller counts, and how far down that page, in page points. Both
+     * null until the paper is first read; written together, only by
+     * `articles.setReadingPosition` (features/a-paper-opens-where-you-left-it).
+     *
+     * Page points rather than pixels or a fraction of the document, so the
+     * same paragraph comes back at any zoom and on any screen.
+     */
+    readingPage: integer('reading_page'),
+    readingOffset: doublePrecision('reading_offset'),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()

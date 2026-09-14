@@ -460,6 +460,89 @@ describe('articles.setStatus', () => {
   })
 })
 
+describe('articles.setReadingPosition', () => {
+  it('stores the position on the caller’s own article, fraction and all', async () => {
+    await runAs('articles.setReadingPosition', CONTEXT_A, {
+      id: ARTICLE_A,
+      page: 7,
+      offset: 412.75,
+    })
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.readingPage).toBe(7)
+    expect(article?.readingOffset).toBe(412.75)
+  })
+
+  it('starts with no position', async () => {
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.readingPage).toBeNull()
+    expect(article?.readingOffset).toBeNull()
+  })
+
+  it('leaves updated_at alone', async () => {
+    // Saved every second a reader scrolls: were this to bump `updated_at`,
+    // "recently updated" would mean "recently read".
+    const [before] = await articleById(ARTICLE_A)
+
+    await runAs('articles.setReadingPosition', CONTEXT_A, {
+      id: ARTICLE_A,
+      page: 2,
+      offset: 10,
+    })
+
+    const [after] = await articleById(ARTICLE_A)
+    expect(after?.readingPage).toBe(2)
+    expect(after?.updatedAt.getTime()).toBe(before?.updatedAt.getTime())
+  })
+
+  it('refuses another user’s article and leaves its position alone', async () => {
+    // Non-vacuous: B's position is really there to be overwritten.
+    await runAs('articles.setReadingPosition', CONTEXT_B, {
+      id: ARTICLE_B,
+      page: 3,
+      offset: 100,
+    })
+
+    await expect(
+      runAs('articles.setReadingPosition', CONTEXT_A, {
+        id: ARTICLE_B,
+        page: 99,
+        offset: 0,
+      }),
+    ).rejects.toThrow()
+
+    const [victim] = await articleById(ARTICLE_B)
+    expect(victim?.readingPage).toBe(3)
+    expect(victim?.readingOffset).toBe(100)
+  })
+
+  it('refuses an anonymous caller', async () => {
+    await expect(
+      runAs('articles.setReadingPosition', undefined, {
+        id: ARTICLE_A,
+        page: 2,
+        offset: 0,
+      }),
+    ).rejects.toThrow()
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.readingPage).toBeNull()
+  })
+
+  it('refuses a page below 1', async () => {
+    await expect(
+      runAs('articles.setReadingPosition', CONTEXT_A, {
+        id: ARTICLE_A,
+        page: 0,
+        offset: 0,
+      }),
+    ).rejects.toThrow()
+
+    const [article] = await articleById(ARTICLE_A)
+    expect(article?.readingPage).toBeNull()
+  })
+})
+
 describe('articles.setNotes', () => {
   it('writes notes on the caller’s own article', async () => {
     await runAs('articles.setNotes', CONTEXT_A, {

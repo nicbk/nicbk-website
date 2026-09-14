@@ -1,6 +1,6 @@
 # Status: A Paper Opens Where You Left It
 
-**Feature state:** **Spec'd** (2026-09-14) — 2 tasks, not started.
+**Feature state:** **In progress** (2026-09-14) — task 1 in review.
 
 Spec written against `main` at `109c2fb`, from a restore-timing probe in the
 local reader. See [research.md](./research.md).
@@ -17,7 +17,7 @@ completion.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-position-is-saved`](./tasks/the-position-is-saved/status.md) | Not started ([#195](https://github.com/nicbk/nicbk-website/issues/195)) | — | — | — |
+| [`the-position-is-saved`](./tasks/the-position-is-saved/status.md) | In review ([#195](https://github.com/nicbk/nicbk-website/issues/195)) | pending | pending | pending |
 | [`the-reader-returns-to-it`](./tasks/the-reader-returns-to-it/status.md) | Not started ([#196](https://github.com/nicbk/nicbk-website/issues/196)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -37,3 +37,4 @@ reload check run in Safari on `nicbk.com`.
 - 2026-09-14 — **Spec'd.** A probe confirmed restoring on the first layout-ready
   holds through FitWidth, and found the 10px viewport gap that makes a naive
   round trip creep — and that #22's go-to carries the same error.
+- 2026-09-14 — Task 1 `the-position-is-saved` implemented; PR open.

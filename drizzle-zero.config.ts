@@ -38,6 +38,8 @@ export default drizzleZeroConfig(drizzleSchema, {
       semanticScholarId: true,
       status: true,
       extractionStatus: true,
+      readingPage: true,
+      readingOffset: true,
       createdAt: true,
       updatedAt: true,
     },

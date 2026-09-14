@@ -277,6 +277,40 @@ export const mutators = defineMutators({
     ),
 
     /**
+     * Remember where in the paper the reader is, so it opens there next time
+     * (features/a-paper-opens-where-you-left-it).
+     *
+     * `page` is 1-based, as the scroller counts; `offset` is page points down
+     * from that page's top. The bounds are beyond any real paper and exist to
+     * refuse garbage, not to describe one.
+     *
+     * **`updatedAt` is not written**, and must not be: this runs every second
+     * or so while a reader scrolls, and "recently updated" would otherwise mean
+     * "recently read". Zero's `update` writes only the named columns — Drizzle's
+     * `$onUpdate` does not run on this path — and the unit test asserts the
+     * write carries nothing else.
+     *
+     * Last write wins across devices, and writing the same position twice is
+     * writing it once, so rebase is safe.
+     */
+    setReadingPosition: defineMutator(
+      z.object({
+        id: z.uuid(),
+        page: readingPageSchema(),
+        offset: readingOffsetSchema(),
+      }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        await requireOwnedArticle(tx, session, args.id)
+        await tx.mutate.articles.update({
+          id: args.id,
+          readingPage: args.page,
+          readingOffset: args.offset,
+        })
+      },
+    ),
+
+    /**
      * Replace an article's free-text notes — the reader's own writing about the
      * paper, distinct from the annotations anchored inside the PDF
      * (research/ui-ux/pages/lit-tracker/pages/article-detail.md).
@@ -468,6 +502,26 @@ function authorSchema() {
     given: z.string().max(200).optional(),
     family: z.string().max(200).optional(),
   })
+}
+
+/**
+ * A page of the paper, 1-based as the reader's scroller counts.
+ *
+ * A hundred thousand pages is beyond any paper; the ceiling is there to refuse
+ * garbage, not to describe a real document. A page past the end of a *real*
+ * paper is stored if sent — the reader ignores it on open, because only the
+ * reader knows the page count.
+ */
+function readingPageSchema() {
+  return z.number().int().min(1).max(100_000)
+}
+
+/**
+ * How far down its page the reader is, in page points. Finite, not negative,
+ * and bounded for the same reason the page is.
+ */
+function readingOffsetSchema() {
+  return z.number().finite().min(0).max(100_000)
 }
 
 /**

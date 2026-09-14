@@ -411,6 +411,86 @@ describe('articles.setStatus', () => {
   })
 })
 
+describe('articles.setReadingPosition', () => {
+  const POSITION = { id: ARTICLE, page: 4, offset: 312.5 }
+
+  it('writes the page and offset, and nothing else', async () => {
+    // Not `updatedAt` above all: this runs every second a reader scrolls, and
+    // would make "recently updated" mean "recently read".
+    const writes = await runCapturing(
+      mutators.articles.setReadingPosition,
+      POSITION,
+    )
+
+    expect(writes).toEqual([
+      {
+        table: 'articles',
+        operation: 'update',
+        values: { id: ARTICLE, readingPage: 4, readingOffset: 312.5 },
+      },
+    ])
+  })
+
+  it.each([
+    ['the first page, at its top', { ...POSITION, page: 1, offset: 0 }],
+    ['the bounds', { ...POSITION, page: 100_000, offset: 100_000 }],
+  ])('accepts %s', async (_case, args) => {
+    const writes = await run(mutators.articles.setReadingPosition, args)
+
+    expect(writes).toEqual([{ table: 'articles', operation: 'update' }])
+  })
+
+  it.each([
+    ['page 0', { ...POSITION, page: 0 }],
+    ['a fractional page', { ...POSITION, page: 2.5 }],
+    ['a page past the bound', { ...POSITION, page: 100_001 }],
+    ['a negative offset', { ...POSITION, offset: -1 }],
+    ['an offset past the bound', { ...POSITION, offset: 100_001 }],
+    ['an infinite offset', { ...POSITION, offset: Number.POSITIVE_INFINITY }],
+    ['a NaN offset', { ...POSITION, offset: Number.NaN }],
+    ['a page as a string', { ...POSITION, page: '4' }],
+    ['a missing offset', { id: ARTICLE, page: 4 }],
+    ['a malformed article id', { ...POSITION, id: 'article-1' }],
+  ])('refuses %s without writing', async (_case, args) => {
+    const { tx, writes } = stubTransaction()
+
+    await expect(
+      mutators.articles.setReadingPosition.fn({
+        args,
+        tx,
+        ctx: CONTEXT,
+      } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+
+  it('refuses an anonymous caller without writing', async () => {
+    const { tx, writes } = stubTransaction()
+
+    await expect(
+      mutators.articles.setReadingPosition.fn({
+        args: POSITION,
+        tx,
+        ctx: undefined,
+      } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+
+  it('refuses an article the caller does not own without writing', async () => {
+    const { tx, writes } = stubTransaction({ reads: [false] })
+
+    await expect(
+      mutators.articles.setReadingPosition.fn({
+        args: POSITION,
+        tx,
+        ctx: CONTEXT,
+      } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+})
+
 describe('articles.updateDetails', () => {
   /** A correction with every field filled in, which most cases vary from. */
   const CORRECTION = {

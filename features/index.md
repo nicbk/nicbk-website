@@ -74,7 +74,7 @@ need them (see Phases 2–3).
 | 14 | Reader zoom performance (tiled rendering, so zooming in stops costing the whole paper) | [`reader-zoom-performance`](./reader-zoom-performance/description.md) | **Complete** (2026-08-23; its one task merged, #121) | #9 |
 | 15 | Reader marking a passage (the text tools reach the selections a reader actually makes) | [`reader-marking-a-passage`](./reader-marking-a-passage/description.md) | **Complete** (2026-09-11; both tasks merged, #129 + #130) | #9, #12 |
 | 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Complete** (2026-09-13; both tasks merged, #153 + #154) | #8, #9 |
-| 17 | One header row (the site's header and the tracker's become one row with two sets of items, at one declared height) | [`one-header-row`](./one-header-row/description.md) | **Spec'd** (2026-09-13; 1 task, not started) | #1, #8 |
+| 17 | One header row (the site's header and the tracker's become one row with two sets of items, at one declared height) | [`one-header-row`](./one-header-row/description.md) | **Complete** (2026-09-13; its one task merged, #157) | #1, #8 |
 
 ## How this roadmap is spec'd out
 
@@ -86,7 +86,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `article-detail-and-reader` (complete), `reader-touch-and-gestures` (complete),
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
 `tracker-navigation-latency` (complete), `article-edit` (complete),
-`surface-layering` (complete) and `one-header-row` (spec'd) have full
+`surface-layering` (complete) and `one-header-row` (complete) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -171,6 +171,15 @@ because the pixel is a symptom: two stylesheets computing a height independently
 had no reason to agree and no test holding them. That reverses a decided spec
 from 2026-07-04, which is why both header documents carry a revision rather than
 an edit.
+
+**It completed the same day, and the general lesson is about reporting rather
+than about headers.** A measurement confirmed the complaint was real while
+showing its stated cause was wrong — "the tracker header is taller" is false, and
+the thing behind it was not. Handing over the numbers instead of a verdict is
+what let the user decide that, and it is the reason a 1px cosmetic report turned
+into deleting a duplicated computation. Every header on the site now measures
+56.00px in **both** engines, where the old site header was fractional and the two
+engines disagreed about it.
 
 **Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
 measurement ruled out the remedy its own spec had assumed — the menu sits inside

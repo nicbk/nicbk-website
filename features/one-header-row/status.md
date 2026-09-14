@@ -1,7 +1,11 @@
 # Status: One Header Row
 
-**Feature state:** **In progress** (2026-09-13) — the one task is implemented and
-awaiting review.
+**Feature state:** **Complete** (2026-09-13) — its one task merged behind green
+CI and human review, and parent issue #156 closed by hand.
+
+**Every header on the site measures 56.00px**, in Chrome and in Safari, from one
+declaration. The old 58.59 and 57.00 were two independent sums with no reason to
+agree and no test holding them there.
 
 Spec written against `main` at `1cbb6e8`, from measurements taken in **both
 Chrome and Safari** before anything was written. Those measurements contradicted
@@ -17,15 +21,16 @@ for the site header and shell, and on
 Feature parent issue: [**#156**](https://github.com/nicbk/nicbk-website/issues/156),
 with one sub-issue for the task, per
 [issue-and-pr-lifecycle.md](../../research/project-management-conventions/issue-and-pr-lifecycle.md).
-The roadmap entry is **#17** in [../index.md](../index.md). Its parent issue is
-**checked** when the feature completes and closed by hand if it has not closed
-itself — which, on the last three features, it has not.
+The roadmap entry is **#17** in [../index.md](../index.md). Its parent issue was
+**checked** on completion and **had not closed itself** — the fourth in a row
+(#135, #140, #149, #156) against the single feature that did, so it was closed by
+hand.
 
 ## Task states
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`one-row-two-item-sets`](./tasks/one-row-two-item-sets/status.md) | Implemented ([#157](https://github.com/nicbk/nicbk-website/issues/157)) | — | — | — |
+| [`one-row-two-item-sets`](./tasks/one-row-two-item-sets/status.md) | **Merged** ([#157](https://github.com/nicbk/nicbk-website/issues/157)) | [#159](https://github.com/nicbk/nicbk-website/pull/159) | green | approved |
 
 ## Definition of Done (feature)
 
@@ -55,6 +60,15 @@ showed, and the sticky one is still sticky.
 
 ## Log
 
+- 2026-09-13 — **Feature complete.** #159 merged, #156 closed by hand. The
+  lesson worth keeping is not about headers: **a measurement can confirm a report
+  is real while showing its stated cause is wrong.** The rows were 1–1.6px apart
+  and the tracker was the *shorter* one, which made the phrase "the tracker
+  header is taller" false and the complaint behind it true. Reporting the numbers
+  rather than a verdict is what let the user decide that, and it is also what
+  turned a 1px cosmetic fix into removing a duplicated computation. The second
+  keeper: **1px is visible to this user**, so "too small to see" is not a
+  conclusion the agent gets to reach on their behalf.
 - 2026-09-13 — **Implemented.** Every header on the site now measures **56.00px**
   in Chrome and **56.00px** in Safari — one declaration, one number, and for the
   first time the same integer in both engines. The browser found nothing to fix,

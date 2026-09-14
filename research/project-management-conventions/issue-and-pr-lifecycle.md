@@ -147,15 +147,15 @@ convention built on someone else's automation has to be re-checked against the
 automation, not just written down once**, because it can change in either
 direction without telling you.
 
-## Second addendum (2026-09-13): three misses, and the guess is dead
+## Second addendum (2026-09-13): the misses are the rule, and the guess is dead
 
-Two more features completed on the same day, and **neither parent closed
-itself**:
+Three more features completed on the same day, and **no parent closed itself**:
 
 | Feature | Last sub-issue closed | Parent closed | Gap |
 |---|---|---|---|
 | #11 `article-edit` (#140) | 2026-09-13 21:16:48Z (#143) | 2026-09-13 21:17:09Z | ~21 seconds, by hand |
 | #16 `surface-layering` (#149) | 2026-09-14 01:20:22Z (#151) | 2026-09-14 01:30:32Z | ~10 minutes, by hand |
+| #17 `one-header-row` (#156) | 2026-09-14 02:22:31Z (#157) | 2026-09-14 02:30Z | ~8 minutes, by hand |
 
 The #140 gap is short because the check was *made* immediately — it is not
 evidence of the parent nearly closing on its own. Both were verified open before
@@ -164,9 +164,15 @@ evidence of the parent nearly closing on its own. Both were verified open before
 **This kills the guess the addendum above wrote down as a guess.** That one
 observed that #128 (auto-closed) had two sub-issues and #135 (missed) had one,
 and offered the count as the only visible difference. **#149 has two sub-issues
-and did not close.** #140 has three and did not close. The count is not the
-variable, and no replacement hypothesis is offered here — the record now reads:
-one auto-close, three misses, all four within three weeks.
+and did not close.** #140 has three and did not close; #156 has one, like #135,
+and did not close either. The count is not the variable, and no replacement
+hypothesis is offered here — the record now reads: **one auto-close and four
+misses**, all five within three weeks, at every sub-issue count from one to
+three.
+
+With the sample at five, the honest summary is no longer "it sometimes closes
+itself" but **expect to close it**, and treat the single auto-close as the
+anomaly rather than the behaviour.
 
 **The rule is unchanged, and is now the cheap one it always should have been:**
 check the parent when the feature's `status.md` is marked Complete, and expect to

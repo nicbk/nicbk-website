@@ -1,6 +1,8 @@
 # Status: The Site Fits a Phone
 
-**Feature state:** **Spec'd** (2026-09-14) — one task, not started.
+**Feature state:** **In progress** (2026-09-14) — the task is implemented and
+awaiting review **and the user's phone check**, which is part of the definition
+of done rather than a follow-up.
 
 Spec written against `main` at `44300c7`, from measurements taken in a **real
 375px viewport** before anything was written. See [research.md](./research.md).
@@ -21,7 +23,7 @@ close themselves.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`type-that-fits-a-phone`](./tasks/type-that-fits-a-phone/status.md) | Not started ([#169](https://github.com/nicbk/nicbk-website/issues/169)) | — | — | — |
+| [`type-that-fits-a-phone`](./tasks/type-that-fits-a-phone/status.md) | Implemented ([#169](https://github.com/nicbk/nicbk-website/issues/169)) | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -54,6 +56,13 @@ confirmed from here.
 
 ## Log
 
+- 2026-09-14 — **Implemented.** The code block went from 34 characters to **40**
+  at 375px, with overflow down from 214px to 139px and the document still not
+  scrolling sideways; the clamp reaches its 14px ceiling exactly at 768px, so
+  desktop is untouched. All four coarse-pointer rules were confirmed **in the
+  served CSSOM** rather than only in source — three on the collection route and
+  the fourth on the reader, which is code splitting working — and all four still
+  compute 14px on a `pointer: fine` machine. What remains is the phone.
 - 2026-09-14 — **Spec'd**, the same day #18 completed. The two reported items
   were measured first and turned out to pull opposite ways — fields must get
   *bigger* on a phone to clear a platform threshold, code must get *smaller* to

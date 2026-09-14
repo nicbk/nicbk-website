@@ -144,6 +144,27 @@
   font-size: var(--font-size-sm);
 }
 
+/*
+ * **Full size on a touch device, because below 16px WebKit zooms the page when
+ * this is focused.** Tapping the field to filter tags would scale the whole
+ * collection up and leave the reader to pinch back out.
+ *
+ * A capability query rather than a width, for the same reason the hover rules in
+ * this project use one: the thing being responded to is a touch input method,
+ * and a width is a proxy that gets a touch laptop and a landscape phone wrong in
+ * opposite directions. The quiet `--font-size-sm` is what this rail was designed
+ * with, so a pointer device keeps it (user-decided 2026-09-14,
+ * features/the-site-fits-a-phone).
+ *
+ * 16px is a threshold, not a preference — 15.9px still zooms — so this is the
+ * token that is exactly 1rem rather than a value that merely looks close.
+ */
+@media (pointer: coarse) {
+  .find {
+    font-size: var(--font-size-md);
+  }
+}
+
 .find::placeholder {
   color: var(--color-text-muted);
 }

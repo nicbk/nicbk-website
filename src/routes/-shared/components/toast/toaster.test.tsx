@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
@@ -126,5 +128,22 @@ describe('Toaster', () => {
     await waitFor(() => {
       expect(visibleToasts('that did not save')).toHaveLength(2)
     })
+  })
+})
+
+describe('toast styles', () => {
+  const css = readFileSync(
+    join(__dirname, 'toaster.module.css'),
+    'utf8',
+  ).replace(/\/\*[\s\S]*?\*\//g, '')
+
+  it('keeps the red edge for errors, so a confirmation cannot read as one', () => {
+    // #22 added the site's first success toast. The error colour on every
+    // toast would make "link copied" look like something went wrong.
+    const baseRule = css.match(/\.toast\s*\{[^}]*\}/)?.[0] ?? ''
+    expect(baseRule).not.toContain('--color-error')
+    expect(css).toMatch(
+      /\.toast\[data-type=['"]error['"]\]\s*\{[^}]*--color-error[^}]*\}/,
+    )
   })
 })

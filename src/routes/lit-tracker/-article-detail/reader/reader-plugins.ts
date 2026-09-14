@@ -8,6 +8,7 @@ import { SelectionPluginPackage } from '@embedpdf/plugin-selection'
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling'
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport'
 import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom'
+import { LINK_LOCK, LINK_TOOL_OVERRIDE } from './link-annotations'
 
 /**
  * What the reader is made of, and where it gets the paper.
@@ -142,6 +143,19 @@ export function createReaderPlugins(articleId: string) {
       // reader marking six passages picks the tool once
       // (research/ui-ux/pages/lit-tracker/components/reader-annotation.md).
       deactivateToolAfterCreate: false,
+      /*
+       * A paper's own links are fixed: never selected, moved, resized, noted
+       * or deleted. The link tool gets a category of its own and the lock names
+       * only that, because its default categories are the highlighter's — see
+       * `link-annotations.ts`. What a click on a locked link does is the
+       * reader's `link` renderer (`link-target.tsx`).
+       */
+      tools: [LINK_TOOL_OVERRIDE],
+      locked: LINK_LOCK,
+      // The plugin would otherwise `window.open` a URL clicked through its own
+      // locked link. The reader copies URLs instead, and says so; this keeps a
+      // second path from opening one anyway.
+      autoOpenLinks: false,
     }),
   ]
 }

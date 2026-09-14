@@ -40,12 +40,16 @@
   pointer-events: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  /* The one place color carries meaning here, and it is redundant with the
-     title's wording rather than the only signal — the message says what
-     happened in words (WCAG 1.4.1). */
-  border-inline-start: 2px solid var(--color-error);
   background-color: var(--color-bg-surface);
   color: var(--color-text);
+}
+
+/* The one place color carries meaning here, and it is redundant with the
+   title's wording rather than the only signal — the message says what
+   happened in words (WCAG 1.4.1). Errors only: a confirmation is the plain
+   panel, so a red edge keeps meaning "something went wrong". */
+.toast[data-type="error"] {
+  border-inline-start: 2px solid var(--color-error);
 }
 
 /*

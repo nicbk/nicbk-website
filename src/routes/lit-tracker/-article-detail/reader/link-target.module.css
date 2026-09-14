@@ -1,0 +1,29 @@
+/*
+ * A paper's link, as a hit area.
+ *
+ * Fills the box EmbedPDF sizes to the link's rect, and draws nothing: the paper
+ * already typesets its own links.
+ */
+.target {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  /*
+   * Stated, not inherited. EmbedPDF's wrappers around every annotation set
+   * `pointer-events: none`, and the property inherits — without this the link
+   * rendered, measured the right size, and could not be clicked. Found in the
+   * browser; the built-in locked link sets the same thing inline.
+   */
+  pointer-events: auto;
+}
+
+/*
+ * A link this reader does not follow — no target, another file. It takes no
+ * pointer events at all, so the text beneath behaves as if the link were not
+ * there, rather than showing a pointer that promises something.
+ */
+.inert {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}

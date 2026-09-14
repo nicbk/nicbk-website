@@ -260,9 +260,20 @@ vi.mock('@embedpdf/plugin-annotation/react', async () => {
       provides: annotationScope,
     }),
     useAnnotationCapability: () => ({ provides: annotationCapability }),
-    AnnotationLayer: () => createElement('div', { 'data-mark-layer': '' }),
+    AnnotationLayer: ({
+      annotationRenderers = [],
+    }: {
+      annotationRenderers?: { id: string }[]
+    }) =>
+      createElement('div', {
+        'data-mark-layer': '',
+        'data-renderers': annotationRenderers.map(({ id }) => id).join(','),
+      }),
   }
 })
+// The link renderer is exercised in `link-target.test.tsx`; here it only has to
+// reach the layer.
+vi.mock('./link-target', () => ({ LINK_RENDERERS: [{ id: 'link' }] }))
 vi.mock('@embedpdf/plugin-selection/react', async () => {
   const { createElement } = await import('react')
   return {
@@ -813,6 +824,18 @@ describe('PdfReader', () => {
         'data-text-layer',
         'data-mark-layer',
       ])
+    })
+
+    it('hands the mark layer the reader’s own link renderer', () => {
+      // Without it EmbedPDF's built-in renderer answers a link: an internal one
+      // scrolls the reader away, and a URL opens in a new tab (#22).
+      const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(
+        container
+          .querySelector('[data-mark-layer]')
+          ?.getAttribute('data-renderers'),
+      ).toBe('link')
     })
 
     it('draws the base at a fixed scale, whatever the document is zoomed to', () => {

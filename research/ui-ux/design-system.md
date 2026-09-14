@@ -134,6 +134,11 @@ app would need. What's left to spec is: (a) the general/default case, and
   silently, no badge/flash/"updated live" indicator.
 - Errors **outside** a form context (e.g. a background action, a failed
   page-level operation): a dismissible toast notification.
+- **Success is not toasted — except an effect with nothing to see.** Copying
+  a paper's link to the clipboard (#22, decided 2026-09-14) raises a short
+  confirmation toast, without the error's red edge, because otherwise the
+  click looks like it did nothing. A success the reader can watch happen stays
+  silent.
 
 **(b) Editable UI bound to reactive data — "editing" vs "non-editing"
 state:**

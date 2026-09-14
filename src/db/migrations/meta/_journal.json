@@ -36,6 +36,13 @@
       "when": 1786670856104,
       "tag": "0004_annotations",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789419868017,
+      "tag": "0005_reading_position",
+      "breakpoints": true
     }
   ]
 }

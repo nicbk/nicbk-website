@@ -76,7 +76,8 @@ need them (see Phases 2–3).
 | 16 | Surface layering (the toolbar stays above the collection; a mark's controls stay above the reader toolbar) | [`surface-layering`](./surface-layering/description.md) | **Complete** (2026-09-13; both tasks merged, #153 + #154) | #8, #9 |
 | 17 | One header row (the site's header and the tracker's become one row with two sets of items, at one declared height) | [`one-header-row`](./one-header-row/description.md) | **Complete** (2026-09-13; its one task merged, #157) | #1, #8 |
 | 18 | Controls look like controls (a filter reads as pressable; the upload controls are finished) | [`controls-look-like-controls`](./controls-look-like-controls/description.md) | **Complete** (2026-09-14; both tasks merged, #162 + #163) | #4, #7, #8 |
-| 19 | The site fits a phone (fields stop zooming iOS; code fits a narrow column) | [`the-site-fits-a-phone`](./the-site-fits-a-phone/description.md) | **Spec'd** (2026-09-14; 1 task, not started) | #4, #8, #9, #11 |
+| 19 | The site fits a phone (fields stop zooming iOS; code fits a narrow column) | [`the-site-fits-a-phone`](./the-site-fits-a-phone/description.md) | **In progress** (2026-09-14; task merged, #169; awaiting the user's phone check) | #4, #8, #9, #11 |
+| 20 | A popup keeps its clicks (clicking a menu stops opening the card behind it) | [`a-popup-keeps-its-clicks`](./a-popup-keeps-its-clicks/description.md) | **Spec'd** (2026-09-14; 1 task, not started) | #8, #11 |
 
 ## How this roadmap is spec'd out
 
@@ -89,8 +90,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `reader-zoom-performance` (complete), `reader-marking-a-passage` (complete),
 `tracker-navigation-latency` (complete), `article-edit` (complete),
 `surface-layering` (complete), `one-header-row` (complete),
-`controls-look-like-controls` (complete) and `the-site-fits-a-phone` (spec'd)
-have full
+`controls-look-like-controls` (complete), `the-site-fits-a-phone` (in progress)
+and `a-popup-keeps-its-clicks` (spec'd) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the
@@ -215,6 +216,18 @@ so this feature was very nearly accepted as one the agent could not check at all
 not the one the report implied — sitting below the 16px iOS zoom threshold. The
 two halves pull opposite ways, fields up and code down, which is why they are
 specified together with the reasoning written down.
+
+**#20 is the one item from that list that resisted three attempts**, and why is
+worth more than the fix. The card's click guard already skips every control, so
+clicking menu *items* — the obvious thing to click — always behaved correctly;
+the defect lives only on inert surface, a popup's padding and its details text.
+Two earlier passes concluded "not reproducible in Chrome" and reached for an
+engine difference, which had been the answer twice that week. It is not one here:
+**React portals propagate events through the React tree, not the DOM**, so
+everything a card portals reaches the card's handler even though none of it is a
+DOM descendant. The blast radius is larger than reported — the edit and delete
+dialogs are mounted from that menu, so clicking a label while correcting metadata
+navigates away from the form.
 
 **Both tasks merged 2026-09-13, and the second one earned its own lesson.** Its
 measurement ruled out the remedy its own spec had assumed — the menu sits inside

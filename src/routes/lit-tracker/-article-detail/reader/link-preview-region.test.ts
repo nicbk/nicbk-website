@@ -206,6 +206,45 @@ describe('previewRegion', () => {
     )
   })
 
+  it('includes a line that starts left of a target partway along it', () => {
+    // Attention's "Table 3" link lands inside its caption's first line, which is
+    // one run from the column's left edge to its right.
+    const captionPage = page([
+      run(108, 300, 396, 'Table 3: Variations on the architecture.'),
+      run(108, 312, 250, 'All metrics are on the development set.'),
+    ])
+
+    const region = previewRegion({
+      linkText: '3',
+      destination: xyz(8, 150, 300),
+      pageText: pages({ 8: captionPage }),
+      landings: [],
+    })
+
+    expect(region?.rect.origin.x).toBe(105)
+    expect((region?.rect.origin.x ?? 0) + (region?.rect.size.width ?? 0)).toBe(
+      507,
+    )
+  })
+
+  it('keeps a table below its caption in the preview, across the gap', () => {
+    const tablePage = page([
+      run(108, 300, 396, 'Table 3: Variations on the architecture.'),
+      run(108, 312, 250, 'All metrics are on the development set.'),
+      run(120, 345, 380, 'N d h dk dv PPL BLEU'),
+      run(120, 360, 380, '6 512 8 64 64 4.92 25.8'),
+    ])
+
+    const region = previewRegion({
+      linkText: '3',
+      destination: xyz(8, 150, 300),
+      pageText: pages({ 8: tablePage }),
+      landings: [],
+    })
+
+    expect(region?.rect.size.height).toBe(240 + 3)
+  })
+
   it('keeps a short line’s preview wide enough to read', () => {
     const region = previewRegion({
       linkText: '5.3',

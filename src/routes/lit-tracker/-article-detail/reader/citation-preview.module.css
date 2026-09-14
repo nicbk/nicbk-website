@@ -1,0 +1,89 @@
+/*
+ * The preview of where a link points: a crop of the paper in a popover.
+ *
+ * The same surface as the reader's other popups — border, radius, surface
+ * background — so it reads as the reader's, and the crop inside it as the
+ * paper's.
+ */
+
+.positioner {
+  outline: none;
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-width: calc(100vw - 2 * var(--space-md));
+  /* Never taller than the space the positioner found; the crop scrolls. */
+  max-height: var(--available-height);
+  overflow-y: auto;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  outline: none;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.title,
+.status {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+}
+
+.goTo {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .goTo:hover {
+    text-decoration: underline;
+  }
+}
+
+.goTo:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/*
+ * The paper, as the paper: white, whatever the site's theme — a crop tinted to
+ * match a dark surface would no longer look like the page it came from.
+ */
+.crop {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  background-color: #fff;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}

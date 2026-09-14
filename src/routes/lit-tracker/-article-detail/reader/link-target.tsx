@@ -1,8 +1,11 @@
 import type { PdfAnnotationObject, PdfLinkAnnoObject } from '@embedpdf/models'
 import { PdfAnnotationSubtype } from '@embedpdf/models'
 import { createRenderer } from '@embedpdf/plugin-annotation/react'
+import type { MouseEvent } from 'react'
+import { useRef, useState } from 'react'
 import { useConfirmationToast } from '~/routes/-shared/components/toast/use-confirmation-toast'
 import { useErrorToast } from '~/routes/-shared/components/toast/use-error-toast'
+import { CitationPreview } from './citation-preview'
 import { linkClickAction } from './link-annotations'
 import styles from './link-target.module.css'
 
@@ -24,8 +27,12 @@ export const LINK_RENDERERS = [
     id: 'link',
     matches: (annotation: PdfAnnotationObject) =>
       annotation.type === PdfAnnotationSubtype.LINK,
-    render: ({ currentObject }) => <LinkTarget link={currentObject} />,
-    renderLocked: ({ currentObject }) => <LinkTarget link={currentObject} />,
+    render: ({ currentObject, documentId }) => (
+      <LinkTarget link={currentObject} documentId={documentId} />
+    ),
+    renderLocked: ({ currentObject, documentId }) => (
+      <LinkTarget link={currentObject} documentId={documentId} />
+    ),
     interactionDefaults: {
       isDraggable: false,
       isResizable: false,
@@ -47,15 +54,32 @@ export const LINK_RENDERERS = [
  * beneath, where the selection plugin listens; only the click — a press and
  * release on the link itself — is answered here.
  */
-export function LinkTarget({ link }: { link: PdfLinkAnnoObject }) {
+export function LinkTarget({
+  link,
+  documentId,
+}: {
+  link: PdfLinkAnnoObject
+  documentId: string
+}) {
   const confirm = useConfirmationToast()
   const showError = useErrorToast()
   const action = linkClickAction(link.target)
+  const hitArea = useRef<HTMLDivElement>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
-  function handleClick() {
+  function handleClick(event: MouseEvent<HTMLDivElement>) {
+    // The preview is portalled, but React routes its clicks through this
+    // component — a click on "go to p. N" would otherwise arrive here and open
+    // the preview it just closed. Only a click physically on the link counts
+    // (#20, AGENTS.md: the rendered tree is not always the tree events travel).
+    if (!event.currentTarget.contains(event.target as Node)) {
+      return
+    }
+    if (action.kind === 'internal') {
+      setPreviewOpen((open) => !open)
+      return
+    }
     if (action.kind !== 'copy') {
-      // `internal` previews in place in task 3 of #22; until then an internal
-      // link is inert, which is strictly better than offering to delete it.
       return
     }
     const clipboard = globalThis.navigator?.clipboard
@@ -76,14 +100,26 @@ export function LinkTarget({ link }: { link: PdfLinkAnnoObject }) {
     // A mouse and touch target only, like the link it stands in for: a paper
     // carries a hundred of these, and a hundred tab stops through the citations
     // would bury the reader's own controls. Keyboard access to links is a
-    // decision for the preview task, not a side effect of this one.
+    // decision of its own, not a side effect of this one: #22 raised it and left
+    // it with the preview reachable by pointer and touch.
     // biome-ignore lint/a11y/noStaticElementInteractions: see above
     // biome-ignore lint/a11y/useKeyWithClickEvents: see above
     <div
+      ref={hitArea}
       className={action.kind === 'none' ? styles.inert : styles.target}
       data-link-action={action.kind}
       onClick={handleClick}
-    />
+    >
+      {action.kind === 'internal' && previewOpen && (
+        <CitationPreview
+          documentId={documentId}
+          link={link}
+          anchor={hitArea}
+          open={previewOpen}
+          onOpenChange={setPreviewOpen}
+        />
+      )}
+    </div>
   )
 }
 

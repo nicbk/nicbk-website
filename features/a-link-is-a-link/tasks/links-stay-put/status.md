@@ -1,6 +1,6 @@
 # Status: Links Stay Put
 
-**State:** **Implemented**, in review. Task 1 of 3.
+**State:** **Merged** (2026-09-14) as `dd0d9b1`, behind green CI and review. Task 1 of 3.
 
 - Branch: `a-link-is-a-link/links-stay-put`, from `main` at `70b9b04` with the
   feature spec merged.
@@ -68,7 +68,12 @@ links pure geometry with a page-level click hit-test. Revisit if it bites.
 
 ## Not verified
 
-- **Safari.** No session on `localhost:3000`; checked on `nicbk.com` after deploy.
+- **Safari's clipboard write.** Checked on `nicbk.com` after deploy: links are
+  locked (no editable link rects; the one transparent rect found was a
+  highlight's), a citation's target takes the pointer, and clicking it shows no
+  menu and does not scroll. Safari only grants the clipboard to a real click,
+  which a script cannot make, so "link copied" there is left for the user to
+  try.
 - **A `mailto:` link in the browser.** Unit-tested; the local paper has none.
 
 ## Log

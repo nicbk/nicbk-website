@@ -1,16 +1,17 @@
 # Status: One Row, Two Item Sets
 
-**State:** Implemented, awaiting review. Task 1 of 1.
+**State:** **Merged** (2026-09-13), behind green CI and human review. Task 1 of 1,
+and the whole of the feature.
 
 - Branch: `one-header-row/one-row-two-item-sets`, from `main` at `1cbb6e8` with
-  the feature spec merged.
+  the feature spec merged. Merged as `4a25437`; branch deleted.
 - Sub-issue: [**#157**](https://github.com/nicbk/nicbk-website/issues/157).
 - PR: [**#159**](https://github.com/nicbk/nicbk-website/pull/159) — CI green
   (Biome/typecheck/unit 3m34s, integration 2m30s; coverage 93.77%, level with the
   baseline).
-- **On merge this completes #17** — check the parent issue
-  [#156](https://github.com/nicbk/nicbk-website/issues/156) and close it by hand
-  if it has not closed itself, which on the last three features it has not.
+- **This completed #17.** The parent issue
+  [#156](https://github.com/nicbk/nicbk-website/issues/156) was checked and had
+  **not** closed itself, so it was closed by hand — the fourth in a row.
 
 ## Why this task exists
 
@@ -90,6 +91,8 @@ both read the same declaration, which is the thing the feature was for.
 
 ## Log
 
+- 2026-09-13 — **Merged** (#159), completing feature #17. Parent #156 closed by
+  hand.
 - 2026-09-13 — Implemented. 1612 unit tests pass (1605 + 7). The regression test
   was checked by reproducing the bug — re-adding `padding-block` to the site
   header's rule — and confirming it fails, then passes again when removed.

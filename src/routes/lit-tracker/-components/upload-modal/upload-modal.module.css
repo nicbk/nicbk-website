@@ -155,48 +155,124 @@
   line-height: var(--line-height-tight);
 }
 
-.pickerLabel {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+/*
+ * The picker: a real file input with a drawn field in front of it.
+ *
+ * **Why the native control is hidden rather than styled.** A browser renders
+ * `<input type="file">` as its own button hard against the words "No file
+ * chosen" — two parts, one of them a vendor pseudo-element, with no spacing
+ * between them to give. Bordering that box left the platform button sitting
+ * inside a dashed rectangle, which is a boundary rather than a design. The input
+ * still does the work; a `<label for>` is what the reader sees and presses,
+ * which is native behaviour rather than a click forwarded in JavaScript.
+ */
+.picker {
+  display: flex;
 }
 
 /*
- * The native file input, restyled only as far as it can be portably: browsers
- * render the button part with a vendor pseudo-element, so the reachable part
- * here is the box around it. Left native on purpose — a hand-rolled picker
- * would have to reimplement multi-select, keyboard operation, and the platform
- * file dialog, all of which this already does correctly.
+ * Visually hidden, still focusable, still in the accessibility tree — the
+ * clipped-rect idiom, never `display: none`, which would take the control out of
+ * the tab order and out of the tree with it. Tab reaches it, Space opens the
+ * platform dialog, and the label supplies its accessible name.
  */
-.picker {
+.pickerInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+ * The field itself: a target big enough to look like one, centred on what it
+ * says.
+ *
+ * **Dashed, not solid.** A solid border on a box this size reads as a text area
+ * — somewhere to type rather than somewhere to pick from — and the dashes are
+ * the one convention that says "put something here" without words.
+ *
+ * **It does not say "drop files here", and must not**: this control accepts
+ * clicks only. A box that invites a drag and then ignores it is worse than the
+ * plain input it replaced. If drag-and-drop is built later, the copy and a
+ * `dragover` state are what change, not this geometry.
+ */
+.pickerField {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
   min-width: 0;
-  max-width: 100%;
-  font: inherit;
-  color: inherit;
-  /*
-   * **A dashed boundary, and deliberately not a drop zone.**
-   *
-   * The field was drawn as nothing at all — no border, no background, no
-   * padding, no radius — in a modal where every other surface is drawn. The
-   * dashes mark it as the place files come from, and the dash is the right
-   * weight for it: a solid border would make it read as a text field, which is
-   * the one thing it is not.
-   *
-   * It stops short of the full dropped-file look — no large empty target, no
-   * "drag files here" — because **this control does not accept drops**. A box
-   * that invites a drag and then ignores it is worse than the bare input it
-   * replaced. If drag-and-drop is built later, this is where the look grows into
-   * it (features/controls-look-like-controls).
-   */
-  padding: var(--space-xs);
+  /* Tall enough to read as a region rather than as a bordered line of text,
+     and it is the modal's one interactive surface, so it can afford the room. */
+  padding: var(--space-lg) var(--space-md);
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-surface);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  text-align: center;
+  cursor: pointer;
 }
 
 @media (hover: hover) {
-  .picker:hover {
+  .pickerField:hover {
     border-color: var(--color-accent);
+    color: var(--color-accent);
   }
+}
+
+/* Motion is opt-in per the project convention (see src/styles/motion.css). */
+@media (prefers-reduced-motion: no-preference) {
+  .pickerField {
+    transition:
+      border-color var(--motion-duration-fast) var(--motion-ease),
+      color var(--motion-duration-fast) var(--motion-ease);
+  }
+}
+
+/*
+ * The focus ring belongs on the field, because the input it describes is one
+ * clipped pixel — the global `:focus-visible` ring would draw around something
+ * invisible and a keyboard reader would see nothing. The input is the previous
+ * sibling, so this needs no `:has()`.
+ */
+.pickerInput:focus-visible + .pickerField {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Uploading is not a moment to invite another selection. */
+.pickerInput:disabled + .pickerField {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pickerIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-text-muted);
+}
+
+/*
+ * What the field says, and the one line that can be a filename — so it elides
+ * rather than widening the modal or wrapping a long paper title into three
+ * lines.
+ */
+.pickerPrompt {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pickerHint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 .errors {

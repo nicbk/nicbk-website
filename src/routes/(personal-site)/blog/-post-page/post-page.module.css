@@ -117,7 +117,26 @@
   border-radius: 4px;
   background-color: var(--color-bg-surface);
   color: var(--shiki-foreground);
-  font-size: var(--font-size-sm);
+  /*
+   * **Fluid, because a fixed size is a fixed number of characters and a phone
+   * column is narrow.** At 14px the advance is 8.43px, so a 375px screen fits
+   * **34 characters** — measured, against a post whose longest line is 62, which
+   * left 214px hanging off the side of every block.
+   *
+   * 12px fits 40. It does not fit everything and is not meant to: the 62nd
+   * character needs roughly 8px type, which nobody can read, so long lines still
+   * scroll inside the block and `overflow-x: auto` above is what carries them.
+   *
+   * Note this is not about matching the prose. Body text here is 16px, so the
+   * code was already the smaller of the two — "too large" meant too large for
+   * the column (user-reported; features/the-site-fits-a-phone).
+   *
+   * The middle term reaches the 14px ceiling at 768px, the same breakpoint the
+   * tracker's layout uses, so anything tablet-sized and up is unchanged. Same
+   * shape as the fluid type tokens in typography.css; deliberately not promoted
+   * into one, since exactly one rule needs it.
+   */
+  font-size: clamp(0.75rem, 0.63rem + 0.51vw, 0.875rem);
   line-height: var(--line-height-base);
 }
 

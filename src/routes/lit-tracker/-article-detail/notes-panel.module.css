@@ -39,6 +39,23 @@
   resize: none;
 }
 
+/*
+ * **Full size on a touch device, because below 16px WebKit zooms the page when
+ * this is focused** — and this is a textarea, so the reader is about to type
+ * into it for a while with the whole page scaled up.
+ *
+ * A capability query rather than a width, matching the hover rules elsewhere in
+ * the project; the quiet `--font-size-sm` stays on a pointer device
+ * (user-decided 2026-09-14, features/the-site-fits-a-phone). 16px is a
+ * threshold rather than a preference, so this uses the token that is exactly
+ * 1rem.
+ */
+@media (pointer: coarse) {
+  .field {
+    font-size: var(--font-size-md);
+  }
+}
+
 .field:focus-visible {
   border-color: var(--color-accent);
 }

@@ -155,6 +155,22 @@
   font-size: var(--font-size-sm);
 }
 
+/*
+ * **Full size on a touch device, because below 16px WebKit zooms the page when
+ * this is focused.** This one sits inside an open card menu, so a zoom on focus
+ * would move the menu out from under the finger that opened it.
+ *
+ * A capability query rather than a width, matching the hover rules elsewhere in
+ * the project; a pointer device keeps the quiet `--font-size-sm` (user-decided
+ * 2026-09-14, features/the-site-fits-a-phone). 16px is a threshold rather than a
+ * preference, so this uses the token that is exactly 1rem.
+ */
+@media (pointer: coarse) {
+  .filter {
+    font-size: var(--font-size-md);
+  }
+}
+
 .filter:focus-visible {
   border-color: var(--color-accent);
 }

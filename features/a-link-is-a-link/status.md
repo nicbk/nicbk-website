@@ -1,6 +1,7 @@
 # Status: A Link Is a Link
 
-**Feature state:** **In progress** (2026-09-14) — tasks 1 and 2 merged (#190, #191), task 3 implemented, in review.
+**Feature state:** **Complete** (2026-09-14) — all three tasks merged (#190, #191,
+#192) and verified in Safari on `nicbk.com`. Parent #185 closed by hand.
 
 Spec written against `main` at `917e224`, from a local reproduction and a
 measurement of five papers' links with the reader's own engine. See
@@ -20,7 +21,7 @@ hand** on completion.
 |---|---|---|---|---|
 | [`links-stay-put`](./tasks/links-stay-put/status.md) | **Merged** ([#186](https://github.com/nicbk/nicbk-website/issues/186)) | [#190](https://github.com/nicbk/nicbk-website/pull/190) | green | approved |
 | [`where-a-link-points`](./tasks/where-a-link-points/status.md) | **Merged** ([#187](https://github.com/nicbk/nicbk-website/issues/187)) | [#191](https://github.com/nicbk/nicbk-website/pull/191) | green | approved |
-| [`a-citation-previews-in-place`](./tasks/a-citation-previews-in-place/status.md) | Implemented ([#188](https://github.com/nicbk/nicbk-website/issues/188)) | — | — | — |
+| [`a-citation-previews-in-place`](./tasks/a-citation-previews-in-place/status.md) | **Merged** ([#188](https://github.com/nicbk/nicbk-website/issues/188)) | [#192](https://github.com/nicbk/nicbk-website/pull/192) | green | approved |
 
 ## Definition of Done (feature)
 
@@ -42,6 +43,10 @@ Safari.
 
 ## Log
 
+- 2026-09-14 — **Complete.** Deployed; in Safari on `nicbk.com` three internal
+  links previewed (p. 13, p. 14, p. 2) with the reader unmoved, and go-to landed
+  on its page. #185 closed. Still the user's to try: a URL's clipboard copy in
+  Safari, which a script cannot trigger.
 - 2026-09-14 — **Task 3 implemented.** Clicking a citation previews its entry in
   place; a table link previews the table. The browser added two resolver rules
   (a run crossing the target; a caption's block runs past the gap).

@@ -37,6 +37,37 @@
   transform: translateY(calc(-100% - var(--space-2xs)));
 }
 
+/*
+ * Below the mark instead, for a mark near the top of the document.
+ *
+ * The reader's toolbar floats up there, and this menu **cannot be drawn over
+ * it**: it is rendered inside a page wrapper carrying `z-index: 1`, inside the
+ * viewport carrying `z-index: 0`, and the bar is the viewport's sibling — so
+ * lifting the menu above the bar means lifting the whole paper with it, which
+ * is a defect this reader already fixed once. A probe inside the viewport at
+ * the maximum expressible `z-index` still lost to the bar. The menu therefore
+ * moves rather than rises (`menu-placement.ts` decides when; user-decided
+ * 2026-09-13).
+ */
+.menu[data-placement="below"] {
+  /*
+   * `top: 100%`, not a translate, and the difference is the mark's own height.
+   *
+   * Above, `translateY(-100%)` works because the percentage resolves against
+   * *this* box, and moving up by its own height clears the anchor's top edge.
+   * Downward there is nothing to resolve against: the same trick shifts the
+   * menu by its own height from the anchor's **top**, which for any mark taller
+   * than the menu lands it on the mark it is about. Positioning against the
+   * wrapper — which EmbedPDF sizes to the mark — is what "below" actually
+   * means. Found in the browser with a mark 35px tall; the translate version
+   * covered it.
+   */
+  position: absolute;
+  top: 100%;
+  margin-top: var(--space-2xs);
+  transform: none;
+}
+
 /* The controls themselves, side by side above whatever they open. */
 .buttons {
   display: flex;

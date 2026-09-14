@@ -1,6 +1,7 @@
 import type { SelectionSelectionMenuProps } from '@embedpdf/plugin-selection/react'
 import { Check, Copy, X } from 'lucide-react'
 import { TEXT_MARKUP_TOOLS } from './annotation-tools'
+import { useMenuPlacement } from './menu-placement'
 import type { CopyState } from './use-selection-copy'
 import styles from './selection-menu.module.css'
 
@@ -74,6 +75,10 @@ export function SelectionMenu({
   onCopy,
   onMark,
 }: SelectionMenuProps) {
+  // Before the early return, because hooks must be — the same arrangement the
+  // annotation menu documents. It measures nothing until the menu appears.
+  const { ref: menuRef, placement } = useMenuPlacement()
+
   // EmbedPDF renders this for the selection layer whether or not there is one.
   if (!selected) {
     return null
@@ -86,7 +91,11 @@ export function SelectionMenu({
     <div {...menuWrapperProps}>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: not an interaction — this stops one, exactly as the annotation menu does; see the comment there. */}
       <div
+        ref={menuRef}
         className={styles.menu}
+        // Above the selection by default, below it when the toolbar would cover
+        // it there. Same rule, same reason, as the mark's menu.
+        data-placement={placement}
         /*
          * The press must not reach the page, which would begin a new selection
          * and unmount this before its click landed. The annotation menu learned

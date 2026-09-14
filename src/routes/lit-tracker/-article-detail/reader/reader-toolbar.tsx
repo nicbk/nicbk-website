@@ -1,6 +1,7 @@
 import type { ZoomLevel } from '@embedpdf/plugin-zoom'
 import type { ReactNode } from 'react'
 import { AnnotationToolControl } from './annotation-tool-control'
+import { READER_TOOLBAR_ATTRIBUTE } from './menu-placement'
 import { PageNavigation } from './page-navigation'
 import { ZoomControl } from './zoom-control'
 import styles from './reader-toolbar.module.css'
@@ -90,7 +91,15 @@ export function ReaderToolbar({
 }: ReaderToolbarProps) {
   return (
     // biome-ignore lint/a11y/useSemanticElements: <fieldset> is for form controls; this groups a document's controls, and a labelled group is the role with no keyboard contract this bar would break (see above).
-    <div className={styles.toolbar} role="group" aria-label="reader controls">
+    <div
+      className={styles.toolbar}
+      role="group"
+      aria-label="reader controls"
+      // How a floating menu finds the one thing it has to dodge. It cannot be
+      // raised above this bar — see `menu-placement.ts` for the measurement —
+      // so it moves instead, and this is what it measures against.
+      {...{ [READER_TOOLBAR_ATTRIBUTE]: '' }}
+    >
       <PageNavigation
         currentPage={currentPage}
         totalPages={totalPages}

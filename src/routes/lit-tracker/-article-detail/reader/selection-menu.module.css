@@ -46,6 +46,29 @@
   transform: translateY(calc(-100% - var(--space-2xs) - 0.875rem));
 }
 
+/*
+ * Below the selection instead, for a passage near the top of the document,
+ * where the reader's toolbar floats.
+ *
+ * This bar cannot be drawn over that one — the mark menu's stylesheet carries
+ * the measurement, and `menu-placement.ts` the decision — so it moves instead.
+ *
+ * **The same 0.875rem, mirrored.** Above, it clears the touch handle's dot
+ * sitting 13px *above* the first line; below, the end handle's dot sits the
+ * same distance under the last one. Dropping the offset on this side would
+ * reintroduce exactly the control-covering-a-control fault the offset above was
+ * added to prevent, at the other end of the selection.
+ */
+.menu[data-placement="below"] {
+  /* `top: 100%` rather than a translate, so "below" clears the *selection's*
+     height rather than this bar's — see the mark menu's stylesheet, which
+     carries the reasoning and the measurement. */
+  position: absolute;
+  top: 100%;
+  margin-top: calc(var(--space-2xs) + 0.875rem);
+  transform: none;
+}
+
 .button {
   display: inline-flex;
   align-items: center;

@@ -5,7 +5,9 @@
 - Branch: `one-header-row/one-row-two-item-sets`, from `main` at `1cbb6e8` with
   the feature spec merged.
 - Sub-issue: [**#157**](https://github.com/nicbk/nicbk-website/issues/157).
-- PR: **TBD**.
+- PR: [**#159**](https://github.com/nicbk/nicbk-website/pull/159) — CI green
+  (Biome/typecheck/unit 3m34s, integration 2m30s; coverage 93.77%, level with the
+  baseline).
 - **On merge this completes #17** — check the parent issue
   [#156](https://github.com/nicbk/nicbk-website/issues/156) and close it by hand
   if it has not closed itself, which on the last three features it has not.

@@ -78,7 +78,7 @@ need them (see Phases 2–3).
 | 18 | Controls look like controls (a filter reads as pressable; the upload controls are finished) | [`controls-look-like-controls`](./controls-look-like-controls/description.md) | **Complete** (2026-09-14; both tasks merged, #162 + #163) | #4, #7, #8 |
 | 19 | The site fits a phone (fields stop zooming iOS; code fits a narrow column) | [`the-site-fits-a-phone`](./the-site-fits-a-phone/description.md) | **Complete** (2026-09-14; its one task merged, #169; the user's phone check passed) | #4, #8, #9, #11 |
 | 20 | A popup keeps its clicks (clicking a menu stops opening the card behind it) | [`a-popup-keeps-its-clicks`](./a-popup-keeps-its-clicks/description.md) | **Complete** (2026-09-14; its one task merged in two PRs, #174 — #176 + #177) | #8, #11 |
-| 21 | A paper downloads once (reopening a paper revalidates instead of re-downloading it) | [`a-paper-downloads-once`](./a-paper-downloads-once/description.md) | **Spec'd** (2026-09-14; 1 task, not started) | #7, #9 |
+| 21 | A paper downloads once (reopening a paper revalidates instead of re-downloading it) | [`a-paper-downloads-once`](./a-paper-downloads-once/description.md) | **Complete** (2026-09-14; its one task merged, #181; verified in Safari on `nicbk.com`) | #7, #9 |
 
 ## How this roadmap is spec'd out
 
@@ -92,7 +92,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `tracker-navigation-latency` (complete), `article-edit` (complete),
 `surface-layering` (complete), `one-header-row` (complete),
 `controls-look-like-controls` (complete), `the-site-fits-a-phone` (complete),
-`a-popup-keeps-its-clicks` (complete) and `a-paper-downloads-once` (spec'd) have full
+`a-popup-keeps-its-clicks` (complete) and `a-paper-downloads-once` (complete) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

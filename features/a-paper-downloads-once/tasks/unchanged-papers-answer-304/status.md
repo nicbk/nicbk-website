@@ -1,13 +1,15 @@
 # Status: Unchanged Papers Answer 304
 
-**State:** **Implemented**, in review. Task 1 of 1.
+**State:** **Complete** (2026-09-14) — merged as `4b6d14f` behind green CI and
+human review, and verified in Safari on `nicbk.com`. Task 1 of 1.
 
 - Branch: `a-paper-downloads-once/unchanged-papers-answer-304`, from `main` at
   `7cd69f9` with the feature spec merged.
 - Sub-issue: [**#181**](https://github.com/nicbk/nicbk-website/issues/181).
-- **On merge this does not complete #21** — the Safari check on `nicbk.com`
-  after deploy does. Then check the parent
-  [#180](https://github.com/nicbk/nicbk-website/issues/180) and close it by hand.
+- PR: [**#183**](https://github.com/nicbk/nicbk-website/pull/183). Tip diffed
+  against `main` after merge; nothing dropped. Branch deleted.
+- Parent [#180](https://github.com/nicbk/nicbk-website/issues/180) closed by hand
+  after the Safari check.
 
 ## What shipped
 
@@ -81,15 +83,36 @@ cache in development both requests download the whole paper, since neither has
 finished when the other starts. **The production count is checked on
 `nicbk.com`** alongside the Safari check.
 
+### Safari, `nicbk.com`, after deploy
+
+Against the largest paper in the collection, in a window the agent created and
+closed by id.
+
+| | first open (cold) | reopen |
+|---|---|---|
+| PDF requests | **1** | **1** |
+| `transferSize` | 13,407,170 | **300** |
+| request duration | 931 ms | 111 ms |
+| click → pages rendered | 1762 ms | **503 ms** |
+
+- **WebKit keeps the 13.4 MB body** and revalidates it — the question the spec
+  could not answer in advance.
+- **Caddy passes the tag through unaltered**, with no `content-encoding`; a tag
+  sent by hand gets 304 with an empty body in 91 ms.
+- **One request per open in production**, confirming the doubled request seen
+  locally is StrictMode's, in development only.
+
 ## Not verified
 
-- **Safari, and production.** Whether WebKit keeps the 13.4 MB paper, whether
-  Caddy on the host passes the ETag through untouched, and that production opens
-  a paper with one request. All three are the feature's definition of done, on
-  `nicbk.com` after deploy.
+- **The other three policies' failure modes in a browser** — a deleted article
+  or a signed-out session refused on reopen. Proven at the integration tier
+  (a deleted object with its old tag → 500, another user's real tag → 404)
+  rather than by deleting one of the user's articles.
 
 ## Log
 
+- 2026-09-14 — **Complete.** Safari on `nicbk.com`: reopening the 13.4 MB paper
+  transfers 300 bytes, and production issues one request per open. #180 closed.
 - 2026-09-14 — Chrome check run: reopening transfers 300 bytes. Traced the
   doubled request to StrictMode, development only.
 - 2026-09-14 — Implemented. 1676 unit and 16 integration tests pass; three

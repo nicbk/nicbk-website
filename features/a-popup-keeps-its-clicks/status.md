@@ -1,7 +1,9 @@
 # Status: A Popup Keeps Its Clicks
 
-**Feature state:** **In progress** (2026-09-14) — the task is implemented and
-awaiting review.
+**Feature state:** **In progress** (2026-09-14) — the card's guard is merged
+(#176); a **second handler**, on the title `<Link>`, was found in the browser after
+that merge and is fixed in a follow-up. Parent #173 stays open until it lands, since
+the tooltip route is still live on `main`.
 
 Spec written against `main` at `f512c18`, from a reproduction taken on
 `nicbk.com` before anything was written. See [research.md](./research.md).

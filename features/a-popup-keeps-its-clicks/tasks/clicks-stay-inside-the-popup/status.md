@@ -1,11 +1,15 @@
 # Status: Clicks Stay Inside the Popup
 
-**State:** Implemented, awaiting review. Task 1 of 1.
+**State:** First fix **merged** (#176); the second — found in the browser after
+that merge — is in a follow-up PR. Task 1 of 1, and **not complete until the
+follow-up lands**: until then the tooltip route is still live on `main`.
 
 - Branch: `a-popup-keeps-its-clicks/clicks-stay-inside-the-popup`, from `main` at
   `1c16f45` with the feature spec merged.
 - Sub-issue: [**#174**](https://github.com/nicbk/nicbk-website/issues/174).
-- PR: **TBD**.
+- PR: [**#176**](https://github.com/nicbk/nicbk-website/pull/176) — the card's
+  guard, merged as `c1b1fe3`. The Link guard follows in its own PR, because #176
+  was merged before the browser pass that found the second handler.
 - **On merge this completes #20** — check the parent issue
   [#173](https://github.com/nicbk/nicbk-website/issues/173) and close it by hand.
 

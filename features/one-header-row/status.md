@@ -1,6 +1,7 @@
 # Status: One Header Row
 
-**Feature state:** **Spec'd** (2026-09-13) — one task, not started.
+**Feature state:** **In progress** (2026-09-13) — the one task is implemented and
+awaiting review.
 
 Spec written against `main` at `1cbb6e8`, from measurements taken in **both
 Chrome and Safari** before anything was written. Those measurements contradicted
@@ -24,7 +25,7 @@ itself — which, on the last three features, it has not.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`one-row-two-item-sets`](./tasks/one-row-two-item-sets/status.md) | Not started | — | — | — |
+| [`one-row-two-item-sets`](./tasks/one-row-two-item-sets/status.md) | Implemented ([#157](https://github.com/nicbk/nicbk-website/issues/157)) | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -54,6 +55,16 @@ showed, and the sticky one is still sticky.
 
 ## Log
 
+- 2026-09-13 — **Implemented.** Every header on the site now measures **56.00px**
+  in Chrome and **56.00px** in Safari — one declaration, one number, and for the
+  first time the same integer in both engines. The browser found nothing to fix,
+  which is the expected shape for a change that *removes* a computation: the
+  three preceding tasks each found a defect the unit tier could not, and each was
+  adding behaviour. See the
+  [task's status](./tasks/one-row-two-item-sets/status.md) for the measurements
+  and for the one deviation from this spec — the row class is applied by the
+  component rather than composed in by each caller, so a future header cannot
+  forget it.
 - 2026-09-13 — **Spec'd**, the same day #16 completed. Filed from item 8 of the
   user's list of sixteen. The cause was measured first and did not match the
   report: the two rows differ by 1–1.6px at desktop and are *identical* at 500px,

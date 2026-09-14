@@ -1,24 +1,15 @@
 /*
- * The lit-tracker header's row contents. Where the row *sits* — pinned to the
- * top of the viewport, outside the scrolling document — is LitTrackerShell's
- * job, so nothing here positions itself.
+ * The lit-tracker header's row contents, and nothing else.
  *
- * The horizontal rhythm mirrors the site header's: one custom property that
- * shrinks with the viewport, so the single row survives a ~320px phone without
- * wrapping or scrolling sideways.
+ * The row itself — its height, horizontal rhythm, type scale, surface and the
+ * divider below it — is header-row.module.css, shared with the site header
+ * (user-decided 2026-09-13). It no longer "mirrors" the site header's: it *is*
+ * it, which is what stopped the two computing heights 1.6px apart.
+ *
+ * Where the row sits — pinned to the top of the viewport, outside the scrolling
+ * document — is LitTrackerShell's job, so nothing here positions itself either.
+ * This file has no `.header` rule at all, and that is the point.
  */
-.header {
-  display: flex;
-  align-items: center;
-  --header-inline-space: clamp(0.5rem, 2.5vw, 1.5rem);
-  gap: var(--header-inline-space);
-  padding: var(--space-sm) var(--header-inline-space);
-  background-color: var(--color-bg-surface);
-  border-bottom: 1px solid var(--color-border);
-  flex-wrap: nowrap;
-  white-space: nowrap;
-  font-size: clamp(0.75rem, 2.5vw, 1rem);
-}
 
 .appName {
   font-weight: var(--font-weight-bold);

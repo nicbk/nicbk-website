@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { HeaderRow } from '~/routes/-shared/components/header-row/header-row'
 import { ThemeToggle } from '~/routes/-shared/components/theme-toggle/theme-toggle'
 import type { AvatarAccount } from '../account-avatar/account-avatar'
 import { AccountAvatar } from '../account-avatar/account-avatar'
@@ -36,19 +37,25 @@ interface LitTrackerHeaderProps {
  * on the right the path, the account control and the theme toggle
  * (research/ui-ux/pages/lit-tracker/components/header.md).
  *
- * A separate component from the site header rather than a variant of it, as
- * that spec requires — each sub-application gets its own. The two are not
- * parameterizations of one thing: the site header is `position: sticky` on a
- * normally-scrolling page, while this one is the fixed top edge of an app
- * shell and never scrolls at all. That difference lives in LitTrackerShell,
- * which owns the layout; this component owns the row's contents.
+ * A separate component from the site header, but no longer a separate *row*
+ * (user-decided 2026-09-13, revising the 2026-07-04 spec). Both render
+ * `HeaderRow`, and this component is the list of things in it.
  *
- * The *arrangement*, though, deliberately mirrors the site header's — a name on
- * one side, links and the theme toggle on the other — so the two headers read
- * as the same site rather than as two products. The toggle is the same
- * component, not a copy: without it here the tracker would be the one place on
- * the site with no way to change theme, since it does not use the site-wide
- * header.
+ * **What is still not shared is where the row sits.** The site header is
+ * `position: sticky` on a normally-scrolling page, while this one is the fixed
+ * top edge of an app shell that never scrolls at all. That difference lives in
+ * LitTrackerShell, which owns the layout, and it is why `HeaderRow` positions
+ * nothing.
+ *
+ * The *arrangement* deliberately echoes the site header's — a name on one side,
+ * links and the theme toggle on the other — so the two headers read as the same
+ * site rather than as two products. Sharing the row is what made that true in
+ * pixels as well as in intent: the two used to compute heights 1.6px apart,
+ * because each summed its own padding with whatever its tallest item was, and
+ * this one's padding was smaller precisely to offset its 32px avatar. The toggle
+ * is the same component, not a copy: without it here the tracker would be the
+ * one place on the site with no way to change theme, since it does not use the
+ * site-wide header.
  *
  * Two links, two destinations, and they are not the same one:
  *
@@ -87,7 +94,7 @@ export function LitTrackerHeader({
   pageTitle,
 }: LitTrackerHeaderProps) {
   return (
-    <header className={styles.header}>
+    <HeaderRow>
       <Link to="/lit-tracker" className={styles.appName}>
         Literature Tracker
       </Link>
@@ -122,6 +129,6 @@ export function LitTrackerHeader({
       />
 
       <ThemeToggle />
-    </header>
+    </HeaderRow>
   )
 }

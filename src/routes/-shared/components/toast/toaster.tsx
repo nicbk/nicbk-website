@@ -4,7 +4,8 @@ import styles from './toaster.module.css'
 
 /**
  * The site's toast notifications: transient, dismissible messages for things
- * that went wrong where there is no form to attach the message to.
+ * that went wrong where there is no form to attach the message to, and for the
+ * rare success nobody could otherwise see.
  *
  * That is the decided pattern rather than a preference —
  * research/ui-ux/design-system.md distinguishes errors *inside* a form context,
@@ -14,9 +15,11 @@ import styles from './toaster.module.css'
  * so by the time the server refuses it there is nowhere on the page the message
  * could sensibly sit.
  *
- * **Not for success.** A toast that confirms what the reader just watched happen
- * is noise, and this site's reactive surfaces apply live updates silently by
- * decision. The only thing this reports is a failure.
+ * **Not for success the reader can see.** A toast that confirms what the reader
+ * just watched happen is noise, and this site's reactive surfaces apply live
+ * updates silently by decision. The one confirmation it carries is for an effect
+ * with nothing to watch — a copy to the clipboard (`use-confirmation-toast.ts`,
+ * #22) — and it is styled without the error's red edge.
  *
  * Mounted once at the document root, so any page may raise one and they all
  * stack in one viewport rather than fighting over a corner of the screen.

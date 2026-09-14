@@ -37,6 +37,7 @@ import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
 import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
 import { canAddAnnotations, canCopyText } from './copy-permission'
+import { LINK_RENDERERS } from './link-target'
 import { PinchGuard } from './pinch/pinch-guard'
 import { usePinchRecovery } from './pinch/use-pinch-recovery'
 import { ReaderNotice } from './reader-notice'
@@ -574,6 +575,9 @@ function ReaderDocument({ articleId, actions }: PdfReaderProps) {
                     <AnnotationLayer
                       documentId={articleId}
                       pageIndex={pageIndex}
+                      // A paper's own links: fixed, and answered by the reader
+                      // rather than the library's defaults. See `link-target.tsx`.
+                      annotationRenderers={LINK_RENDERERS}
                       // What a reader can do to the mark they have selected.
                       // EmbedPDF calls this for every annotation on the page and
                       // the control declines to draw for the unselected ones.

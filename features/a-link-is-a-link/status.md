@@ -1,6 +1,6 @@
 # Status: A Link Is a Link
 
-**Feature state:** **Spec'd** (2026-09-14) — 3 tasks, not started.
+**Feature state:** **In progress** (2026-09-14) — task 1 implemented, in review.
 
 Spec written against `main` at `917e224`, from a local reproduction and a
 measurement of five papers' links with the reader's own engine. See
@@ -18,7 +18,7 @@ hand** on completion.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`links-stay-put`](./tasks/links-stay-put/status.md) | Not started ([#186](https://github.com/nicbk/nicbk-website/issues/186)) | — | — | — |
+| [`links-stay-put`](./tasks/links-stay-put/status.md) | Implemented ([#186](https://github.com/nicbk/nicbk-website/issues/186)) | — | — | — |
 | [`where-a-link-points`](./tasks/where-a-link-points/status.md) | Not started ([#187](https://github.com/nicbk/nicbk-website/issues/187)) | — | — | — |
 | [`a-citation-previews-in-place`](./tasks/a-citation-previews-in-place/status.md) | Not started ([#188](https://github.com/nicbk/nicbk-website/issues/188)) | — | — | — |
 
@@ -42,6 +42,10 @@ Safari.
 
 ## Log
 
+- 2026-09-14 — **Task 1 implemented.** Links locked, URLs copy. Two browser
+  findings: an inherited `pointer-events: none` made links unclickable (fixed),
+  and a drag cannot start on a link (accepted with the user). Inside a mark, a
+  click on a citation reaches the link — recorded for task 3.
 - 2026-09-14 — **Spec'd.** Reproduced locally: clicking `[13]` offered to delete
   it. Measured before design: internal links are not only citations, LaTeX
   targets are exact, publisher targets are off by up to five entries, and every

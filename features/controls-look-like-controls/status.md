@@ -1,7 +1,7 @@
 # Status: Controls Look Like Controls
 
-**Feature state:** **In progress** (2026-09-13) — task 1 implemented and
-awaiting review, task 2 not started.
+**Feature state:** **In progress** (2026-09-13) — task 1 merged, task 2
+implemented and awaiting review.
 
 Spec written against `main` at `6290ca8`, from measurements taken on the running
 page before anything was written. See [research.md](./research.md).
@@ -23,8 +23,8 @@ five did not close themselves, so expect to.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`pressable-things-look-pressable`](./tasks/pressable-things-look-pressable/status.md) | Implemented ([#162](https://github.com/nicbk/nicbk-website/issues/162)) | — | — | — |
-| [`the-upload-controls-look-finished`](./tasks/the-upload-controls-look-finished/status.md) | Not started ([#163](https://github.com/nicbk/nicbk-website/issues/163)) | — | — | — |
+| [`pressable-things-look-pressable`](./tasks/pressable-things-look-pressable/status.md) | **Merged** ([#162](https://github.com/nicbk/nicbk-website/issues/162)) | [#165](https://github.com/nicbk/nicbk-website/pull/165) | green | approved |
+| [`the-upload-controls-look-finished`](./tasks/the-upload-controls-look-finished/status.md) | Implemented ([#163](https://github.com/nicbk/nicbk-website/issues/163)) | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -59,6 +59,14 @@ put a file, and the spinner's box is a whole number of pixels.
 
 ## Log
 
+- 2026-09-13 — **Task 2 implemented.** The "+" is 39.5 × 39.5 (aspect 1.000)
+  with the row's `align-items: stretch` untouched, the picker has a dashed
+  boundary that deliberately stops short of promising a drop it cannot accept,
+  and the spinner's box is 18 × 18 with its pivot on the grid. One thing turned
+  up while doing it: `1.15em` is a house value in **eleven** stylesheets, with
+  the reader deriving `--reader-control-height` from it — so only the icon that
+  actually rotates was changed, since a glyph rasterized once does not judder.
+- 2026-09-13 — **Task 1 merged** (#165).
 - 2026-09-13 — **Task 1 implemented.** One declaration, and the browser
   confirmed three separated states on both surfaces in both themes: heading
   `rgb(89,89,89)`, resting `rgb(31,31,31)`, pressed `rgb(11,87,208)` + weight

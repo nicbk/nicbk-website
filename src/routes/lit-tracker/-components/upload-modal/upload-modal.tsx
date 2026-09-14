@@ -1,6 +1,6 @@
 import { Button } from '@base-ui/react/button'
 import { Dialog } from '@base-ui/react/dialog'
-import { Plus, X } from 'lucide-react'
+import { FilePlus2, Plus, X } from 'lucide-react'
 import { useId, useState } from 'react'
 import { MAX_FILES_PER_SUBMISSION } from '~/lit-tracker/upload/validation'
 import type { RejectedFile } from './upload-request'
@@ -76,24 +76,38 @@ export function UploadModal() {
             </Dialog.Close>
           </div>
 
-          <label className={styles.pickerLabel} htmlFor={inputId}>
-            PDFs — up to {MAX_FILES_PER_SUBMISSION} at once
-          </label>
-          <input
-            id={inputId}
-            className={styles.picker}
-            type="file"
-            accept="application/pdf"
-            multiple
-            disabled={isUploading}
-            aria-describedby={rejections.length > 0 ? errorId : undefined}
-            onChange={(event) => {
-              // A fresh selection supersedes the previous refusal: leaving the
-              // old message up would read as a verdict on the new files.
-              setRejections([])
-              setFiles(Array.from(event.target.files ?? []))
-            }}
-          />
+          {/*
+            The picker is one target: a real file input, visually hidden, and a
+            label drawn as the field. Clicking the label opens the platform
+            dialog natively — no click forwarding, no ref — and the input keeps
+            its focus, its keyboard operation and its accessible name, which the
+            label's own text supplies. See `.pickerField` for why the native
+            control could not simply be styled.
+          */}
+          <div className={styles.picker}>
+            <input
+              id={inputId}
+              className={styles.pickerInput}
+              type="file"
+              accept="application/pdf"
+              multiple
+              disabled={isUploading}
+              aria-describedby={rejections.length > 0 ? errorId : undefined}
+              onChange={(event) => {
+                // A fresh selection supersedes the previous refusal: leaving the
+                // old message up would read as a verdict on the new files.
+                setRejections([])
+                setFiles(Array.from(event.target.files ?? []))
+              }}
+            />
+            <label className={styles.pickerField} htmlFor={inputId}>
+              <FilePlus2 className={styles.pickerIcon} aria-hidden="true" />
+              <span className={styles.pickerPrompt}>{pickerPrompt(files)}</span>
+              <span className={styles.pickerHint}>
+                up to {MAX_FILES_PER_SUBMISSION} PDFs at once
+              </span>
+            </label>
+          </div>
 
           {rejections.length > 0 && (
             <ul className={styles.errors} id={errorId}>
@@ -137,4 +151,27 @@ function submitLabel(count: number): string {
     return 'upload'
   }
   return count === 1 ? 'upload 1 PDF' : `upload ${count} PDFs`
+}
+
+/**
+ * What the picker field says on its first line.
+ *
+ * It replaces the platform's own summary, which was the visible half of the
+ * problem: browsers draw `<input type="file">` as a grey button hard against the
+ * words "No file chosen", with no spacing to give and no way to restyle either
+ * part portably. Naming the files back is the *useful* half of what that control
+ * was doing, so the field keeps it and drops the rest.
+ *
+ * One name is worth showing; several are not — a column of long paper filenames
+ * would push the submit button off a small screen, which the article-edit dialog
+ * already learned once.
+ */
+function pickerPrompt(files: File[]): string {
+  if (files.length === 0) {
+    return 'choose PDFs'
+  }
+  if (files.length === 1) {
+    return files[0]?.name ?? '1 PDF selected'
+  }
+  return `${files.length} PDFs selected`
 }

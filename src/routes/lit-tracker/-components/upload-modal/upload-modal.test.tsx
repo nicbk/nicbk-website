@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -178,5 +180,105 @@ describe('UploadModal', () => {
     await user.keyboard('{Escape}')
 
     expect(screen.getByRole('button', { name: 'Add articles' })).toHaveFocus()
+  })
+})
+
+/*
+ * How the two controls are drawn. jsdom lays nothing out and resolves no custom
+ * properties, so what a unit test can hold is the declaration — the rendered
+ * geometry is measured in a browser and recorded in the task's status.
+ *
+ * Comments are stripped before matching: a comment naming a property otherwise
+ * satisfies the assertion looking for it (collection-toolbar.test.tsx).
+ */
+const MODAL_CSS = readFileSync(
+  join(__dirname, 'upload-modal.module.css'),
+  'utf8',
+)
+const TOOLBAR_CSS = readFileSync(
+  join(__dirname, '../collection-toolbar/collection-toolbar.module.css'),
+  'utf8',
+)
+
+function declarationsOf(stylesheet: string, selector: string): string {
+  const css = stylesheet.replace(/\/\*[\s\S]*?\*\//g, '')
+  const start = css.indexOf(`\n${selector} {`)
+  if (start === -1) {
+    throw new Error(`No \`${selector}\` rule in the stylesheet.`)
+  }
+  return css.slice(css.indexOf('{', start) + 1, css.indexOf('}', start))
+}
+
+describe('the shape of the add-articles controls', () => {
+  it('makes the trigger square without opting out of the row', () => {
+    /*
+     * It measured 28.4 × 39.5px: an intrinsic width against a height the row
+     * handed it through `align-items: stretch`. That stretch is itself a fix —
+     * three controls sized to their own contents looked ragged side by side — so
+     * squaring the button must not be bought by removing it. `aspect-ratio`
+     * keeps both: the row sets the height, the button stays square at it.
+     */
+    expect(declarationsOf(MODAL_CSS, '.trigger')).toMatch(/aspect-ratio:\s*1\b/)
+    expect(declarationsOf(TOOLBAR_CSS, '.controls')).toMatch(
+      /align-items:\s*stretch\b/,
+    )
+  })
+
+  it('draws the field with a dash rather than a solid box', () => {
+    // Dashed says "put something here" without words. Solid, on a box this
+    // size, reads as a text area — somewhere to type rather than to pick from.
+    expect(declarationsOf(MODAL_CSS, '.pickerField')).toMatch(
+      /border:\s*1px\s+dashed\b/,
+    )
+  })
+
+  it('hides the native input without taking it out of reach', () => {
+    /*
+     * The platform draws `<input type="file">` as its own button hard against
+     * "No file chosen", with no spacing to give and no portable way to restyle
+     * either part — so the field is a `<label>` and the input is clipped behind
+     * it. Clipped, never `display: none`: that would drop the control out of the
+     * tab order and out of the accessibility tree, which is how this pattern is
+     * usually got wrong.
+     */
+    const input = declarationsOf(MODAL_CSS, '.pickerInput')
+
+    expect(input).toMatch(/clip-path:\s*inset\(50%\)/)
+    expect(input).not.toMatch(/display:\s*none/)
+    expect(input).not.toMatch(/visibility:\s*hidden/)
+  })
+
+  it('puts the focus ring on the field, not on the clipped input', () => {
+    // The input is one pixel. The global :focus-visible ring would draw around
+    // something invisible and a keyboard reader would see nothing happen.
+    expect(MODAL_CSS.replace(/\/\*[\s\S]*?\*\//g, '')).toMatch(
+      /\.pickerInput:focus-visible \+ \.pickerField \{[^}]*outline:/,
+    )
+  })
+})
+
+describe('what the picker field says', () => {
+  it('invites a choice before anything is chosen', async () => {
+    await open()
+
+    expect(screen.getByText('choose PDFs')).toBeInTheDocument()
+  })
+
+  it('names a single file back, rather than counting it', async () => {
+    // The useful half of what the platform summary did. One name fits; several
+    // would be a column of long paper filenames pushing submit off a phone.
+    const user = await open()
+    await user.upload(picker(), pdf('attention-is-all-you-need.pdf'))
+
+    expect(
+      screen.getByText('attention-is-all-you-need.pdf'),
+    ).toBeInTheDocument()
+  })
+
+  it('counts them once there is more than one', async () => {
+    const user = await open()
+    await user.upload(picker(), [pdf('a.pdf'), pdf('b.pdf'), pdf('c.pdf')])
+
+    expect(screen.getByText('3 PDFs selected')).toBeInTheDocument()
   })
 })

@@ -1,6 +1,6 @@
 # Status: Citation-Graph Traversal
 
-**Feature state:** **In progress** (2026-09-14): 5 tasks; tasks 1–3 merged, task 4 in review.
+**Feature state:** **In progress** (2026-09-14): 5 tasks; tasks 1–4 merged, task 5 not started.
 
 Spec written against `main` at `daa8fc2`. See [research.md](./research.md).
 
@@ -20,7 +20,7 @@ completion.
 | [`the-references-can-be-trusted`](./tasks/the-references-can-be-trusted/status.md) | Complete ([#202](https://github.com/nicbk/nicbk-website/issues/202)) | [#208](https://github.com/nicbk/nicbk-website/pull/208) | Pass | Merged |
 | [`older-papers-are-re-read`](./tasks/older-papers-are-re-read/status.md) | Complete ([#207](https://github.com/nicbk/nicbk-website/issues/207)) | [#209](https://github.com/nicbk/nicbk-website/pull/209) | Pass | Merged |
 | [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | Complete ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | [#210](https://github.com/nicbk/nicbk-website/pull/210) | Pass | Merged |
-| [`the-citations-view`](./tasks/the-citations-view/status.md) | In review ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | [#211](https://github.com/nicbk/nicbk-website/pull/211) | pending | pending |
+| [`the-citations-view`](./tasks/the-citations-view/status.md) | Complete ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | [#211](https://github.com/nicbk/nicbk-website/pull/211) | Pass | Merged |
 | [`the-way-back`](./tasks/the-way-back/status.md) | Not started ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -53,3 +53,4 @@ flow checked in Safari on `nicbk.com`.
 - 2026-09-14 — #208 merged. Task 2 implemented; verified on the local stack, including a real try again through Semantic Scholar's rate limiting.
 - 2026-09-15 — #209 merged. Task 3 implemented: owner-scoped citation queries, first use of `related()`.
 - 2026-09-15 — #210 merged. Task 4 implemented (#211), then reworked after the user tried it: two tabs, no shortfall message, credits in the header.
+- 2026-09-15 — #211 merged without its last commit (the per-paper reader fix); carried to main separately.

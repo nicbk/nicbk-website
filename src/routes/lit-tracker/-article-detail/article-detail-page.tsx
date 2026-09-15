@@ -191,7 +191,18 @@ export function ArticleDetailPage({
       <h1 className={styles.heading}>{article.title}</h1>
 
       <div className={styles.main} hidden={showingCitations}>
+        {/*
+          Keyed by the article: one reader per paper, never one reader handed a
+          second paper. This page stays mounted when only the id in the URL
+          changes — following a citation, or Back from one — and a reader kept
+          across that change asked EmbedPDF's annotation plugin about the new
+          document before it had opened, which threw ("Annotation state not
+          found for document") and took the page down (user-reported). Keyed,
+          the old reader unmounts, writing its position to its own article on
+          the way out, and the new one opens its paper from the start.
+        */}
         <ArticleReader
+          key={articleId}
           articleId={articleId}
           readingPosition={readingPositionOf(article)}
           onReadingPositionChange={(position) =>

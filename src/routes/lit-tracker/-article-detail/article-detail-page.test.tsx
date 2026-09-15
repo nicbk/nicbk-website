@@ -282,6 +282,26 @@ describe('ArticleDetailPage', () => {
       expect(screen.queryByRole('region', { name: 'citations' })).toBeNull()
     })
 
+    it('gives a new paper a new reader, rather than handing the old one a second document', () => {
+      // Following a citation changes only the id in the URL, so this page stays
+      // mounted. A reader kept across that change threw inside EmbedPDF.
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      const { rerender } = renderPage('reader')
+      const first = screen.getByText(/starting the reader/)
+
+      rerender(
+        <Toaster>
+          <ArticleDetailPage
+            articleId="018f5b6c-0000-7000-8000-000000000002"
+            view="reader"
+            onViewChange={onViewChange}
+          />
+        </Toaster>,
+      )
+
+      expect(screen.getByText(/starting the reader/)).not.toBe(first)
+    })
+
     it('takes the page’s controls while the reader is hidden, in one place only', () => {
       answerQueries({ 'articles.byId': [ARTICLE] })
       renderPage('citations')

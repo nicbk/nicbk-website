@@ -84,3 +84,9 @@ alignment are not reachable from jsdom; both were measured in the browser.
 - 2026-09-15 — Implemented; PR #211.
 - 2026-09-15 — Reworked after the user's review: two tabs, no shortfall,
   credits in the header, rules aligned.
+- 2026-09-15 — Fixed "Annotation state not found for document" (user-reported):
+  following a citation, or Back from one, kept this page mounted and handed the
+  same reader a second paper. Reproduced in Chrome (Back threw inside
+  `ReaderDocument` and the root error page replaced the tracker); the reader is
+  now keyed by article. Four citation → Back round trips after: no errors, and
+  each paper reopened at its own position.

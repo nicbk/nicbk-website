@@ -138,3 +138,11 @@
   flex: 1;
   overflow: hidden;
 }
+
+/* The Citations tab's one sentence: what it opened is the main area, not this
+   panel. Muted like every other notice in the tracker. */
+.notice {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

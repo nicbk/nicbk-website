@@ -21,6 +21,28 @@
 }
 
 /*
+ * The reader's slot. A box of its own so the `hidden` attribute has something to
+ * hide without touching the reader's markup, and a flex column like the page so
+ * the reader fills it exactly as it filled the page before.
+ */
+.main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+/*
+ * The attribute alone does not hide it: `hidden` is only the browser's default
+ * `display: none`, and the `display: flex` above outranks it. Found by looking —
+ * the attribute was set and the reader was still drawn.
+ */
+.main[hidden] {
+  display: none;
+}
+
+/*
  * Clipped, not removed: nothing draws the article's title on this page any more
  * — the header's breadcrumb does — but the heading still names the page for
  * assistive technology and is what the route-change focus handoff moves to.

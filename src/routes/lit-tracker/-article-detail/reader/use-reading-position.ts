@@ -43,6 +43,8 @@ interface UseReadingPositionOptions {
   /** Where this paper was left, as stored when the reader opened. */
   saved: ReadingPosition | null
   save: (position: ReadingPosition) => void
+  /** True while the reader is hidden behind another view. See below. */
+  paused?: boolean
 }
 
 /**
@@ -67,6 +69,19 @@ interface UseReadingPositionOptions {
  * `pagehide` and a hidden tab — the last events a phone reliably gives when a
  * reader switches apps — and unmount, for leaving within the app. Movement of
  * less than a line is not saved.
+ *
+ * **Scrolling is ignored while paused** — the reader hidden behind the citations
+ * view (features/citation-graph-traversal). A hidden panel has no layout: its
+ * scroll offset reads 0 while the browser keeps the real one for its return, so
+ * anything reported from it is not where the paper was left. Chrome was measured
+ * to report nothing at all there; the guard is what makes that a guarantee
+ * rather than an engine's current habit. A position already waiting for its
+ * second when the reader was hidden is still written — that one was real.
+ *
+ * The pause is read from a ref assigned during render rather than set up in an
+ * effect, so it is already in force at the commit that hides the panel — before
+ * any `ResizeObserver` callback the hiding sets off, and before React runs
+ * effects.
  */
 export function useReadingPosition({
   documentId,
@@ -74,12 +89,15 @@ export function useReadingPosition({
   viewportGap,
   saved,
   save,
+  paused = false,
 }: UseReadingPositionOptions): void {
   const initial = useRef(saved)
   const saveRef = useRef(save)
   saveRef.current = save
   const gap = useRef(viewportGap)
   gap.current = viewportGap
+  const pausedRef = useRef(paused)
+  pausedRef.current = paused
   /**
    * Whether the restore has happened, and the position last written or
    * restored — what movement is measured from. Refs, not effect locals: the
@@ -132,7 +150,11 @@ export function useReadingPosition({
     })
 
     const stopScroll = scroll.onScroll((event) => {
-      if (event.documentId !== documentId || !restored.current) {
+      if (
+        event.documentId !== documentId ||
+        !restored.current ||
+        pausedRef.current
+      ) {
         return
       }
       const position = positionFromMetrics(

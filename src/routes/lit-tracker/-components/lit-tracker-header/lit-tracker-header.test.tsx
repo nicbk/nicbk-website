@@ -63,7 +63,7 @@ describe('LitTrackerHeader', () => {
     expect(screen.queryByRole('link', { name: /Nicolás/ })).toBeNull()
   })
 
-  it('orders the right-hand group: path, account, then theme toggle', () => {
+  it('orders the right-hand group: path, account, credits, then theme toggle', () => {
     renderHeader()
     const header = screen.getByRole('banner')
 
@@ -77,6 +77,11 @@ describe('LitTrackerHeader', () => {
     // from the foot of the sidebar at the user's request (2026-08-09).
     expect(header.children[2]).toBe(
       screen.getByRole('button', { name: 'Account settings' }),
+    )
+    // Semantic Scholar's attribution, beside the account control (user-decided
+    // 2026-09-15; see credits.tsx).
+    expect(header.children[3]).toBe(
+      screen.getByRole('button', { name: 'credits' }),
     )
     // Without the toggle here the tracker would be the one place on the site
     // with no way to change theme, since it does not use the site-wide header.

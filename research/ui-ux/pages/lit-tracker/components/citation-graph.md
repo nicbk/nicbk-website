@@ -62,3 +62,22 @@ Spec'd as [`citation-graph-traversal`](../../../../../features/citation-graph-tr
   returning to a paper on it cuts it back, each step is labelled cites / cited
   by, the middle folds into "…" past three, and it is kept in the URL. A plain
   trail was rejected as unwieldy after a few hops.
+
+## Revision (2026-09-15), decided with the user at implementation
+
+After using the first build:
+
+- **Two tabs, the two directions**: *cites* and *cited by*. The three traversal
+  modes above survive as structure rather than tabs: *cites* groups the papers
+  in your collection first and the rest under *elsewhere*. Three tabs — in your
+  collection, cited by, not in your collection — read as three places.
+- **The "N of M references read" shortfall is dropped.** Semantic Scholar's
+  reference count disagreed with the printed bibliography on three of four local
+  papers, so the message reported losses that had not happened.
+- **The Semantic Scholar credit moves to the tracker header** (an information
+  button opening a credits popup; see [header.md](./header.md)). Its licence
+  requires attribution on the website, not on each page using the data, and in
+  the view it cost a row of the panel.
+- **The view's tab rule lines up with the sidebar's**, which it sits beside.
+- **Switching to and from the view is a history entry**, so Back from the lists
+  returns to the paper.

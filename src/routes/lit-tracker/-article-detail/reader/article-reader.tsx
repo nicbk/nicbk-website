@@ -49,6 +49,16 @@ interface ArticleReaderProps {
   readingPosition?: ReadingPosition | null
   /** Called, at most about once a second, as the reader moves through it. */
   onReadingPositionChange?: (position: ReadingPosition) => void
+  /**
+   * True while the page shows the citations view in the reader's place.
+   *
+   * The page hides the reader rather than unmounting it, so the paper is still
+   * open, at the same place, when it comes back (decided with the user,
+   * features/citation-graph-traversal). Hiding is the page's to do; what the
+   * reader does with this is **stop saving its position** — a reader nobody can
+   * see has not moved anywhere worth remembering.
+   */
+  hidden?: boolean
 }
 
 export function ArticleReader({
@@ -56,6 +66,7 @@ export function ArticleReader({
   actions,
   readingPosition,
   onReadingPositionChange,
+  hidden = false,
 }: ArticleReaderProps) {
   // The same frame the loaded reader has, so the panel's shape is settled from
   // the first paint and only its contents change. `starting` is the honest
@@ -79,6 +90,7 @@ export function ArticleReader({
           actions={actions}
           readingPosition={readingPosition}
           onReadingPositionChange={onReadingPositionChange}
+          hidden={hidden}
         />
       </Suspense>
     </ClientOnly>

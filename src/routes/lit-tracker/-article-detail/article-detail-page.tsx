@@ -1,10 +1,14 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { PanelLeft } from 'lucide-react'
+import { useState } from 'react'
 import { ArticleMenu } from '~/routes/lit-tracker/-components/article-menu/article-menu'
 import { NarrowScreenDrawer } from '~/routes/lit-tracker/-components/narrow-screen-drawer/narrow-screen-drawer'
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { ArticleDetails } from './article-details'
 import { ArticleSidebar, SIDEBAR_LABEL } from './article-sidebar'
+import type { ArticleView } from './article-view'
+import { CitationsView } from './citations/citations-view'
+import { useCitations } from './citations/use-citations'
 import type { DetailArticle } from './detail-article'
 import { ArticleReader } from './reader/article-reader'
 import type { ReadingPosition } from './reader/reading-position'
@@ -31,6 +35,9 @@ const ERROR_MESSAGE = 'could not load this article.'
 
 interface ArticleDetailPageProps {
   articleId: string
+  /** The reader, or the citations view in its place. From the URL. */
+  view: ArticleView
+  onViewChange: (view: ArticleView) => void
 }
 
 /**
@@ -59,11 +66,30 @@ interface ArticleDetailPageProps {
  * matched route, exactly as it already does for the collection's filters. What
  * this page does render is the *sheet* copy of it, below the breakpoint, through
  * the trigger it hands to the reader's toolbar.
+ *
+ * **The citations view takes the reader's place without unmounting it**
+ * (features/citation-graph-traversal). The reader is hidden with the `hidden`
+ * attribute — no layout, no focus, no pointer — and stays open behind it, so
+ * choosing any other tab shows the same page at the same place with nothing
+ * reloaded. Measured before building: a remount costs ~0.4s of blank panel on
+ * `nicbk.com` and loses the place; hidden, Chrome kept the scroll offset and the
+ * zoom exactly and redrew nothing.
+ *
+ * **The page's controls go wherever the page is showing.** They sit at the end
+ * of the reader's toolbar, which is hidden with the reader, so the citations view
+ * takes them while it shows. Rendered in one place at a time, never two: the
+ * sheet is a single dialog, and two mounted copies would open two sheets.
  */
-export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
+export function ArticleDetailPage({
+  articleId,
+  view,
+  onViewChange,
+}: ArticleDetailPageProps) {
   const { state, article, tags, allTags } = useArticleDetail(articleId)
+  const citations = useCitations(articleId)
   const mutations = useArticleMutations()
   const navigate = useNavigate()
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   if (state === 'syncing') {
     return <p className={styles.notice}>{SYNCING_MESSAGE}</p>
@@ -91,70 +117,98 @@ export function ArticleDetailPage({ articleId }: ArticleDetailPageProps) {
   }
 
   const appliedTagIds = new Set(tags.map((tag) => tag.id))
+  const showingCitations = view === 'citations'
+
+  const actions = (
+    <>
+      <NarrowScreenDrawer
+        label={SIDEBAR_LABEL}
+        icon={PanelLeft}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      >
+        {/*
+                An element, not a rendered tree: the sheet mounts it only while
+                open, so the sidebar's queries and its tab state exist once at a
+                time even though two surfaces can show it.
+              */}
+        <ArticleSidebar
+          articleId={articleId}
+          view={view}
+          onViewChange={(next) => {
+            // Choosing Citations in the sheet closes it, so what the
+            // reader sees is the lists they asked for rather than the
+            // sheet still covering them. Any other tab is shown in the
+            // sheet itself, which stays open.
+            if (next === 'citations') {
+              setSheetOpen(false)
+            }
+            onViewChange(next)
+          }}
+        />
+      </NarrowScreenDrawer>
+
+      <ArticleMenu
+        article={article}
+        onSaveDetails={(details) => mutations.updateDetails(articleId, details)}
+        onDelete={() => {
+          // Leave first, then delete. Zero applies the delete to the
+          // local copy immediately, so staying would put this page into
+          // its own "no such article in your collection" branch — a dead
+          // end presented to the reader who just asked for it, which
+          // reads as an error rather than as the thing working. The
+          // collection is where they were before this article and the
+          // only place left to be. A refusal still arrives, as a toast,
+          // once the server has answered.
+          void navigate({ to: '/lit-tracker' })
+          void mutations.deleteArticle(articleId)
+        }}
+        // The card's menu, unchanged in what it does — #11 added "edit…"
+        // and "delete…" to this one rather than building a second. What
+        // this surface adds is the article's own details at the top, since
+        // nothing else on the page shows them any more.
+        details={<ArticleDetails article={article} />}
+        // The menu opens over the reader's floating toolbar, which would
+        // otherwise stay lit and clickable behind it.
+        modal
+        status={article.status ?? 'pending'}
+        allTags={allTags}
+        appliedTagIds={appliedTagIds}
+        onSetStatus={(status) => mutations.setStatus(articleId, status)}
+        onToggleTag={(tagId, applied) =>
+          applied
+            ? mutations.applyTag(articleId, tagId)
+            : mutations.removeTag(articleId, tagId)
+        }
+        onCreateTag={(name) => mutations.createAndApplyTag(articleId, name)}
+      />
+    </>
+  )
 
   return (
     <div className={styles.page}>
       {/* Clipped, not removed — see this component's docblock. */}
       <h1 className={styles.heading}>{article.title}</h1>
 
-      <ArticleReader
-        articleId={articleId}
-        readingPosition={readingPositionOf(article)}
-        onReadingPositionChange={(position) =>
-          mutations.setReadingPosition(articleId, position)
-        }
-        actions={
-          <>
-            <NarrowScreenDrawer label={SIDEBAR_LABEL} icon={PanelLeft}>
-              {/*
-                An element, not a rendered tree: the sheet mounts it only while
-                open, so the sidebar's queries and its tab state exist once at a
-                time even though two surfaces can show it.
-              */}
-              <ArticleSidebar articleId={articleId} />
-            </NarrowScreenDrawer>
+      <div className={styles.main} hidden={showingCitations}>
+        <ArticleReader
+          articleId={articleId}
+          readingPosition={readingPositionOf(article)}
+          onReadingPositionChange={(position) =>
+            mutations.setReadingPosition(articleId, position)
+          }
+          hidden={showingCitations}
+          actions={showingCitations ? undefined : actions}
+        />
+      </div>
 
-            <ArticleMenu
-              article={article}
-              onSaveDetails={(details) =>
-                mutations.updateDetails(articleId, details)
-              }
-              onDelete={() => {
-                // Leave first, then delete. Zero applies the delete to the
-                // local copy immediately, so staying would put this page into
-                // its own "no such article in your collection" branch — a dead
-                // end presented to the reader who just asked for it, which
-                // reads as an error rather than as the thing working. The
-                // collection is where they were before this article and the
-                // only place left to be. A refusal still arrives, as a toast,
-                // once the server has answered.
-                void navigate({ to: '/lit-tracker' })
-                void mutations.deleteArticle(articleId)
-              }}
-              // The card's menu, unchanged in what it does — #11 added "edit…"
-              // and "delete…" to this one rather than building a second. What
-              // this surface adds is the article's own details at the top, since
-              // nothing else on the page shows them any more.
-              details={<ArticleDetails article={article} />}
-              // The menu opens over the reader's floating toolbar, which would
-              // otherwise stay lit and clickable behind it.
-              modal
-              status={article.status ?? 'pending'}
-              allTags={allTags}
-              appliedTagIds={appliedTagIds}
-              onSetStatus={(status) => mutations.setStatus(articleId, status)}
-              onToggleTag={(tagId, applied) =>
-                applied
-                  ? mutations.applyTag(articleId, tagId)
-                  : mutations.removeTag(articleId, tagId)
-              }
-              onCreateTag={(name) =>
-                mutations.createAndApplyTag(articleId, name)
-              }
-            />
-          </>
-        }
-      />
+      {showingCitations ? (
+        <CitationsView
+          state={citations.state}
+          lists={citations.lists}
+          actions={actions}
+        />
+      ) : null}
     </div>
   )
 }

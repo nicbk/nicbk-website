@@ -28,6 +28,12 @@ actually appears to the user. Exact placement/wording is a UI implementation
 detail, not a licensing decision — the requirement is just that a credit
 must exist somewhere in that view.
 
+**Re-read 2026-09-15** (the licence page, Section 4): the obligation is to
+attribute "on its website or in any published materials", with no placement,
+wording or linking rules. A credit per view is therefore more than required.
+Placed, with the user, in the Lit Tracker header's credits popup
+([header.md](../ui-ux/pages/lit-tracker/components/header.md)).
+
 ## GROBID — no end-user-facing attribution needed
 
 GROBID is Apache 2.0 and self-hosted as an unmodified processing service,

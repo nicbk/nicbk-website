@@ -1,6 +1,6 @@
 # Status: Citation-Graph Traversal
 
-**Feature state:** **In progress** (2026-09-14): 5 tasks; tasks 1–2 merged, task 3 in review.
+**Feature state:** **In progress** (2026-09-14): 5 tasks; tasks 1–3 merged, task 4 in review.
 
 Spec written against `main` at `daa8fc2`. See [research.md](./research.md).
 
@@ -19,8 +19,8 @@ completion.
 |---|---|---|---|---|
 | [`the-references-can-be-trusted`](./tasks/the-references-can-be-trusted/status.md) | Complete ([#202](https://github.com/nicbk/nicbk-website/issues/202)) | [#208](https://github.com/nicbk/nicbk-website/pull/208) | Pass | Merged |
 | [`older-papers-are-re-read`](./tasks/older-papers-are-re-read/status.md) | Complete ([#207](https://github.com/nicbk/nicbk-website/issues/207)) | [#209](https://github.com/nicbk/nicbk-website/pull/209) | Pass | Merged |
-| [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | In review ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | pending | pending | pending |
-| [`the-citations-view`](./tasks/the-citations-view/status.md) | Not started ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | — | — | — |
+| [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | Complete ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | [#210](https://github.com/nicbk/nicbk-website/pull/210) | Pass | Merged |
+| [`the-citations-view`](./tasks/the-citations-view/status.md) | In review ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | [#211](https://github.com/nicbk/nicbk-website/pull/211) | pending | pending |
 | [`the-way-back`](./tasks/the-way-back/status.md) | Not started ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -36,6 +36,7 @@ flow checked in Safari on `nicbk.com`.
 - **Outside references link to Semantic Scholar** (revised with the user).
 - **The re-read never writes a field a reader can edit.**
 - **The re-read is visible**: one summary row while it runs; a failure stays, with try again and no dismiss (decided with the user).
+- **Two directions, not three places**: the citations view is *cites* (grouped into your collection and elsewhere) and *cited by*; no count comparison; the Semantic Scholar credit is in the tracker header (decided with the user after trying the first build).
 
 ## Log
 
@@ -51,3 +52,4 @@ flow checked in Safari on `nicbk.com`.
   succeeds. `references_read_at` added to mark papers already read.
 - 2026-09-14 — #208 merged. Task 2 implemented; verified on the local stack, including a real try again through Semantic Scholar's rate limiting.
 - 2026-09-15 — #209 merged. Task 3 implemented: owner-scoped citation queries, first use of `related()`.
+- 2026-09-15 — #210 merged. Task 4 implemented (#211), then reworked after the user tried it: two tabs, no shortfall message, credits in the header.

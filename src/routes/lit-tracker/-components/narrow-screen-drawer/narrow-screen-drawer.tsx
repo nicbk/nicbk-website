@@ -1,7 +1,7 @@
 import { Drawer } from '@base-ui/react/drawer'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import styles from './narrow-screen-drawer.module.css'
 
 /**
@@ -25,6 +25,13 @@ interface NarrowScreenDrawerProps {
   icon: LucideIcon
   /** What the sheet holds. Mounted only while it is open. */
   children: ReactNode
+  /**
+   * Whether the sheet is open, for a page that has to close it itself — the
+   * article page closes it when the Citations tab replaces what is behind it.
+   * Left out, the sheet keeps its own state, as the collection's does.
+   */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 /**
@@ -57,8 +64,18 @@ export function NarrowScreenDrawer({
   label,
   icon: Icon,
   children,
+  open: controlledOpen,
+  onOpenChange,
 }: NarrowScreenDrawerProps) {
-  const [open, setOpen] = useState(false)
+  const [ownOpen, setOwnOpen] = useState(false)
+  const open = controlledOpen ?? ownOpen
+  const setOpen = useCallback(
+    (next: boolean) => {
+      setOwnOpen(next)
+      onOpenChange?.(next)
+    },
+    [onOpenChange],
+  )
 
   /**
    * Close the sheet if the window grows past the breakpoint while it is open.
@@ -84,10 +101,14 @@ export function NarrowScreenDrawer({
     }
     narrow.addEventListener('change', closeIfWide)
     return () => narrow.removeEventListener('change', closeIfWide)
-  }, [open])
+  }, [open, setOpen])
 
   return (
-    <Drawer.Root open={open} onOpenChange={setOpen} swipeDirection="down">
+    <Drawer.Root
+      open={open}
+      onOpenChange={(next) => setOpen(next)}
+      swipeDirection="down"
+    >
       {/* The name is on the button rather than left to its text, because the
           text goes away on the narrowest screens — see the stylesheet. */}
       <Drawer.Trigger className={styles.trigger} aria-label={label}>

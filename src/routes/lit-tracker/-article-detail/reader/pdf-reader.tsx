@@ -90,6 +90,8 @@ interface PdfReaderProps {
   readingPosition?: ReadingPosition | null
   /** Called as the reader moves through the paper. See `useReadingPosition`. */
   onReadingPositionChange?: (position: ReadingPosition) => void
+  /** True while the page shows something else in the reader's place. See `ArticleReader`. */
+  hidden?: boolean
 }
 
 export function PdfReader({
@@ -97,6 +99,7 @@ export function PdfReader({
   actions,
   readingPosition,
   onReadingPositionChange,
+  hidden = false,
 }: PdfReaderProps) {
   const {
     engine,
@@ -145,6 +148,7 @@ export function PdfReader({
         actions={actions}
         readingPosition={readingPosition}
         onReadingPositionChange={onReadingPositionChange}
+        hidden={hidden}
       />
     </EmbedPDF>
   )
@@ -162,6 +166,7 @@ function ReaderDocument({
   actions,
   readingPosition = null,
   onReadingPositionChange,
+  hidden = false,
 }: PdfReaderProps) {
   const documentState = useDocumentState(articleId)
   const { state: scroll, provides: scrollScope } = useScroll(articleId)
@@ -357,6 +362,7 @@ function ReaderDocument({
     viewportGap: viewport?.getViewportGap() ?? 0,
     saved: readingPosition,
     save: (position) => onReadingPositionChange?.(position),
+    paused: hidden,
   })
 
   return (

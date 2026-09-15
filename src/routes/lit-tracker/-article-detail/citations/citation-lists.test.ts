@@ -2,14 +2,15 @@ import { describe, expect, it } from 'vitest'
 import type { CitationArticle, CitationEdge } from './citation-lists'
 import {
   citationLists,
-  citationNotices,
+  citationNotice,
+  citesCount,
   noticeText,
   semanticScholarUrl,
 } from './citation-lists'
 
 /**
- * Which list a citation belongs to, in what order, and which sentence explains
- * a list — the rules the citations view promises, without React.
+ * Which group a citation belongs to, in what order, and which sentence explains
+ * an empty tab — the rules the citations view promises, without React.
  */
 
 let next = 0
@@ -41,19 +42,19 @@ function edge(fields: Partial<CitationEdge> = {}): CitationEdge {
 }
 
 describe('citationLists', () => {
-  it('puts a reference with its article in the collection, and one without outside', () => {
+  it('groups what it cites by whether the cited paper is in the collection', () => {
     const bert = article('BERT', 2019)
     const lists = citationLists(
       [edge({ citedArticle: bert }), edge({ title: 'Adam' })],
       [],
     )
 
-    expect(lists.inCollection).toEqual([bert])
-    expect(lists.outside.map((row) => row.title)).toEqual(['Adam'])
-    expect(lists.referencesRead).toBe(2)
+    expect(lists.cites.inCollection).toEqual([bert])
+    expect(lists.cites.elsewhere.map((row) => row.title)).toEqual(['Adam'])
+    expect(citesCount(lists)).toBe(2)
   })
 
-  it('treats a missing related article as outside, whether null or undefined', () => {
+  it('treats a missing related article as elsewhere, whether null or undefined', () => {
     // The client gives `undefined` for a relation with no row and server-side
     // ZQL gives `null`; an edge pointing at another account's article arrives
     // as either, because the query scopes the relation to its owner.
@@ -62,8 +63,8 @@ describe('citationLists', () => {
       [edge({ citingArticle: null }), edge({})],
     )
 
-    expect(lists.inCollection).toEqual([])
-    expect(lists.outside).toHaveLength(2)
+    expect(lists.cites.inCollection).toEqual([])
+    expect(lists.cites.elsewhere).toHaveLength(2)
     expect(lists.citedBy).toEqual([])
   })
 
@@ -84,11 +85,11 @@ describe('citationLists', () => {
     )
 
     // Ties keep the paper's own order.
-    expect(lists.inCollection).toEqual([recent, alsoRecent, old, undated])
+    expect(lists.cites.inCollection).toEqual([recent, alsoRecent, old, undated])
     expect(lists.citedBy).toEqual([recent, old])
   })
 
-  it('keeps outside references in the order the paper printed them', () => {
+  it('keeps references elsewhere in the order the paper printed them', () => {
     const lists = citationLists(
       [
         edge({ title: 'Zeta', publicationYear: 2020 }),
@@ -98,7 +99,7 @@ describe('citationLists', () => {
       [],
     )
 
-    expect(lists.outside.map((row) => row.title)).toEqual([
+    expect(lists.cites.elsewhere.map((row) => row.title)).toEqual([
       'Zeta',
       'Alpha',
       'Mu',
@@ -109,10 +110,12 @@ describe('citationLists', () => {
     const bert = article('BERT', 2019)
     const lists = citationLists(
       [edge({ citedArticle: bert }), edge({ citedArticle: bert })],
-      [],
+      [edge({ citingArticle: bert }), edge({ citingArticle: bert })],
     )
 
-    expect(lists.inCollection).toEqual([bert])
+    expect(lists.cites.inCollection).toEqual([bert])
+    expect(lists.citedBy).toEqual([bert])
+    expect(citesCount(lists)).toBe(1)
   })
 
   it('carries the printed text, and a link only for a Semantic Scholar id', () => {
@@ -127,12 +130,12 @@ describe('citationLists', () => {
       [],
     )
 
-    expect(lists.outside[0]).toMatchObject({
+    expect(lists.cites.elsewhere[0]).toMatchObject({
       rawText: 'A. Vaswani. Attention. 2017.',
       semanticScholarUrl: 'https://www.semanticscholar.org/paper/abc',
     })
     // Blank printed text is no printed text, so the row falls back to title.
-    expect(lists.outside[1]).toMatchObject({
+    expect(lists.cites.elsewhere[1]).toMatchObject({
       rawText: null,
       semanticScholarUrl: null,
     })
@@ -149,79 +152,45 @@ describe('semanticScholarUrl', () => {
   })
 })
 
-describe('citationNotices', () => {
+describe('citationNotice', () => {
   const bert = article('BERT', 2019)
 
   it('says the bibliography was not read when there are no references at all', () => {
-    const lists = citationLists([], [])
-
-    expect(citationNotices('in-collection', lists, 41)).toEqual([
-      { kind: 'not-read' },
-    ])
-    expect(citationNotices('outside', lists, null)).toEqual([
-      { kind: 'not-read' },
-    ])
+    expect(citationNotice('cites', citationLists([], []))).toBe('not-read')
   })
 
-  it('says it cites nothing in the collection when references exist but none are', () => {
-    const lists = citationLists([edge()], [])
-
-    expect(citationNotices('in-collection', lists, null)).toEqual([
-      { kind: 'none-in-collection' },
-    ])
+  it('says it cites nothing in the collection when every reference is elsewhere', () => {
+    expect(citationNotice('cites', citationLists([edge()], []))).toBe(
+      'none-in-collection',
+    )
   })
 
-  it('counts a shortfall against Semantic Scholar on both reference tabs', () => {
-    const lists = citationLists([edge({ citedArticle: bert }), edge()], [])
-
-    expect(citationNotices('in-collection', lists, 41)).toEqual([
-      { kind: 'partly-read', read: 2, total: 41 },
-    ])
-    expect(citationNotices('outside', lists, 41)).toEqual([
-      { kind: 'partly-read', read: 2, total: 41 },
-    ])
-  })
-
-  it('claims no shortfall without a count, or when the count is met', () => {
-    const lists = citationLists([edge({ citedArticle: bert }), edge()], [])
-
-    expect(citationNotices('outside', lists, null)).toEqual([])
-    expect(citationNotices('outside', lists, 2)).toEqual([])
-    expect(citationNotices('outside', lists, 1)).toEqual([])
-  })
-
-  it('says when everything cited is in the collection', () => {
-    const lists = citationLists([edge({ citedArticle: bert })], [])
-
-    expect(citationNotices('outside', lists, null)).toEqual([
-      { kind: 'all-in-collection' },
-    ])
+  it('says nothing when some of what it cites is in the collection', () => {
+    expect(
+      citationNotice(
+        'cites',
+        citationLists([edge({ citedArticle: bert }), edge()], []),
+      ),
+    ).toBeNull()
   })
 
   it('says when nothing in the collection cites it, whatever its references', () => {
-    expect(citationNotices('cited-by', citationLists([], []), 41)).toEqual([
-      { kind: 'not-cited' },
-    ])
+    expect(citationNotice('cited-by', citationLists([edge()], []))).toBe(
+      'not-cited',
+    )
     expect(
-      citationNotices(
+      citationNotice(
         'cited-by',
         citationLists([], [edge({ citingArticle: bert })]),
-        41,
       ),
-    ).toEqual([])
+    ).toBeNull()
   })
 
   it('words each notice', () => {
-    expect(noticeText({ kind: 'not-read' })).toBe(
-      'its bibliography was not read.',
-    )
-    expect(noticeText({ kind: 'none-in-collection' })).toBe(
+    expect(noticeText('not-read')).toBe('its bibliography was not read.')
+    expect(noticeText('none-in-collection')).toBe(
       'it cites nothing else in your collection.',
     )
-    expect(noticeText({ kind: 'partly-read', read: 40, total: 41 })).toBe(
-      '40 of 41 references read.',
-    )
-    expect(noticeText({ kind: 'all-in-collection' })).toMatch(/everything/)
-    expect(noticeText({ kind: 'not-cited' })).toMatch(/nothing .* cites it/)
+    expect(noticeText('not-cited')).toBe('nothing in your collection cites it.')
   })
 })

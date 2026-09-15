@@ -36,7 +36,7 @@ flow checked in Safari on `nicbk.com`.
 - **Outside references link to Semantic Scholar** (revised with the user).
 - **The re-read never writes a field a reader can edit.**
 - **The re-read is visible**: one summary row while it runs; a failure stays, with try again and no dismiss (decided with the user).
-- **On a phone the citations view's controls sit in the credit row**, and its tabs show a glyph, count and short word (decided with the user).
+- **Two directions, not three places**: the citations view is *cites* (grouped into your collection and elsewhere) and *cited by*; no count comparison; the Semantic Scholar credit is in the tracker header (decided with the user after trying the first build).
 
 ## Log
 
@@ -52,4 +52,4 @@ flow checked in Safari on `nicbk.com`.
   succeeds. `references_read_at` added to mark papers already read.
 - 2026-09-14 — #208 merged. Task 2 implemented; verified on the local stack, including a real try again through Semantic Scholar's rate limiting.
 - 2026-09-15 — #209 merged. Task 3 implemented: owner-scoped citation queries, first use of `related()`.
-- 2026-09-15 — #210 merged. Task 4 implemented; the phone layout of the citations view decided with the user.
+- 2026-09-15 — #210 merged. Task 4 implemented (#211), then reworked after the user tried it: two tabs, no shortfall message, credits in the header.

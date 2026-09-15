@@ -206,7 +206,6 @@ export function ArticleDetailPage({
         <CitationsView
           state={citations.state}
           lists={citations.lists}
-          referenceCount={article.referenceCount ?? null}
           actions={actions}
         />
       ) : null}

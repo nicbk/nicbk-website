@@ -77,8 +77,8 @@ describe('useCitations', () => {
     const { result } = renderHook(() => useCitations(ARTICLE_ID))
 
     expect(result.current.state).toBe('ready')
-    expect(result.current.lists.outside.map((row) => row.title)).toEqual([
-      'Adam',
-    ])
+    expect(
+      result.current.lists.cites.elsewhere.map((row) => row.title),
+    ).toEqual(['Adam'])
   })
 })

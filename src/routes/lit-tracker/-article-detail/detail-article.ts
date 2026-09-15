@@ -27,12 +27,6 @@ export interface DetailArticle extends EditableArticle {
   /** Where the reader left off; both null until the paper is first read. */
   readingPage: number | null
   readingOffset: number | null
-  /**
-   * Semantic Scholar's count of the paper's references, or null when it was
-   * never matched there. The citations view compares it with the references
-   * actually read.
-   */
-  referenceCount: number | null
 }
 
 /**

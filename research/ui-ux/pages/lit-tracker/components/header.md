@@ -185,3 +185,14 @@ breadcrumb, which stays rooted at the personal site. The slot shows a short path
 The rules are in
 [`citation-graph-traversal`](../../../../../features/citation-graph-traversal/constraints-and-behavior.md#the-way-back).
 With no path, the slot shows the title alone, as before.
+
+## Revision (2026-09-15): a credits button
+
+Decided with the user during
+[`citation-graph-traversal`](../../../../../features/citation-graph-traversal/constraints-and-behavior.md#the-citations-view).
+An information button sits right of the account avatar, before the theme
+toggle, and opens a small *credits* popup: "paper metadata and citations from
+Semantic Scholar", linked. It carries the attribution Semantic Scholar's licence
+asks for ([third-party-attribution-requirements.md](../../../../licensing/third-party-attribution-requirements.md)),
+which first sat at the foot of the citations view. Tracker header only: the
+personal site shows no Semantic Scholar data.

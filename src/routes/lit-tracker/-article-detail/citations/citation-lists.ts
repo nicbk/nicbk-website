@@ -4,9 +4,16 @@ import type { Author } from '~/db/schema/lit-tracker'
  * What the citations view shows, worked out from the two synced queries
  * (`queries.citationEdges.references` and `.citedBy`) without touching React.
  *
- * Kept pure so every rule the view promises — which list a row belongs to, the
- * order, the counts, and which sentence explains an empty or partial list — is
- * asserted directly (features/citation-graph-traversal, task 4).
+ * Kept pure so every rule the view promises — which group a row belongs to, the
+ * order, and which sentence explains an empty tab — is asserted directly
+ * (features/citation-graph-traversal, task 4).
+ *
+ * **Two directions, not three places** (user-decided 2026-09-15). A paper's
+ * citations are its forward edges, *what it cites*, and its backward edges,
+ * *what cites it*. The first version split the forward edges into two tabs of
+ * their own beside "cited by", and the labels read as three places rather than
+ * two directions. Whether a cited paper is in the collection is now a grouping
+ * inside "cites".
  */
 
 /** The fields of an article this view draws. */
@@ -51,21 +58,22 @@ export interface OutsideReference {
 }
 
 export interface CitationLists {
-  /** Papers this one cites that are in the collection, newest first. */
-  inCollection: CitationArticle[]
+  /** What this paper cites. */
+  cites: {
+    /** The cited papers that are in the collection, newest first. */
+    inCollection: CitationArticle[]
+    /** Everything else it cites, in the paper's own order. */
+    elsewhere: OutsideReference[]
+  }
   /** Papers in the collection that cite this one, newest first. */
   citedBy: CitationArticle[]
-  /** Everything else this one cites, in the paper's own order. */
-  outside: OutsideReference[]
-  /** How many references were read, in or out of the collection. */
-  referencesRead: number
 }
 
 /**
- * Sorts the synced rows into the three lists.
+ * Sorts the synced rows into the lists.
  *
  * `references` arrives in edge-id order, which is the order the bibliography
- * was parsed in — the paper's own — so the outside list keeps it untouched.
+ * was parsed in — the paper's own — so the "elsewhere" group keeps it untouched.
  *
  * **A paper appears once per list.** A bibliography can hold the same work
  * twice (a preprint and its proceedings version, both resolved to the one
@@ -76,14 +84,14 @@ export function citationLists(
   references: readonly CitationEdge[],
   citedBy: readonly CitationEdge[],
 ): CitationLists {
-  const outside: OutsideReference[] = []
+  const elsewhere: OutsideReference[] = []
   const inCollection: CitationArticle[] = []
 
   for (const edge of references) {
     if (edge.citedArticle) {
       inCollection.push(edge.citedArticle)
     } else {
-      outside.push({
+      elsewhere.push({
         id: edge.id,
         rawText: blankToNull(edge.rawText),
         title: edge.title,
@@ -99,79 +107,58 @@ export function citationLists(
   )
 
   return {
-    inCollection: newestFirst(onePerArticle(inCollection)),
+    cites: {
+      inCollection: newestFirst(onePerArticle(inCollection)),
+      elsewhere,
+    },
     citedBy: newestFirst(onePerArticle(citing)),
-    outside,
-    referencesRead: references.length,
   }
 }
 
-/** Which sentence, if any, explains a list. */
-export type CitationNotice =
-  | { kind: 'not-read' }
-  | { kind: 'none-in-collection' }
-  | { kind: 'all-in-collection' }
-  | { kind: 'not-cited' }
-  | { kind: 'partly-read'; read: number; total: number }
+/** How many rows a "cites" tab shows: both groups together. */
+export function citesCount(lists: CitationLists): number {
+  return lists.cites.inCollection.length + lists.cites.elsewhere.length
+}
 
-export type CitationTab = 'in-collection' | 'cited-by' | 'outside'
+export type CitationTab = 'cites' | 'cited-by'
+
+/** The sentence, if any, that stands in for or introduces a tab's rows. */
+export type CitationNotice = 'not-read' | 'none-in-collection' | 'not-cited'
 
 /**
- * The sentences a tab shows above (or instead of) its rows.
+ * Which sentence a tab needs.
  *
- * **Empty and incomplete are different**, and the reader is told which:
- *  - no references at all means the bibliography was never read — not that the
- *    paper cites nothing;
- *  - references, none of them in the collection, is a real answer;
- *  - fewer references than Semantic Scholar counts means some were missed, so
- *    the two reference tabs say how many of how many.
+ * **Empty is not one thing.** A paper with no references at all had its
+ * bibliography go unread — it did not cite nothing. A paper whose references
+ * are all elsewhere is a real answer, and says so above them.
  *
- * `referenceCount` is Semantic Scholar's, and `null` when the paper was never
- * matched there — in which case no shortfall can be claimed.
+ * There is deliberately no comparison with Semantic Scholar's reference count.
+ * The first version said "40 of 41 references read", and nothing was missing:
+ * the count disagreed with the printed bibliography on three of the four local
+ * papers (user-decided 2026-09-15 to drop it).
  */
-export function citationNotices(
+export function citationNotice(
   tab: CitationTab,
   lists: CitationLists,
-  referenceCount: number | null,
-): CitationNotice[] {
+): CitationNotice | null {
   if (tab === 'cited-by') {
-    return lists.citedBy.length === 0 ? [{ kind: 'not-cited' }] : []
+    return lists.citedBy.length === 0 ? 'not-cited' : null
   }
-
-  if (lists.referencesRead === 0) {
-    return [{ kind: 'not-read' }]
+  if (citesCount(lists) === 0) {
+    return 'not-read'
   }
-
-  const notices: CitationNotice[] = []
-  if (referenceCount !== null && referenceCount > lists.referencesRead) {
-    notices.push({
-      kind: 'partly-read',
-      read: lists.referencesRead,
-      total: referenceCount,
-    })
-  }
-  if (tab === 'in-collection' && lists.inCollection.length === 0) {
-    notices.push({ kind: 'none-in-collection' })
-  }
-  if (tab === 'outside' && lists.outside.length === 0) {
-    notices.push({ kind: 'all-in-collection' })
-  }
-  return notices
+  return lists.cites.inCollection.length === 0 ? 'none-in-collection' : null
 }
 
 /** The words for each notice. */
 export function noticeText(notice: CitationNotice): string {
-  switch (notice.kind) {
+  switch (notice) {
     case 'not-read':
       return 'its bibliography was not read.'
     case 'none-in-collection':
       return 'it cites nothing else in your collection.'
-    case 'all-in-collection':
-      return 'everything it cites is in your collection.'
     case 'not-cited':
       return 'nothing in your collection cites it.'
-    case 'partly-read':
-      return `${notice.read} of ${notice.total} references read.`
   }
 }
 

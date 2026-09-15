@@ -4,6 +4,7 @@ import { HeaderRow } from '~/routes/-shared/components/header-row/header-row'
 import { ThemeToggle } from '~/routes/-shared/components/theme-toggle/theme-toggle'
 import type { AvatarAccount } from '../account-avatar/account-avatar'
 import { AccountAvatar } from '../account-avatar/account-avatar'
+import { Credits } from '../credits/credits'
 import styles from './lit-tracker-header.module.css'
 
 /**
@@ -127,6 +128,10 @@ export function LitTrackerHeader({
         onSignedOut={onSignedOut}
         onDeleted={onDeleted}
       />
+
+      {/* Semantic Scholar's attribution, which its licence asks for somewhere on
+          the site rather than beside every paper (`credits.tsx`). */}
+      <Credits />
 
       <ThemeToggle />
     </HeaderRow>

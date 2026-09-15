@@ -18,27 +18,39 @@
 
 ### The citations view
 
-- **Three tabs**, each with a count: *in your collection*, *cited by*, *not in
-  your collection*.
+Revised with the user at implementation (2026-09-15), after trying the first
+version: three tabs read as three places rather than two directions, and the
+count comparison claimed losses that had not happened.
+
+- **Two tabs**, each with a count: *cites* (the paper's forward edges) and
+  *cited by* (papers in the collection that cite it).
+- **Inside *cites*, two groups**, each headed with its count: *in your
+  collection* first, then *elsewhere*. An empty group is not shown.
 - **In your collection / cited by**: title, authors, year. Activating one opens
   that paper, with the reader showing and the path extended (below).
-- **Not in your collection**: the printed reference when there is one, else
-  title, authors and year. With a Semantic Scholar id it is a link to
+- **Elsewhere**: the printed reference when there is one, else title, authors
+  and year. With a Semantic Scholar id it is a link to
   `https://www.semanticscholar.org/paper/{id}`, opening in a new tab
   (`rel="noopener noreferrer"`), marked as external. Without one it is plain
   text.
-- **Empty and incomplete are different**:
-  - no rows at all: "its bibliography was not read";
-  - rows, but none in the collection: "cites nothing else in your collection";
-  - `reference_count` known and greater than the rows: "N of M references read".
-- **A Semantic Scholar credit** is visible in the view.
-- Order: in-collection and cited-by by year, newest first; outside references in
-  the order stored (the paper's own order, as parsed).
-- **The page's controls** (sheet trigger, article menu) come with the view: at
-  the end of its tab row, or, on a narrow panel, at the end of the credit row.
-- **On a narrow panel** each tab shows a glyph, its count and a short word
-  (collection / cited by / elsewhere); the full label stays its accessible name
-  (decided with the user at implementation, 2026-09-15).
+- **Empty is not one thing**:
+  - no references at all: "its bibliography was not read";
+  - references, none in the collection: "it cites nothing else in your
+    collection", above the *elsewhere* group;
+  - nothing cites it: "nothing in your collection cites it".
+- **No comparison with Semantic Scholar's reference count.** "40 of 41
+  references read" was shown for *Attention*, whose 40 rows are its whole
+  bibliography; the count disagreed with the printed list on three of four
+  local papers.
+- **The Semantic Scholar credit is in the tracker header**, behind an
+  information button right of the avatar, not in the view. Its licence asks for
+  attribution "on its website", not beside each use.
+- Order: in-collection and cited-by by year, newest first; *elsewhere* in the
+  order stored (the paper's own order, as parsed).
+- **The page's controls** (sheet trigger, article menu) sit at the end of the
+  view's tab row, at every width.
+- **The view's tab rule is the sidebar's line**: both rules are at the same
+  height beside each other.
 
 ### Older papers are re-read
 
@@ -121,16 +133,16 @@ command":
 
 ## Acceptance criteria
 
-1. The Citations tab shows three lists with correct counts for *Attention Is All
-   You Need* on the local stack (research §2).
+1. The Citations tab shows *cites* and *cited by* with correct counts and groups
+   for *Attention Is All You Need* on the local stack (research §2).
 2. Switching to Citations and back shows the reader at the same place, with no
    document reload (no new PDF request, and the first page is not redrawn).
 3. An in-collection item opens that paper, with the reader showing and the path
    extended.
 4. An outside reference with an id opens Semantic Scholar in a new tab; one
    without is not a link.
-5. The credit is visible; the three empty/incomplete messages each appear for a
-   paper in that state.
+5. The credit is reachable from the tracker header; the three empty messages
+   each appear for a paper in that state.
 6. The two merged rows are gone after the re-read, and nothing else is removed.
    Existing papers gain printed text and a reference count. Edited metadata is
    unchanged. The summary row counts down and disappears; a forced failure shows

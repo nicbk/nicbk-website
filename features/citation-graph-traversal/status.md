@@ -20,7 +20,7 @@ completion.
 | [`the-references-can-be-trusted`](./tasks/the-references-can-be-trusted/status.md) | Complete ([#202](https://github.com/nicbk/nicbk-website/issues/202)) | [#208](https://github.com/nicbk/nicbk-website/pull/208) | Pass | Merged |
 | [`older-papers-are-re-read`](./tasks/older-papers-are-re-read/status.md) | Complete ([#207](https://github.com/nicbk/nicbk-website/issues/207)) | [#209](https://github.com/nicbk/nicbk-website/pull/209) | Pass | Merged |
 | [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | Complete ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | [#210](https://github.com/nicbk/nicbk-website/pull/210) | Pass | Merged |
-| [`the-citations-view`](./tasks/the-citations-view/status.md) | In review ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | pending | pending | pending |
+| [`the-citations-view`](./tasks/the-citations-view/status.md) | In review ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | [#211](https://github.com/nicbk/nicbk-website/pull/211) | pending | pending |
 | [`the-way-back`](./tasks/the-way-back/status.md) | Not started ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | — | — | — |
 
 ## Definition of Done (feature)

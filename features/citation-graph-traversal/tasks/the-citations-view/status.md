@@ -1,6 +1,6 @@
 # Status: The Citations View
 
-**State:** In review ([#204](https://github.com/nicbk/nicbk-website/issues/204)).
+**State:** In review ([#204](https://github.com/nicbk/nicbk-website/issues/204); PR [#211](https://github.com/nicbk/nicbk-website/pull/211)).
 
 ## What shipped
 

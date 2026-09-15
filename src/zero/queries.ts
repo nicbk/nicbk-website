@@ -119,6 +119,50 @@ export const queries = defineQueries({
     }),
   },
 
+  citationEdges: {
+    /**
+     * One paper's bibliography: every reference it makes, with the article each
+     * one points at when that paper is also in the collection
+     * (features/citation-graph-traversal).
+     *
+     * **Owned twice over.** The edge is filtered by its own `user_id`, like
+     * every other query here, *and* the related article is filtered by owner
+     * inside its subquery. Every edge is written for one user and points only at
+     * that user's articles, so the second filter should never remove anything;
+     * it is there so that if that ever stopped being true, a foreign key into
+     * another account would bring back nothing rather than that account's row.
+     *
+     * In stored order — edge ids are UUIDv7s generated in the paper's own
+     * reference order, so this is the order the paper printed them, with the
+     * references only Semantic Scholar supplied after.
+     */
+    references: defineQuery(z.uuid(), ({ args: articleId, ctx }) => {
+      if (!ctx) {
+        return zql.citationEdges.limit(0)
+      }
+      return zql.citationEdges
+        .where('citingArticleId', articleId)
+        .where('userId', ctx.id)
+        .related('citedArticle', (article) => article.where('userId', ctx.id))
+        .orderBy('id', 'asc')
+    }),
+
+    /**
+     * The papers in the collection that cite this one, each with the citing
+     * article. Owned twice over, for the reason `references` gives.
+     */
+    citedBy: defineQuery(z.uuid(), ({ args: articleId, ctx }) => {
+      if (!ctx) {
+        return zql.citationEdges.limit(0)
+      }
+      return zql.citationEdges
+        .where('citedArticleId', articleId)
+        .where('userId', ctx.id)
+        .related('citingArticle', (article) => article.where('userId', ctx.id))
+        .orderBy('id', 'asc')
+    }),
+  },
+
   referenceReads: {
     /**
      * The signed-in user's re-reads of older papers — what the upload status

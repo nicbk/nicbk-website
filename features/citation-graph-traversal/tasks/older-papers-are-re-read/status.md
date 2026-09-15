@@ -1,6 +1,6 @@
 # Status: Older Papers Are Re-read
 
-**State:** In review ([#207](https://github.com/nicbk/nicbk-website/issues/207)).
+**State:** Complete — merged in #209.
 
 ## What shipped
 

@@ -1,6 +1,6 @@
 # Status: Citation-Graph Traversal
 
-**Feature state:** **In progress** (2026-09-14): 5 tasks; task 1 merged, task 2 in review.
+**Feature state:** **In progress** (2026-09-14): 5 tasks; tasks 1–2 merged, task 3 in review.
 
 Spec written against `main` at `daa8fc2`. See [research.md](./research.md).
 
@@ -18,8 +18,8 @@ completion.
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`the-references-can-be-trusted`](./tasks/the-references-can-be-trusted/status.md) | Complete ([#202](https://github.com/nicbk/nicbk-website/issues/202)) | [#208](https://github.com/nicbk/nicbk-website/pull/208) | Pass | Merged |
-| [`older-papers-are-re-read`](./tasks/older-papers-are-re-read/status.md) | In review ([#207](https://github.com/nicbk/nicbk-website/issues/207)) | pending | pending | pending |
-| [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | Not started ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | — | — | — |
+| [`older-papers-are-re-read`](./tasks/older-papers-are-re-read/status.md) | Complete ([#207](https://github.com/nicbk/nicbk-website/issues/207)) | [#209](https://github.com/nicbk/nicbk-website/pull/209) | Pass | Merged |
+| [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | In review ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | pending | pending | pending |
 | [`the-citations-view`](./tasks/the-citations-view/status.md) | Not started ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | — | — | — |
 | [`the-way-back`](./tasks/the-way-back/status.md) | Not started ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | — | — | — |
 
@@ -50,3 +50,4 @@ flow checked in Safari on `nicbk.com`.
   runs, and a failure that stays, with try again and no dismiss, until it
   succeeds. `references_read_at` added to mark papers already read.
 - 2026-09-14 — #208 merged. Task 2 implemented; verified on the local stack, including a real try again through Semantic Scholar's rate limiting.
+- 2026-09-15 — #209 merged. Task 3 implemented: owner-scoped citation queries, first use of `related()`.

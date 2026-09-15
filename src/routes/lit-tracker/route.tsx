@@ -8,6 +8,7 @@ import { requireAuth } from '~/auth/require-auth'
 import { ArticleRail } from './-article-detail/article-rail'
 import { SIDEBAR_LABEL } from './-article-detail/article-sidebar'
 import { ArticleTitle } from './-article-detail/article-title'
+import { articleViewOf } from './-article-detail/article-view'
 import { ReaderJumpProvider } from './-article-detail/reader-jump'
 import { FilterRail } from './-collection-filters/filter-rail'
 import { collectionSearchSchema } from './-collection-filters/search-schema'
@@ -101,6 +102,7 @@ function LitTrackerLayout() {
             <ArticleRail
               articleId={articleMatch.params.articleId}
               label={SIDEBAR_LABEL}
+              view={articleViewOf(articleMatch.search)}
             />
           ) : (
             <FilterRail label={FILTER_RAIL_LABEL} />

@@ -1,4 +1,6 @@
 import { ArticleSidebar } from './article-sidebar'
+import type { ArticleView } from './article-view'
+import { useSetArticleView } from './article-view'
 import styles from './article-rail.module.css'
 
 interface ArticleRailProps {
@@ -9,6 +11,8 @@ interface ArticleRailProps {
    * the rail belongs to, not of the rail.
    */
   label: string
+  /** Which main view the page is showing, from the article route's search. */
+  view: ArticleView
 }
 
 /**
@@ -24,10 +28,15 @@ interface ArticleRailProps {
  * accessibility tree too, or a screen-reader user would meet both copies with no
  * way to tell which one the sighted layout is using.
  */
-export function ArticleRail({ articleId, label }: ArticleRailProps) {
+export function ArticleRail({ articleId, label, view }: ArticleRailProps) {
+  const setView = useSetArticleView(articleId)
   return (
     <aside className={styles.rail} aria-label={label}>
-      <ArticleSidebar articleId={articleId} />
+      <ArticleSidebar
+        articleId={articleId}
+        view={view}
+        onViewChange={setView}
+      />
     </aside>
   )
 }

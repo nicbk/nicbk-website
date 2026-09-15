@@ -1,6 +1,6 @@
 # Status: Citations Are Queryable
 
-**State:** In review ([#203](https://github.com/nicbk/nicbk-website/issues/203)).
+**State:** Complete ([#203](https://github.com/nicbk/nicbk-website/issues/203); merged in [#210](https://github.com/nicbk/nicbk-website/pull/210)).
 
 ## What shipped
 
@@ -43,3 +43,4 @@ client gives `undefined`. The view must treat both as "not in the collection".
 
 - 2026-09-14 — Spec'd.
 - 2026-09-15 — Implemented.
+- 2026-09-15 — #210 merged.

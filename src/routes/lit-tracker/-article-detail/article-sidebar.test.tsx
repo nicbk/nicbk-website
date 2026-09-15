@@ -7,10 +7,10 @@ import { Toaster } from '~/routes/-shared/components/toast/toaster'
  * The article's sidebar: which tabs it has, that switching works, and that each
  * panel edits the right thing.
  *
- * Two assertions here are deliberately about what is *absent*. There is no
- * Citations tab — that is #10, and a disabled or empty one would be a promise
- * this page cannot keep — and selecting the Annotations tab (task 5) must not
- * swap the main content. #10 will invert the first of those on purpose.
+ * The Citations tab is the one tab that is not the sidebar's own: it swaps the
+ * page's main area, so it is selected exactly when `view` says so, and choosing
+ * it or leaving it asks the page to change view. Selecting the Annotations tab
+ * must not.
  */
 
 const useQuery = vi.hoisted(() => vi.fn())
@@ -63,10 +63,16 @@ function answerQueries(
   })
 }
 
-function renderSidebar() {
+const onViewChange = vi.fn()
+
+function renderSidebar(view: 'reader' | 'citations' = 'reader') {
   return render(
     <Toaster>
-      <ArticleSidebar articleId={ARTICLE_ID} />
+      <ArticleSidebar
+        articleId={ARTICLE_ID}
+        view={view}
+        onViewChange={onViewChange}
+      />
     </Toaster>,
   )
 }
@@ -74,6 +80,7 @@ function renderSidebar() {
 beforeEach(() => {
   useQuery.mockReset()
   mutate.mockClear()
+  onViewChange.mockClear()
 })
 
 describe('ArticleSidebar', () => {
@@ -85,6 +92,7 @@ describe('ArticleSidebar', () => {
     expect(tabs.map((tab) => tab.textContent)).toEqual([
       'tags',
       'notes',
+      'citations',
       'annotations',
     ])
   })
@@ -103,13 +111,85 @@ describe('ArticleSidebar', () => {
     }
   })
 
-  it('renders no Citations tab', () => {
-    // #10's, and it arrives with the citation graph it opens. Not disabled, not
-    // empty — absent. This assertion is meant to be inverted by that feature.
-    answerQueries({ 'articles.byId': [ARTICLE] })
-    renderSidebar()
+  describe('the Citations tab', () => {
+    it('asks for the citations view when chosen', async () => {
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      renderSidebar()
 
-    expect(screen.queryByRole('tab', { name: /citation/i })).toBeNull()
+      await userEvent.click(screen.getByRole('tab', { name: 'citations' }))
+
+      expect(onViewChange).toHaveBeenCalledExactlyOnceWith('citations')
+    })
+
+    it('is selected whenever the page shows citations', () => {
+      // Reloading `?view=citations`, or the other copy of the sidebar choosing
+      // it: this copy must agree without having been clicked.
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      renderSidebar('citations')
+
+      expect(screen.getByRole('tab', { name: 'citations' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+    })
+
+    it('brings the reader back when another tab is chosen, and opens that tab', async () => {
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      const { rerender } = renderSidebar('citations')
+
+      await userEvent.click(screen.getByRole('tab', { name: 'notes' }))
+      expect(onViewChange).toHaveBeenCalledExactlyOnceWith('reader')
+
+      rerender(
+        <Toaster>
+          <ArticleSidebar
+            articleId={ARTICLE_ID}
+            view="reader"
+            onViewChange={onViewChange}
+          />
+        </Toaster>,
+      )
+      expect(screen.getByRole('tab', { name: 'notes' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+    })
+
+    it('does not change the view when switching between the sidebar’s own tabs', async () => {
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      renderSidebar()
+
+      await userEvent.click(screen.getByRole('tab', { name: 'notes' }))
+      await userEvent.click(screen.getByRole('tab', { name: 'annotations' }))
+
+      expect(onViewChange).not.toHaveBeenCalled()
+    })
+
+    it('opens the next paper on the default tab', async () => {
+      // Following a citation lands on another article's sidebar, which must not
+      // carry over whichever tab the last paper had open.
+      const OTHER_ID = '018f5b6c-0000-7000-8000-000000000002'
+      answerQueries({
+        'articles.byId': [ARTICLE],
+      })
+      const { rerender } = renderSidebar()
+      await userEvent.click(screen.getByRole('tab', { name: 'notes' }))
+
+      rerender(
+        <Toaster>
+          <ArticleSidebar
+            articleId={OTHER_ID}
+            view="reader"
+            onViewChange={onViewChange}
+          />
+        </Toaster>,
+      )
+
+      expect(screen.getByRole('tab', { name: 'tags' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+    })
   })
 
   it('opens on the tags tab', () => {
@@ -137,8 +217,8 @@ describe('ArticleSidebar', () => {
     //
     // **Manual activation**, and the two assertions here are what pin it: arrow
     // moves focus without selecting, and Enter selects. It is the model this
-    // list keeps once #10's Citations tab swaps the main content for a citation
-    // graph — see `article-sidebar.tsx`.
+    // list keeps because the Citations tab swaps the main content — see
+    // `article-sidebar.tsx`.
     answerQueries({ 'articles.byId': [ARTICLE] })
     renderSidebar()
 
@@ -315,7 +395,11 @@ describe('ArticleSidebar', () => {
       <Toaster>
         <ReaderJumpProvider>
           <ReaderStandIn />
-          <ArticleSidebar articleId={ARTICLE_ID} />
+          <ArticleSidebar
+            articleId={ARTICLE_ID}
+            view="reader"
+            onViewChange={onViewChange}
+          />
         </ReaderJumpProvider>
       </Toaster>,
     )
@@ -325,6 +409,7 @@ describe('ArticleSidebar', () => {
 
     expect(handle).toHaveBeenCalledWith(3)
     expect(screen.getByTestId('reader')).toBeInTheDocument()
+    expect(onViewChange).not.toHaveBeenCalled()
   })
 
   it('renders nothing until the article has arrived', () => {

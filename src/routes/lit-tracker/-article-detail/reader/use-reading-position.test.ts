@@ -67,15 +67,27 @@ function mount(saved: ReadingPosition | null = null) {
   const fake = fakeScroll()
   const save = vi.fn()
   const hook = renderHook(
-    ({ saved: current }: { saved: ReadingPosition | null }) =>
+    ({
+      saved: current,
+      paused,
+    }: {
+      saved: ReadingPosition | null
+      paused?: boolean
+    }) =>
       useReadingPosition({
         documentId: DOC,
         scroll: fake.scroll,
         viewportGap: GAP,
         saved: current,
         save,
+        paused,
       }),
-    { initialProps: { saved } },
+    {
+      initialProps: { saved } as {
+        saved: ReadingPosition | null
+        paused?: boolean
+      },
+    },
   )
   return { ...fake, save, hook }
 }
@@ -227,5 +239,54 @@ describe('saving', () => {
     act(() => vi.advanceTimersByTime(READING_POSITION_SAVE_MS * 2))
 
     expect(save).not.toHaveBeenCalled()
+  })
+})
+
+describe('while hidden behind the citations view', () => {
+  it('ignores scrolling reported while hidden', () => {
+    // A hidden panel has no layout, so whatever it reports is not where the
+    // paper was left — and must not overwrite where it was.
+    const { layoutReady, scrollTo, save, hook } = mount({
+      page: 7,
+      offset: 400,
+    })
+    layoutReady()
+
+    hook.rerender({ saved: { page: 7, offset: 400 }, paused: true })
+    scrollTo(1, 0)
+    act(() => vi.advanceTimersByTime(READING_POSITION_SAVE_MS * 2))
+
+    expect(save).not.toHaveBeenCalled()
+  })
+
+  it('still writes a position that was waiting when the reader was hidden', () => {
+    const { layoutReady, scrollTo, save, hook } = mount(null)
+    layoutReady()
+    scrollTo(4, 200)
+
+    hook.rerender({ saved: null, paused: true })
+    act(() => vi.advanceTimersByTime(READING_POSITION_SAVE_MS))
+
+    expect(save).toHaveBeenCalledExactlyOnceWith({ page: 4, offset: 200 })
+  })
+
+  it('saves again once shown, without restoring a second time', () => {
+    const { layoutReady, scrollTo, save, scrollToPage, hook } = mount({
+      page: 7,
+      offset: 400,
+    })
+    layoutReady()
+    hook.rerender({ saved: { page: 7, offset: 400 }, paused: true })
+    hook.rerender({ saved: { page: 7, offset: 400 }, paused: false })
+
+    // Back at the same place: nothing to write.
+    scrollTo(7, 400)
+    act(() => vi.advanceTimersByTime(READING_POSITION_SAVE_MS))
+    expect(save).not.toHaveBeenCalled()
+
+    scrollTo(8, 50)
+    act(() => vi.advanceTimersByTime(READING_POSITION_SAVE_MS))
+    expect(save).toHaveBeenCalledExactlyOnceWith({ page: 8, offset: 50 })
+    expect(scrollToPage).toHaveBeenCalledTimes(1)
   })
 })

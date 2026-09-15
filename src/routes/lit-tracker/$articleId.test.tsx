@@ -9,16 +9,23 @@ import { describe, expect, it, vi } from 'vitest'
  */
 
 const ArticleDetailPage = vi.hoisted(() =>
-  vi.fn(({ articleId }: { articleId: string }) => articleId),
+  vi.fn(
+    ({ articleId, view }: { articleId: string; view: string }) =>
+      `${articleId} ${view}`,
+  ),
 )
 vi.mock('./-article-detail/article-detail-page', () => ({ ArticleDetailPage }))
 
 const params = vi.hoisted(() => ({ current: { articleId: 'article-1' } }))
+const search = vi.hoisted(() => ({ current: {} as Record<string, unknown> }))
+const navigate = vi.hoisted(() => vi.fn())
 vi.mock('@tanstack/react-router', () => ({
   createFileRoute: () => (options: unknown) => ({
     options,
     useParams: () => params.current,
+    useSearch: () => search.current,
   }),
+  useNavigate: () => navigate,
 }))
 
 const { Route } = await import('./$articleId')
@@ -29,6 +36,7 @@ const options = Route.options as unknown as {
   component: () => React.ReactNode
   beforeLoad?: unknown
   loader?: unknown
+  validateSearch: { parse: (input: unknown) => unknown }
 }
 
 describe('the /lit-tracker/$articleId mount', () => {
@@ -39,8 +47,29 @@ describe('the /lit-tracker/$articleId mount', () => {
     render(<Component />)
 
     expect(
-      screen.getByText('018f5b6c-0000-7000-8000-000000000001'),
+      screen.getByText('018f5b6c-0000-7000-8000-000000000001 reader'),
     ).toBeInTheDocument()
+  })
+
+  it('hands the view in the URL to the page', () => {
+    params.current = { articleId: 'article-1' }
+    search.current = { view: 'citations' }
+    const Component = options.component
+
+    render(<Component />)
+
+    expect(screen.getByText('article-1 citations')).toBeInTheDocument()
+    search.current = {}
+  })
+
+  it('validates the view, dropping anything it does not know', () => {
+    expect(options.validateSearch.parse({ view: 'citations' })).toEqual({
+      view: 'citations',
+    })
+    expect(options.validateSearch.parse({ view: 'graph' })).toEqual({
+      view: undefined,
+    })
+    expect(options.validateSearch.parse({})).toEqual({})
   })
 
   it('has no loader', () => {

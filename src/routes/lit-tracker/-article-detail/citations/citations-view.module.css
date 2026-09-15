@@ -1,0 +1,333 @@
+/*
+ * The citations view, filling the panel the reader fills when it shows.
+ *
+ * A grid of three rows: the tabs (with the page's controls beside them), the
+ * list — the one region that scrolls — and the Semantic Scholar credit, which
+ * stays put below it. A grid rather than stacked boxes because the controls move
+ * from the first row to the last on a narrow panel, and only placement can move
+ * an element without rendering it twice (`citations-view.tsx`).
+ *
+ * The section is the container and the tabs' root, inside it, is the grid.
+ *
+ * A container query rather than a media query decides that, because what
+ * decides whether the labels fit is the panel's width, and the panel is narrower
+ * than the viewport by the rail beside it.
+ */
+.view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  container: citations-view / inline-size;
+}
+
+/*
+ * The grid. On the tabs' root rather than on the section, because a container
+ * query styles what is inside its container and never the container itself —
+ * written on the section first, the narrow placement silently never applied.
+ */
+.tabsRoot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "tabs actions"
+    "panel panel"
+    "credit credit";
+  flex: 1;
+  min-height: 0;
+}
+
+/*
+ * The tabs and the controls share the rule under them — the same strip the
+ * sidebar's tabs make, so the two tab lists on this page read as one kind of
+ * thing. The rule is drawn under each rather than around both, because the two
+ * are separate grid items.
+ */
+.tabs {
+  grid-area: tabs;
+  display: flex;
+  min-width: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* The sidebar's tab, in look and in how the selected one is marked
+   (`article-sidebar.module.css` explains both). */
+.tab {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  /* Wider than the sidebar's: these tabs carry a word and a number each, and
+     at the sidebar's padding one tab's count ran into the next tab's word. */
+  padding: var(--space-2xs) var(--space-sm);
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: left;
+  /* One line in the wide row; the narrow arrangement below takes over before
+     one line stops fitting. */
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tab[aria-selected="true"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
+@media (hover: hover) {
+  .tab:hover {
+    color: var(--color-text);
+  }
+}
+
+/*
+ * The selected word is bold, and bold is wider: left alone, choosing a tab
+ * shifted every tab after it by a few pixels. A hidden, zero-height bold copy
+ * of the word sits under it in a column, so each word always takes its bold
+ * width.
+ */
+.label {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.label::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: var(--font-weight-bold);
+}
+
+/* The narrow panel's glyph and short word; hidden until then (see the end). */
+.tabIcon,
+.shortLabel {
+  display: none;
+}
+
+/* The number beside the word: quieter, and not bold when its tab is. */
+.count {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+/* The sheet trigger and the article menu, on the tabs' rule. */
+.actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding-bottom: var(--space-2xs);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/*
+ * The list's scroll region. The panel spans the whole width so its scrollbar
+ * sits at the panel's edge; the column inside keeps lines to a readable length.
+ */
+.panel {
+  grid-area: panel;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-width: 80ch;
+  padding-block: var(--space-sm);
+}
+
+/* "its bibliography was not read." — a sentence about the list, not a row. */
+.notice {
+  margin: 0;
+  padding-inline: var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * A row: the text, and for a link out, the external mark after it. Every row
+ * is the same shape whether it opens a paper, opens Semantic Scholar, or is
+ * plain text, so the three lists read as one kind of list.
+ */
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+}
+
+/* A reference with nothing to open. The same row, without a cursor that
+   promises otherwise. */
+.plain {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  a.row:hover {
+    color: var(--color-accent);
+  }
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+/*
+ * Titles and printed references can run long, and a paper's list is dozens of
+ * them: two lines of a title, three of a printed reference (which leads with
+ * its authors), so rows stay close in height and the list stays scannable.
+ * `overflow-wrap` for the DOIs and URLs printed references are full of.
+ */
+.title,
+.printed {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  -webkit-line-clamp: 2;
+}
+
+.printed {
+  -webkit-line-clamp: 3;
+}
+
+.byline {
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Marks a row that leaves the site. Muted, so the reference outweighs it. */
+.external {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.externalIcon {
+  width: 0.9em;
+  height: 0.9em;
+  vertical-align: -0.1em;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The credit, below the list at every scroll position. */
+.credit {
+  grid-area: credit;
+  align-self: center;
+  margin: 0;
+  padding: var(--space-xs) var(--space-xs) 0;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.credit a {
+  color: inherit;
+}
+
+/*
+ * A narrow panel: the full labels need about fifty characters and a phone's
+ * panel has about forty, so they wrapped to four lines a tab (user-reported, and
+ * the arrangement below user-decided 2026-09-15).
+ *
+ * 40rem because the wide row was measured at 37rem — the three full labels with
+ * two-digit counts, and the controls — and a three-digit count adds most of a
+ * rem more. Below the threshold the wide row wrapped its labels raggedly rather
+ * than switching, which is what the `nowrap` on `.tab` now rules out.
+ *
+ *  - The controls leave the tab row for the credit row, which is there anyway,
+ *    so they cost no height of their own — and sit where a thumb reaches.
+ *  - The tabs take the whole width in equal shares, and each shows its glyph and
+ *    count over a short word: two lines, the same two in every tab.
+ */
+@container citations-view (max-width: 40rem) {
+  .tabsRoot {
+    grid-template-areas:
+      "tabs tabs"
+      "panel panel"
+      "credit actions";
+  }
+
+  /* Continues the credit's rule above it, so the bottom row reads as one. */
+  .actions {
+    padding-block: var(--space-2xs) 0;
+    border-bottom: none;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Glyph and count on the first line, the short word wrapped under them. */
+  .tab {
+    flex: 1 1 0;
+    flex-wrap: wrap;
+    white-space: normal;
+    justify-content: center;
+    align-items: center;
+    column-gap: var(--space-2xs);
+    min-width: 0;
+    padding-inline: var(--space-2xs);
+    text-align: center;
+  }
+
+  .tabIcon {
+    display: block;
+    width: 1.1em;
+    height: 1.1em;
+  }
+
+  .label {
+    display: none;
+  }
+
+  /* A printed reference leads with its authors, and at a phone's width three
+     lines of them often ended before the title began. */
+  .printed {
+    -webkit-line-clamp: 4;
+  }
+
+  /* The word on a line of its own, under the glyph and count. */
+  .shortLabel {
+    display: block;
+    flex-basis: 100%;
+    order: 1;
+  }
+}

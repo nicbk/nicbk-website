@@ -744,6 +744,14 @@ describe('PdfReader', () => {
       })
     })
 
+    it('pauses while the page hides the reader, and not otherwise', () => {
+      const { rerender } = render(<PdfReader articleId={ARTICLE_ID} />)
+      expect(readingPosition.current).toMatchObject({ paused: false })
+
+      rerender(<PdfReader articleId={ARTICLE_ID} hidden />)
+      expect(readingPosition.current).toMatchObject({ paused: true })
+    })
+
     it('has nothing saved when the page passes none', () => {
       render(<PdfReader articleId={ARTICLE_ID} />)
 

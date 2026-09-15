@@ -1,8 +1,10 @@
 import { Tabs } from '@base-ui/react/tabs'
-import { Highlighter, NotebookPen, Tag } from 'lucide-react'
+import { Highlighter, Network, NotebookPen, Tag } from 'lucide-react'
+import { useState } from 'react'
 import { ArticleTagControls } from '~/routes/lit-tracker/-components/article-menu/article-tag-controls'
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { AnnotationsPanel } from './annotations-panel'
+import type { ArticleView } from './article-view'
 import { NotesPanel } from './notes-panel'
 import { useReaderJump } from './reader-jump'
 import { useArticleAnnotations } from './use-article-annotations'
@@ -16,12 +18,9 @@ import styles from './article-sidebar.module.css'
  * its panel, its glyph — cannot drift apart, and so #10's Citations tab is one
  * entry rather than edits in three places.
  *
- * The decided sidebar has **four** tabs (Tags, Notes, Citations, Annotations).
- * Three exist now; **Citations arrives with the citation graph it opens**
- * (#10), because a tab is not rendered before its contents exist — a disabled
- * "Citations" would be a promise the page cannot keep, and an empty one is
- * worse. Annotations sits where the decided order puts it, which will be after
- * Citations once that tab exists between them.
+ * The decided sidebar has **four** tabs, in this order. Citations arrived with
+ * the citation graph it opens (#10) — until then it was absent rather than
+ * disabled, because a tab is not rendered before its contents exist.
  *
  * **Each tab is a word or a glyph, by container width** (user-decided
  * 2026-08-17): the strip shows the words where they fit on one line — the
@@ -34,11 +33,27 @@ import styles from './article-sidebar.module.css'
 const TABS = [
   { id: 'tags', icon: Tag },
   { id: 'notes', icon: NotebookPen },
+  { id: 'citations', icon: Network },
   { id: 'annotations', icon: Highlighter },
 ] as const
 
+type TabId = (typeof TABS)[number]['id']
+
+/** The tabs whose panel is the sidebar's own, rather than the page's main area. */
+type PanelTab = Exclude<TabId, 'citations'>
+
+/** The tab a sidebar opens on, and returns to for each new article. */
+const DEFAULT_TAB: PanelTab = 'tags'
+
 interface ArticleSidebarProps {
   articleId: string
+  /** Which main view the page is showing; Citations is selected exactly when it is that one. */
+  view: ArticleView
+  /**
+   * Asks for the other main view. Called only when the choice changes it:
+   * choosing Citations, or leaving Citations for any other tab.
+   */
+  onViewChange: (view: ArticleView) => void
 }
 
 /**
@@ -71,11 +86,12 @@ interface ArticleSidebarProps {
  */
 export const SIDEBAR_LABEL = 'article'
 
-export function ArticleSidebar({ articleId }: ArticleSidebarProps) {
-  const { state, article, tags, allTags } = useArticleDetail(articleId)
-  const mutations = useArticleMutations()
-  const annotations = useArticleAnnotations(articleId)
-  const jumpToPage = useReaderJump()
+export function ArticleSidebar({
+  articleId,
+  view,
+  onViewChange,
+}: ArticleSidebarProps) {
+  const { state, article } = useArticleDetail(articleId)
 
   // Nothing to edit until the row is here. Rendering the tabs against an absent
   // article would offer controls that write to an id whose ownership has not
@@ -84,19 +100,71 @@ export function ArticleSidebar({ articleId }: ArticleSidebarProps) {
     return null
   }
 
+  return (
+    // Keyed by the article, so following a citation to another paper opens its
+    // sidebar on the default tab rather than on whatever the last paper had
+    // showing (features/citation-graph-traversal, task 4).
+    <SidebarTabs
+      key={articleId}
+      articleId={articleId}
+      view={view}
+      onViewChange={onViewChange}
+    />
+  )
+}
+
+/**
+ * The tabs themselves, once there is an article to show them for.
+ *
+ * **Which tab is selected is partly this instance's and partly the URL's.**
+ * Tags, Notes and Annotations are panels inside the sidebar, and which of them
+ * is open is nobody else's business — each copy of the sidebar keeps its own.
+ * Citations is different: it swaps the page's main area, so it is selected
+ * exactly when the URL says the citations view is showing, in every copy at
+ * once. Leaving Citations for another tab is what brings the reader back; there
+ * is no separate control for that.
+ */
+function SidebarTabs({ articleId, view, onViewChange }: ArticleSidebarProps) {
+  const { article, tags, allTags } = useArticleDetail(articleId)
+  const mutations = useArticleMutations()
+  const annotations = useArticleAnnotations(articleId)
+  const jumpToPage = useReaderJump()
+  const [panel, setPanel] = useState<PanelTab>(DEFAULT_TAB)
+
+  // Checked by the caller already; narrowed again here for the types.
+  if (article === undefined) {
+    return null
+  }
+
+  const selected: TabId = view === 'citations' ? 'citations' : panel
+
+  function choose(tab: TabId) {
+    if (tab === 'citations') {
+      onViewChange('citations')
+      return
+    }
+    setPanel(tab)
+    if (view === 'citations') {
+      onViewChange('reader')
+    }
+  }
+
   const appliedTagIds = new Set(tags.map((tag) => tag.id))
 
   return (
-    <Tabs.Root className={styles.sidebar} defaultValue={TABS[0]}>
+    <Tabs.Root
+      className={styles.sidebar}
+      value={selected}
+      onValueChange={(value: TabId) => choose(value)}
+    >
       {/*
         **Manual activation** — arrow keys move focus, Enter or Space selects —
         which is Base UI's default and is kept deliberately rather than by
         accident. WAI-ARIA prefers automatic activation only while every panel
         displays "without noticeable latency", and this tab list is about to
-        stop qualifying: #10's Citations tab swaps the *main content area* for
-        the citation graph, so arrowing past it would build a graph nobody asked
-        to see. Choosing the model now means the keyboard behaviour does not
-        change under readers when that tab lands.
+        stop qualifying: the Citations tab swaps the *main content area* for the
+        citation graph, so arrowing past it would hide the paper nobody asked to
+        stop reading.
       */}
       <Tabs.List className={styles.tabs}>
         {TABS.map((tab) => (
@@ -145,10 +213,22 @@ export function ArticleSidebar({ articleId }: ArticleSidebarProps) {
         />
       </Tabs.Panel>
 
+      <Tabs.Panel className={styles.panel} value="citations">
+        {/*
+          Nothing in the sidebar: what this tab opens is the page's main area
+          (`citations/citations-view.tsx`). Saying so here keeps the panel from
+          reading as an empty tab to someone arriving by keyboard.
+        */}
+        <p className={styles.notice}>
+          citations are open on the page. choose another tab to return to the
+          paper.
+        </p>
+      </Tabs.Panel>
+
       <Tabs.Panel className={styles.panel} value="annotations">
         {/*
           Selecting this tab must not swap the main content area — the decided
-          contrast with #10's Citations tab. Upholding it costs nothing here
+          contrast with the Citations tab. Upholding it costs nothing here
           (the reader is another panel entirely, and the only reach into it is
           the jump), but the invariant belongs to this tab, so it is stated
           where the tab is made.

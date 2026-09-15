@@ -22,6 +22,7 @@ const ARTICLE = {
   notes: null,
   readingPage: null,
   readingOffset: null,
+  referenceCount: null,
 }
 
 describe('formatPublication', () => {

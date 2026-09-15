@@ -1,7 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '~/routes/-shared/components/toast/toaster'
 
 /**
@@ -35,6 +35,7 @@ vi.mock('@tanstack/react-router', async () => {
   return {
     Link: ({ to, children }: { to: string; children: ReactNode }) =>
       createElement('a', { href: to }, children),
+    useMatch: () => undefined,
     useNavigate: () => navigate,
     // Stands in for the real boundary by rendering only its fallback, which is
     // what the server pass does. That keeps PDFium's WebAssembly out of jsdom,
@@ -83,18 +84,29 @@ function answerQueries(
   })
 }
 
-function renderPage() {
-  return render(
+const onViewChange = vi.fn()
+
+function page(view: 'reader' | 'citations' = 'reader') {
+  return (
     <Toaster>
-      <ArticleDetailPage articleId={ARTICLE_ID} />
-    </Toaster>,
+      <ArticleDetailPage
+        articleId={ARTICLE_ID}
+        view={view}
+        onViewChange={onViewChange}
+      />
+    </Toaster>
   )
+}
+
+function renderPage(view: 'reader' | 'citations' = 'reader') {
+  return render(page(view))
 }
 
 beforeEach(() => {
   useQuery.mockReset()
   mutate.mockClear()
   navigate.mockClear()
+  onViewChange.mockClear()
 })
 
 describe('ArticleDetailPage', () => {
@@ -186,7 +198,11 @@ describe('ArticleDetailPage', () => {
     answerQueries({})
     const notMine = render(
       <Toaster>
-        <ArticleDetailPage articleId="018f5b6c-0000-7000-8000-00000000dead" />
+        <ArticleDetailPage
+          articleId="018f5b6c-0000-7000-8000-00000000dead"
+          view="reader"
+          onViewChange={onViewChange}
+        />
       </Toaster>,
     )
     const forSomeoneElse = notMine.container.innerHTML
@@ -224,6 +240,91 @@ describe('ArticleDetailPage', () => {
     expect(
       screen.getByRole('button', { name: `Options for ${ARTICLE.title}` }),
     ).toBeInTheDocument()
+  })
+
+  describe('the citations view', () => {
+    beforeEach(() => {
+      // jsdom has no `matchMedia`, which the sheet listens to while open. Always
+      // narrow: these tests are about a phone's sheet.
+      vi.stubGlobal('matchMedia', (query: string) => ({
+        media: query,
+        matches: true,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }))
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('hides the reader behind it rather than unmounting it', () => {
+      // The decided swap (features/citation-graph-traversal): the paper stays
+      // open, at its place, while the lists show. The same element before and
+      // after is what "not unmounted" means — a remount would be a new one.
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      const { rerender } = renderPage('reader')
+      const reader = screen.getByText(/starting the reader/)
+
+      rerender(page('citations'))
+
+      // `getByText` matches hidden elements too, which is what this needs.
+      expect(screen.getByText(/starting the reader/)).toBe(reader)
+      expect(reader.closest('[hidden]')).not.toBeNull()
+      expect(
+        screen.getByRole('region', { name: 'citations' }),
+      ).toBeInTheDocument()
+
+      rerender(page('reader'))
+
+      expect(screen.getByText(/starting the reader/)).toBe(reader)
+      expect(reader.closest('[hidden]')).toBeNull()
+      expect(screen.queryByRole('region', { name: 'citations' })).toBeNull()
+    })
+
+    it('takes the page’s controls while the reader is hidden, in one place only', () => {
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      renderPage('citations')
+
+      const menus = screen.getAllByRole('button', {
+        name: `Options for ${ARTICLE.title}`,
+        hidden: true,
+      })
+      expect(menus).toHaveLength(1)
+      expect(
+        screen.getByRole('region', { name: 'citations' }),
+      ).toContainElement(menus[0] ?? null)
+    })
+
+    it('closes the sheet when Citations is chosen in it', async () => {
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      renderPage('reader')
+
+      await userEvent.click(screen.getByRole('button', { name: 'article' }))
+      const sheet = await screen.findByRole('dialog', { name: 'article' })
+      await userEvent.click(
+        within(sheet).getByRole('tab', { name: 'citations' }),
+      )
+
+      expect(onViewChange).toHaveBeenCalledWith('citations')
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'article' })).toBeNull(),
+      )
+    })
+
+    it('keeps the sheet open for any other tab', async () => {
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      renderPage('reader')
+
+      await userEvent.click(screen.getByRole('button', { name: 'article' }))
+      const sheet = await screen.findByRole('dialog', { name: 'article' })
+      await userEvent.click(within(sheet).getByRole('tab', { name: 'notes' }))
+
+      expect(
+        screen.getByRole('dialog', { name: 'article' }),
+      ).toBeInTheDocument()
+      expect(onViewChange).not.toHaveBeenCalled()
+    })
   })
 
   describe('the menu writes against this article', () => {

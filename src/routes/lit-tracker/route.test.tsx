@@ -23,7 +23,9 @@ const requireAuth = vi.hoisted(() => vi.fn())
 const navigate = vi.hoisted(() => vi.fn())
 /** What `useMatch` answers for the article route — see the mock below. */
 const articleMatch = vi.hoisted(() => ({
-  current: undefined as { params: { articleId: string } } | undefined,
+  current: undefined as
+    | { params: { articleId: string }; search?: { view?: string } }
+    | undefined,
 }))
 
 vi.mock('~/auth/require-auth', () => ({ requireAuth }))
@@ -77,8 +79,20 @@ vi.mock('./-collection-filters/filter-rail', async () => {
 vi.mock('./-article-detail/article-rail', async () => {
   const { createElement } = await import('react')
   return {
-    ArticleRail: ({ articleId, label }: { articleId: string; label: string }) =>
-      createElement('aside', { 'aria-label': label }, articleId),
+    ArticleRail: ({
+      articleId,
+      label,
+      view,
+    }: {
+      articleId: string
+      label: string
+      view: string
+    }) =>
+      createElement(
+        'aside',
+        { 'aria-label': label, 'data-view': view },
+        articleId,
+      ),
   }
 })
 // And the header's article title, which queries for it. That it
@@ -167,6 +181,21 @@ describe('the /lit-tracker group layout', () => {
     expect(
       screen.queryByRole('navigation', { name: 'filter collection' }),
     ).toBeNull()
+  })
+
+  it('tells the rail which view the article page is showing', () => {
+    // The rail's copy of the sidebar is outside the page, so it learns that
+    // Citations is open from the article route's search, read here.
+    articleMatch.current = {
+      params: { articleId: 'article-1' },
+      search: { view: 'citations' },
+    }
+    const Layout = options.component
+    render(<Layout />)
+
+    expect(
+      screen.getByRole('complementary', { name: 'article' }),
+    ).toHaveAttribute('data-view', 'citations')
   })
 
   it('names the article in the header, on that route only', () => {

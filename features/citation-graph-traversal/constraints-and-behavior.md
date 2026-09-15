@@ -34,6 +34,11 @@
 - **A Semantic Scholar credit** is visible in the view.
 - Order: in-collection and cited-by by year, newest first; outside references in
   the order stored (the paper's own order, as parsed).
+- **The page's controls** (sheet trigger, article menu) come with the view: at
+  the end of its tab row, or, on a narrow panel, at the end of the credit row.
+- **On a narrow panel** each tab shows a glyph, its count and a short word
+  (collection / cited by / elsewhere); the full label stays its accessible name
+  (decided with the user at implementation, 2026-09-15).
 
 ### Older papers are re-read
 

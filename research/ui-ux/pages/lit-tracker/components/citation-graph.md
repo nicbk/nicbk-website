@@ -62,3 +62,13 @@ Spec'd as [`citation-graph-traversal`](../../../../../features/citation-graph-tr
   returning to a paper on it cuts it back, each step is labelled cites / cited
   by, the middle folds into "…" past three, and it is kept in the URL. A plain
   trail was rejected as unwieldy after a few hops.
+
+## Revision (2026-09-15), decided with the user at implementation
+
+- **On a phone the view's tabs are a glyph, a count and a short word** — a
+  library for *in your collection*, a quotation mark for *cited by*, a globe for
+  *not in your collection* ("elsewhere") — and the page's controls sit in the
+  Semantic Scholar credit row at the bottom rather than beside the tabs. The full
+  labels wrapped to four lines a tab at 375px.
+- **Switching to and from the view is a history entry**, so Back from the lists
+  returns to the paper.

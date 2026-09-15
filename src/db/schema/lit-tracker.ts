@@ -121,6 +121,20 @@ export const articles = pgTable(
     readingPage: integer('reading_page'),
     readingOffset: doublePrecision('reading_offset'),
 
+    /**
+     * How many references Semantic Scholar says this paper has. Null when it was
+     * never enriched. Compared with the stored rows, it is what makes a
+     * bibliography that was only partly read say so, rather than look complete
+     * (features/citation-graph-traversal).
+     */
+    referenceCount: integer('reference_count'),
+    /**
+     * When this paper's bibliography was last read by the pipeline that keeps
+     * printed text. Null for papers read before it existed — which is how the
+     * backfill finds the ones to re-read. Server-side bookkeeping; not synced.
+     */
+    referencesReadAt: timestamp('references_read_at', { withTimezone: true }),
+
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -332,6 +346,13 @@ export const citationEdges = pgTable(
     publicationYear: integer('publication_year'),
     /** The referenced paper's Semantic Scholar `paperId`, when enrichment found one. */
     semanticScholarId: text('semantic_scholar_id'),
+    /**
+     * The reference exactly as the citing paper printed it — GROBID's
+     * `raw_reference`. The evidence behind the row, and what a reference that
+     * links nowhere is shown as. Null for a row Semantic Scholar's list supplied
+     * with no parsed entry behind it (features/citation-graph-traversal).
+     */
+    rawText: text('raw_text'),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()

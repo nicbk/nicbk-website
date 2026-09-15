@@ -8,6 +8,7 @@ import type {
 } from '~/lit-tracker/extraction/tei'
 import type { Work } from './matching'
 import { firstAuthorKey, isSameWork, normalizeTitle } from './matching'
+import { mergedRowIds } from './merged-rows'
 
 /**
  * Reading and writing the citation graph: turning a parsed bibliography into
@@ -28,6 +29,8 @@ interface EdgeDraft {
   title: string
   authors: Author[]
   publicationYear: number | null
+  /** The reference as printed, when GROBID kept it. */
+  rawText: string | null
   /** Not stored — carried so the caller knows what to look this edge up by. */
   identifiers: PaperIdentifiers
 }
@@ -95,6 +98,7 @@ export async function writeBibliography(
     title: draft.title,
     authors: draft.authors,
     publicationYear: draft.publicationYear,
+    rawText: draft.rawText,
   }))
 
   await tx.insert(citationEdges).values(rows)
@@ -134,6 +138,9 @@ function toDraft(entry: BibliographyEntry): EdgeDraft[] {
       title,
       authors: entry.authors,
       publicationYear: entry.publicationYear,
+      // Kept through everything that follows: Semantic Scholar's record later
+      // replaces the title and authors of a row it resolves, never this.
+      rawText: entry.raw?.trim() || null,
       identifiers: entry.identifiers,
     },
   ]
@@ -303,6 +310,37 @@ export async function addReferenceEdges(
     .returning({ id: citationEdges.id })
 
   return inserted.length
+}
+
+/**
+ * Removes the rows of this article's bibliography that are two references
+ * GROBID read as one — see `merged-rows.ts` for the rule and what it was
+ * measured against.
+ *
+ * Runs once Semantic Scholar's list has been applied, because the rule's
+ * evidence is a *resolved* row: before that, every row is unresolved and none
+ * of them proves anything.
+ */
+export async function dropMergedRows(
+  tx: DatabaseTransaction,
+  citingArticleId: string,
+): Promise<number> {
+  const rows = await tx
+    .select({
+      id: citationEdges.id,
+      title: citationEdges.title,
+      semanticScholarId: citationEdges.semanticScholarId,
+      citedArticleId: citationEdges.citedArticleId,
+    })
+    .from(citationEdges)
+    .where(eq(citationEdges.citingArticleId, citingArticleId))
+
+  const merged = mergedRowIds(rows)
+  if (merged.length === 0) {
+    return 0
+  }
+  await tx.delete(citationEdges).where(inArray(citationEdges.id, merged))
+  return merged.length
 }
 
 /**

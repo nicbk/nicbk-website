@@ -591,6 +591,107 @@ describe('references that printed no identifier', () => {
   })
 })
 
+describe('what the citations view can trust', () => {
+  it('keeps the printed reference through resolution, and has none for an added row', async () => {
+    const articleId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        bibliography: [
+          reference(
+            '2018a. Deep contextualized word representations',
+            'Peters',
+          ),
+        ],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [
+            {
+              paperId: 's2-elmo',
+              title: 'Deep Contextualized Word Representations',
+            },
+            { paperId: 's2-added', title: 'A Reference Only The List Had' },
+          ],
+        },
+      },
+    )
+
+    const edges = await edgesOf(articleId)
+    // Semantic Scholar's title replaced GROBID's; what the paper printed stays.
+    expect(edges).toEqual([
+      expect.objectContaining({
+        title: 'A Reference Only The List Had',
+        raw_text: null,
+      }),
+      expect.objectContaining({
+        title: 'Deep Contextualized Word Representations',
+        raw_text:
+          'Peters. 2018a. Deep contextualized word representations. 2019.',
+      }),
+    ])
+  })
+
+  it('records how many references Semantic Scholar holds, and when they were read', async () => {
+    const articleId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+      }),
+      {
+        papers: {
+          'DOI:10.1/citing': paper({
+            paperId: 's2-citing',
+            referenceCount: 63,
+          }),
+        },
+      },
+    )
+
+    const article = await articleRow(articleId)
+    expect(article?.['reference_count']).toBe(63)
+    // A raw `select *` hands timestamps back as text; set is what matters.
+    expect(article?.['references_read_at']).not.toBeNull()
+  })
+
+  it('drops a row that is two references read as one, and keeps both halves', async () => {
+    const articleId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        bibliography: [
+          reference(
+            'Understanding the difficulty of training deep feedforward neural networks. The handbook of brain theory and neural networks',
+            'Glorot',
+          ),
+        ],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [
+            {
+              paperId: 's2-glorot',
+              title:
+                'Understanding the difficulty of training deep feedforward neural networks',
+            },
+            {
+              paperId: 's2-handbook',
+              title: 'The handbook of brain theory and neural networks',
+            },
+          ],
+        },
+      },
+    )
+
+    expect((await edgesOf(articleId)).map((edge) => edge['title'])).toEqual([
+      'The handbook of brain theory and neural networks',
+      'Understanding the difficulty of training deep feedforward neural networks',
+    ])
+  })
+})
+
 describe('graduation', () => {
   it('resolves a new edge against a paper already in the collection', async () => {
     // Direction one. The cited paper is uploaded first.

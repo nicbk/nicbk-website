@@ -43,6 +43,13 @@
       "when": 1789419868017,
       "tag": "0005_reading_position",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789444204871,
+      "tag": "0006_references_read",
+      "breakpoints": true
     }
   ]
 }

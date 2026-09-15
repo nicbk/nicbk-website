@@ -40,6 +40,9 @@ export default drizzleZeroConfig(drizzleSchema, {
       extractionStatus: true,
       readingPage: true,
       readingOffset: true,
+      referenceCount: true,
+      // `referencesReadAt` is deliberately absent: it is the backfill's
+      // bookkeeping, and no client decides anything by it.
       createdAt: true,
       updatedAt: true,
     },
@@ -75,6 +78,7 @@ export default drizzleZeroConfig(drizzleSchema, {
       authors: true,
       publicationYear: true,
       semanticScholarId: true,
+      rawText: true,
       createdAt: true,
       updatedAt: true,
     },

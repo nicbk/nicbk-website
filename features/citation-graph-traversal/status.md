@@ -1,6 +1,6 @@
 # Status: Citation-Graph Traversal
 
-**Feature state:** **Spec'd** (2026-09-14): 4 tasks, not started.
+**Feature state:** **In progress** (2026-09-14): 5 tasks, task 1 in review.
 
 Spec written against `main` at `daa8fc2`. See [research.md](./research.md).
 
@@ -17,14 +17,15 @@ completion.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-references-can-be-trusted`](./tasks/the-references-can-be-trusted/status.md) | Not started ([#202](https://github.com/nicbk/nicbk-website/issues/202)) | — | — | — |
+| [`the-references-can-be-trusted`](./tasks/the-references-can-be-trusted/status.md) | In review ([#202](https://github.com/nicbk/nicbk-website/issues/202)) | pending | pending | pending |
+| [`older-papers-are-re-read`](./tasks/older-papers-are-re-read/status.md) | Not started ([#207](https://github.com/nicbk/nicbk-website/issues/207)) | — | — | — |
 | [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | Not started ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | — | — | — |
 | [`the-citations-view`](./tasks/the-citations-view/status.md) | Not started ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | — | — | — |
 | [`the-way-back`](./tasks/the-way-back/status.md) | Not started ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | — | — | — |
 
 ## Definition of Done (feature)
 
-All acceptance criteria met, all four tasks merged behind CI + review, and the
+All acceptance criteria met, all five tasks merged behind CI + review, and the
 flow checked in Safari on `nicbk.com`.
 
 ## Notes carried into implementation
@@ -33,7 +34,8 @@ flow checked in Safari on `nicbk.com`.
   with the user).
 - **A path, not a log**, in the URL (decided with the user).
 - **Outside references link to Semantic Scholar** (revised with the user).
-- **The backfill never writes a field a reader can edit.**
+- **The re-read never writes a field a reader can edit.**
+- **The re-read is visible**: one summary row while it runs; a failure stays, with try again and no dismiss (decided with the user).
 
 ## Log
 
@@ -42,3 +44,8 @@ flow checked in Safari on `nicbk.com`.
   - A candidate merged-row rule matched exactly the two known rows.
   - Four questions decided with the user, including rejecting a growing trail in
     favour of a short path.
+- 2026-09-14 — **Task 1 implemented; the backfill split out as task 2** (#207).
+  Asked how a backfill runs on a self-deploying host, the user wanted it
+  automatic and visible: a summary row in the upload status indicator while it
+  runs, and a failure that stays, with try again and no dismiss, until it
+  succeeds. `references_read_at` added to mark papers already read.

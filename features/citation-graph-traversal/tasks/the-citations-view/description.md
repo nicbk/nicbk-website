@@ -1,6 +1,6 @@
 # Task: The Citations View
 
-Task 3 of 4 of [#10](../../description.md). Sub-issue
+Task 4 of 5 of [#10](../../description.md). Sub-issue
 [#204](https://github.com/nicbk/nicbk-website/issues/204).
 
 The Citations sidebar tab, `?view=citations`, the reader hidden behind it, and

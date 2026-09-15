@@ -35,6 +35,22 @@
 - Order: in-collection and cited-by by year, newest first; outside references in
   the order stored (the paper's own order, as parsed).
 
+### Older papers are re-read
+
+Decided with the user at implementation (2026-09-14), replacing "a one-off
+command":
+
+- **Automatic on deploy.** When the worker starts, each finished article with no
+  `references_read_at` is queued for a re-read, at most once at a time.
+- **Shown in the upload status indicator**, next to "+", as **one summary row**:
+  "re-reading references · N of M papers". The indicator shows its in-progress
+  state while any paper is queued, and returns to "All articles synced" when
+  the last one succeeds. The row disappears on its own.
+- **A failure stays visible until it succeeds.** A paper whose re-read exhausts
+  its retries keeps its previous references untouched. A warning row, "couldn't
+  re-read references for N papers · their old references are kept", shows with
+  **try again** and **no dismiss**. Trying again re-queues those papers.
+
 ### The way back
 
 - **The header's title slot shows a path** ending at the open paper:
@@ -71,7 +87,10 @@
   letters-and-digits title contains the full letters-and-digits title of a
   Semantic Scholar-resolved row of the same citing article. Measured: exactly
   the two known rows on the local papers (research §4).
-- **Backfill** for existing articles rewrites their bibliography (edges, printed
+- `articles.references_read_at timestamptz null`: set when a bibliography is
+  read by this pipeline (extraction, or the re-read). Null marks a paper read
+  before it, which is what the re-read looks for. Not synced.
+- **The re-read** of older papers rewrites their bibliography (edges, printed
   text, reference count) and re-runs graduation. It **never writes** `title`,
   `authors`, `publication_year`, `venue`, `doi`, `abstract`, `notes`, `status`
   or the reading position.
@@ -107,9 +126,10 @@
    without is not a link.
 5. The credit is visible; the three empty/incomplete messages each appear for a
    paper in that state.
-6. The two merged rows are gone after backfill, and nothing else is removed.
+6. The two merged rows are gone after the re-read, and nothing else is removed.
    Existing papers gain printed text and a reference count. Edited metadata is
-   unchanged.
+   unchanged. The summary row counts down and disappears; a forced failure shows
+   the warning row, which only a successful try again removes.
 7. Another user's edges and articles never appear (integration tests).
 8. The path: A → B → C shows `A › B › C` with labels; opening A from C cuts it to
    `A`; a fourth and fifth hop fold the middle; reload and back keep it; a phone

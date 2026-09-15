@@ -8,11 +8,9 @@ The feature's **Data** constraints, plus:
   Scholar reference keeps its `raw`.
 - **`referenceCount` is added to the enrichment request's fields**, not fetched
   separately.
-- **The backfill is a job per article**, enqueued by a one-off command, and safe
-  to run twice. It reads the stored PDF through the existing storage layer.
 - Generated the project's way (schema → allowlist → `db:generate-zero-schema` →
   `drizzle-kit generate`).
 
 ## Acceptance
 
-Feature criterion 6.
+Feature criterion 6, for new uploads (older papers are task 2).

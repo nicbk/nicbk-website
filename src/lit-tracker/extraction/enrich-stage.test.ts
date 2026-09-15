@@ -219,6 +219,37 @@ describe('a successful enrichment', () => {
     })
   })
 
+  it('records how many references Semantic Scholar holds', async () => {
+    await runEnrichStage(
+      JOB,
+      fakeServices({
+        papers: new Map([
+          [JOB.articleLookupKey as string, { ...PAPER, referenceCount: 40 }],
+        ]),
+      }),
+    )
+
+    expect(recorded.articleUpdate).toMatchObject({ referenceCount: 40 })
+  })
+
+  it.each([
+    ['absent', undefined],
+    ['null', null],
+    ['not a whole number', 12.5],
+    ['negative', -1],
+  ])('records no reference count when the API’s is %s', async (_case, count) => {
+    await runEnrichStage(
+      JOB,
+      fakeServices({
+        papers: new Map([
+          [JOB.articleLookupKey as string, { ...PAPER, referenceCount: count }],
+        ]),
+      }),
+    )
+
+    expect(recorded.articleUpdate).toMatchObject({ referenceCount: null })
+  })
+
   it('fills in the venue and corrects the year', async () => {
     await runEnrichStage(JOB, fakeServices())
 

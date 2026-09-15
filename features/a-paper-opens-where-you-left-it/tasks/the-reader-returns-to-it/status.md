@@ -1,6 +1,6 @@
 # Status: The Reader Returns to It
 
-**State:** In review. Safari check on `nicbk.com` after deploy still to do.
+**State:** Complete — merged in #199; Safari check passed on `nicbk.com`.
 
 ## Log
 
@@ -27,3 +27,6 @@
   | p. 3 / 100pt written to the row while open | arrived in the tab's Zero store; reader did not move |
   | reload after that | p. 3, 100.02pt |
   | scroll and reload within 150ms | flushed (p. 7, 584.69pt); reopened at 584.71pt, same scrollTop |
+- 2026-09-14 — **Merged (#199) and checked in Safari on `nicbk.com`**: three
+  reloads at p. 4, 295.79pt, scrollTop 3090 each; the same paper in Chrome
+  opened at p. 4, 295.84pt.

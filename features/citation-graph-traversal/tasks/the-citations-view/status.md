@@ -1,6 +1,6 @@
 # Status: The Citations View
 
-**State:** In review ([#204](https://github.com/nicbk/nicbk-website/issues/204); PR [#211](https://github.com/nicbk/nicbk-website/pull/211)).
+**State:** Complete ([#204](https://github.com/nicbk/nicbk-website/issues/204); merged in [#211](https://github.com/nicbk/nicbk-website/pull/211), with the reader fix following separately).
 
 ## What shipped
 
@@ -90,3 +90,6 @@ alignment are not reachable from jsdom; both were measured in the browser.
   `ReaderDocument` and the root error page replaced the tracker); the reader is
   now keyed by article. Four citation → Back round trips after: no errors, and
   each paper reopened at its own position.
+- 2026-09-15 — #211 merged at `9517700`, before the reader fix above was pushed,
+  so main and `nicbk.com` shipped without it and the user kept seeing the error
+  there. Carried to main in its own PR.

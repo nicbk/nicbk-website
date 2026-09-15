@@ -45,10 +45,16 @@ export interface SemanticScholarPaper {
   venue: string | null
   externalIds: Record<string, unknown> | null
   authors: { name?: string }[] | null
+  /**
+   * How many references Semantic Scholar holds for the paper — what a
+   * bibliography's rows are compared with, so a short one is visible.
+   */
+  referenceCount?: number | null
 }
 
 /** The fields worth asking for; every one of them fills a column. */
-const FIELDS = 'paperId,title,abstract,year,venue,externalIds,authors'
+const FIELDS =
+  'paperId,title,abstract,year,venue,externalIds,authors,referenceCount'
 
 /**
  * A reference list is read for its ids *and* its metadata: where Semantic

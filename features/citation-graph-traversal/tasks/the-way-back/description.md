@@ -1,6 +1,6 @@
 # Task: The Way Back
 
-Task 4 of 4 of [#10](../../description.md). Sub-issue
+Task 5 of 5 of [#10](../../description.md). Sub-issue
 [#205](https://github.com/nicbk/nicbk-website/issues/205).
 
 The path from where you started to the open paper, in the header's title slot:

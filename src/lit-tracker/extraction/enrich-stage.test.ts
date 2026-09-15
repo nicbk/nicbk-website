@@ -64,12 +64,21 @@ interface Recorded {
   lookedUp: string[][]
   titleQueries: string[]
   referenceListsFetched: string[]
+  deletes: number
 }
 
 let recorded: Recorded
 
 /** Edges the extract stage wrote that carry no identifier of their own. */
 let unresolvedEdges: { id: string; title: string }[] = []
+
+/** The bibliography as the transaction reads it back, after resolution. */
+let bibliographyRows: {
+  id: string
+  title: string
+  semanticScholarId: string | null
+  citedArticleId: string | null
+}[] = []
 
 function fakeDatabase(article: typeof ARTICLE | undefined): DatabaseHandle {
   const tx = {
@@ -94,7 +103,12 @@ function fakeDatabase(article: typeof ARTICLE | undefined): DatabaseHandle {
         },
       }),
     }),
-    select: () => ({ from: () => ({ where: async () => [] }) }),
+    select: () => ({ from: () => ({ where: async () => bibliographyRows }) }),
+    delete: () => ({
+      where: async () => {
+        recorded.deletes += 1
+      },
+    }),
     // Edges added from Semantic Scholar's own reference list.
     insert: () => ({
       values: (rows: Record<string, unknown>[]) => ({
@@ -193,8 +207,10 @@ beforeEach(() => {
     lookedUp: [],
     titleQueries: [],
     referenceListsFetched: [],
+    deletes: 0,
   }
   unresolvedEdges = []
+  bibliographyRows = []
 })
 
 describe('a successful enrichment', () => {
@@ -217,6 +233,66 @@ describe('a successful enrichment', () => {
       semanticScholarId: PAPER.paperId,
       extractionStatus: 'enriched',
     })
+  })
+
+  it('records how many references Semantic Scholar holds', async () => {
+    await runEnrichStage(
+      JOB,
+      fakeServices({
+        papers: new Map([
+          [JOB.articleLookupKey as string, { ...PAPER, referenceCount: 40 }],
+        ]),
+      }),
+    )
+
+    expect(recorded.articleUpdate).toMatchObject({ referenceCount: 40 })
+  })
+
+  it.each([
+    ['absent', undefined],
+    ['null', null],
+    ['not a whole number', 12.5],
+    ['negative', -1],
+  ])('records no reference count when the API’s is %s', async (_case, count) => {
+    await runEnrichStage(
+      JOB,
+      fakeServices({
+        papers: new Map([
+          [JOB.articleLookupKey as string, { ...PAPER, referenceCount: count }],
+        ]),
+      }),
+    )
+
+    expect(recorded.articleUpdate).toMatchObject({ referenceCount: null })
+  })
+
+  it('removes a row that is two references read as one, once the list is applied', async () => {
+    bibliographyRows = [
+      {
+        id: 'merged',
+        title:
+          'Understanding the difficulty of training deep feedforward neural networks. The handbook of brain theory and neural networks',
+        semanticScholarId: null,
+        citedArticleId: null,
+      },
+      {
+        id: 'clean',
+        title:
+          'Understanding the difficulty of training deep feedforward neural networks',
+        semanticScholarId: 's2-glorot',
+        citedArticleId: null,
+      },
+    ]
+
+    await runEnrichStage(JOB, fakeServices())
+
+    expect(recorded.deletes).toBe(1)
+  })
+
+  it('removes nothing when no row is a merge', async () => {
+    await runEnrichStage(JOB, fakeServices())
+
+    expect(recorded.deletes).toBe(0)
   })
 
   it('fills in the venue and corrects the year', async () => {

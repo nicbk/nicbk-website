@@ -210,6 +210,10 @@ async function recordOutcome(
       outcome.kind === 'extracted'
         ? ('grobid_only' as const)
         : ('failed' as const),
+    // Marks the bibliography as read by the pipeline that keeps printed text,
+    // so the backfill of older papers passes this one by. Null on a failure: no
+    // bibliography is written to have been read.
+    referencesReadAt: outcome.kind === 'extracted' ? new Date() : null,
   }
 
   await services.database.db.transaction(async (tx) => {

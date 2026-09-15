@@ -290,6 +290,28 @@ describe('a successful extraction', () => {
     })
   })
 
+  it('keeps each reference as printed, and marks the bibliography read', async () => {
+    await runExtractStage(
+      JOB,
+      fakeServices({
+        extract: async () => ({
+          ...COMPLETE,
+          bibliography: [
+            { ...REFERENCES[0], raw: '  Hopper. A title. 2019.  ' },
+            { ...REFERENCES[1], raw: '   ' },
+          ] as typeof REFERENCES,
+        }),
+      }),
+    )
+
+    expect(recorded.edges.map((edge) => edge['rawText'])).toEqual([
+      'Hopper. A title. 2019.',
+      null,
+    ])
+    // What the backfill of older papers passes this one by.
+    expect(recorded.article?.['referencesReadAt']).toBeInstanceOf(Date)
+  })
+
   it('adopts the pre-allocated id and the object already stored under it', async () => {
     await runExtractStage(JOB, fakeServices({}))
 
@@ -356,6 +378,8 @@ describe('a document GROBID could not extract', () => {
       title: FILENAME,
       authors: [],
       extractionStatus: 'failed',
+      // No bibliography was written, so none was read.
+      referencesReadAt: null,
     })
   })
 

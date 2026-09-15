@@ -4,6 +4,7 @@ import { articles, citationEdges } from '~/db/schema'
 import {
   addReferenceEdges,
   applyResolvedEdges,
+  dropMergedRows,
   graduateEdgesCiting,
 } from '~/lit-tracker/citations/edges'
 import { isSameWork } from '~/lit-tracker/citations/matching'
@@ -111,6 +112,9 @@ export async function runEnrichStage(
         .update(articles)
         .set({
           ...enrichment,
+          // What the rows are measured against, so a bibliography that was
+          // only partly read can say so.
+          referenceCount: referenceCountOf(matched.paper),
           extractionStatus: 'enriched',
           updatedAt: new Date(),
         })
@@ -149,6 +153,10 @@ export async function runEnrichStage(
       { articleId: job.articleId, userId: job.userId },
       fromReferenceList.unclaimed,
     )
+
+    // Only now can a merged row be recognised: its evidence is the clean rows
+    // Semantic Scholar's list just resolved or added.
+    await dropMergedRows(tx, job.articleId)
 
     const finalize: FinalizeJob = { uploadJobId: job.uploadJobId }
     await services.queue.send(FINALIZE_QUEUE, finalize, {
@@ -263,6 +271,14 @@ async function matchArticle(
     },
   )
   return agrees ? { paper: candidate, kind: 'title' } : null
+}
+
+/** A usable reference count, or null — the API omits it for thin records. */
+function referenceCountOf(paper: SemanticScholarPaper): number | null {
+  const count = paper.referenceCount
+  return typeof count === 'number' && Number.isInteger(count) && count >= 0
+    ? count
+    : null
 }
 
 /** The columns enrichment reads before deciding what to write back. */

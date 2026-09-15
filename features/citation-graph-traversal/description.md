@@ -37,6 +37,9 @@ started to where you are.
   "its bibliography was not read" are different messages.
 - **Cleaner rows.** A reference GROBID merged with its neighbour is dropped when
   both halves arrived cleanly from Semantic Scholar.
+- **Older papers catch up on their own.** Papers read before printed text was
+  kept are re-read on deploy, with progress in the upload status indicator. A
+  failure stays there, with try again, until it succeeds.
 - **The way back.** The header's title slot becomes a path
   (`Attention › … › BERT › RoBERTa`). Each step is labelled with how you got
   there (cites / cited by), and returning to a paper already on the path cuts it

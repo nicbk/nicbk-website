@@ -27,7 +27,15 @@
    * (collection-toolbar.module.css) — so it stays, and `aspect-ratio` is what
    * keeps both properties: the row still decides the height, and the button is
    * square at whatever height that turns out to be.
+   *
+   * **`height: 100%` is what makes that true in Safari.** A height that arrives
+   * only by stretching is not one WebKit feeds through `aspect-ratio`: Safari
+   * 17.5 drew this button 28.4 × 40px — tall, and as wide as its glyph — while
+   * Chrome drew it square (user-reported, measured in both). Stated as a height
+   * of its own, filling the stretched row, it is one Safari resolves too: 40 ×
+   * 40px there, 39.5 × 39.5px in Chrome.
    */
+  height: 100%;
   aspect-ratio: 1;
   padding: var(--space-2xs);
   border: 1px solid var(--color-border);

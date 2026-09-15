@@ -451,6 +451,7 @@ describe('what Zero replicates', () => {
       // Added by the migration that creates it, in the same commit — #10
       // traverses this table from the client.
       'citation_edges',
+      'reference_reads',
       'tags',
       'upload_jobs',
     ])

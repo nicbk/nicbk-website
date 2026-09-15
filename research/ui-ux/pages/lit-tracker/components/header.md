@@ -175,3 +175,13 @@ The original "each sub-application gets its own header" was about **identity**,
 and identity survives intact: the two headers still share not one item.
 
 Tracked as **#17 `one-header-row`** in `features/index.md`.
+
+## Revision (2026-09-14): what the title slot becomes during traversal
+
+**Decided with the user**, closing the question the 2026-08-13 revision left
+for #10. The hops go in the **title slot beside the app name**, not in the
+breadcrumb, which stays rooted at the personal site. The slot shows a short path
+(`Literature Tracker │ Attention › … › BERT › RoBERTa`), not an appended trail.
+The rules are in
+[`citation-graph-traversal`](../../../../../features/citation-graph-traversal/constraints-and-behavior.md#the-way-back).
+With no path, the slot shows the title alone, as before.

@@ -82,3 +82,11 @@ document outline are unchanged — the same arrangement
 main content, the four-tab sidebar and which tabs swap the main area, the drawer
 behaviour below the breakpoint, and the Semantic Scholar attribution requirement,
 which still travels with the S2-derived data #10 will show.
+
+## Revision (2026-09-14): the Citations tab hides the reader
+
+The main-content swap stands, with one change decided with the user at #10's spec:
+while Citations is active **the reader is hidden, not unloaded**, so switching
+back is instant and the reading position is where it was. Which view is showing
+is kept in the URL (`?view=citations`), since the rail and the narrow-screen
+sheet are separate sidebar instances.

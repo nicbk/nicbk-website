@@ -67,7 +67,7 @@ need them (see Phases 2–3).
 | 7 | Article upload + extraction pipeline (Garage, pg-boss jobs, GROBID + Semantic Scholar, upload status) | [`article-upload-and-extraction`](./article-upload-and-extraction/description.md) | **Complete** (2026-08-09; all 5 tasks merged, #67 + #68 + #69 + #70 + #71) | #6 |
 | 8 | Collection view (card grid, tags, reading status, filtering, live search) | [`collection-view`](./collection-view/description.md) | **Complete** (2026-08-09; all 4 tasks merged, #86 + #88 + #90 + #92) | #7 |
 | 9 | Article detail + PDF reader + annotations | [`article-detail-and-reader`](./article-detail-and-reader/description.md) | **Complete** (2026-08-17; all 6 tasks merged, #96 + #97 + #98 + #99 + #100 + #105) | #7, #8 |
-| 10 | Citation-graph traversal | `citation-graph-traversal` | Not yet spec'd | #9 |
+| 10 | Citation-graph traversal (a Citations tab: what a paper cites and what cites it, followed from paper to paper with a short way back) | [`citation-graph-traversal`](./citation-graph-traversal/description.md) | **Spec'd** (2026-09-14; 4 tasks, not started) | #7, #9, #23 |
 | 11 | Article edit (correcting what the extractor got wrong, deleting an article) | [`article-edit`](./article-edit/description.md) | **Complete** (2026-09-13; all 3 tasks merged, #141 + #142 + #143) | #7, #8 |
 | 12 | Reader touch + gestures (pinch zoom, touch scrolling, click-away, touch selection) | [`reader-touch-and-gestures`](./reader-touch-and-gestures/description.md) | **Complete** (2026-08-23; all 7 tasks merged, #109 + #111 + #114 + #112 + #118 + #122 + #116) | #9 |
 | 13 | Tracker navigation latency (the auth guard stops blocking) | [`tracker-navigation-latency`](./tracker-navigation-latency/description.md) | **Complete** (2026-09-12; its one task merged, #136) | #6, #8 |
@@ -94,8 +94,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `tracker-navigation-latency` (complete), `article-edit` (complete),
 `surface-layering` (complete), `one-header-row` (complete),
 `controls-look-like-controls` (complete), `the-site-fits-a-phone` (complete),
-`a-popup-keeps-its-clicks` (complete), `a-paper-downloads-once` (complete), `a-link-is-a-link` (complete) and
-`a-paper-opens-where-you-left-it` (complete) have full
+`a-popup-keeps-its-clicks` (complete), `a-paper-downloads-once` (complete), `a-link-is-a-link` (complete),
+`a-paper-opens-where-you-left-it` (complete) and `citation-graph-traversal` (spec'd) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

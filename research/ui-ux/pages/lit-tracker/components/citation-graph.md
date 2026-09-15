@@ -43,3 +43,22 @@ a graph-visualization canvas.
   [../../../../licensing/third-party-attribution-requirements.md](../../../../licensing/third-party-attribution-requirements.md).
   Exact placement/wording is an implementation detail; the requirement is
   only that the credit exists somewhere this S2-sourced data is displayed.
+
+## Revision (2026-09-14), decided with the user at spec time
+
+Spec'd as [`citation-graph-traversal`](../../../../../features/citation-graph-traversal/description.md)
+(#10). Three bullets above change; the rest stand.
+
+- **The swap hides the reader rather than replacing it.** The main area still
+  shows this view while Citations is active, but the reader stays mounted behind
+  it. Measured on `nicbk.com`, a remount is ~0.4s of blank panel; hidden, the
+  return is instant and the place is kept.
+- **"Not in collection" items link out.** 95%+ of them carry a Semantic Scholar
+  id, so they open the paper's Semantic Scholar page in a new tab, marked
+  external. Without an id they stay plain text. They show the reference as the
+  paper printed it when that text exists.
+- **The breadcrumb becomes a short path in the header's title slot**, not a
+  growing trail. Only the chain from the starting paper to the open one is kept:
+  returning to a paper on it cuts it back, each step is labelled cites / cited
+  by, the middle folds into "…" past three, and it is kept in the URL. A plain
+  trail was rejected as unwieldy after a few hops.

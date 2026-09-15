@@ -16,7 +16,15 @@ vi.mock('./queue', async (importOriginal) => ({
   getQueue,
 }))
 
-const { startJobWorker } = await import('./worker')
+const queueReferenceRereads = vi.hoisted(() => vi.fn(async () => 0))
+vi.mock('~/lit-tracker/citations/reread-stage', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('~/lit-tracker/citations/reread-stage')
+  >()),
+  queueReferenceRereads,
+}))
+
+const { queueOlderPaperRereads, startJobWorker } = await import('./worker')
 
 describe('startJobWorker', () => {
   afterEach(() => {
@@ -55,7 +63,11 @@ describe('startJobWorker', () => {
       'lit-tracker.enrich-exhausted',
       'lit-tracker.finalize',
       'lit-tracker.pdf-cleanup',
+      'lit-tracker.reread-references',
+      'lit-tracker.reread-references-exhausted',
     ])
+    // And once they are bound, the older papers are queued for their re-read.
+    expect(queueReferenceRereads).toHaveBeenCalledOnce()
   })
 
   it('starts only once, however many times it is called', async () => {
@@ -65,5 +77,32 @@ describe('startJobWorker', () => {
 
     expect(startJobWorker()).toBe(first)
     await first
+  })
+})
+
+describe('queueOlderPaperRereads', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('says how many older papers it queued', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    queueReferenceRereads.mockResolvedValueOnce(3)
+
+    await queueOlderPaperRereads({} as never)
+
+    expect(log).toHaveBeenCalledWith(
+      'Re-reading references for 3 older papers.',
+    )
+  })
+
+  it('logs a failure rather than throwing, so the worker is not started twice', async () => {
+    // The handlers are bound by the time this runs; a throw would send the
+    // retry loop round and bind every one of them again.
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    queueReferenceRereads.mockRejectedValueOnce(new Error('connection lost'))
+
+    await expect(queueOlderPaperRereads({} as never)).resolves.toBeUndefined()
+    expect(error).toHaveBeenCalled()
   })
 })

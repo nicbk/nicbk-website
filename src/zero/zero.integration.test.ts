@@ -197,6 +197,14 @@ async function seedTwoUsers(): Promise<void> {
   await applyTag(ARTICLE_B, TAG_B)
   await createAnnotation(ANNOTATION_A, ARTICLE_A, USER_A)
   await createAnnotation(ANNOTATION_B, ARTICLE_B, USER_B)
+  for (const [articleId, userId] of [
+    [ARTICLE_A, USER_A],
+    [ARTICLE_B, USER_B],
+  ] as const) {
+    await database.db
+      .insert(drizzleSchema.referenceReads)
+      .values({ articleId, userId, status: 'queued' })
+  }
 }
 
 describe('the committed migrations', () => {
@@ -284,6 +292,7 @@ describe('the committed migrations', () => {
       'article_tags',
       'articles',
       'citation_edges',
+      'reference_reads',
       'tags',
       'upload_jobs',
     ])
@@ -530,6 +539,17 @@ describe('cross-user isolation', () => {
     expect(forA[0]?.id).not.toBe(forB[0]?.id)
   })
 
+  it('returns only the requesting user’s re-reads', async () => {
+    const forA = await runAs(queries.referenceReads.mine, CONTEXT_A, undefined)
+    const forB = await runAs(queries.referenceReads.mine, CONTEXT_B, undefined)
+
+    // Keyed by article, so the row's `articleId` is its identity.
+    const articleIds = (rows: unknown[]) =>
+      (rows as { articleId: string }[]).map((row) => row.articleId)
+    expect(articleIds(forA)).toEqual([ARTICLE_A])
+    expect(articleIds(forB)).toEqual([ARTICLE_B])
+  })
+
   it('returns only the requesting user’s tags', async () => {
     const forA = await runAs(queries.tags.mine, CONTEXT_A, undefined)
     const forB = await runAs(queries.tags.mine, CONTEXT_B, undefined)
@@ -595,6 +615,9 @@ describe('cross-user isolation', () => {
       [],
     )
     expect(await runAs(queries.tags.mine, undefined, undefined)).toEqual([])
+    expect(
+      await runAs(queries.referenceReads.mine, undefined, undefined),
+    ).toEqual([])
     expect(await runAs(queries.articleTags.mine, undefined, undefined)).toEqual(
       [],
     )

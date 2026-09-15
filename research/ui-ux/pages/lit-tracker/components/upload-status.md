@@ -32,3 +32,22 @@ Clicking it opens a popup listing in-progress and problem uploads.
 
 Uses the [lit-tracker header](./header.md) as underlying page context (the
 popup itself has no separate header).
+
+## Revision (2026-09-14): the indicator also shows a re-read of older papers
+
+Decided with the user during #10
+([`older-papers-are-re-read`](../../../../../features/citation-graph-traversal/tasks/older-papers-are-re-read/description.md)).
+Papers read before printed reference text was kept are re-read automatically on
+deploy, and this indicator is where that shows. Two departures from the bullets
+above, both deliberate:
+
+- **A summary, not a row per paper.** "re-reading references · 7 of 12 papers",
+  one row however large the batch. The flat-list rule above is for uploads, each
+  of which the reader started; a re-read is many papers the reader did not.
+- **A failure with no way to set it aside.** "couldn't re-read references for N
+  papers · their old references are kept", with **try again** and no dismiss:
+  the warning is how the reader knows those papers are behind, so it clears only
+  when they catch up.
+
+The icon's rules are unchanged: a failure outranks work in progress, and the
+checkmark means nothing is outstanding of either kind.

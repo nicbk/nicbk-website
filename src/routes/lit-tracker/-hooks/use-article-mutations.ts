@@ -97,6 +97,11 @@ export interface ArticleMutations {
    * client of the object store.
    */
   deleteArticle: (articleId: string) => Promise<void>
+  /**
+   * Tries again to re-read the references of papers whose re-read failed.
+   * A refusal is a toast: this one the reader did ask for.
+   */
+  retryReferenceReads: (articleIds: string[]) => Promise<void>
 }
 
 export function useArticleMutations(): ArticleMutations {
@@ -175,6 +180,9 @@ export function useArticleMutations(): ArticleMutations {
 
       deleteArticle: (articleId) =>
         run(() => zero.mutate(mutators.articles.delete({ id: articleId }))),
+
+      retryReferenceReads: (articleIds) =>
+        run(() => zero.mutate(mutators.referenceReads.retry({ articleIds }))),
     }),
     [report, run, zero],
   )

@@ -1,4 +1,6 @@
 // @vitest-environment node
+import type { SQL } from 'drizzle-orm'
+import { PgDialect } from 'drizzle-orm/pg-core'
 import { describe, expect, it, vi } from 'vitest'
 import type { ZeroContext } from './context'
 import { mutators } from './mutators'
@@ -134,6 +136,106 @@ describe('runServerEffect', () => {
         getQueue: async () => queue,
       }),
     ).rejects.toThrow(/outside the server/)
+    expect(send).not.toHaveBeenCalled()
+  })
+})
+
+describe('referenceReads.retry', () => {
+  const OTHER = '0199a1b2-c3d4-7e5f-8a9b-000000000002'
+
+  /** A server transaction whose re-read lookup answers with these rows. */
+  function serverTxReturning(rows: { articleId: string }[]) {
+    const where = vi.fn(async () => rows)
+    const wrapped = { select: () => ({ from: () => ({ where }) }) }
+    return {
+      tx: {
+        location: 'server',
+        dbTransaction: { wrappedTransaction: wrapped },
+      } as never,
+      where,
+    }
+  }
+
+  it('queues the papers now waiting, one job each, on the mutation’s transaction', async () => {
+    const { queue, send } = queueSpy()
+    const { tx } = serverTxReturning([
+      { articleId: ARTICLE },
+      { articleId: OTHER },
+    ])
+
+    await runServerEffect(mutators.referenceReads.retry.mutatorName, {
+      args: { articleIds: [ARTICLE, OTHER] },
+      ctx: CONTEXT,
+      tx,
+      getQueue: async () => queue,
+    })
+
+    expect(send.mock.calls.map(([name, job]) => [name, job])).toEqual([
+      [
+        'lit-tracker.reread-references',
+        { articleId: ARTICLE, userId: CONTEXT.id },
+      ],
+      [
+        'lit-tracker.reread-references',
+        { articleId: OTHER, userId: CONTEXT.id },
+      ],
+    ])
+    // Keyed by paper, so a paper still queued is not queued twice.
+    expect(send.mock.calls[0]?.[2]).toMatchObject({
+      singletonKey: ARTICLE,
+      db: expect.anything(),
+    })
+  })
+
+  it('looks only at the caller’s own papers, and only those now waiting', async () => {
+    // The ids come from the browser. Which rows they can reach is decided by
+    // this query, so its conditions are what is asserted — rendered as the SQL
+    // Postgres would receive.
+    const { queue } = queueSpy()
+    const { tx, where } = serverTxReturning([])
+
+    await runServerEffect(mutators.referenceReads.retry.mutatorName, {
+      args: { articleIds: [ARTICLE] },
+      ctx: CONTEXT,
+      tx,
+      getQueue: async () => queue,
+    })
+
+    const condition = (where.mock.calls as unknown as [SQL][])[0]?.[0]
+    const rendered = new PgDialect().sqlToQuery(condition as SQL)
+    expect(rendered.sql).toContain('"user_id" = $')
+    expect(rendered.sql).toContain('"status" = $')
+    expect(rendered.params).toEqual(
+      expect.arrayContaining([CONTEXT.id, 'queued', ARTICLE]),
+    )
+  })
+
+  it('sends nothing when no named paper is the caller’s and waiting', async () => {
+    const { queue, send } = queueSpy()
+    const { tx } = serverTxReturning([])
+
+    await runServerEffect(mutators.referenceReads.retry.mutatorName, {
+      args: { articleIds: [ARTICLE] },
+      ctx: CONTEXT,
+      tx,
+      getQueue: async () => queue,
+    })
+
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('refuses a retry carrying no session', async () => {
+    const { queue, send } = queueSpy()
+    const { tx } = serverTxReturning([{ articleId: ARTICLE }])
+
+    await expect(
+      runServerEffect(mutators.referenceReads.retry.mutatorName, {
+        args: { articleIds: [ARTICLE] },
+        ctx: undefined,
+        tx,
+        getQueue: async () => queue,
+      }),
+    ).rejects.toThrow()
     expect(send).not.toHaveBeenCalled()
   })
 })

@@ -692,6 +692,211 @@ describe('what the citations view can trust', () => {
   })
 })
 
+describe('re-reading an older paper', () => {
+  type RereadModule = typeof import('./reread-stage')
+  let reread: RereadModule
+
+  beforeEach(async () => {
+    reread = await import('./reread-stage')
+  })
+
+  /** A merged reference, and the two halves Semantic Scholar knows. */
+  const MERGED = reference(
+    'Understanding the difficulty of training deep feedforward neural networks. The handbook of brain theory and neural networks',
+    'Glorot',
+  )
+  const HALVES = {
+    's2-citing': [
+      {
+        paperId: 's2-glorot',
+        title:
+          'Understanding the difficulty of training deep feedforward neural networks',
+      },
+      {
+        paperId: 's2-handbook',
+        title: 'The handbook of brain theory and neural networks',
+      },
+    ],
+  }
+  const CITING = extraction({
+    identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+    bibliography: [MERGED],
+  })
+  const ENRICHED = {
+    papers: {
+      'DOI:10.1/citing': paper({ paperId: 's2-citing', referenceCount: 2 }),
+      's2-citing': paper({ paperId: 's2-citing', referenceCount: 2 }),
+    },
+  }
+
+  /**
+   * An article as one read before this feature looks: no printed text, no
+   * count, no read marker — and, since its upload had no reference list to
+   * align against, the merged row still standing. Then corrected by a reader.
+   */
+  async function olderPaper(userId = USER_A): Promise<string> {
+    const id = await uploadAndSettle('older.pdf', CITING, ENRICHED, userId)
+    await database.db.execute(
+      sql`update citation_edges set raw_text = null where citing_article_id = ${id}`,
+    )
+    await database.db.execute(
+      sql`update articles set references_read_at = null, reference_count = null,
+            title = 'Title A Reader Corrected', notes = 'mine', status = 'reading',
+            reading_page = 3, reading_offset = 120,
+            updated_at = '2020-01-01T00:00:00Z'
+          where id = ${id}`,
+    )
+    return id
+  }
+
+  async function readsOf(userId = USER_A) {
+    const { rows } = await database.db.execute<{
+      article_id: string
+      status: string
+    }>(
+      sql`select article_id, status from reference_reads where user_id = ${userId} order by article_id`,
+    )
+    return rows
+  }
+
+  it('queues each finished paper not yet read this way, once', async () => {
+    const older = await olderPaper()
+    // Read by this pipeline already: nothing to catch up on.
+    await uploadAndSettle('new.pdf', extraction({ title: 'A New Paper' }))
+
+    expect(await reread.queueReferenceRereads(database, queue)).toBe(1)
+    expect(await readsOf()).toEqual([{ article_id: older, status: 'queued' }])
+    // A second start adds nothing, and sends no second job.
+    expect(await reread.queueReferenceRereads(database, queue)).toBe(0)
+    const { rows } = await database.db.execute<{ count: number }>(
+      sql`select count(*)::int as count from pgboss.job where name = ${queueModule.REFERENCE_REREAD_QUEUE}`,
+    )
+    expect(rows[0]?.count).toBe(1)
+  })
+
+  it('sends a job again for a paper whose job was lost, and counts it as nothing new', async () => {
+    const older = await olderPaper()
+    await reread.queueReferenceRereads(database, queue)
+    // A queue recreated, a job purged: the row still says it is waiting.
+    await database.db.execute(
+      sql`delete from pgboss.job where name = ${queueModule.REFERENCE_REREAD_QUEUE}`,
+    )
+
+    expect(await reread.queueReferenceRereads(database, queue)).toBe(0)
+
+    const { rows } = await database.db.execute<{ data: { articleId: string } }>(
+      sql`select data from pgboss.job where name = ${queueModule.REFERENCE_REREAD_QUEUE}`,
+    )
+    expect(rows.map((row) => row.data.articleId)).toEqual([older])
+  })
+
+  it('re-reads the bibliography, and nothing a reader can edit', async () => {
+    const id = await olderPaper()
+    const before = await articleRow(id)
+    await reread.queueReferenceRereads(database, queue)
+
+    await reread.runReferenceReread(
+      { articleId: id, userId: USER_A },
+      servicesWith(CITING, { ...ENRICHED, references: HALVES }),
+    )
+
+    const after = await articleRow(id)
+    expect(after).toMatchObject({
+      title: 'Title A Reader Corrected',
+      notes: 'mine',
+      status: 'reading',
+      reading_page: 3,
+      reading_offset: 120,
+      reference_count: 2,
+    })
+    expect(after?.['updated_at']).toEqual(before?.['updated_at'])
+    expect(after?.['references_read_at']).not.toBeNull()
+
+    const edges = await edgesOf(id)
+    // The merge is gone, both halves arrived, and what was printed is back.
+    expect(edges.map((edge) => edge['title'])).toEqual([
+      'The handbook of brain theory and neural networks',
+      'Understanding the difficulty of training deep feedforward neural networks',
+    ])
+    // The batch was this one paper, so nothing is left to show.
+    expect(await readsOf()).toEqual([])
+  })
+
+  it('keeps finished papers counted until the batch is done', async () => {
+    const first = await olderPaper()
+    const second = await olderPaper()
+    await reread.queueReferenceRereads(database, queue)
+    const services = servicesWith(CITING, ENRICHED)
+
+    await reread.runReferenceReread(
+      { articleId: first, userId: USER_A },
+      services,
+    )
+    expect(await readsOf()).toEqual(
+      [
+        { article_id: first, status: 'done' },
+        { article_id: second, status: 'queued' },
+      ].sort((a, b) => a.article_id.localeCompare(b.article_id)),
+    )
+
+    await reread.runReferenceReread(
+      { articleId: second, userId: USER_A },
+      services,
+    )
+    expect(await readsOf()).toEqual([])
+  })
+
+  it('keeps the old references and says so when the paper cannot be read', async () => {
+    const id = await olderPaper()
+    const edgesBefore = await edgesOf(id)
+    await reread.queueReferenceRereads(database, queue)
+    const { ExtractionFailedError } = await import(
+      '~/lit-tracker/extraction/failure'
+    )
+
+    await reread.runReferenceReread(
+      { articleId: id, userId: USER_A },
+      {
+        ...servicesWith(CITING, ENRICHED),
+        extractMetadata: async () => {
+          throw new ExtractionFailedError("couldn't read this PDF")
+        },
+      },
+    )
+
+    expect(await readsOf()).toEqual([{ article_id: id, status: 'failed' }])
+    expect(await edgesOf(id)).toEqual(edgesBefore)
+  })
+
+  it('keeps the old references, and asks to be retried, when Semantic Scholar is away', async () => {
+    const id = await olderPaper()
+    const edgesBefore = await edgesOf(id)
+    await reread.queueReferenceRereads(database, queue)
+
+    await expect(
+      reread.runReferenceReread(
+        { articleId: id, userId: USER_A },
+        servicesWith(CITING, { unavailable: true }),
+      ),
+    ).rejects.toThrow()
+
+    expect(await readsOf()).toEqual([{ article_id: id, status: 'queued' }])
+    expect(await edgesOf(id)).toEqual(edgesBefore)
+  })
+
+  it('shows a paper as failed once its retries run out', async () => {
+    const id = await olderPaper()
+    await reread.queueReferenceRereads(database, queue)
+
+    await reread.runExhaustedReferenceReread(
+      { articleId: id, userId: USER_A },
+      { database },
+    )
+
+    expect(await readsOf()).toEqual([{ article_id: id, status: 'failed' }])
+  })
+})
+
 describe('graduation', () => {
   it('resolves a new edge against a paper already in the collection', async () => {
     // Direction one. The cited paper is uploaded first.

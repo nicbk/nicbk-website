@@ -81,6 +81,14 @@ describe('the mutation each action names', () => {
     ])
   })
 
+  it('tries re-reading references again', async () => {
+    await mutations().retryReferenceReads([ARTICLE])
+
+    expect(requested()).toEqual([
+      { name: 'referenceReads.retry', args: { articleIds: [ARTICLE] } },
+    ])
+  })
+
   it('applies a tag, generating the join row’s id', async () => {
     await mutations().applyTag(ARTICLE, TAG)
 

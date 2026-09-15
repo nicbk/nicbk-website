@@ -77,6 +77,7 @@ function stubTransaction({ reads }: { reads?: boolean[] } = {}) {
       articles: table('articles'),
       annotations: table('annotations'),
       uploadJobs: table('uploadJobs'),
+      referenceReads: table('referenceReads'),
     },
   }
 
@@ -406,6 +407,68 @@ describe('articles.setStatus', () => {
 
     await expect(
       mutators.articles.setStatus.fn({ args, tx, ctx: CONTEXT } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+})
+
+describe('referenceReads.retry', () => {
+  /** A transaction whose lookup answers with a re-read in this status, or none. */
+  function withRead(status: string | null) {
+    const { tx, writes } = stubTransaction()
+    const run = async () =>
+      status === null ? [] : [{ articleId: ARTICLE, status }]
+    return { tx: { ...tx, run }, writes }
+  }
+
+  it('sets a failed re-read back to queued', async () => {
+    const { tx, writes } = withRead('failed')
+
+    await mutators.referenceReads.retry.fn({
+      args: { articleIds: [ARTICLE] },
+      tx,
+      ctx: CONTEXT,
+    } as never)
+
+    expect(writes).toEqual([
+      {
+        table: 'referenceReads',
+        operation: 'update',
+        values: expect.objectContaining({
+          articleId: ARTICLE,
+          status: 'queued',
+        }),
+      },
+    ])
+  })
+
+  it.each(['queued', 'done'])('leaves a %s re-read alone', async (status) => {
+    const { tx, writes } = withRead(status)
+
+    await mutators.referenceReads.retry.fn({
+      args: { articleIds: [ARTICLE] },
+      tx,
+      ctx: CONTEXT,
+    } as never)
+
+    expect(writes).toEqual([])
+  })
+
+  it.each([
+    [
+      'a re-read that is not the caller’s',
+      { articleIds: [ARTICLE] },
+      null,
+      CONTEXT,
+    ],
+    ['an anonymous caller', { articleIds: [ARTICLE] }, 'failed', undefined],
+    ['no papers', { articleIds: [] }, 'failed', CONTEXT],
+    ['a malformed id', { articleIds: ['article-1'] }, 'failed', CONTEXT],
+  ])('refuses %s without writing', async (_case, args, status, ctx) => {
+    const { tx, writes } = withRead(status)
+
+    await expect(
+      mutators.referenceReads.retry.fn({ args, tx, ctx } as never),
     ).rejects.toThrow()
     expect(writes).toEqual([])
   })

@@ -54,6 +54,24 @@ export const FINALIZE_QUEUE = 'lit-tracker.finalize'
 export const PDF_CLEANUP_QUEUE = 'lit-tracker.pdf-cleanup'
 
 /**
+ * Reads an older paper's bibliography again, keeping what the paper printed.
+ *
+ * **Not part of the upload chain either.** Queued when the worker starts, for
+ * each paper whose bibliography was read before printed reference text was kept
+ * (features/citation-graph-traversal, task `older-papers-are-re-read`). It
+ * rewrites the bibliography and nothing else about the article.
+ */
+export const REFERENCE_REREAD_QUEUE = 'lit-tracker.reread-references'
+
+/**
+ * Where a re-read lands once its retries are exhausted: its row is marked
+ * failed, which is what puts the warning, and its try again, in front of the
+ * reader. The paper keeps the references it had.
+ */
+export const REFERENCE_REREAD_DEAD_LETTER_QUEUE =
+  'lit-tracker.reread-references-exhausted'
+
+/**
  * Where an extract job lands once its retries are exhausted.
  *
  * Without this a transient failure that never stopped being transient — GROBID
@@ -102,6 +120,12 @@ export interface EnrichJob {
   articleLookupKey: string | null
   /** One entry per written edge that carried an identifier. */
   edgeLookups: { edgeId: string; key: string }[]
+}
+
+/** What a re-read carries: the paper, and whose it is. */
+export interface ReferenceRereadJob {
+  articleId: string
+  userId: string
 }
 
 /** What a finalize job carries: the row to remove. */
@@ -172,6 +196,23 @@ const ENRICH_RETRY_POLICY = {
 } as const
 
 /**
+ * How hard a re-read tries before it is shown as failed.
+ *
+ * Extraction's policy, for extraction's reason: what fails is GROBID reloading
+ * its models after a deploy — and a deploy is exactly when these are queued.
+ *
+ * **`exclusive`, keyed by article**: a paper can have one re-read queued or
+ * running, never two. Sends carry the article id as `singletonKey`, so a try
+ * again that lands while the paper is still queued is simply not added.
+ */
+const REFERENCE_REREAD_RETRY_POLICY = {
+  retryLimit: 5,
+  retryDelay: 30,
+  retryBackoff: true,
+  deadLetter: REFERENCE_REREAD_DEAD_LETTER_QUEUE,
+} as const
+
+/**
  * How hard the cleanup tries before an object is left behind.
  *
  * **No dead-letter queue**, unlike the two stages above, because there is
@@ -211,10 +252,17 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
   // another queue's `deadLetter` is not something pg-boss accepts.
   await boss.createQueue(EXTRACT_DEAD_LETTER_QUEUE)
   await boss.createQueue(ENRICH_DEAD_LETTER_QUEUE)
+  await boss.createQueue(REFERENCE_REREAD_DEAD_LETTER_QUEUE)
   await boss.createQueue(FINALIZE_QUEUE)
   await boss.createQueue(EXTRACT_QUEUE, EXTRACT_RETRY_POLICY)
   await boss.createQueue(ENRICH_QUEUE, ENRICH_RETRY_POLICY)
   await boss.createQueue(PDF_CLEANUP_QUEUE, PDF_CLEANUP_RETRY_POLICY)
+  await boss.createQueue(REFERENCE_REREAD_QUEUE, {
+    ...REFERENCE_REREAD_RETRY_POLICY,
+    // Only at creation: pg-boss refuses a policy in `updateQueue`, even the
+    // same one, so the loop below re-applies the retry settings alone.
+    policy: 'exclusive',
+  })
   // `createQueue` is a no-op on a queue that already exists — including its
   // options — so a database that already carries the extract queue from an
   // earlier version would keep that version's retry policy. Applying it again
@@ -223,6 +271,7 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
   await boss.updateQueue(EXTRACT_QUEUE, EXTRACT_RETRY_POLICY)
   await boss.updateQueue(ENRICH_QUEUE, ENRICH_RETRY_POLICY)
   await boss.updateQueue(PDF_CLEANUP_QUEUE, PDF_CLEANUP_RETRY_POLICY)
+  await boss.updateQueue(REFERENCE_REREAD_QUEUE, REFERENCE_REREAD_RETRY_POLICY)
   return boss
 }
 

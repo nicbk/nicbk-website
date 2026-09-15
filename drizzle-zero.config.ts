@@ -93,6 +93,13 @@ export default drizzleZeroConfig(drizzleSchema, {
       createdAt: true,
       updatedAt: true,
     },
+    referenceReads: {
+      articleId: true,
+      userId: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
     user: false,
     session: false,
     account: false,

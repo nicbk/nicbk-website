@@ -159,6 +159,51 @@ export const articles = pgTable(
 /** Whether an upload still needs attention. Resolved jobs are deleted, not marked. */
 export type UploadJobStatus = 'processing' | 'failed'
 
+/** Where one paper's re-read stands. See `referenceReads`. */
+export type ReferenceReadStatus = 'queued' | 'done' | 'failed'
+
+/**
+ * Papers whose bibliography is being read again, for what the reader is shown
+ * while it happens (features/citation-graph-traversal, task
+ * `older-papers-are-re-read`).
+ *
+ * Papers read before printed reference text was kept are re-read automatically
+ * when the worker starts. The upload status indicator shows this table as one
+ * summary row — "re-reading references · 7 of 12 papers" — so a finished
+ * paper's row stays `done` until the whole batch has, which is what gives the
+ * count its "of 12". Once nothing is `queued` or `failed`, the rows are deleted
+ * and the indicator returns to "All articles synced".
+ *
+ * A `failed` row stays until a try again succeeds (decided with the user: no
+ * dismiss). The paper it names keeps its previous references untouched.
+ *
+ * Its own table rather than a kind of `upload_jobs` row: an upload's failure
+ * opens the fix dialog and is retired by editing the article's details, and
+ * neither is true of a re-read.
+ */
+export const referenceReads = pgTable(
+  'reference_reads',
+  {
+    /** One re-read per paper at a time, so the paper is the key. */
+    articleId: uuid('article_id')
+      .primaryKey()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    status: text('status').$type<ReferenceReadStatus>().notNull(),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index('reference_reads_user_id_idx').on(table.userId)],
+)
+
 export const uploadJobs = pgTable(
   'upload_jobs',
   {
@@ -528,6 +573,14 @@ export const uploadJobsRelations = relations(uploadJobs, ({ one }) => ({
   }),
   article: one(articles, {
     fields: [uploadJobs.articleId],
+    references: [articles.id],
+  }),
+}))
+
+export const referenceReadsRelations = relations(referenceReads, ({ one }) => ({
+  user: one(user, { fields: [referenceReads.userId], references: [user.id] }),
+  article: one(articles, {
+    fields: [referenceReads.articleId],
     references: [articles.id],
   }),
 }))

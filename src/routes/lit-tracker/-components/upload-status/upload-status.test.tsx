@@ -19,17 +19,20 @@ import type { UploadJobRow } from './job-list'
  */
 const useQuery = vi.hoisted(() => vi.fn())
 const updateDetails = vi.hoisted(() => vi.fn())
+const retryReferenceReads = vi.hoisted(() => vi.fn())
 
 beforeEach(() => {
   useQuery.mockReset()
   useQuery.mockReturnValue([[], { type: 'complete' }])
   updateDetails.mockReset()
   updateDetails.mockResolvedValue(null)
+  retryReferenceReads.mockReset()
+  retryReferenceReads.mockResolvedValue(undefined)
 })
 
 vi.mock('@rocicorp/zero/react', () => ({ useQuery, useZero: () => ({}) }))
 vi.mock('~/routes/lit-tracker/-hooks/use-article-mutations', () => ({
-  useArticleMutations: () => ({ updateDetails }),
+  useArticleMutations: () => ({ updateDetails, retryReferenceReads }),
 }))
 
 const { UploadStatus } = await import('./upload-status')
@@ -208,6 +211,80 @@ function failed(overrides: Partial<UploadJobRow> = {}): UploadJobRow {
     ...overrides,
   })
 }
+
+describe('UploadStatus — re-reading older papers', () => {
+  const read = (articleId: string, status: string) => ({ articleId, status })
+
+  it('shows a batch as one row that counts, however many papers', async () => {
+    const user = userEvent.setup()
+    render(
+      <UploadStatus
+        jobs={[]}
+        referenceReads={[
+          read('a', 'done'),
+          read('b', 'done'),
+          read('c', 'queued'),
+          read('d', 'queued'),
+        ]}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole('button', { name: 'Re-reading references' }),
+    )
+
+    const list = await screen.findByRole('list', { name: 'Uploads' })
+    expect(within(list).getAllByRole('listitem')).toHaveLength(1)
+    expect(within(list).getByText('2 of 4 papers')).toBeTruthy()
+    expect(
+      within(list).getByRole('progressbar', {
+        name: 'Re-reading references, 2 of 4 papers',
+      }),
+    ).toBeTruthy()
+  })
+
+  it('is the checkmark once the batch is done', () => {
+    render(<UploadStatus jobs={[]} referenceReads={[read('a', 'done')]} />)
+
+    expect(
+      screen.getByRole('img', { name: 'All articles synced' }),
+    ).toBeTruthy()
+  })
+
+  it('warns about failed papers, with try again and no dismiss', async () => {
+    const user = userEvent.setup()
+    render(
+      <UploadStatus
+        jobs={[]}
+        referenceReads={[read('a', 'done'), read('b', 'failed')]}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Some references could not be re-read',
+      }),
+    )
+
+    const list = await screen.findByRole('list', { name: 'Uploads' })
+    expect(
+      within(list).getByText("couldn't re-read references for 1 paper"),
+    ).toBeTruthy()
+    expect(within(list).getByText('their old references are kept')).toBeTruthy()
+    // The warning goes only when the papers catch up.
+    expect(within(list).getAllByRole('button')).toHaveLength(1)
+    expect(within(list).queryByRole('button', { name: /dismiss/i })).toBeNull()
+
+    await user.click(
+      within(list).getByRole('button', {
+        name: 'try again to re-read references',
+      }),
+    )
+    expect(retryReferenceReads).toHaveBeenCalledWith(['b'])
+    // The popup stays open: the row becoming progress is the answer.
+    expect(screen.getByRole('list', { name: 'Uploads' })).toBeTruthy()
+  })
+})
 
 describe('UploadStatus — resolving a failure', () => {
   it('names the fix control for the upload it opens', async () => {

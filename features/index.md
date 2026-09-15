@@ -80,7 +80,7 @@ need them (see Phases 2–3).
 | 20 | A popup keeps its clicks (clicking a menu stops opening the card behind it) | [`a-popup-keeps-its-clicks`](./a-popup-keeps-its-clicks/description.md) | **Complete** (2026-09-14; its one task merged in two PRs, #174 — #176 + #177) | #8, #11 |
 | 21 | A paper downloads once (reopening a paper revalidates instead of re-downloading it) | [`a-paper-downloads-once`](./a-paper-downloads-once/description.md) | **Complete** (2026-09-14; its one task merged, #181; verified in Safari on `nicbk.com`) | #7, #9 |
 | 22 | A link is a link (a paper's links stop behaving like marks; a URL copies, a citation previews in place) | [`a-link-is-a-link`](./a-link-is-a-link/description.md) | **Complete** (2026-09-14; all 3 tasks merged, #186 + #187 + #188) | #9, #15 |
-| 23 | A paper opens where you left it (the reader saves your place and reopens there, on any device) | [`a-paper-opens-where-you-left-it`](./a-paper-opens-where-you-left-it/description.md) | **Spec'd** (2026-09-14; 2 tasks, not started) | #8, #9 |
+| 23 | A paper opens where you left it (the reader saves your place and reopens there, on any device) | [`a-paper-opens-where-you-left-it`](./a-paper-opens-where-you-left-it/description.md) | **Complete** (2026-09-14; both tasks merged, #195 + #196) | #8, #9 |
 
 ## How this roadmap is spec'd out
 
@@ -95,7 +95,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `surface-layering` (complete), `one-header-row` (complete),
 `controls-look-like-controls` (complete), `the-site-fits-a-phone` (complete),
 `a-popup-keeps-its-clicks` (complete), `a-paper-downloads-once` (complete), `a-link-is-a-link` (complete) and
-`a-paper-opens-where-you-left-it` (spec'd) have full
+`a-paper-opens-where-you-left-it` (complete) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

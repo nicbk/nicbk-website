@@ -51,6 +51,12 @@ describe('query names', () => {
     expect(queries.articles.mine.queryName).toBe('articles.mine')
     expect(queries.articles.byId.queryName).toBe('articles.byId')
     expect(queries.uploadJobs.mine.queryName).toBe('uploadJobs.mine')
+    expect(queries.citationEdges.references.queryName).toBe(
+      'citationEdges.references',
+    )
+    expect(queries.citationEdges.citedBy.queryName).toBe(
+      'citationEdges.citedBy',
+    )
   })
 })
 
@@ -156,6 +162,54 @@ describe('annotations.forArticle', () => {
 
     expect(ast.limit).toBe(0)
     expect(ast.where).toBeUndefined()
+  })
+})
+
+describe.each([
+  ['references', 'citingArticleId', 'citedArticle'],
+  ['citedBy', 'citedArticleId', 'citingArticle'],
+] as const)('citationEdges.%s', (name, column, relationship) => {
+  const query = queries.citationEdges[name]
+
+  it('filters by the paper and by owner, and scopes the related article to the owner too', () => {
+    const ast = astOf(query.fn({ args: AN_ARTICLE_ID, ctx: OWNER })) as {
+      table: string
+      where?: unknown
+      orderBy?: unknown
+      related?: {
+        subquery: { alias: string; table: string; where?: unknown }
+      }[]
+    }
+
+    expect(ast.table).toBe('citationEdges')
+    expect(ast.where).toEqual({
+      type: 'and',
+      conditions: [equals(column, AN_ARTICLE_ID), equals('userId', OWNER.id)],
+    })
+    expect(ast.orderBy).toEqual([['id', 'asc']])
+    expect(ast.related).toHaveLength(1)
+    expect(ast.related?.[0]?.subquery).toMatchObject({
+      alias: relationship,
+      table: 'articles',
+      where: equals('userId', OWNER.id),
+    })
+  })
+
+  it('still filters by the context user when the argument names someone else’s paper', () => {
+    const ast = astOf(query.fn({ args: AN_ARTICLE_ID, ctx: OWNER }))
+
+    expect(JSON.stringify(ast.where)).toContain(OWNER.id)
+    expect(JSON.stringify(ast.where)).not.toContain(OTHER_USER_ID)
+  })
+
+  it('rejects an argument that is not an article id', () => {
+    expect(() => query.fn({ args: 'not-an-id' as never, ctx: OWNER })).toThrow()
+  })
+
+  it('matches nothing without a context', () => {
+    expect(astOf(query.fn({ args: AN_ARTICLE_ID, ctx: undefined })).limit).toBe(
+      0,
+    )
   })
 })
 

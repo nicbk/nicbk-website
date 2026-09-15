@@ -648,6 +648,123 @@ describe('cross-user isolation', () => {
   })
 })
 
+describe('citation queries', () => {
+  /** A second paper each, so one of each user's papers can cite the other. */
+  const CITING_A = '0199a1b2-c3d4-7e5f-8a9b-000000000a04'
+  const CITING_B = '0199a1b2-c3d4-7e5f-8a9b-000000000b04'
+  const IN_COLLECTION_A = '0199a1b2-c3d4-7e5f-8a9b-00000000e0a1'
+  const OUTSIDE_A = '0199a1b2-c3d4-7e5f-8a9b-00000000e0a2'
+  const IN_COLLECTION_B = '0199a1b2-c3d4-7e5f-8a9b-00000000e0b1'
+  const PLANTED = '0199a1b2-c3d4-7e5f-8a9b-00000000e0a3'
+
+  async function edge(
+    id: string,
+    userId: string,
+    citingArticleId: string,
+    citedArticleId: string | null,
+    title: string,
+  ) {
+    await database.db.insert(drizzleSchema.citationEdges).values({
+      id,
+      userId,
+      citingArticleId,
+      citedArticleId,
+      title,
+      authors: [{ name: 'Someone' }],
+      rawText: `Someone. ${title}.`,
+    })
+  }
+
+  type Edge = {
+    id: string
+    rawText: string | null
+    citedArticle?: { id: string } | null
+    citingArticle?: { id: string } | null
+  }
+  /** Runs one of the citation queries, typed as the rows this suite reads. */
+  const run = (
+    query: typeof queries.citationEdges.references,
+    ctx: ZeroContext | undefined,
+    id: string,
+  ) => runAs(query as never, ctx, id as never) as unknown as Promise<Edge[]>
+
+  beforeEach(async () => {
+    await seedTwoUsers()
+    await createArticle(CITING_A, USER_A)
+    await createArticle(CITING_B, USER_B)
+    await edge(IN_COLLECTION_A, USER_A, CITING_A, ARTICLE_A, 'A Paper A Owns')
+    await edge(OUTSIDE_A, USER_A, CITING_A, null, 'A Paper Nobody Here Owns')
+    await edge(IN_COLLECTION_B, USER_B, CITING_B, ARTICLE_B, 'A Paper B Owns')
+  })
+
+  it('returns the requester’s references, with the article each one names', async () => {
+    const references = await run(
+      queries.citationEdges.references,
+      CONTEXT_A,
+      CITING_A,
+    )
+
+    expect(references.map((row) => row.id)).toEqual([
+      IN_COLLECTION_A,
+      OUTSIDE_A,
+    ])
+    expect(references[0]?.citedArticle?.id).toBe(ARTICLE_A)
+    expect(references[1]?.citedArticle ?? null).toBeNull()
+    expect(references[1]?.rawText).toBe('Someone. A Paper Nobody Here Owns.')
+  })
+
+  it('returns the requester’s citing papers, with each citing article', async () => {
+    const citedBy = await run(
+      queries.citationEdges.citedBy,
+      CONTEXT_A,
+      ARTICLE_A,
+    )
+
+    expect(citedBy.map((row) => row.id)).toEqual([IN_COLLECTION_A])
+    expect(citedBy[0]?.citingArticle?.id).toBe(CITING_A)
+  })
+
+  it('returns nothing for another user’s paper, in either direction', async () => {
+    // B's rows are really there: B sees them.
+    expect(
+      (await run(queries.citationEdges.references, CONTEXT_B, CITING_B)).map(
+        (row) => row.id,
+      ),
+    ).toEqual([IN_COLLECTION_B])
+    expect(
+      await run(queries.citationEdges.references, CONTEXT_A, CITING_B),
+    ).toEqual([])
+    expect(
+      await run(queries.citationEdges.citedBy, CONTEXT_A, ARTICLE_B),
+    ).toEqual([])
+  })
+
+  it('never brings back another account’s article, even through an edge pointing at it', async () => {
+    // Nothing writes an edge like this; it is planted to prove the related
+    // article's own owner filter, which is the only thing left to stop it.
+    await edge(PLANTED, USER_A, CITING_A, ARTICLE_B, 'A Paper B Owns')
+
+    const references = await run(
+      queries.citationEdges.references,
+      CONTEXT_A,
+      CITING_A,
+    )
+    const planted = references.find((row) => row.id === PLANTED)
+
+    expect(planted).toBeDefined()
+    expect(planted?.citedArticle ?? null).toBeNull()
+  })
+
+  it('returns nothing to an anonymous request', async () => {
+    expect(
+      await run(queries.citationEdges.references, undefined, CITING_A),
+    ).toEqual([])
+    expect(
+      await run(queries.citationEdges.citedBy, undefined, ARTICLE_A),
+    ).toEqual([])
+  })
+})
+
 describe('ownership cascades', () => {
   beforeEach(seedTwoUsers)
 

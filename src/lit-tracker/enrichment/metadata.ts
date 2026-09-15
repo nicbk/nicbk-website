@@ -89,3 +89,14 @@ function yearOrNull(value: number | null | undefined): number | null {
     ? value
     : null
 }
+
+/**
+ * A usable reference count, or null — the API omits it for thin records, and a
+ * count that is not a whole number is not one.
+ */
+export function referenceCountOf(paper: SemanticScholarPaper): number | null {
+  const count = paper.referenceCount
+  return typeof count === 'number' && Number.isInteger(count) && count >= 0
+    ? count
+    : null
+}

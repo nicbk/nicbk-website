@@ -24,6 +24,49 @@ export interface JobStatusRow {
   readonly status: string | null
 }
 
+/**
+ * A re-read of an older paper's references, as synced
+ * (features/citation-graph-traversal, task `older-papers-are-re-read`).
+ * Nullable status for the same reason as a job's.
+ */
+export interface ReferenceReadRow {
+  readonly articleId: string
+  readonly status: string | null
+}
+
+/** A batch of re-reads, counted the way the list shows it. */
+export interface ReferenceReadSummary {
+  /** Papers finished — the "7" in "7 of 12". */
+  done: number
+  /** Every paper in the batch, finished or not. */
+  total: number
+  /** Papers still waiting or being read. */
+  queued: number
+  /** The papers whose re-read failed — what try again names. */
+  failedArticleIds: string[]
+}
+
+/**
+ * Counts a batch of re-reads.
+ *
+ * Finished rows stay until the whole batch is, which is what lets this say
+ * "of 12" at all; a null status reads as queued, as a job's reads as processing.
+ */
+export function referenceReadSummary(
+  reads: readonly ReferenceReadRow[],
+): ReferenceReadSummary {
+  const failedArticleIds = reads
+    .filter((read) => read.status === 'failed')
+    .map((read) => read.articleId)
+  const done = reads.filter((read) => read.status === 'done').length
+  return {
+    done,
+    total: reads.length,
+    queued: reads.length - done - failedArticleIds.length,
+    failedArticleIds,
+  }
+}
+
 export type UploadStatusState =
   /** Nothing in flight and nothing failed: the non-clickable checkmark. */
   | 'synced'
@@ -42,14 +85,26 @@ export type UploadStatusState =
  */
 export function uploadStatusState(
   jobs: readonly JobStatusRow[],
+  reads: ReferenceReadSummary = EMPTY_READS,
 ): UploadStatusState {
-  if (jobs.some((job) => job.status === 'failed')) {
+  if (
+    jobs.some((job) => job.status === 'failed') ||
+    reads.failedArticleIds.length > 0
+  ) {
     return 'failed'
   }
-  if (jobs.length > 0) {
+  if (jobs.length > 0 || reads.queued > 0) {
     return 'in-progress'
   }
   return 'synced'
+}
+
+/** No re-reads at all: the state of every collection once a batch is done. */
+export const EMPTY_READS: ReferenceReadSummary = {
+  done: 0,
+  total: 0,
+  queued: 0,
+  failedArticleIds: [],
 }
 
 /**
@@ -59,13 +114,21 @@ export function uploadStatusState(
  * without seeing the icon or its color (WCAG 1.4.1). The synced string is also
  * the tooltip text the decided spec names.
  */
-export function uploadStatusLabel(state: UploadStatusState): string {
+export function uploadStatusLabel(
+  state: UploadStatusState,
+  jobs: readonly JobStatusRow[] = [],
+): string {
+  // With no upload behind the state, the work is a re-read, and calling it an
+  // upload would name something the reader never did.
+  const rereadsOnly = jobs.length === 0
   switch (state) {
     case 'synced':
       return 'All articles synced'
     case 'in-progress':
-      return 'Uploads in progress'
+      return rereadsOnly ? 'Re-reading references' : 'Uploads in progress'
     case 'failed':
-      return 'Some uploads need attention'
+      return jobs.some((job) => job.status === 'failed')
+        ? 'Some uploads need attention'
+        : 'Some references could not be re-read'
   }
 }

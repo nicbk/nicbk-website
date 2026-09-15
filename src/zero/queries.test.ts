@@ -159,6 +159,25 @@ describe('annotations.forArticle', () => {
   })
 })
 
+describe('referenceReads.mine', () => {
+  it('filters to the context user', () => {
+    const ast = astOf(
+      queries.referenceReads.mine.fn({ args: undefined, ctx: OWNER }),
+    )
+
+    expect(ast.table).toBe('referenceReads')
+    expect(ast.where).toEqual(equals('userId', OWNER.id))
+  })
+
+  it('matches nothing without a context', () => {
+    const ast = astOf(
+      queries.referenceReads.mine.fn({ args: undefined, ctx: undefined }),
+    )
+
+    expect(ast.limit).toBe(0)
+  })
+})
+
 describe('uploadJobs.mine', () => {
   it('filters to the context user, oldest first', () => {
     const ast = astOf(

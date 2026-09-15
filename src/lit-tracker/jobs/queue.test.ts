@@ -101,6 +101,23 @@ describe('startQueue', () => {
     )
   })
 
+  it('keeps a paper to one re-read at a time, and re-applies only its retries', async () => {
+    await startQueue('postgres://unit@localhost/unused')
+
+    expect(createQueue).toHaveBeenCalledWith(
+      'lit-tracker.reread-references',
+      expect.objectContaining({
+        policy: 'exclusive',
+        deadLetter: 'lit-tracker.reread-references-exhausted',
+      }),
+    )
+    // pg-boss refuses a policy in `updateQueue`, even an unchanged one.
+    expect(updateQueue).toHaveBeenCalledWith(
+      'lit-tracker.reread-references',
+      expect.not.objectContaining({ policy: expect.anything() }),
+    )
+  })
+
   it('listens for errors, which pg-boss emits instead of throwing', async () => {
     await startQueue('postgres://unit@localhost/unused')
 

@@ -1,6 +1,6 @@
 # Status: The References Can Be Trusted
 
-**State:** In review ([#202](https://github.com/nicbk/nicbk-website/issues/202)).
+**State:** Complete — merged in #208.
 
 ## What shipped
 

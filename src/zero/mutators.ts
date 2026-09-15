@@ -8,6 +8,7 @@ import { ANNOTATION_TYPES } from '~/lit-tracker/annotation-type'
 import { ARTICLE_STATUSES } from '~/lit-tracker/article-status'
 import type { ZeroContext } from './context'
 import {
+  MutationRefusedError,
   requireOwnedAnnotation,
   requireOwnedArticle,
   requireOwnedTag,
@@ -249,6 +250,45 @@ export const mutators = defineMutators({
         const session = requireSession(ctx)
         await requireOwnedAnnotation(tx, session, args.id)
         await tx.mutate.annotations.delete({ id: args.id })
+      },
+    ),
+  },
+
+  referenceReads: {
+    /**
+     * Try again to re-read the references of papers whose re-read failed.
+     *
+     * A failed re-read is shown until one succeeds, with no dismiss (decided
+     * with the user), so this is the only way its warning ever clears. Each row
+     * named must be the caller's — refused otherwise, like every other id here.
+     * A row that is not `failed` any more is left alone, which is what makes
+     * this safe to re-run on rebase and harmless to click twice.
+     *
+     * **The jobs are not queued here**: that is the server half's, in
+     * `~/zero/server-effects.ts`, because this module runs in the browser too.
+     */
+    retry: defineMutator(
+      z.object({ articleIds: z.array(z.uuid()).min(1).max(1000) }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        for (const articleId of args.articleIds) {
+          const [read] = await tx.run(
+            zql.referenceReads
+              .where('articleId', articleId)
+              .where('userId', session.id)
+              .limit(1),
+          )
+          if (!read) {
+            throw new MutationRefusedError()
+          }
+          if (read.status === 'failed') {
+            await tx.mutate.referenceReads.update({
+              articleId,
+              status: 'queued',
+              updatedAt: Date.now(),
+            })
+          }
+        }
       },
     ),
   },

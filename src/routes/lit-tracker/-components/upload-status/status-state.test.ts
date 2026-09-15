@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { uploadStatusLabel, uploadStatusState } from './status-state'
+import {
+  EMPTY_READS,
+  referenceReadSummary,
+  uploadStatusLabel,
+  uploadStatusState,
+} from './status-state'
 
 describe('uploadStatusState', () => {
   it('is synced when there are no unresolved jobs', () => {
@@ -51,5 +56,69 @@ describe('uploadStatusLabel', () => {
     for (const label of labels) {
       expect(label.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('referenceReadSummary', () => {
+  it('counts a batch as the list shows it', () => {
+    expect(
+      referenceReadSummary([
+        { articleId: 'a', status: 'done' },
+        { articleId: 'b', status: 'queued' },
+        { articleId: 'c', status: 'failed' },
+        { articleId: 'd', status: null },
+      ]),
+    ).toEqual({ done: 1, total: 4, queued: 2, failedArticleIds: ['c'] })
+  })
+
+  it('is empty with no re-reads', () => {
+    expect(referenceReadSummary([])).toEqual(EMPTY_READS)
+  })
+})
+
+describe('uploadStatusState with re-reads', () => {
+  const reads = (rows: { articleId: string; status: string }[]) =>
+    referenceReadSummary(rows)
+
+  it('is in progress while a paper is still queued', () => {
+    expect(
+      uploadStatusState([], reads([{ articleId: 'a', status: 'queued' }])),
+    ).toBe('in-progress')
+  })
+
+  it('is failed while a re-read has failed, however much else is running', () => {
+    expect(
+      uploadStatusState(
+        [{ status: 'processing' }],
+        reads([
+          { articleId: 'a', status: 'queued' },
+          { articleId: 'b', status: 'failed' },
+        ]),
+      ),
+    ).toBe('failed')
+  })
+
+  it('is synced when every paper in the batch is done', () => {
+    expect(
+      uploadStatusState([], reads([{ articleId: 'a', status: 'done' }])),
+    ).toBe('synced')
+  })
+})
+
+describe('uploadStatusLabel with re-reads', () => {
+  it('does not call a re-read an upload', () => {
+    expect(uploadStatusLabel('in-progress', [])).toBe('Re-reading references')
+    expect(uploadStatusLabel('failed', [])).toBe(
+      'Some references could not be re-read',
+    )
+  })
+
+  it('names uploads when there are any', () => {
+    expect(uploadStatusLabel('in-progress', [{ status: 'processing' }])).toBe(
+      'Uploads in progress',
+    )
+    expect(uploadStatusLabel('failed', [{ status: 'failed' }])).toBe(
+      'Some uploads need attention',
+    )
   })
 })

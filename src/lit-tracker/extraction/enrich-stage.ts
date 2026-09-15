@@ -10,7 +10,10 @@ import {
 import { isSameWork } from '~/lit-tracker/citations/matching'
 import type { SemanticScholarPaper } from '~/lit-tracker/enrichment/client'
 import type { MatchKind } from '~/lit-tracker/enrichment/metadata'
-import { enrichmentFrom } from '~/lit-tracker/enrichment/metadata'
+import {
+  enrichmentFrom,
+  referenceCountOf,
+} from '~/lit-tracker/enrichment/metadata'
 import type { ReferenceAlignment } from '~/lit-tracker/enrichment/reference-list'
 import { alignReferences } from '~/lit-tracker/enrichment/reference-list'
 import type { EnrichJob, FinalizeJob } from '~/lit-tracker/jobs/queue'
@@ -271,14 +274,6 @@ async function matchArticle(
     },
   )
   return agrees ? { paper: candidate, kind: 'title' } : null
-}
-
-/** A usable reference count, or null — the API omits it for thin records. */
-function referenceCountOf(paper: SemanticScholarPaper): number | null {
-  const count = paper.referenceCount
-  return typeof count === 'number' && Number.isInteger(count) && count >= 0
-    ? count
-    : null
 }
 
 /** The columns enrichment reads before deciding what to write back. */

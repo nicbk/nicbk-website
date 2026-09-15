@@ -55,6 +55,7 @@ export function CollectionToolbar({
   onQueryChange,
 }: CollectionToolbarProps) {
   const [jobs] = useQuery(queries.uploadJobs.mine())
+  const [referenceReads] = useQuery(queries.referenceReads.mine())
 
   return (
     // Not a <nav> or a <toolbar>: a handful of unrelated controls, two of which
@@ -80,7 +81,7 @@ export function CollectionToolbar({
         */}
         <FiltersDrawer />
         <UploadModal />
-        <UploadStatus jobs={jobs} />
+        <UploadStatus jobs={jobs} referenceReads={referenceReads} />
       </div>
     </div>
   )

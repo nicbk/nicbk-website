@@ -460,6 +460,64 @@ describe('articles.setStatus', () => {
   })
 })
 
+describe('referenceReads.retry', () => {
+  async function readsFailed() {
+    for (const [articleId, userId] of [
+      [ARTICLE_A, USER_A],
+      [ARTICLE_B, USER_B],
+    ] as const) {
+      await database.db
+        .insert(drizzleSchema.referenceReads)
+        .values({ articleId, userId, status: 'failed' })
+    }
+  }
+  const statusOf = async (articleId: string) =>
+    (
+      await database.db
+        .select()
+        .from(drizzleSchema.referenceReads)
+        .where(eq(drizzleSchema.referenceReads.articleId, articleId))
+    )[0]?.status
+
+  it('queues the caller’s failed re-read again', async () => {
+    await readsFailed()
+
+    await runAs('referenceReads.retry', CONTEXT_A, { articleIds: [ARTICLE_A] })
+
+    expect(await statusOf(ARTICLE_A)).toBe('queued')
+  })
+
+  it('refuses another user’s re-read and leaves it failed', async () => {
+    await readsFailed()
+
+    await expect(
+      runAs('referenceReads.retry', CONTEXT_A, { articleIds: [ARTICLE_B] }),
+    ).rejects.toThrow()
+
+    expect(await statusOf(ARTICLE_B)).toBe('failed')
+  })
+
+  it('refuses an anonymous caller', async () => {
+    await readsFailed()
+
+    await expect(
+      runAs('referenceReads.retry', undefined, { articleIds: [ARTICLE_A] }),
+    ).rejects.toThrow()
+
+    expect(await statusOf(ARTICLE_A)).toBe('failed')
+  })
+
+  it('leaves a re-read that is not failed as it was', async () => {
+    await database.db
+      .insert(drizzleSchema.referenceReads)
+      .values({ articleId: ARTICLE_A, userId: USER_A, status: 'done' })
+
+    await runAs('referenceReads.retry', CONTEXT_A, { articleIds: [ARTICLE_A] })
+
+    expect(await statusOf(ARTICLE_A)).toBe('done')
+  })
+})
+
 describe('articles.setReadingPosition', () => {
   it('stores the position on the caller’s own article, fraction and all', async () => {
     await runAs('articles.setReadingPosition', CONTEXT_A, {

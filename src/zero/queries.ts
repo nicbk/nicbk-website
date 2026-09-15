@@ -119,6 +119,19 @@ export const queries = defineQueries({
     }),
   },
 
+  referenceReads: {
+    /**
+     * The signed-in user's re-reads of older papers — what the upload status
+     * indicator summarises while they run, and warns about when one failed.
+     */
+    mine: defineQuery(({ ctx }) => {
+      if (!ctx) {
+        return zql.referenceReads.limit(0)
+      }
+      return zql.referenceReads.where('userId', ctx.id)
+    }),
+  },
+
   uploadJobs: {
     /**
      * The signed-in user's unresolved uploads, oldest first — what the upload

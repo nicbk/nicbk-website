@@ -6,13 +6,19 @@ import { useRef, useState } from 'react'
 import { FixUploadDialog } from './fix-upload-dialog'
 import type { UploadJobRow } from './job-list'
 import { JobList } from './job-list'
-import type { UploadStatusState } from './status-state'
-import { uploadStatusLabel, uploadStatusState } from './status-state'
+import type { ReferenceReadRow, UploadStatusState } from './status-state'
+import {
+  referenceReadSummary,
+  uploadStatusLabel,
+  uploadStatusState,
+} from './status-state'
 import styles from './upload-status.module.css'
 
 interface UploadStatusProps {
   /** The signed-in user's unresolved upload jobs, live from Zero. */
   jobs: readonly UploadJobRow[]
+  /** The signed-in user's re-reads of older papers, live from Zero. */
+  referenceReads?: readonly ReferenceReadRow[]
 }
 
 /**
@@ -51,8 +57,9 @@ interface UploadStatusProps {
  * makes focus restoration a race — and the cost of keeping it is one query for
  * a row the client has already synced.
  */
-export function UploadStatus({ jobs }: UploadStatusProps) {
-  const state = uploadStatusState(jobs)
+export function UploadStatus({ jobs, referenceReads = [] }: UploadStatusProps) {
+  const reads = referenceReadSummary(referenceReads)
+  const state = uploadStatusState(jobs, reads)
   const indicatorRef = useRef<HTMLElement>(null)
   const [fixingArticleId, setFixingArticleId] = useState<string | null>(null)
   const [fixing, setFixing] = useState(false)
@@ -66,7 +73,7 @@ export function UploadStatus({ jobs }: UploadStatusProps) {
           <Popover.Trigger
             ref={indicatorRef as RefObject<HTMLButtonElement | null>}
             className={styles.indicator}
-            aria-label={uploadStatusLabel(state)}
+            aria-label={uploadStatusLabel(state, jobs)}
           >
             <StatusIcon state={state} />
           </Popover.Trigger>
@@ -78,6 +85,7 @@ export function UploadStatus({ jobs }: UploadStatusProps) {
                 </Popover.Title>
                 <JobList
                   jobs={jobs}
+                  referenceReads={reads}
                   onFix={(articleId) => {
                     setFixingArticleId(articleId)
                     setFixing(true)

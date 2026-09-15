@@ -1,5 +1,8 @@
 import { Popover } from '@base-ui/react/popover'
 import { AlertTriangle } from 'lucide-react'
+import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
+import type { ReferenceReadSummary } from './status-state'
+import { EMPTY_READS } from './status-state'
 import styles from './upload-status.module.css'
 
 /**
@@ -37,9 +40,13 @@ export interface UploadJobRow {
  *
  * In progress: the filename and a progress indicator. Failed: the filename, a
  * warning icon, and a short reason. **No grouping or summary** for several
- * failures at once — each is its own row in the same list, which is the decided
- * behaviour and the reason this is a plain list rather than a component that
- * aggregates.
+ * failed uploads at once — each is its own row in the same list, which is the
+ * decided behaviour for uploads.
+ *
+ * **Re-reads of older papers are the exception, and summarised** — one progress
+ * row and one warning row however many papers (decided with the user, #10): a
+ * re-read is many papers the reader did not start, where an upload is one they
+ * did. See research/ui-ux/pages/lit-tracker/components/upload-status.md.
  *
  * The progress indicator is indeterminate on purpose. What is being waited on
  * is extraction, and neither GROBID nor the queue reports a fraction, so a
@@ -47,9 +54,12 @@ export interface UploadJobRow {
  */
 export function JobList({
   jobs,
+  referenceReads = EMPTY_READS,
   onFix,
 }: {
   jobs: readonly UploadJobRow[]
+  /** The batch of re-reads of older papers, counted. */
+  referenceReads?: ReferenceReadSummary
   /** Opens the edit modal on the article behind a failed upload. */
   onFix: (articleId: string) => void
 }) {
@@ -64,7 +74,77 @@ export function JobList({
           )}
         </li>
       ))}
+      {referenceReads.queued > 0 && (
+        <li className={styles.job}>
+          <RereadProgress reads={referenceReads} />
+        </li>
+      )}
+      {referenceReads.failedArticleIds.length > 0 && (
+        <li className={styles.job}>
+          <RereadFailure articleIds={referenceReads.failedArticleIds} />
+        </li>
+      )}
     </ul>
+  )
+}
+
+/** "1 paper", "12 papers". */
+function papers(count: number): string {
+  return `${count} ${count === 1 ? 'paper' : 'papers'}`
+}
+
+/**
+ * Older papers being re-read, as **one** row however many there are
+ * (decided with the user): twelve papers are not twelve rows.
+ *
+ * Counts finished papers against the whole batch, which is a real fraction
+ * rather than an invented one — unlike an upload's bar, each paper is either
+ * done or not.
+ */
+function RereadProgress({ reads }: { reads: ReferenceReadSummary }) {
+  const progress = `${reads.done} of ${papers(reads.total)}`
+  return (
+    <>
+      <span className={styles.filename}>re-reading references</span>
+      <span className={styles.jobState}>{progress}</span>
+      <span
+        className={styles.progress}
+        role="progressbar"
+        aria-label={`Re-reading references, ${progress}`}
+      />
+    </>
+  )
+}
+
+/**
+ * Papers whose re-read failed: still showing their old references, and shown
+ * here until a try again succeeds.
+ *
+ * **No dismiss**, by the user's decision: the warning is how the reader knows
+ * those papers are behind the rest, so the only way it goes is by the papers
+ * catching up. Try again keeps the popup open — the row becomes the progress
+ * row, which is the answer the reader is waiting for.
+ */
+function RereadFailure({ articleIds }: { articleIds: readonly string[] }) {
+  const { retryReferenceReads } = useArticleMutations()
+
+  return (
+    <>
+      <span className={styles.filenameFailed}>
+        <AlertTriangle className={styles.jobIcon} aria-hidden="true" />
+        couldn't re-read references for {papers(articleIds.length)}
+      </span>
+      <span className={styles.reason}>their old references are kept</span>
+      <button
+        type="button"
+        className={styles.fix}
+        // Contains the visible words, per WCAG 2.5.3, and says what again.
+        aria-label="try again to re-read references"
+        onClick={() => void retryReferenceReads([...articleIds])}
+      >
+        try again
+      </button>
+    </>
   )
 }
 

@@ -1,4 +1,8 @@
 import { db, pool } from '~/db/client'
+import {
+  queueReferenceRereads,
+  registerReferenceRereadHandlers,
+} from '~/lit-tracker/citations/reread-stage'
 import { productionServices } from '~/lit-tracker/extraction/services'
 import { registerExtractionHandlers } from '~/lit-tracker/extraction/worker'
 import {
@@ -51,14 +55,15 @@ async function registerUntilConnected(): Promise<void> {
   for (;;) {
     try {
       const boss = await getQueue()
-      await registerExtractionHandlers(
-        boss,
-        productionServices({ db, pool }, boss),
-      )
+      const services = productionServices({ db, pool }, boss)
+      await registerExtractionHandlers(boss, services)
       await registerPdfCleanupHandler(boss, productionPdfCleanupServices())
+      await registerReferenceRereadHandlers(boss, services)
       if (attempt > 0) {
         console.log('Job worker connected.')
       }
+      // After the handlers, so the first re-read starts as soon as it is sent.
+      await queueOlderPaperRereads(boss)
       return
     } catch (error) {
       attempt += 1
@@ -75,6 +80,28 @@ async function registerUntilConnected(): Promise<void> {
       await sleep(delay)
       delay = Math.min(delay * 2, MAX_RETRY_MS)
     }
+  }
+}
+
+/**
+ * Queues the re-read of papers read before printed references were kept.
+ * Queues nothing once every paper has been read that way.
+ *
+ * **Outside the retry loop above.** The handlers are already bound by the time
+ * this runs, and a failure here sending the loop round again would bind every
+ * one of them a second time. Missing it costs only a wait: the next start
+ * queues the same papers.
+ */
+export async function queueOlderPaperRereads(
+  boss: Awaited<ReturnType<typeof getQueue>>,
+): Promise<void> {
+  try {
+    const queued = await queueReferenceRereads({ db, pool }, boss)
+    if (queued > 0) {
+      console.log(`Re-reading references for ${queued} older papers.`)
+    }
+  } catch (error) {
+    console.error('Could not queue the re-read of older papers:', error)
   }
 }
 

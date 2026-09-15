@@ -1,9 +1,17 @@
 import type { Transaction } from '@rocicorp/zero'
-import { sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import { fromDrizzle } from 'pg-boss'
 import { z } from 'zod'
-import type { JobQueue, PdfCleanupJob } from '~/lit-tracker/jobs/queue'
-import { PDF_CLEANUP_QUEUE } from '~/lit-tracker/jobs/queue'
+import { referenceReads } from '~/db/schema'
+import type {
+  JobQueue,
+  PdfCleanupJob,
+  ReferenceRereadJob,
+} from '~/lit-tracker/jobs/queue'
+import {
+  PDF_CLEANUP_QUEUE,
+  REFERENCE_REREAD_QUEUE,
+} from '~/lit-tracker/jobs/queue'
 import type { ZeroContext } from './context'
 import { mutators } from './mutators'
 import { requireSession } from './ownership'
@@ -82,6 +90,7 @@ type ServerEffect = (input: EffectInput) => Promise<void>
  */
 const EFFECTS = new Map<string, ServerEffect>([
   [mutators.articles.delete.mutatorName, enqueuePdfCleanup],
+  [mutators.referenceReads.retry.mutatorName, enqueueReferenceRereads],
 ])
 
 /**
@@ -126,6 +135,46 @@ async function enqueuePdfCleanup({
   await queue.send(PDF_CLEANUP_QUEUE, job, {
     db: fromDrizzle(drizzleTransactionOf(tx), sql),
   })
+}
+
+/** The ids `referenceReads.retry` was called with, read back rather than assumed. */
+const RETRIED_READS = z.object({ articleIds: z.array(z.uuid()).min(1) })
+
+/**
+ * Queues the re-reads a try again just set back to `queued`.
+ *
+ * Only rows the caller owns and that are now `queued` are sent — read in this
+ * transaction, after the mutator's own write, so an id that was refused or was
+ * not failed sends nothing new. A paper whose re-read is still queued is kept to
+ * one job by the queue's `exclusive` policy and the article id as its key.
+ */
+// A function declaration for the same reason as `enqueuePdfCleanup`.
+async function enqueueReferenceRereads({
+  args,
+  ctx,
+  tx,
+  queue,
+}: EffectInput): Promise<void> {
+  const userId = requireSession(ctx).id
+  const { articleIds } = RETRIED_READS.parse(args)
+  const drizzle = drizzleTransactionOf(tx)
+  const queued = await drizzle
+    .select({ articleId: referenceReads.articleId })
+    .from(referenceReads)
+    .where(
+      and(
+        eq(referenceReads.userId, userId),
+        eq(referenceReads.status, 'queued'),
+        inArray(referenceReads.articleId, articleIds),
+      ),
+    )
+  for (const { articleId } of queued) {
+    const job: ReferenceRereadJob = { articleId, userId }
+    await queue.send(REFERENCE_REREAD_QUEUE, job, {
+      singletonKey: articleId,
+      db: fromDrizzle(drizzle, sql),
+    })
+  }
 }
 
 /**

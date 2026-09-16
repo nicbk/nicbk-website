@@ -1,7 +1,7 @@
 # Status: The Way Back
 
-**State:** Implemented, in review
-([#205](https://github.com/nicbk/nicbk-website/issues/205)).
+**State:** Complete ([#205](https://github.com/nicbk/nicbk-website/issues/205);
+merged in [#214](https://github.com/nicbk/nicbk-website/pull/214)).
 
 ## What shipped
 
@@ -74,6 +74,8 @@ holds, and the fold is the same rule at four as at five.
 
 ## Log
 
+- 2026-09-16 — #214 merged, and checked on `nicbk.com` in Safari: the path and
+  its labels, a revisit cutting back, and "⋯" plus the open paper at 375px.
 - 2026-09-14 — Spec'd.
 - 2026-09-15 — Implemented. Measured the header before choosing a layout, after
   the user asked whether a path could be read in the navbar at all; the width

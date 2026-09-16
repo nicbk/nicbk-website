@@ -1,7 +1,7 @@
 # Status: Citation-Graph Traversal
 
-**Feature state:** **In progress** (2026-09-15): 5 tasks; tasks 1–4 merged, task
-5 implemented and in review.
+**Feature state:** **Complete** (2026-09-16): all 5 tasks merged, and the flow
+checked in Safari on `nicbk.com` after deploy.
 
 Spec written against `main` at `daa8fc2`. See [research.md](./research.md).
 
@@ -22,7 +22,7 @@ completion.
 | [`older-papers-are-re-read`](./tasks/older-papers-are-re-read/status.md) | Complete ([#207](https://github.com/nicbk/nicbk-website/issues/207)) | [#209](https://github.com/nicbk/nicbk-website/pull/209) | Pass | Merged |
 | [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | Complete ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | [#210](https://github.com/nicbk/nicbk-website/pull/210) | Pass | Merged |
 | [`the-citations-view`](./tasks/the-citations-view/status.md) | Complete ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | [#211](https://github.com/nicbk/nicbk-website/pull/211) | Pass | Merged |
-| [`the-way-back`](./tasks/the-way-back/status.md) | Implemented ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | — | — | In review |
+| [`the-way-back`](./tasks/the-way-back/status.md) | Complete ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | [#214](https://github.com/nicbk/nicbk-website/pull/214) | Pass | Merged |
 
 ## Definition of Done (feature)
 
@@ -59,6 +59,11 @@ flow checked in Safari on `nicbk.com`.
 - 2026-09-15 — #209 merged. Task 3 implemented: owner-scoped citation queries, first use of `related()`.
 - 2026-09-15 — #210 merged. Task 4 implemented (#211), then reworked after the user tried it: two tabs, no shortfall message, credits in the header.
 - 2026-09-15 — #211 merged without its last commit (the per-paper reader fix); carried to main separately.
+- 2026-09-16 — #214 merged; the feature is complete. Checked on `nicbk.com`
+  after deploy, in Safari: the path appears and is labelled from the edges, a
+  revisit cuts it back, and three citation round trips ran with no
+  `Annotation state not found` — the #213 re-check that was still owed. At
+  375px the row is "⋯" plus the open paper, one row, no overflow.
 - 2026-09-15 — Task 5 implemented. The user asked whether a path could be read
   in the header at all; measuring it said no below ~1100px for three papers, so
   what shows steps down with the width and the "⋯" menu carries the rest. A

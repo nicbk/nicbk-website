@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react'
 import type { PreviewRegion } from './link-preview-region'
 import { resolveLinkPreview } from './link-preview-source'
 import { READER_TOOLBAR_ATTRIBUTE } from './menu-placement'
+import type { PreviewedReference } from './use-previewed-reference'
+import { usePreviewedReference } from './use-previewed-reference'
 import styles from './citation-preview.module.css'
 
 /**
@@ -69,17 +71,27 @@ function toolbarClearance(): number {
   return Math.max(0, bottom - reader.getBoundingClientRect().top)
 }
 
+interface Ready {
+  kind: 'ready'
+  region: PreviewRegion
+  url: string
+  width: number
+  height: number
+}
+
+type Resolution = { kind: 'loading' | 'nothing' | 'failed' } | Ready
+
+/**
+ * What the preview knows.
+ *
+ * A ready preview also knows **which reference it is showing**, when the region
+ * it drew is a bibliography entry this paper's edges were parsed from. Nothing
+ * renders that yet: the action it is for is task 3 of
+ * features/a-citation-opens-the-paper.
+ */
 type PreviewState =
-  | { kind: 'loading' }
-  | { kind: 'nothing' }
-  | { kind: 'failed' }
-  | {
-      kind: 'ready'
-      region: PreviewRegion
-      url: string
-      width: number
-      height: number
-    }
+  | { kind: 'loading' | 'nothing' | 'failed' }
+  | (Ready & { reference: PreviewedReference | null })
 
 interface CitationPreviewProps {
   documentId: string
@@ -218,7 +230,13 @@ function useCitationPreview({
   const readingScale = documentState?.scale ?? 1
   const { state: annotations } = useAnnotation(documentId)
   const { provides: render } = useRenderCapability()
-  const [state, setState] = useState<PreviewState>({ kind: 'loading' })
+  const [state, setState] = useState<Resolution>({ kind: 'loading' })
+  // The document's id is the article's (`pdf-reader.tsx`), so the open paper's
+  // bibliography is what its references are matched against.
+  const reference = usePreviewedReference(
+    documentId,
+    state.kind === 'ready' ? state.region : null,
+  )
 
   // `annotations.byUid` changes identity on every annotation event; the landings
   // it yields do not change while a popover is open, so it is read once per
@@ -290,5 +308,5 @@ function useCitationPreview({
     }
   }, [open, registry, document, render, documentId, link, readingScale])
 
-  return state
+  return state.kind === 'ready' ? { ...state, reference } : state
 }

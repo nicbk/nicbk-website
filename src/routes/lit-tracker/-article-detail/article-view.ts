@@ -18,15 +18,26 @@ import { z } from 'zod'
  */
 export type ArticleView = 'reader' | 'citations'
 
-export const articleSearchSchema = z.object({
-  /** Absent means the reader. A malformed value degrades to absent. */
-  view: z.enum(['citations']).optional().catch(undefined),
-})
+/**
+ * The `view` parameter itself. Absent means the reader; a malformed value
+ * degrades to absent. The route's whole search schema composes this with the
+ * path's `via` (`article-search.ts`).
+ */
+export const articleViewField = z
+  .enum(['citations'])
+  .optional()
+  .catch(undefined)
 
-export type ArticleSearch = z.infer<typeof articleSearchSchema>
-
-/** The view a validated search names. */
-export function articleViewOf(search: ArticleSearch | undefined): ArticleView {
+/**
+ * The view a validated search names.
+ *
+ * Takes the one field it reads rather than the route's whole search type, which
+ * is what keeps `article-search.ts` free to compose this module without the two
+ * importing each other.
+ */
+export function articleViewOf(
+  search: { view?: 'citations' | undefined } | undefined,
+): ArticleView {
   return search?.view === 'citations' ? 'citations' : 'reader'
 }
 

@@ -24,7 +24,10 @@ const navigate = vi.hoisted(() => vi.fn())
 /** What `useMatch` answers for the article route — see the mock below. */
 const articleMatch = vi.hoisted(() => ({
   current: undefined as
-    | { params: { articleId: string }; search?: { view?: string } }
+    | {
+        params: { articleId: string }
+        search?: { view?: string; via?: string[] }
+      }
     | undefined,
 }))
 
@@ -95,15 +98,20 @@ vi.mock('./-article-detail/article-rail', async () => {
       ),
   }
 })
-// And the header's article title, which queries for it. That it
-// names the article is `-article-detail/`'s coverage; what this file asserts is
-// that the layout hands it to the header on the article route and nothing
-// everywhere else.
-vi.mock('./-article-detail/article-title', async () => {
+// And the header's way back, which queries for the papers it names. What it
+// draws is `-article-detail/path/`'s coverage; what this file asserts is that
+// the layout hands it to the header on the article route, with the path out of
+// the URL, and nothing everywhere else.
+vi.mock('./-article-detail/path/article-path', async () => {
   const { createElement } = await import('react')
   return {
-    ArticleTitle: ({ articleId }: { articleId: string }) =>
-      createElement('span', null, `trail:${articleId}`),
+    ArticlePath: ({
+      articleId,
+      via,
+    }: {
+      articleId: string
+      via: readonly string[]
+    }) => createElement('span', null, `trail:${via.join('>')}>${articleId}`),
   }
 })
 
@@ -217,10 +225,25 @@ describe('the /lit-tracker group layout', () => {
     articleMatch.current = { params: { articleId: 'article-1' } }
     render(<Layout />)
 
-    expect(screen.getByText('trail:article-1')).toBeInTheDocument()
+    expect(screen.getByText('trail:>article-1')).toBeInTheDocument()
     expect(
       screen.getByRole('navigation', { name: 'Breadcrumb' }),
     ).not.toHaveTextContent('trail:')
+  })
+
+  it('gives the header the way back out of the URL', () => {
+    // The header is a sibling of the page, like the rail, so the path it draws
+    // is read from the article route's search here rather than passed down.
+    articleMatch.current = {
+      params: { articleId: 'article-3' },
+      search: { via: ['article-1', 'article-2'] },
+    }
+    const Layout = options.component
+    render(<Layout />)
+
+    expect(
+      screen.getByText('trail:article-1>article-2>article-3'),
+    ).toBeInTheDocument()
   })
 
   it('validates the collection filters at the group root', () => {

@@ -79,6 +79,10 @@ export default drizzleZeroConfig(drizzleSchema, {
       publicationYear: true,
       semanticScholarId: true,
       rawText: true,
+      // Synced because the matching happens in the reader: it is the open
+      // paper's own edges that a previewed reference is matched against
+      // (features/a-citation-opens-the-paper).
+      entryRegions: true,
       createdAt: true,
       updatedAt: true,
     },

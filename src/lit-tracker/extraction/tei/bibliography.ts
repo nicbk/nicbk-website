@@ -12,6 +12,8 @@ import {
 import { publicationYearIn, titleIn } from './fields'
 import type { PaperIdentifiers } from './identifiers'
 import { identifiersIn } from './identifiers'
+import type { EntryRegion } from './regions'
+import { parseRegion } from './regions'
 
 /**
  * The parsed reference list, out of TEI's `<listBibl>`.
@@ -38,6 +40,13 @@ export interface BibliographyEntry {
    * the structured fields come back empty.
    */
   raw: string | null
+  /**
+   * Where the entry is printed in the citing paper, when GROBID located it —
+   * what lets a previewed reference be matched back to this row
+   * (features/a-citation-opens-the-paper). Null when the request asked for no
+   * coordinates, or when GROBID found none for this entry.
+   */
+  region: EntryRegion | null
 }
 
 export function parseBibliography(root: TeiElement): BibliographyEntry[] {
@@ -91,6 +100,7 @@ function parseEntry(entry: TeiElement): BibliographyEntry {
     venue: articleTitle ? containerTitle : null,
     identifiers: identifiersIn(entry),
     raw: textOrNull(elementWhere(entry, 'note', 'type', 'raw_reference')),
+    region: parseRegion(attribute(entry, 'coords')),
   }
 }
 

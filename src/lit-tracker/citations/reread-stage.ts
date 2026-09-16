@@ -64,6 +64,14 @@ import {
  * is `exclusive` and each job is keyed by its paper, so a paper whose job is
  * still waiting is not given a second.
  *
+ * **Two conditions, because the first one is spent.** `references_read_at` was
+ * #10's marker for "read before this pipeline existed", and every paper carries
+ * one now. What this feature adds is *where* each entry is printed
+ * (features/a-citation-opens-the-paper), so a paper also needs re-reading when
+ * it holds a parsed entry — one with printed text behind it — that has no
+ * region. A row Semantic Scholar supplied has no entry in the paper at all, and
+ * is never evidence of anything missing.
+ *
  * The rows and their jobs commit together. Returns how many papers were newly
  * queued.
  */
@@ -77,7 +85,15 @@ export async function queueReferenceRereads(
         insert into ${referenceReads} (article_id, user_id, status)
         select a.id, a.user_id, 'queued'
         from ${articles} a
-        where a.references_read_at is null
+        where (
+            a.references_read_at is null
+            or exists (
+              select 1 from citation_edges e
+              where e.citing_article_id = a.id
+                and e.raw_text is not null
+                and e.entry_regions is null
+            )
+          )
           and a.extraction_status in ('grobid_only', 'enriched')
           and not exists (
             select 1 from upload_jobs j where j.article_id = a.id

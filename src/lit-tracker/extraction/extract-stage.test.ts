@@ -53,6 +53,7 @@ const REFERENCES: ExtractedMetadata['bibliography'] = [
     venue: null,
     identifiers: { ...NO_IDENTIFIERS, arxivId: '1901.00001' },
     raw: 'Byron, A. A Reference With An ArXiv Id. 2019.',
+    region: null,
   },
   {
     title: 'A Reference With Nothing To Look It Up By',
@@ -61,6 +62,7 @@ const REFERENCES: ExtractedMetadata['bibliography'] = [
     venue: 'Proceedings of Something',
     identifiers: NO_IDENTIFIERS,
     raw: null,
+    region: null,
   },
 ]
 

@@ -6,6 +6,7 @@ import type {
   BibliographyEntry,
   PaperIdentifiers,
 } from '~/lit-tracker/extraction/tei'
+import type { EntryRegion } from '~/lit-tracker/extraction/tei/regions'
 import type { Work } from './matching'
 import { firstAuthorKey, isSameWork, normalizeTitle } from './matching'
 import { mergedRowIds } from './merged-rows'
@@ -31,6 +32,8 @@ interface EdgeDraft {
   publicationYear: number | null
   /** The reference as printed, when GROBID kept it. */
   rawText: string | null
+  /** Where the entry is printed, when GROBID located it. */
+  entryRegions: EntryRegion | null
   /** Not stored — carried so the caller knows what to look this edge up by. */
   identifiers: PaperIdentifiers
 }
@@ -99,6 +102,7 @@ export async function writeBibliography(
     authors: draft.authors,
     publicationYear: draft.publicationYear,
     rawText: draft.rawText,
+    entryRegions: draft.entryRegions,
   }))
 
   await tx.insert(citationEdges).values(rows)
@@ -141,6 +145,11 @@ function toDraft(entry: BibliographyEntry): EdgeDraft[] {
       // Kept through everything that follows: Semantic Scholar's record later
       // replaces the title and authors of a row it resolves, never this.
       rawText: entry.raw?.trim() || null,
+      // Where the reference sits in the citing paper, so a previewed reference
+      // can be matched back to this row (features/a-citation-opens-the-paper).
+      // Null is ordinary: a paper read before this was asked for, or one
+      // GROBID located nothing in.
+      entryRegions: entry.region,
       identifiers: entry.identifiers,
     },
   ]

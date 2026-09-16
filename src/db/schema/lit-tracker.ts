@@ -15,6 +15,7 @@ import type {
   AnnotationType,
 } from '~/lit-tracker/annotation-type'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
+import type { EntryRegion } from '~/lit-tracker/extraction/tei/regions'
 import { user } from './identity'
 
 /**
@@ -398,6 +399,21 @@ export const citationEdges = pgTable(
      * with no parsed entry behind it (features/citation-graph-traversal).
      */
     rawText: text('raw_text'),
+    /**
+     * Where this reference is printed in the citing paper — a page index and
+     * the boxes it occupies, from GROBID's `teiCoordinates`
+     * (features/a-citation-opens-the-paper).
+     *
+     * What it is for: matching a previewed reference back to this row, so a
+     * citation to a paper in the collection can open it. Kept as boxes rather
+     * than one bounding rectangle because a hanging-indented entry's union
+     * covers part of the entry above it.
+     *
+     * Null for a row Semantic Scholar supplied with no parsed entry behind it,
+     * for a paper GROBID located nothing in, and for every row written before
+     * this column existed — the re-read fills those in.
+     */
+    entryRegions: jsonb('entry_regions').$type<EntryRegion>(),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()

@@ -53,6 +53,12 @@ let storeUpload: typeof import('~/lit-tracker/upload/store-upload').storeUpload
 let productionServices: typeof import('~/lit-tracker/extraction/services').productionServices
 let registerExtractionHandlers: typeof import('~/lit-tracker/extraction/worker').registerExtractionHandlers
 
+/** Where an entry was printed, as GROBID locates one. */
+const A_REGION = {
+  pageIndex: 9,
+  boxes: [{ x: 72, y: 417.33, width: 218.36, height: 8.91 }],
+}
+
 /** A reference, as the TEI parser reports one. */
 function reference(
   title: string,
@@ -66,6 +72,9 @@ function reference(
     venue: null,
     identifiers: { doi: null, arxivId: null, pubmedId: null, ...identifiers },
     raw: `${family}. ${title}. 2019.`,
+    // Located references are this feature's own coverage; what these rows are
+    // here to exercise is the writer and the re-read around them.
+    region: null,
   }
 }
 
@@ -633,6 +642,41 @@ describe('what the citations view can trust', () => {
     ])
   })
 
+  it('stores where a located reference is printed, and nothing for one that is not', async () => {
+    // What a previewed reference is matched against
+    // (features/a-citation-opens-the-paper). Semantic Scholar's own additions
+    // are printed nowhere in the citing paper, so they carry no region at all.
+    const located = reference('A Located Reference', 'Devlin')
+    const articleId = await uploadAndSettle(
+      'citing.pdf',
+      extraction({
+        identifiers: { doi: '10.1/citing', arxivId: null, pubmedId: null },
+        bibliography: [
+          { ...located, region: A_REGION },
+          reference('An Unlocated Reference', 'Vaswani'),
+        ],
+      }),
+      {
+        papers: { 'DOI:10.1/citing': paper({ paperId: 's2-citing' }) },
+        references: {
+          's2-citing': [
+            { paperId: 's2-added', title: 'A Reference Only The List Had' },
+          ],
+        },
+      },
+    )
+
+    const edges = await edgesOf(articleId)
+    // Ordered by title, in the database's own collation.
+    expect(edges.map((edge) => [edge['title'], edge['entry_regions']])).toEqual(
+      [
+        ['A Located Reference', A_REGION],
+        ['An Unlocated Reference', null],
+        ['A Reference Only The List Had', null],
+      ],
+    )
+  })
+
   it('records how many references Semantic Scholar holds, and when they were read', async () => {
     const articleId = await uploadAndSettle(
       'citing.pdf',
@@ -772,6 +816,38 @@ describe('re-reading an older paper', () => {
       sql`select count(*)::int as count from pgboss.job where name = ${queueModule.REFERENCE_REREAD_QUEUE}`,
     )
     expect(rows[0]?.count).toBe(1)
+  })
+
+  it('queues a paper this pipeline read, but read before it located anything', async () => {
+    // #10's marker is spent — every paper carries a `references_read_at` now —
+    // so what asks for a re-read is a parsed entry with nowhere recorded
+    // (features/a-citation-opens-the-paper).
+    const id = await uploadAndSettle('located.pdf', CITING, ENRICHED)
+    await database.db.execute(
+      sql`update citation_edges set entry_regions = null
+          where citing_article_id = ${id}`,
+    )
+
+    expect(await reread.queueReferenceRereads(database, queue)).toBe(1)
+    expect(await readsOf()).toEqual([{ article_id: id, status: 'queued' }])
+  })
+
+  it('leaves alone a paper whose rows are located, and one printed nowhere', async () => {
+    // A row Semantic Scholar supplied has no entry in the citing paper at all,
+    // so its empty region is not evidence of anything missing.
+    const id = await uploadAndSettle('located.pdf', CITING, ENRICHED)
+    await database.db.execute(
+      sql`update citation_edges
+          set entry_regions = ${JSON.stringify(A_REGION)}::jsonb
+          where citing_article_id = ${id} and raw_text is not null`,
+    )
+    await database.db.execute(
+      sql`update citation_edges set entry_regions = null, raw_text = null
+          where citing_article_id = ${id} and raw_text is null`,
+    )
+
+    expect(await reread.queueReferenceRereads(database, queue)).toBe(0)
+    expect(await readsOf()).toEqual([])
   })
 
   it('sends a job again for a paper whose job was lost, and counts it as nothing new', async () => {

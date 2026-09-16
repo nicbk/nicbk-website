@@ -128,7 +128,8 @@ export function classifyGrobidResponse(
  * collection, because arXiv registers its DOIs with DataCite and is a known
  * dead zone there. Enrichment is Semantic Scholar's job, in task 5.
  * `includeRawCitations` is on so a reference GROBID could not segment still
- * carries the text as it was printed.
+ * carries the text as it was printed, and `teiCoordinates` asks where each
+ * reference sits on the page (see below).
  */
 export async function requestTei(pdf: Uint8Array): Promise<string> {
   const form = new FormData()
@@ -141,6 +142,19 @@ export async function requestTei(pdf: Uint8Array): Promise<string> {
   form.append('consolidateHeader', '0')
   form.append('consolidateCitations', '0')
   form.append('includeRawCitations', '1')
+  /*
+   * Where each reference is printed, as `page,x,y,width,height` boxes on the
+   * entry itself. It is what lets a previewed reference be matched back to the
+   * row it became (features/a-citation-opens-the-paper): the alternative —
+   * matching on the reference's printed number, or on text pulled out of the
+   * page — fails on exactly the papers that need it most, since numbering does
+   * not always follow entry order and a publisher PDF's extracted text comes
+   * out broken mid-word (#22's own finding).
+   *
+   * Measured on the collection's papers before this was added: 51 of RoBERTa's
+   * 51 entries come back located.
+   */
+  form.append('teiCoordinates', 'biblStruct')
 
   const response = await fetch(`${env.GROBID_URL}${FULLTEXT_PATH}`, {
     method: 'POST',

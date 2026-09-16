@@ -1,7 +1,7 @@
 # Status: The Text Box Fits a Margin
 
-**State:** Implemented, in review
-([#217](https://github.com/nicbk/nicbk-website/issues/217)).
+**State:** Complete ([#217](https://github.com/nicbk/nicbk-website/issues/217);
+merged in [#218](https://github.com/nicbk/nicbk-website/pull/218)).
 
 ## What shipped
 
@@ -54,3 +54,4 @@ control; a reload confirms the papers are as they were.
 
 - 2026-09-16 — Spec'd.
 - 2026-09-16 — Implemented, and verified against both margin widths.
+- 2026-09-16 — #218 merged.

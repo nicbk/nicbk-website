@@ -1,7 +1,8 @@
 # Status: A Note Fits the Margin
 
-**Feature state:** **In progress** (2026-09-16): its one task implemented and
-in review.
+**Feature state:** **Complete** (2026-09-16) — its one task merged (#218), with
+the note written in a real margin at a desktop width and at 375px before it
+went in. Parent #216 closed by hand.
 
 Spec written against `main` at `aa3a741`, from measurements of the papers in the
 collection and of the engine's own defaults, both taken before anything was
@@ -18,7 +19,7 @@ Its parent issue is **checked** on completion and **closed by hand**.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-text-box-fits-a-margin`](./tasks/the-text-box-fits-a-margin/status.md) | Implemented ([#217](https://github.com/nicbk/nicbk-website/issues/217)) | — | — | In review |
+| [`the-text-box-fits-a-margin`](./tasks/the-text-box-fits-a-margin/status.md) | Complete ([#217](https://github.com/nicbk/nicbk-website/issues/217)) | [#218](https://github.com/nicbk/nicbk-website/pull/218) | Pass | Merged |
 
 ## Definition of Done (feature)
 
@@ -34,6 +35,7 @@ written in a real margin in the browser at a desktop and a phone width.
 
 ## Log
 
+- 2026-09-16 — **#218 merged**; the feature is complete.
 - 2026-09-16 — **Implemented.** The override became a clone of the resolved
   tool: the plugin replaces `defaults` wholesale, so a partial one would have
   dropped the colour and the subtype. A height was added to the decision — the

@@ -2,6 +2,7 @@ import { Tabs } from '@base-ui/react/tabs'
 import { Link } from '@tanstack/react-router'
 import { ExternalLink } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { nextVia } from '~/lit-tracker/citation-path'
 import { formatAuthors } from '~/routes/lit-tracker/-collection-page/authors'
 import type {
   CitationArticle,
@@ -49,13 +50,20 @@ const TABS: { id: CitationTab; label: string }[] = [
 ]
 
 interface CitationsViewProps {
+  /** The paper whose citations these are — the step a followed link records. */
+  articleId: string
   state: CitationsState
   lists: CitationLists
   /** The page's controls: the sidebar sheet's trigger and the article menu. */
   actions?: ReactNode
 }
 
-export function CitationsView({ state, lists, actions }: CitationsViewProps) {
+export function CitationsView({
+  articleId,
+  state,
+  lists,
+  actions,
+}: CitationsViewProps) {
   const counts: Record<CitationTab, number> = {
     cites: citesCount(lists),
     'cited-by': lists.citedBy.length,
@@ -90,7 +98,12 @@ export function CitationsView({ state, lists, actions }: CitationsViewProps) {
         {TABS.map((tab) => (
           <Tabs.Panel key={tab.id} className={styles.panel} value={tab.id}>
             <div className={styles.column}>
-              <PanelContents tab={tab.id} state={state} lists={lists} />
+              <PanelContents
+                tab={tab.id}
+                state={state}
+                lists={lists}
+                articleId={articleId}
+              />
             </div>
           </Tabs.Panel>
         ))}
@@ -103,9 +116,10 @@ interface PanelContentsProps {
   tab: CitationTab
   state: CitationsState
   lists: CitationLists
+  articleId: string
 }
 
-function PanelContents({ tab, state, lists }: PanelContentsProps) {
+function PanelContents({ tab, state, lists, articleId }: PanelContentsProps) {
   if (state === 'syncing') {
     return <p className={styles.notice}>{SYNCING_MESSAGE}</p>
   }
@@ -123,7 +137,11 @@ function PanelContents({ tab, state, lists }: PanelContentsProps) {
     return (
       <>
         {sentence}
-        <ArticleList label="cited by" articles={lists.citedBy} />
+        <ArticleList
+          label="cited by"
+          articles={lists.citedBy}
+          fromId={articleId}
+        />
       </>
     )
   }
@@ -137,6 +155,7 @@ function PanelContents({ tab, state, lists }: PanelContentsProps) {
           <ArticleList
             label="cites, in your collection"
             articles={inCollection}
+            fromId={articleId}
           />
         </Group>
       )}
@@ -173,9 +192,12 @@ function Group({
 function ArticleList({
   label,
   articles,
+  fromId,
 }: {
   label: string
   articles: CitationArticle[]
+  /** The paper being left, which is the step the path records. */
+  fromId: string
 }) {
   if (articles.length === 0) {
     return null
@@ -188,12 +210,20 @@ function ArticleList({
             A real link, so it can be opened in a new tab like any other. The
             search drops `view`, so the paper opens on its reader rather than on
             its own citations; the collection's filters ride along untouched.
+
+            `via` records the hop: the paper being left joins the way back, and
+            opening one already on it cuts the path back to it rather than
+            growing a loop (`~/lit-tracker/citation-path`).
           */}
           <Link
             className={styles.row}
             to="/lit-tracker/$articleId"
             params={{ articleId: article.id }}
-            search={(previous) => ({ ...previous, view: undefined })}
+            search={(previous) => ({
+              ...previous,
+              view: undefined,
+              via: nextVia(previous.via ?? [], fromId, article.id),
+            })}
           >
             <span className={styles.text}>
               <span className={styles.title}>{article.title}</span>

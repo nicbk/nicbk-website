@@ -35,6 +35,9 @@ vi.mock('@tanstack/react-router', async () => {
 
 const { CitationsView } = await import('./citations-view')
 
+/** The paper whose citations are on screen — the step a followed link records. */
+const OPEN_PAPER = 'article-attention'
+
 const BERT = {
   id: 'article-bert',
   title: 'BERT',
@@ -81,7 +84,14 @@ const LISTS: CitationLists = citationLists(
 function renderView(
   overrides: Partial<Parameters<typeof CitationsView>[0]> = {},
 ) {
-  return render(<CitationsView state="ready" lists={LISTS} {...overrides} />)
+  return render(
+    <CitationsView
+      articleId={OPEN_PAPER}
+      state="ready"
+      lists={LISTS}
+      {...overrides}
+    />,
+  )
 }
 
 describe('CitationsView', () => {
@@ -130,7 +140,31 @@ describe('CitationsView', () => {
     expect(props.search({ q: 'attention', view: 'citations' })).toEqual({
       q: 'attention',
       view: undefined,
+      via: [OPEN_PAPER],
     })
+  })
+
+  it('records the paper being left on the way back', () => {
+    renderView()
+
+    const props = linkProps.mock.calls.at(-1)?.[0]
+
+    expect(props.search({ via: ['article-roberta'] }).via).toEqual([
+      'article-roberta',
+      OPEN_PAPER,
+    ])
+  })
+
+  it('cuts the path back when the paper opened is already on it', () => {
+    renderView()
+
+    // The link is BERT's, and BERT is where this journey began: opening it
+    // again is the way back to it, not a fourth step.
+    const props = linkProps.mock.calls.at(-1)?.[0]
+
+    expect(
+      props.search({ via: ['article-bert', 'article-roberta'] }).via,
+    ).toBeUndefined()
   })
 
   it('lists what cites it', async () => {

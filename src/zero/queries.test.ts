@@ -50,6 +50,7 @@ describe('query names', () => {
     // pinned rather than left to whatever `defineQueries` happens to compute.
     expect(queries.articles.mine.queryName).toBe('articles.mine')
     expect(queries.articles.byId.queryName).toBe('articles.byId')
+    expect(queries.articles.onPath.queryName).toBe('articles.onPath')
     expect(queries.uploadJobs.mine.queryName).toBe('uploadJobs.mine')
     expect(queries.citationEdges.references.queryName).toBe(
       'citationEdges.references',
@@ -121,6 +122,81 @@ describe('articles.byId', () => {
 
     expect(ast.limit).toBe(0)
     expect(ast.where).toBeUndefined()
+  })
+})
+
+describe('articles.onPath', () => {
+  const ANOTHER_ARTICLE_ID = '0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5c'
+
+  it('asks for the path’s papers and the edges between them, owner-scoped twice', () => {
+    const ast = astOf(
+      queries.articles.onPath.fn({
+        args: [AN_ARTICLE_ID, ANOTHER_ARTICLE_ID],
+        ctx: OWNER,
+      }),
+    ) as {
+      table: string
+      where?: unknown
+      related?: {
+        subquery: { alias: string; table: string; where?: unknown }
+      }[]
+    }
+
+    expect(ast.table).toBe('articles')
+    expect(ast.where).toEqual({
+      type: 'and',
+      conditions: [
+        {
+          type: 'simple',
+          left: { type: 'column', name: 'id' },
+          right: {
+            type: 'literal',
+            value: [AN_ARTICLE_ID, ANOTHER_ARTICLE_ID],
+          },
+          op: 'IN',
+        },
+        equals('userId', OWNER.id),
+      ],
+    })
+    // The edges come back with the papers, which is what lets one query label
+    // every step; they are filtered to the path and to the owner as well.
+    expect(ast.related).toHaveLength(1)
+    expect(ast.related?.[0]?.subquery).toMatchObject({
+      alias: 'references',
+      table: 'citationEdges',
+    })
+    expect(JSON.stringify(ast.related?.[0]?.subquery.where)).toContain(OWNER.id)
+  })
+
+  it('still filters by the context user when the ids are someone else’s', () => {
+    const ast = astOf(
+      queries.articles.onPath.fn({ args: [AN_ARTICLE_ID], ctx: OWNER }),
+    )
+
+    expect(JSON.stringify(ast.where)).not.toContain(OTHER_USER_ID)
+  })
+
+  it('rejects ids that are not article ids, and a path longer than one can be', () => {
+    expect(() =>
+      queries.articles.onPath.fn({ args: ['not-a-uuid'], ctx: OWNER }),
+    ).toThrow()
+    expect(() =>
+      queries.articles.onPath.fn({
+        args: Array.from({ length: 22 }, () => AN_ARTICLE_ID),
+        ctx: OWNER,
+      }),
+    ).toThrow()
+  })
+
+  it('matches nothing for an empty path, and nothing without a context', () => {
+    expect(
+      astOf(queries.articles.onPath.fn({ args: [], ctx: OWNER })).limit,
+    ).toBe(0)
+    expect(
+      astOf(
+        queries.articles.onPath.fn({ args: [AN_ARTICLE_ID], ctx: undefined }),
+      ).limit,
+    ).toBe(0)
   })
 })
 

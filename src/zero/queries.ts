@@ -1,5 +1,6 @@
 import { defineQueries, defineQuery } from '@rocicorp/zero'
 import { z } from 'zod'
+import { PATH_ARTICLES_MAX } from '~/lit-tracker/citation-path'
 import { zql } from './schema.gen'
 
 /**
@@ -51,6 +52,38 @@ export const queries = defineQueries({
       }
       return zql.articles.where('id', id).where('userId', ctx.id)
     }),
+
+    /**
+     * The papers on a reading path, with the edges that join them — everything
+     * the header's way back draws (features/citation-graph-traversal, task 5).
+     *
+     * **One query for the whole path, not one per step.** A path is up to
+     * `PATH_ARTICLES_MAX` papers (`~/lit-tracker/citation-path`), and resolving
+     * it a paper at a time would be that many live subscriptions for a row of
+     * text, with each title popping in on its own. The `IN` filter answers the
+     * titles, and the related edges — restricted to the same ids — answer which
+     * way each step ran, so a step is labelled from the graph as it stands
+     * rather than from what the URL claims.
+     *
+     * Owned twice over, like `citationEdges.references`: the article by its own
+     * `user_id`, and every edge by the requester's again inside the subquery.
+     * The ids come from the URL, where anyone may type anything, so they are
+     * never the only thing standing between a request and a row.
+     */
+    onPath: defineQuery(
+      z.array(z.uuid()).max(PATH_ARTICLES_MAX),
+      ({ args: ids, ctx }) => {
+        if (!ctx || ids.length === 0) {
+          return zql.articles.limit(0)
+        }
+        return zql.articles
+          .where('id', 'IN', ids)
+          .where('userId', ctx.id)
+          .related('references', (edge) =>
+            edge.where('userId', ctx.id).where('citedArticleId', 'IN', ids),
+          )
+      },
+    ),
   },
 
   tags: {

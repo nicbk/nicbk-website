@@ -1,6 +1,7 @@
 # Status: Citation-Graph Traversal
 
-**Feature state:** **In progress** (2026-09-14): 5 tasks; tasks 1–4 merged, task 5 not started.
+**Feature state:** **In progress** (2026-09-15): 5 tasks; tasks 1–4 merged, task
+5 implemented and in review.
 
 Spec written against `main` at `daa8fc2`. See [research.md](./research.md).
 
@@ -21,7 +22,7 @@ completion.
 | [`older-papers-are-re-read`](./tasks/older-papers-are-re-read/status.md) | Complete ([#207](https://github.com/nicbk/nicbk-website/issues/207)) | [#209](https://github.com/nicbk/nicbk-website/pull/209) | Pass | Merged |
 | [`citations-are-queryable`](./tasks/citations-are-queryable/status.md) | Complete ([#203](https://github.com/nicbk/nicbk-website/issues/203)) | [#210](https://github.com/nicbk/nicbk-website/pull/210) | Pass | Merged |
 | [`the-citations-view`](./tasks/the-citations-view/status.md) | Complete ([#204](https://github.com/nicbk/nicbk-website/issues/204)) | [#211](https://github.com/nicbk/nicbk-website/pull/211) | Pass | Merged |
-| [`the-way-back`](./tasks/the-way-back/status.md) | Not started ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | — | — | — |
+| [`the-way-back`](./tasks/the-way-back/status.md) | Implemented ([#205](https://github.com/nicbk/nicbk-website/issues/205)) | — | — | In review |
 
 ## Definition of Done (feature)
 
@@ -36,6 +37,10 @@ flow checked in Safari on `nicbk.com`.
 - **Outside references link to Semantic Scholar** (revised with the user).
 - **The re-read never writes a field a reader can edit.**
 - **The re-read is visible**: one summary row while it runs; a failure stays, with try again and no dismiss (decided with the user).
+- **The path is width-stepped**: how many papers the header shows is decided by
+  how many characters the row actually holds, with the "⋯" menu always holding
+  the whole path, and a cycle collapses to where it began (decided with the user
+  after measuring the header).
 - **Two directions, not three places**: the citations view is *cites* (grouped into your collection and elsewhere) and *cited by*; no count comparison; the Semantic Scholar credit is in the tracker header (decided with the user after trying the first build).
 
 ## Log
@@ -54,3 +59,7 @@ flow checked in Safari on `nicbk.com`.
 - 2026-09-15 — #209 merged. Task 3 implemented: owner-scoped citation queries, first use of `related()`.
 - 2026-09-15 — #210 merged. Task 4 implemented (#211), then reworked after the user tried it: two tabs, no shortfall message, credits in the header.
 - 2026-09-15 — #211 merged without its last commit (the per-paper reader fix); carried to main separately.
+- 2026-09-15 — Task 5 implemented. The user asked whether a path could be read
+  in the header at all; measuring it said no below ~1100px for three papers, so
+  what shows steps down with the width and the "⋯" menu carries the rest. A
+  fourth paper (RoBERTa) was uploaded through the app to walk a four-step path.

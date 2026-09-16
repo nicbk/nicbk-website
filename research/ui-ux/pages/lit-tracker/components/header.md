@@ -196,3 +196,36 @@ Semantic Scholar", linked. It carries the attribution Semantic Scholar's licence
 asks for ([third-party-attribution-requirements.md](../../../../licensing/third-party-attribution-requirements.md)),
 which first sat at the foot of the citations view. Tracker header only: the
 personal site shows no Semantic Scholar data.
+
+## Revision (2026-09-15): the title slot's path is width-stepped
+
+Decided with the user at implementation of the way back, after they asked
+whether a path could be read in this row at all. It can, and only above a
+certain width — so **the row shows as much of the path as the width can hold**,
+rather than squeezing every step into whatever is left.
+
+Measured in this header, with the row's clamped type and gaps, the slot holds:
+
+| viewport | room | characters |
+|---|---|---|
+| 1512px | 975px | 101 |
+| 1280px | 853px | 88 |
+| 1024px | 608px | 63 |
+| 768px | 400px | 41 |
+| 600px | 278px | 30 |
+| 375px | ~95px | ~13 |
+
+A paper title here is 25–80 characters on its own (*BERT: Pre-training of Deep
+Bidirectional Transformers for Language Understanding* is 79), and a hop label
+costs about nine. So a labelled trail of three needs ~66 characters and reads
+only from about 1100px. The ladder that follows from that, in
+[`citation-graph-traversal`](../../../../../features/citation-graph-traversal/constraints-and-behavior.md#the-way-back):
+three papers from 70rem, two from 52rem, one below, and the labels themselves
+drop under 34rem. A "⋯" menu carries the whole path at every width, which is
+what makes dropping steps safe.
+
+Two consequences for this row as a whole: **the earlier papers are the part that
+shrinks** (capped at 16 characters, the open paper keeping the rest), and the
+path costs the row about two characters at 375px, where the app name was already
+ellipsising — the existing order of sacrifice, app name before title, is
+unchanged.

@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ArticleDetailPage } from './-article-detail/article-detail-page'
+import { articleSearchSchema } from './-article-detail/article-search'
 import {
-  articleSearchSchema,
   articleViewOf,
   useSetArticleView,
 } from './-article-detail/article-view'
@@ -22,10 +22,12 @@ import {
  * group layout in `route.tsx`, which also decides what the sidebar rail shows on
  * this route.
  *
- * **`?view=citations`** swaps the reader for the citations view. Validated here,
- * on the article route rather than the group root, because no other tracker page
- * has a view to swap; the layout still reads it, through this route's match, to
- * tell the rail's copy of the sidebar which tab is selected (`article-view.ts`).
+ * **`?view=citations`** swaps the reader for the citations view, and **`?via=`**
+ * carries the papers visited before this one (`article-search.ts`). Both are
+ * validated here, on the article route rather than the group root, because no
+ * other tracker page has a view to swap or a path to keep; the layout reads
+ * both through this route's match, to tell the rail's copy of the sidebar which
+ * tab is selected and the header where the reader came from.
  */
 export const Route = createFileRoute('/lit-tracker/$articleId')({
   validateSearch: articleSearchSchema,

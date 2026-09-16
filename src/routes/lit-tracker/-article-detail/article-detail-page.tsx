@@ -215,6 +215,7 @@ export function ArticleDetailPage({
 
       {showingCitations ? (
         <CitationsView
+          articleId={articleId}
           state={citations.state}
           lists={citations.lists}
           actions={actions}

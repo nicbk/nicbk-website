@@ -1,0 +1,249 @@
+/*
+ * The way back, in the header's title slot.
+ *
+ * **This file decides how much of the path a width can show.** The measurements
+ * it is written against, taken in this header on the local stack: the slot holds
+ * 101 characters at 1512px, 88 at 1280px, 63 at 1024px, 41 at 768px and 30 at
+ * 600px (the row's type shrinks below 640px, which is why the last two fall
+ * faster than the width does). Paper titles here are 25–80 characters on their
+ * own, so a step needs ~16 characters to be recognisable and a hop label costs
+ * ~8 more.
+ *
+ * Hence the two breakpoints below: three papers need ~66 characters and fit from
+ * 70rem, two need ~41 and fit from 52rem, and under that only the open paper is
+ * drawn. Nothing measures at runtime — the component states how many papers
+ * there are and where each one sits, and these rules answer with what fits.
+ */
+
+.path {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.foldItem {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/*
+ * A step's name. Every one of them ellipsises; what differs is how much room it
+ * is allowed to want.
+ */
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * **Earlier papers give way first** (user-decided 2026-09-15). They are handles
+ * for going back rather than things to read, so they are capped at a stub and
+ * the paper actually open keeps the rest of the row. The full text of any of
+ * them is one hover — or one press of "⋯" — away.
+ */
+.step[data-role="first"] .name,
+.step[data-role="previous"] .name {
+  flex: 0 1 auto;
+  max-width: 16ch;
+}
+
+.step[data-role="current"] .name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Hover-only affordance: a touch device would latch it on after a tap and never
+   release it (see styling-conventions.md). */
+@media (hover: hover) {
+  .link:hover {
+    text-decoration: underline;
+  }
+}
+
+/*
+ * The separator and the word for how the step was reached. Smaller than the
+ * titles it sits between, because it is what joins them rather than one of
+ * them — and it never shrinks, since half of "cited by" says the wrong thing.
+ *
+ * **It is the first thing to go**, before any paper is. A phone's row holds
+ * about 13 characters and "›cited by " is nine of them: at 375px the label left
+ * the open paper reading "L…", which names nothing. Above 34rem there is room
+ * for both, and below it the label is still in the "⋯" menu, beside the paper it
+ * belongs to.
+ */
+.hop {
+  display: none;
+  align-items: baseline;
+  gap: 0.25ch;
+  flex-shrink: 0;
+}
+
+@media (min-width: 34rem) {
+  .hop {
+    display: flex;
+  }
+}
+
+.hopLabel {
+  font-size: 0.875em;
+}
+
+/*
+ * "⋯", which opens the whole path. Styled as the row's own text rather than as a
+ * control: it is one glyph in a line of titles, and a bordered button here would
+ * be the loudest thing in a header whose job is to stay quiet.
+ */
+.foldTrigger {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--space-2xs);
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .foldTrigger:hover {
+    text-decoration: underline;
+  }
+}
+
+/*
+ * What each width shows.
+ *
+ * The narrowest row is the floor — the open paper and the fold — and each
+ * breakpoint adds the next step back. The fold disappears exactly when nothing
+ * is left to fold: with two papers from 52rem, with three from 70rem. Four or
+ * more (`data-steps="many"`) always keep it, which is the middle of the path
+ * folding away, as decided.
+ */
+.step[data-role="first"],
+.step[data-role="middle"],
+.step[data-role="previous"] {
+  display: none;
+}
+
+@media (min-width: 52rem) {
+  .step[data-role="previous"] {
+    display: flex;
+  }
+
+  .path[data-steps="2"] .foldItem {
+    display: none;
+  }
+}
+
+@media (min-width: 70rem) {
+  .step[data-role="first"] {
+    display: flex;
+  }
+
+  .path[data-steps="3"] .foldItem {
+    display: none;
+  }
+}
+
+/* The menu: the same floating surface as the reader's zoom menu and the card's,
+   so the site has one idea of what a floating list looks like. */
+.positioner {
+  outline: none;
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  max-width: min(28rem, calc(100vw - 2 * var(--space-md)));
+  padding: var(--space-2xs) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  outline: none;
+}
+
+.menuItem {
+  display: flex;
+  padding: var(--space-2xs) var(--space-sm);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.menuItem[data-highlighted] {
+  background-color: var(--color-bg);
+}
+
+/* The paper you are on: listed so the journey is whole, with nothing to press. */
+.menuItem[data-disabled] {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.menuEntry {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/*
+ * How this paper was reached, above its title — which is where it belongs, since
+ * it describes the move from the paper listed before it to this one.
+ */
+.menuHop {
+  color: var(--color-text-muted);
+  font-size: 0.875em;
+}
+
+.menuTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menuSuffix {
+  font-size: 0.875em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .popup {
+    transform-origin: var(--transform-origin);
+    transition:
+      opacity var(--motion-duration-fast) var(--motion-ease),
+      scale var(--motion-duration-fast) var(--motion-ease);
+  }
+
+  .popup[data-starting-style],
+  .popup[data-ending-style] {
+    opacity: 0;
+    scale: 0.98;
+  }
+}

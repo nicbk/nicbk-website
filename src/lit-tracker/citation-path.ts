@@ -158,19 +158,22 @@ export function citationPath(
   articles: readonly PathArticle[],
 ): PathStep[] {
   const byId = new Map(articles.map((article) => [article.id, article]))
-  const ids = walkedPath(via, currentId).filter((id) => byId.has(id))
+  // Resolved to papers as it is walked, so an id nothing answers to simply
+  // leaves the path rather than becoming a step with no name.
+  const path = walkedPath(via, currentId)
+    .map((id) => byId.get(id))
+    .filter((article) => article !== undefined)
 
-  if (ids.length < 2 || ids[ids.length - 1] !== currentId) {
+  if (path.length < 2 || path[path.length - 1]?.id !== currentId) {
     return []
   }
 
-  return ids.map((id, index) => ({
-    id,
-    // Non-null by construction: `ids` is what `byId` answered to.
-    title: byId.get(id)?.title ?? '',
-    label: index === 0 ? null : labelBetween(ids[index - 1], id, byId),
-    role: roleOf(index, ids.length),
-    via: ids.slice(0, index),
+  return path.map((article, index) => ({
+    id: article.id,
+    title: article.title,
+    label: labelBetween(path[index - 1], article),
+    role: roleOf(index, path.length),
+    via: path.slice(0, index).map((step) => step.id),
   }))
 }
 
@@ -183,17 +186,15 @@ export function citationPath(
  * without saying why.
  */
 function labelBetween(
-  fromId: string | undefined,
-  toId: string,
-  byId: Map<string, PathArticle>,
+  from: PathArticle | undefined,
+  to: PathArticle,
 ): StepLabel | null {
-  if (fromId === undefined) {
-    return null
-  }
-  if (cites(byId.get(fromId), toId)) {
+  // `from` is absent for the first paper on the path, which was reached from
+  // nothing and so says nothing.
+  if (cites(from, to.id)) {
     return 'cites'
   }
-  if (cites(byId.get(toId), fromId)) {
+  if (from !== undefined && cites(to, from.id)) {
     return 'cited by'
   }
   return null

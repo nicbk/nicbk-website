@@ -81,6 +81,7 @@ need them (see Phases 2–3).
 | 21 | A paper downloads once (reopening a paper revalidates instead of re-downloading it) | [`a-paper-downloads-once`](./a-paper-downloads-once/description.md) | **Complete** (2026-09-14; its one task merged, #181; verified in Safari on `nicbk.com`) | #7, #9 |
 | 22 | A link is a link (a paper's links stop behaving like marks; a URL copies, a citation previews in place) | [`a-link-is-a-link`](./a-link-is-a-link/description.md) | **Complete** (2026-09-14; all 3 tasks merged, #186 + #187 + #188) | #9, #15 |
 | 23 | A paper opens where you left it (the reader saves your place and reopens there, on any device) | [`a-paper-opens-where-you-left-it`](./a-paper-opens-where-you-left-it/description.md) | **Complete** (2026-09-14; both tasks merged, #195 + #196) | #8, #9 |
+| 24 | A note fits the margin (a text box writes at the size of a margin note, in a box that fits one) | [`a-note-fits-the-margin`](./a-note-fits-the-margin/description.md) | **Not started** (2026-09-16; spec'd, one task, #216) | #9 |
 
 ## How this roadmap is spec'd out
 
@@ -95,7 +96,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `surface-layering` (complete), `one-header-row` (complete),
 `controls-look-like-controls` (complete), `the-site-fits-a-phone` (complete),
 `a-popup-keeps-its-clicks` (complete), `a-paper-downloads-once` (complete), `a-link-is-a-link` (complete),
-`a-paper-opens-where-you-left-it` (complete) and `citation-graph-traversal` (complete) have full
+`a-paper-opens-where-you-left-it` (complete), `citation-graph-traversal`
+(complete) and `a-note-fits-the-margin` (spec'd) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

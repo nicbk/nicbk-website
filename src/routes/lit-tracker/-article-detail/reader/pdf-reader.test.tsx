@@ -64,8 +64,31 @@ const selectionScope = vi.hoisted(() => ({
  * The reader reaches for it to register the one tool that is its own rather than
  * the engine's — see `use-highlight-box-tool.ts`.
  */
+/**
+ * The engine's text box, already sized for a margin — what `getTool('freeText')`
+ * answers unless a test says otherwise, so the effect that resizes it is a
+ * no-op and the assertions below are about the tool each test is really
+ * exercising (`use-margin-text-box.ts`).
+ */
+const MARGIN_SIZED_TEXT_BOX = {
+  id: 'freeText',
+  defaults: { fontSize: 8 },
+  clickBehavior: { enabled: true, defaultSize: { width: 72, height: 40 } },
+}
+
 const annotationCapability = vi.hoisted(() => ({
-  getTool: vi.fn((_toolId: string) => undefined as unknown),
+  getTool: vi.fn((toolId: string) =>
+    toolId === 'freeText'
+      ? ({
+          id: 'freeText',
+          defaults: { fontSize: 8 },
+          clickBehavior: {
+            enabled: true,
+            defaultSize: { width: 72, height: 40 },
+          },
+        } as unknown)
+      : (undefined as unknown),
+  ),
   addTool: vi.fn(),
 }))
 const annotationState = vi.hoisted(() => ({
@@ -807,7 +830,9 @@ describe('PdfReader', () => {
         id: 'highlight',
         interaction: { textSelection: true },
       }
-      annotationCapability.getTool.mockReturnValue(highlight)
+      annotationCapability.getTool.mockImplementation((toolId: string) =>
+        toolId === 'freeText' ? MARGIN_SIZED_TEXT_BOX : highlight,
+      )
       render(<PdfReader articleId={ARTICLE_ID} />)
 
       await userEvent.click(screen.getByRole('button', { name: 'highlight' }))
@@ -827,7 +852,9 @@ describe('PdfReader', () => {
     it('marks nothing when the engine does not know the tool', () => {
       // Unreachable with the stock plugin, and silence is right if it happens:
       // the same judgement `use-highlight-box-tool.ts` makes.
-      annotationCapability.getTool.mockReturnValue(undefined)
+      annotationCapability.getTool.mockImplementation((toolId: string) =>
+        toolId === 'freeText' ? MARGIN_SIZED_TEXT_BOX : undefined,
+      )
       render(<PdfReader articleId={ARTICLE_ID} />)
 
       screen.getByRole('button', { name: 'underline' }).click()
@@ -974,12 +1001,48 @@ describe('PdfReader', () => {
 
     it('does not add it twice, which would replace a live tool', () => {
       annotationCapability.getTool.mockImplementation((id: string) =>
-        id === 'highlightBox' ? { id } : { id: 'square', defaults: {} },
+        id === 'highlightBox'
+          ? { id }
+          : id === 'freeText'
+            ? MARGIN_SIZED_TEXT_BOX
+            : { id: 'square', defaults: {} },
       )
 
       render(<PdfReader articleId={ARTICLE_ID} />)
 
       expect(annotationCapability.addTool).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('the text box the reader resizes', () => {
+    it('gives the engine’s text box a size that fits a margin', () => {
+      // The engine writes at 14pt in a box wider than a one-inch margin; the
+      // reader replaces the tool with one sized for the papers it shows
+      // (features/a-note-fits-the-margin).
+      annotationCapability.getTool.mockImplementation((id: string) =>
+        id === 'freeText'
+          ? {
+              id,
+              defaults: { fontSize: 14 },
+              clickBehavior: {
+                enabled: true,
+                defaultSize: { width: 100, height: 20 },
+              },
+            }
+          : undefined,
+      )
+
+      render(<PdfReader articleId={ARTICLE_ID} />)
+
+      expect(annotationCapability.addTool).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'freeText',
+          defaults: expect.objectContaining({ fontSize: 8 }),
+          clickBehavior: expect.objectContaining({
+            defaultSize: { width: 72, height: 40 },
+          }),
+        }),
+      )
     })
   })
 

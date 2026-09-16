@@ -57,6 +57,7 @@ import { usePointerKind } from './touch-selection/pointer-kind'
 import { READER_PANEL_ATTRIBUTE } from './touch-selection/reader-panel'
 import { TouchSelection } from './touch-selection/touch-selection'
 import { useHighlightBoxTool } from './use-highlight-box-tool'
+import { useMarginTextBox } from './use-margin-text-box'
 import { useReaderCopyShortcut } from './use-reader-copy-shortcut'
 import { useReadingMode } from './use-reading-mode'
 import { useReadingPosition } from './use-reading-position'
@@ -187,6 +188,9 @@ function ReaderDocument({
   // The thirteenth tool, which is this reader's rather than the engine's and so
   // has to be handed to it. See `use-highlight-box-tool.ts`.
   useHighlightBoxTool(annotations)
+  // The engine's text box writes larger than the paper does; this sizes it for
+  // a margin (`margin-text-box.ts`).
+  useMarginTextBox(annotations)
 
   // Gives the paper back to the browser to scroll, when no tool is live. Before
   // this, every page carried `touch-action: none` and a thumb moved nothing —

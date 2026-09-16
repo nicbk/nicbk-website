@@ -1,0 +1,1 @@
+ALTER TABLE "citation_edges" ADD COLUMN "entry_regions" jsonb;

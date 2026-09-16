@@ -59,7 +59,22 @@ describe('parsing a published journal article', () => {
         pubmedId: null,
       },
       raw: expect.stringContaining('Causal consistency without coordination'),
+      // Where the entry is printed, from GROBID's `coords` — two lines on
+      // page 10, counted from zero here (features/a-citation-opens-the-paper).
+      region: {
+        pageIndex: 9,
+        boxes: [
+          { x: 72, y: 417.33, width: 218.36, height: 8.91 },
+          { x: 82.92, y: 428.37, width: 207.42, height: 8.72 },
+        ],
+      },
     })
+  })
+
+  it('leaves a reference GROBID did not locate without a region', () => {
+    // The ordinary case for a paper read before coordinates were asked for,
+    // and for one whose reference list GROBID could not place.
+    expect(parsed.bibliography[1]?.region).toBeNull()
   })
 
   it('reads a reference that is only a preprint, with no venue', () => {

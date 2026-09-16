@@ -85,7 +85,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 
 				<listBibl>
 
-<biblStruct status="extracted" xml:id="b0">
+<biblStruct coords="10,72.00,417.33,218.36,8.91;10,82.92,428.37,207.42,8.72" status="extracted" xml:id="b0">
 	<analytic>
 		<title level="a" type="main">Causal consistency without coordination</title>
 		<author>

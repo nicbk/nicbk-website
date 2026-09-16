@@ -113,6 +113,10 @@ describe('requesting extraction', () => {
     expect(init.body.get('consolidateHeader')).toBe('0')
     expect(init.body.get('consolidateCitations')).toBe('0')
     expect(init.body.get('includeRawCitations')).toBe('1')
+    // Where each reference is printed, which is what lets a previewed
+    // reference be matched back to its row
+    // (features/a-citation-opens-the-paper).
+    expect(init.body.get('teiCoordinates')).toBe('biblStruct')
   })
 
   it('returns the TEI on success', async () => {

@@ -57,6 +57,13 @@
       "when": 1789445811947,
       "tag": "0007_reference_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789582413683,
+      "tag": "0008_classy_chimera",
+      "breakpoints": true
     }
   ]
 }

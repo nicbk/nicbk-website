@@ -132,6 +132,17 @@ describe('ArticlePath', () => {
     ).toHaveTextContent('cites')
   })
 
+  it('does not separate the first paper from anything', () => {
+    // A chevron before the paper the journey started at reads as a step out of
+    // something that is not there.
+    renderPath()
+
+    const first = screen.getByRole('navigation', {
+      name: 'the way back',
+    }).firstElementChild?.firstElementChild
+    expect(first?.textContent).toBe('Attention Is All You Need')
+  })
+
   it('leaves a step with no edge unlabelled rather than guessing', () => {
     renderPath([
       step(ATTENTION, 'Attention', 'previous'),
@@ -164,7 +175,7 @@ describe('ArticlePath', () => {
     // makes going back a shortening rather than another hop.
     expect(
       props.search({ q: 'bert', view: 'citations', via: [ATTENTION, BERT] }),
-    ).toEqual({ q: 'bert', view: undefined, via: [] })
+    ).toEqual({ q: 'bert', view: undefined, via: undefined })
   })
 
   it('tells the stylesheet how many papers there are, so it can fold', () => {
@@ -205,6 +216,21 @@ describe('ArticlePath', () => {
       '↓ cited byBERT: Pre-training of Deep Bidirectional Transformers',
       '↓ cited byRoBERTa: A Robustly Optimized BERT Pretrainingyou are here',
     ])
+  })
+
+  it('truncates the path from the menu too, not only from the row', async () => {
+    renderPath()
+
+    await userEvent.click(screen.getByRole('button', { name: 'the way back' }))
+    await screen.findAllByRole('menuitem')
+
+    // The menu's own link to the middle paper: going back to it leaves the one
+    // paper that came before it.
+    const props = linkProps.mock.calls
+      .map(([call]) => call)
+      .filter((call) => call.params.articleId === BERT)
+      .at(-1)
+    expect(props.search({ via: [ATTENTION, BERT] }).via).toEqual([ATTENTION])
   })
 
   it('makes the menu’s earlier papers links back, and the open one inert', async () => {

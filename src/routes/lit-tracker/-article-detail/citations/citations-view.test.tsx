@@ -164,7 +164,7 @@ describe('CitationsView', () => {
 
     expect(
       props.search({ via: ['article-bert', 'article-roberta'] }).via,
-    ).toEqual([])
+    ).toBeUndefined()
   })
 
   it('lists what cites it', async () => {

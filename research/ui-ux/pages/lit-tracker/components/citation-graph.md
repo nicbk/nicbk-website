@@ -81,3 +81,16 @@ After using the first build:
 - **The view's tab rule lines up with the sidebar's**, which it sits beside.
 - **Switching to and from the view is a history entry**, so Back from the lists
   returns to the paper.
+
+## Revision (2026-09-15), decided with the user while building the way back
+
+- **The short path steps down with the width** instead of folding by count
+  alone: three papers where there is room for three, then the previous paper and
+  the open one, then the open one alone, with the hop labels the first thing to
+  go. The numbers behind it are in [header.md](./header.md); the rules are in the
+  feature's constraints.
+- **The "⋯" holds the whole path**, not only the steps a fold hid, so no paper on
+  it is reachable only at a particular width.
+- **A cycle collapses.** Opening a paper already on the path cuts back to it, and
+  that rule is applied to every hop in turn — so A → B → A → C is `A › C`, and a
+  loop cannot grow the path.

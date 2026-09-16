@@ -72,14 +72,21 @@ describe('nextVia', () => {
     expect(nextVia([], A, B)).toEqual([A])
   })
 
+  it('spells an empty path as no parameter at all', () => {
+    // Going back to where the journey started leaves nothing before it, and an
+    // empty `?via=` is that state written out — the URL should be as clean as
+    // it was before any citation was followed.
+    expect(nextVia([A], A, A)).toBeUndefined()
+  })
+
   it('extends a path that is already going', () => {
     expect(nextVia([A], B, C)).toEqual([A, B])
   })
 
   it('leaves nothing before a paper opened again from further along', () => {
     // On C with A › B › C behind you, opening A puts you back at the start,
-    // where nothing came before.
-    expect(nextVia([A, B], C, A)).toEqual([])
+    // where nothing came before — which the URL spells as no parameter.
+    expect(nextVia([A, B], C, A)).toBeUndefined()
   })
 })
 

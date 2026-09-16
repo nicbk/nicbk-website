@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Fragment } from 'react'
 import type { PathStep } from '~/lit-tracker/citation-path'
+import { viaParam } from '~/lit-tracker/citation-path'
 import { ArticleTitle } from '../article-title'
 import { useCitationPath } from './use-citation-path'
 import styles from './article-path.module.css'
@@ -67,7 +68,11 @@ export function ArticlePath({ articleId, via }: ArticlePathProps) {
         {steps.map((step, index) => (
           <Fragment key={step.id}>
             <li className={styles.step} data-role={step.role}>
-              <Hop label={step.label} />
+              {/* Where the journey starts there is nothing to separate it
+                  from — but every later step keeps its own chevron even when
+                  the step before it is hidden, because then it follows the
+                  "⋯" that stands in for it. */}
+              {index > 0 && <Hop label={step.label} />}
               <StepName step={step} />
             </li>
             {/* The fold stands where the papers it holds would be: after the
@@ -122,7 +127,11 @@ function StepName({ step }: { step: PathStep }) {
       className={`${styles.name} ${styles.link}`}
       to="/lit-tracker/$articleId"
       params={{ articleId: step.id }}
-      search={(previous) => ({ ...previous, view: undefined, via: step.via })}
+      search={(previous) => ({
+        ...previous,
+        view: undefined,
+        via: viaParam(step.via),
+      })}
       title={step.title}
     >
       {step.title}
@@ -168,7 +177,7 @@ function Fold({ steps }: { steps: PathStep[] }) {
                       search={(previous) => ({
                         ...previous,
                         view: undefined,
-                        via: step.via,
+                        via: viaParam(step.via),
                       })}
                     />
                   }

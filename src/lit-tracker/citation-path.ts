@@ -122,8 +122,21 @@ export function nextVia(
   via: readonly string[],
   fromId: string,
   toId: string,
-): string[] {
-  return walkedPath([...via, fromId], toId).slice(0, -1)
+): string[] | undefined {
+  return viaParam(walkedPath([...via, fromId], toId).slice(0, -1))
+}
+
+/**
+ * A path as the URL should spell it: absent when there is none.
+ *
+ * `?via=` with nothing in it is the same state as no parameter at all, and this
+ * site spells an inactive parameter as absent — the reason the collection's
+ * filters give (`-collection-filters/search-schema.ts`). It matters most here,
+ * where the empty path is what *going back to the start* produces: the journey
+ * ends with as clean a URL as it began with.
+ */
+export function viaParam(via: readonly string[]): string[] | undefined {
+  return via.length > 0 ? [...via] : undefined
 }
 
 /**

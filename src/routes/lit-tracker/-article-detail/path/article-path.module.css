@@ -88,12 +88,24 @@
  * The separator and the word for how the step was reached. Smaller than the
  * titles it sits between, because it is what joins them rather than one of
  * them — and it never shrinks, since half of "cited by" says the wrong thing.
+ *
+ * **It is the first thing to go**, before any paper is. A phone's row holds
+ * about 13 characters and "›cited by " is nine of them: at 375px the label left
+ * the open paper reading "L…", which names nothing. Above 34rem there is room
+ * for both, and below it the label is still in the "⋯" menu, beside the paper it
+ * belongs to.
  */
 .hop {
-  display: flex;
+  display: none;
   align-items: baseline;
   gap: 0.25ch;
   flex-shrink: 0;
+}
+
+@media (min-width: 34rem) {
+  .hop {
+    display: flex;
+  }
 }
 
 .hopLabel {

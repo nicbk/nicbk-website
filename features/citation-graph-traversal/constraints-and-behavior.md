@@ -79,17 +79,27 @@ command":
   unlabelled.
 - **Opening a paper from the citations view** appends the paper it was opened
   from. **If the paper opened is already on the path, the path is cut back to
-  it.**
+  it.** The rule applies to every id in turn, so a cycle of any length collapses
+  to where it began and no paper is on the path twice (user-raised 2026-09-15);
+  a hand-edited `?via=` is replayed the same way.
 - **Following a path link** opens that paper with the path up to it.
 - **Opening a paper any other way** (the collection, a pasted URL without one)
   has no path: the slot shows the title alone, as today.
-- **More than three papers**: the first and the last two show, and the middle
-  folds into "…", a menu listing the hidden steps with their labels. On a phone
-  the path shows "…" and the current paper only.
+- **How much of the path shows is decided by width, not only by count**
+  (user-decided 2026-09-15, against measurements of this header: 101 characters
+  at 1512px, 63 at 1024px, 30 at 600px, against paper titles of 25–80).
+  - from 70rem: three papers, and past three the middle folds into "⋯";
+  - from 52rem: the previous paper and the open one;
+  - under that: the open paper alone — which is what a phone shows;
+  - under 34rem: the hop labels go as well, before any paper does.
+  - **"⋯" holds the whole path**, every step with its label, so nothing is
+    reachable only at a width. It shows exactly when something is folded.
+- **Earlier papers give way first**: capped at 16 characters, with the open paper
+  keeping the rest of the row.
 - **Kept in the URL** as the ordered article ids before the current one
-  (`?via=`), at most 20; beyond that the oldest are dropped. An id that is not
-  one of the reader's articles is dropped from the display, never shown as a
-  placeholder.
+  (`?via=`), at most 20; beyond that the oldest are dropped. An empty path is no
+  parameter at all. An id that is not one of the reader's articles is dropped
+  from the display, never shown as a placeholder.
 
 ## Constraints
 

@@ -82,7 +82,7 @@ need them (see Phases 2–3).
 | 22 | A link is a link (a paper's links stop behaving like marks; a URL copies, a citation previews in place) | [`a-link-is-a-link`](./a-link-is-a-link/description.md) | **Complete** (2026-09-14; all 3 tasks merged, #186 + #187 + #188) | #9, #15 |
 | 23 | A paper opens where you left it (the reader saves your place and reopens there, on any device) | [`a-paper-opens-where-you-left-it`](./a-paper-opens-where-you-left-it/description.md) | **Complete** (2026-09-14; both tasks merged, #195 + #196) | #8, #9 |
 | 24 | A note fits the margin (a text box writes at the size of a margin note, in a box that fits one) | [`a-note-fits-the-margin`](./a-note-fits-the-margin/description.md) | **Complete** (2026-09-16; its one task merged, #218) | #9 |
-| 25 | A citation opens the paper (a previewed reference you own becomes a way into it) | [`a-citation-opens-the-paper`](./a-citation-opens-the-paper/description.md) | **In progress** (2026-09-16; 1 of 3 tasks merged, #220) | #7, #10, #22 |
+| 25 | A citation opens the paper (a previewed reference you own becomes a way into it) | [`a-citation-opens-the-paper`](./a-citation-opens-the-paper/description.md) | **Complete** (2026-09-17; 3 tasks, #220) | #7, #10, #22 |
 
 ## How this roadmap is spec'd out
 
@@ -99,7 +99,7 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `a-popup-keeps-its-clicks` (complete), `a-paper-downloads-once` (complete), `a-link-is-a-link` (complete),
 `a-paper-opens-where-you-left-it` (complete), `citation-graph-traversal`
 (complete), `a-note-fits-the-margin` (complete) and
-`a-citation-opens-the-paper` (spec'd) have full
+`a-citation-opens-the-paper` (complete) have full
 folders today. The rest carry a one-line
 intent here and get their full folder
 (six files + tasks) written when we reach them, so their specs reflect the

@@ -1,7 +1,7 @@
 # Status: The Preview Knows the Paper
 
-**State:** Implemented, in review
-([#222](https://github.com/nicbk/nicbk-website/issues/222)).
+**State:** **Complete** ([#222](https://github.com/nicbk/nicbk-website/issues/222),
+PR [#226](https://github.com/nicbk/nicbk-website/pull/226), merged 2026-09-16).
 
 ## What shipped
 

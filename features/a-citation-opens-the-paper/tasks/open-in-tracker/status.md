@@ -1,7 +1,7 @@
 # Status: Open in Tracker
 
-**State:** Implemented, in review
-([#223](https://github.com/nicbk/nicbk-website/issues/223)).
+**State:** **Complete** ([#223](https://github.com/nicbk/nicbk-website/issues/223),
+PR [#227](https://github.com/nicbk/nicbk-website/pull/227), merged 2026-09-17).
 
 ## What shipped
 
@@ -55,3 +55,4 @@ spilling.
 - 2026-09-16 — Spec'd.
 - 2026-09-16 — Implemented, with the header's capacity measured before the
   placement was chosen.
+- 2026-09-17 — Merged in #227.

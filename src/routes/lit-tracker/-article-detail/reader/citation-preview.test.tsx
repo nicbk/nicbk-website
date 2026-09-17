@@ -2,6 +2,7 @@ import type { PdfLinkAnnoObject } from '@embedpdf/models'
 import { PdfAnnotationSubtype, PdfZoomMode } from '@embedpdf/models'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { createRef } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PreviewRegion } from './link-preview-region'
@@ -28,6 +29,7 @@ const stubs = vi.hoisted(() => {
     scrollToPage,
     renderPageRect,
     resolveLinkPreview: vi.fn(),
+    linkProps: vi.fn(),
     usePreviewedReference: vi.fn<
       (
         articleId: string,
@@ -46,6 +48,7 @@ const {
   renderPageRect,
   resolveLinkPreview,
   usePreviewedReference,
+  linkProps,
 } = stubs
 
 vi.mock('@embedpdf/core/react', () => ({
@@ -69,6 +72,31 @@ vi.mock('./link-preview-source', () => ({
 vi.mock('./use-previewed-reference', () => ({
   usePreviewedReference: stubs.usePreviewedReference,
 }))
+/** The router's `Link`, as the attributes it would render with. */
+vi.mock('@tanstack/react-router', async () => {
+  const { createElement } = await import('react')
+  return {
+    Link: ({
+      to,
+      params,
+      search,
+      children,
+      ...rest
+    }: {
+      to: string
+      params: { articleId: string }
+      search: (previous: Record<string, unknown>) => Record<string, unknown>
+      children?: ReactNode
+    } & Record<string, unknown>) => {
+      stubs.linkProps({ to, params, search, ...rest })
+      return createElement(
+        'a',
+        { href: `/lit-tracker/${params.articleId}`, ...rest },
+        children,
+      )
+    },
+  }
+})
 
 const { CitationPreview, goToCoordinates } = await import('./citation-preview')
 
@@ -113,12 +141,26 @@ function show(onOpenChange = vi.fn()) {
   return onOpenChange
 }
 
+/** A matched reference whose paper is in the collection, and one that is not. */
+const ELMO_ARTICLE = '018f5b6c-0000-7000-8000-0000000000e1'
+const ATTENTION = '018f5b6c-0000-7000-8000-0000000000a1'
+const ELMO: PreviewedReference = {
+  id: 'edge-elmo',
+  entryRegions: null,
+  citedArticle: {
+    id: ELMO_ARTICLE,
+    title: 'Deep Contextualized Word Representations',
+  },
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   URL.createObjectURL = vi.fn(() => 'blob:crop')
   URL.revokeObjectURL = vi.fn()
   resolveLinkPreview.mockResolvedValue(REGION)
   renderPageRect.mockReturnValue(task(new Blob()))
+  // No match unless a test says so: most links are not references a reader has.
+  usePreviewedReference.mockReturnValue(null)
 })
 
 describe('goToCoordinates', () => {
@@ -152,20 +194,53 @@ describe('CitationPreview', () => {
     )
   })
 
-  it('looks the shown region up in the open paper’s references', async () => {
-    // The answer is held, not drawn: a preview of a paper in the collection
-    // still shows the crop and "go to" and nothing else until task 3.
-    usePreviewedReference.mockReturnValue({
-      id: 'edge',
-      entryRegions: null,
-      citedArticle: { id: 'article', title: 'Deep Contextualized Word' },
+  it('opens the paper a reference names, recording the hop', async () => {
+    usePreviewedReference.mockReturnValue(ELMO)
+    show()
+
+    const action = await screen.findByRole('link', { name: /open in tracker/ })
+    expect(usePreviewedReference).toHaveBeenCalledWith('doc', REGION)
+    expect(action.getAttribute('href')).toBe(`/lit-tracker/${ELMO_ARTICLE}`)
+
+    // Dropping `view` opens the paper on its reader rather than on its own
+    // citations; `via` records the paper being left, and the collection's
+    // filters ride along untouched.
+    const { search } = linkProps.mock.calls.at(-1)?.[0] ?? {}
+    expect(search({ q: 'bert', view: 'citations', via: [ATTENTION] })).toEqual({
+      q: 'bert',
+      view: undefined,
+      via: [ATTENTION, 'doc'],
     })
+  })
+
+  it('closes the preview when the paper is opened', async () => {
+    usePreviewedReference.mockReturnValue(ELMO)
+    const user = userEvent.setup()
+    const onOpenChange = show()
+
+    await user.click(
+      await screen.findByRole('link', { name: /open in tracker/ }),
+    )
+
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('offers nothing when the region is no reference of this paper', async () => {
+    // A table, a section heading, or an entry the rule refused to call.
     show()
 
     await screen.findByRole('img', { name: /page 11/ })
-    expect(usePreviewedReference).toHaveBeenCalledWith('doc', REGION)
-    expect(screen.getAllByRole('button')).toHaveLength(1)
-    expect(screen.queryByText(/Deep Contextualized/)).toBeNull()
+    expect(screen.queryByRole('link')).toBeNull()
+  })
+
+  it('offers nothing for a reference that is not in the collection', async () => {
+    // The commonest case by far: a paper cites far more than a reader holds.
+    // Absent, not disabled — there is nothing to press and nothing to explain.
+    usePreviewedReference.mockReturnValue({ id: 'edge', entryRegions: null })
+    show()
+
+    await screen.findByRole('img', { name: /page 11/ })
+    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('scrolls to the region clear of the toolbar, and closes, on "go to"', async () => {

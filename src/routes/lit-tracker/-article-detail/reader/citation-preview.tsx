@@ -4,8 +4,10 @@ import type { PdfLinkAnnoObject } from '@embedpdf/models'
 import { useAnnotation } from '@embedpdf/plugin-annotation/react'
 import { useRenderCapability } from '@embedpdf/plugin-render/react'
 import { useScroll } from '@embedpdf/plugin-scroll/react'
+import { Link } from '@tanstack/react-router'
 import type { RefObject } from 'react'
 import { useEffect, useState } from 'react'
+import { nextVia } from '~/lit-tracker/citation-path'
 import type { PreviewRegion } from './link-preview-region'
 import { resolveLinkPreview } from './link-preview-source'
 import { READER_TOOLBAR_ATTRIBUTE } from './menu-placement'
@@ -187,6 +189,11 @@ export function CitationPreview({
                   height={preview.height}
                   alt={`what the link points to, on page ${preview.region.pageIndex + 1}`}
                 />
+                <OpenInTracker
+                  fromId={documentId}
+                  article={preview.reference?.citedArticle}
+                  onOpen={() => onOpenChange(false)}
+                />
               </>
             ) : (
               <Popover.Title className={styles.status}>
@@ -197,6 +204,55 @@ export function CitationPreview({
         </Popover.Positioner>
       </Popover.Portal>
     </Popover.Root>
+  )
+}
+
+/**
+ * The way from a reference into the paper it names
+ * (features/a-citation-opens-the-paper, task 3).
+ *
+ * **Under the crop, not beside "go to p. N"** (user-decided 2026-09-16, against
+ * the widths): the crop is drawn at the reading zoom, so the header is as wide
+ * as the reference's column — 450px on BERT at 197%, but 229px at 100%, where
+ * two actions and the page number do not fit. Its own row is the same place at
+ * every zoom, and reads in the order a reader does: the reference, then the way
+ * into it.
+ *
+ * **Absent, not disabled**, when the region matched no entry, when the matched
+ * reference is not a paper in the collection, or when the link was never a
+ * reference. There is nothing to press and nothing to explain.
+ *
+ * A real anchor, openable in a new tab like the citations view's rows, carrying
+ * the hop the same way: the paper being left joins the path, and opening one
+ * already on it cuts the path back rather than growing a loop.
+ */
+function OpenInTracker({
+  fromId,
+  article,
+  onOpen,
+}: {
+  /** The paper being left, which is the step the path records. */
+  fromId: string
+  article: { id: string; title: string } | null | undefined
+  onOpen: () => void
+}) {
+  if (!article) {
+    return null
+  }
+  return (
+    <Link
+      className={styles.open}
+      to="/lit-tracker/$articleId"
+      params={{ articleId: article.id }}
+      search={(previous) => ({
+        ...previous,
+        view: undefined,
+        via: nextVia(previous.via ?? [], fromId, article.id),
+      })}
+      onClick={onOpen}
+    >
+      <span aria-hidden="true">→</span> open in tracker
+    </Link>
   )
 }
 

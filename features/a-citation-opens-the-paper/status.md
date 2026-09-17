@@ -1,6 +1,7 @@
 # Status: A Citation Opens the Paper
 
-**Feature state:** **In progress** (2026-09-16): 3 tasks, 1 complete.
+**Feature state:** **In progress** (2026-09-16): 3 tasks, 2 complete, the third
+in review.
 
 Spec written against `main` at `b570453`, from measurements of GROBID's
 coordinates on two papers and a reading of what #22's preview already resolves.
@@ -20,8 +21,8 @@ with one sub-issue per task. The roadmap entry is **#25** in
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`the-entry-is-located`](./tasks/the-entry-is-located/status.md) | **Complete** ([#221](https://github.com/nicbk/nicbk-website/issues/221)) | [#225](https://github.com/nicbk/nicbk-website/pull/225) | green | merged |
-| [`the-preview-knows-the-paper`](./tasks/the-preview-knows-the-paper/status.md) | Implemented, in review ([#222](https://github.com/nicbk/nicbk-website/issues/222)) | — | — | — |
-| [`open-in-tracker`](./tasks/open-in-tracker/status.md) | Not started ([#223](https://github.com/nicbk/nicbk-website/issues/223)) | — | — | — |
+| [`the-preview-knows-the-paper`](./tasks/the-preview-knows-the-paper/status.md) | **Complete** ([#222](https://github.com/nicbk/nicbk-website/issues/222)) | [#226](https://github.com/nicbk/nicbk-website/pull/226) | green | merged |
+| [`open-in-tracker`](./tasks/open-in-tracker/status.md) | Implemented, in review ([#223](https://github.com/nicbk/nicbk-website/issues/223)) | — | — | — |
 
 ## Definition of Done (feature)
 
@@ -40,6 +41,12 @@ flow checked in Safari on `nicbk.com` after deploy.
 
 ## Log
 
+- 2026-09-16 — **Task 3 implemented**, and criteria 1, 2 and 3 checked in Chrome
+  on BERT: *Vaswani et al. (2017)* opens *Attention Is All You Need* with the
+  path reading `›cites`, while a citation to a paper not in the collection and a
+  figure link offer nothing. Where the action sits was decided against measured
+  header widths (`tasks/open-in-tracker/status.md`).
+- 2026-09-16 — **Task 2 merged** (#226).
 - 2026-09-16 — **Task 2 implemented.** The matching rule, measured over the 343
   located references now in the local collection before the threshold was
   chosen: the entry a region is showing is covered 1.000, the entry above it at

@@ -224,6 +224,23 @@ describe('the shape of the add-articles controls', () => {
     )
   })
 
+  it('reserves the width it draws', () => {
+    /*
+     * The two declarations above are also what made this button 11.1px wider
+     * than the room its row kept for it: the height arrives by stretching and
+     * the width follows, but intrinsic sizing runs before there is a height, so
+     * the width it *contributed* was its glyph's. The row overran at every
+     * width, and on a phone that became a sideways scroll
+     * (features/it-fits-the-screen).
+     *
+     * A floor is the part layout can see, and it must stay — without it the
+     * overrun comes back silently, at a width nobody is looking at.
+     */
+    expect(declarationsOf(MODAL_CSS, '.trigger')).toMatch(
+      /min-width:\s*2\.5rem\b/,
+    )
+  })
+
   it('draws the field with a dash rather than a solid box', () => {
     // Dashed says "put something here" without words. Solid, on a box this
     // size, reads as a text area — somewhere to type rather than to pick from.

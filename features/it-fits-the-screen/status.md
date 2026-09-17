@@ -1,6 +1,7 @@
 # Status: It Fits the Screen
 
-**Feature state:** **In progress** (2026-09-17): 3 tasks, the first in review.
+**Feature state:** **In progress** (2026-09-17): 3 tasks, one merged and the
+second in review.
 
 Spec written against `main` at `378f656`, from measurements taken in Chrome at
 viewports 320–1400 on the local stack. See [research.md](./research.md) — two of
@@ -21,8 +22,8 @@ completion and **closed by hand**.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`a-menu-stays-on-screen`](./tasks/a-menu-stays-on-screen/status.md) | Implemented, in review ([#230](https://github.com/nicbk/nicbk-website/issues/230)) | — | — | — |
-| [`the-row-reserves-what-it-draws`](./tasks/the-row-reserves-what-it-draws/status.md) | Not started ([#231](https://github.com/nicbk/nicbk-website/issues/231)) | — | — | — |
+| [`a-menu-stays-on-screen`](./tasks/a-menu-stays-on-screen/status.md) | **Complete** ([#230](https://github.com/nicbk/nicbk-website/issues/230)) | [#234](https://github.com/nicbk/nicbk-website/pull/234) | green | merged |
+| [`the-row-reserves-what-it-draws`](./tasks/the-row-reserves-what-it-draws/status.md) | Implemented, in review ([#231](https://github.com/nicbk/nicbk-website/issues/231)) | — | — | — |
 | [`the-citations-row-breathes`](./tasks/the-citations-row-breathes/status.md) | Not started ([#232](https://github.com/nicbk/nicbk-website/issues/232)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -43,6 +44,14 @@ three reported behaviours checked by the user on a phone.
 
 ## Log
 
+- 2026-09-17 — **Task 2 implemented.** The 11.1px overrun is exactly the upload
+  **+**'s drawn-minus-contributed width (39.5 − 28.4), proved by closing it with
+  a floor: `min-width: 2.5rem` takes the row's overrun to 0 at 320, 375, 500,
+  900 and 1400, in Chrome and in Safari. `width: max-content` on the container
+  was tried and does nothing — a container cannot see a width that does not
+  exist until the height does. The button and its row are 0.5px taller in
+  Chrome as a result, which is what Safari already drew.
+- 2026-09-17 — **Task 1 merged** (#234).
 - 2026-09-17 — **Task 1 implemented.** The edge rule, and the sweep it was
   meant to justify: at a real 375px in Safari every portalled surface stays
   inside, and the citation preview stops at 359 — exactly the inset this rule

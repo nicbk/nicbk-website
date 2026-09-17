@@ -63,6 +63,30 @@
 }
 
 /*
+ * The way into the paper a reference names: its own row under the crop, so it
+ * sits in the same place whatever the reading zoom made the crop (the component
+ * has the widths). Left-aligned and only as wide as its words — a full-width
+ * bar would read as the popover's main business, and the crop is.
+ */
+.open {
+  align-self: start;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .open:hover {
+    text-decoration: underline;
+  }
+}
+
+.open:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/*
  * The paper, as the paper: white, whatever the site's theme — a crop tinted to
  * match a dark surface would no longer look like the page it came from.
  */

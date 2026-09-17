@@ -97,6 +97,68 @@ export function menuPlacement(
 }
 
 /**
+ * How far a menu stops short of the screen's edge, in pixels.
+ *
+ * `--space-md`, which is what every portalled surface in the app caps itself
+ * with (`max-width: calc(100vw - 2 * var(--space-md))`) and what the citation
+ * preview hands Base UI as its collision padding. Stated here as a number
+ * because this is arithmetic on screen pixels, and read from the same token so
+ * the two families of floating surface stop in the same place.
+ */
+export const EDGE_INSET = 16
+
+/**
+ * How far to slide a menu sideways so it stays on the screen.
+ *
+ * **These menus had no horizontal rule at all** until this existed
+ * (features/it-fits-the-screen): they hang from the left edge of the mark or
+ * selection they are about, so a mark on the right of the page put its controls
+ * partly off the screen — measured on a phone, where a mark more than ~39px
+ * from the left was enough. Their stylesheets cap their *width*, and a cap is
+ * not a position.
+ *
+ * **Decided from the anchor, never from where the menu currently is**, for the
+ * reason `menuPlacement` gives above: a rule phrased "it hangs off now, so move
+ * it" is a rule that moves back the moment moving fixes the overhang. The
+ * unshifted left edge is the anchor's, because that is where the stylesheet
+ * puts the menu; the width is the menu's own, which a shift does not change. So
+ * the same input always gives the same answer, however many times it is asked.
+ *
+ * **Slide, never flip** (user-decided 2026-09-17): the menu moves by the
+ * smallest amount that makes it visible, rather than re-anchoring to the mark's
+ * other edge — a menu that changed sides while a reader marked across a line
+ * would read as unstable.
+ *
+ * The left edge wins a conflict: a menu wider than the screen starts at the
+ * inset and runs off to the right, which keeps the first control — and, for a
+ * mark's menu, every control the reader is most likely to want — reachable.
+ */
+export function edgeShift(
+  anchor: Pick<DOMRect, 'left'>,
+  menuWidth: number,
+  viewportWidth: number,
+): number {
+  // Nothing measured, nothing moved — the same answer the vertical rule gives
+  // when there is no toolbar on screen. A viewport of zero is a document that
+  // has not been laid out (jsdom, and a menu measured before first paint), and
+  // treating it as a screen 0px wide would fling every menu to the left margin.
+  if (viewportWidth <= 0) {
+    return 0
+  }
+
+  const over = anchor.left + menuWidth - (viewportWidth - EDGE_INSET)
+  if (over <= 0) {
+    // Nothing crosses the edge, so nothing moves. A menu merely *close* to the
+    // left edge is left exactly where the stylesheet put it: the rule exists to
+    // recover a menu that cannot be pressed, not to tidy one that can.
+    return 0
+  }
+
+  const shift = -over
+  return anchor.left + shift < EDGE_INSET ? EDGE_INSET - anchor.left : shift
+}
+
+/**
  * Keeps a floating menu out from under the reader's toolbar.
  *
  * **Why this exists rather than a `z-index`.** It was measured: the menu is
@@ -130,9 +192,12 @@ export function menuPlacement(
 export function useMenuPlacement(): {
   ref: (node: HTMLElement | null) => void
   placement: MenuPlacement
+  /** Pixels to slide the menu sideways so it stays on screen; `0` when it fits. */
+  shift: number
 } {
   const [menu, setMenu] = useState<HTMLElement | null>(null)
   const [placement, setPlacement] = useState<MenuPlacement>('above')
+  const [shift, setShift] = useState(0)
 
   useEffect(() => {
     const anchor = menu?.parentElement
@@ -146,27 +211,40 @@ export function useMenuPlacement(): {
       }
       const bar = document.querySelector(`[${READER_TOOLBAR_ATTRIBUTE}]`)
       const menuBox = menu.getBoundingClientRect()
+      const anchorBox = anchor.getBoundingClientRect()
       setPlacement(
         menuPlacement(
-          anchor.getBoundingClientRect(),
+          anchorBox,
           menuBox.height,
           menuBox.width,
           bar ? visibleBounds(bar) : null,
+        ),
+      )
+      setShift(
+        edgeShift(
+          anchorBox,
+          menuBox.width,
+          document.documentElement.clientWidth,
         ),
       )
     }
 
     measure()
 
+    // The window's own resize, which the observer above does not see: it
+    // watches the menu, and a narrower screen moves the edge without changing
+    // the menu by a pixel.
     window.addEventListener('scroll', measure, true)
+    window.addEventListener('resize', measure)
     const resize = new ResizeObserver(measure)
     resize.observe(menu)
 
     return () => {
       window.removeEventListener('scroll', measure, true)
+      window.removeEventListener('resize', measure)
       resize.disconnect()
     }
   }, [menu])
 
-  return { ref: setMenu, placement }
+  return { ref: setMenu, placement, shift }
 }

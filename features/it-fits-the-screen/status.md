@@ -1,6 +1,6 @@
 # Status: It Fits the Screen
 
-**Feature state:** **Not started** (2026-09-17): 3 tasks.
+**Feature state:** **In progress** (2026-09-17): 3 tasks, the first in review.
 
 Spec written against `main` at `378f656`, from measurements taken in Chrome at
 viewports 320–1400 on the local stack. See [research.md](./research.md) — two of
@@ -21,7 +21,7 @@ completion and **closed by hand**.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`a-menu-stays-on-screen`](./tasks/a-menu-stays-on-screen/status.md) | Not started ([#230](https://github.com/nicbk/nicbk-website/issues/230)) | — | — | — |
+| [`a-menu-stays-on-screen`](./tasks/a-menu-stays-on-screen/status.md) | Implemented, in review ([#230](https://github.com/nicbk/nicbk-website/issues/230)) | — | — | — |
 | [`the-row-reserves-what-it-draws`](./tasks/the-row-reserves-what-it-draws/status.md) | Not started ([#231](https://github.com/nicbk/nicbk-website/issues/231)) | — | — | — |
 | [`the-citations-row-breathes`](./tasks/the-citations-row-breathes/status.md) | Not started ([#232](https://github.com/nicbk/nicbk-website/issues/232)) | — | — | — |
 
@@ -43,6 +43,13 @@ three reported behaviours checked by the user on a phone.
 
 ## Log
 
+- 2026-09-17 — **Task 1 implemented.** The edge rule, and the sweep it was
+  meant to justify: at a real 375px in Safari every portalled surface stays
+  inside, and the citation preview stops at 359 — exactly the inset this rule
+  uses, so the two families of floating surface now agree. Two corrections to
+  the spec: the note editor is carried by the mark's menu rather than positioned
+  itself (two surfaces, not three), and a menu merely *near* the left edge is
+  left where it is.
 - 2026-09-17 — **Spec'd.** Three defects reported by the user from using the
   tracker on a phone. Measured before writing: the reader's menus have no
   horizontal rule at all, while every portalled surface is already guarded; the

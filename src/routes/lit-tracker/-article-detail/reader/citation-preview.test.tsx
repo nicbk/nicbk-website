@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { createRef } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PreviewRegion } from './link-preview-region'
+import type { PreviewedReference } from './use-previewed-reference'
 
 /**
  * The preview popover.
@@ -27,6 +28,12 @@ const stubs = vi.hoisted(() => {
     scrollToPage,
     renderPageRect,
     resolveLinkPreview: vi.fn(),
+    usePreviewedReference: vi.fn<
+      (
+        articleId: string,
+        region: PreviewRegion | null,
+      ) => PreviewedReference | null
+    >(() => null),
     registry: { registry: { getEngine: () => ({}) } },
     documentState: { document: { id: 'doc', pages: [] }, scale: 1.5 },
     annotation: { state: { byUid: {} } },
@@ -34,7 +41,12 @@ const stubs = vi.hoisted(() => {
     scroll: { provides: { scrollToPage } },
   }
 })
-const { scrollToPage, renderPageRect, resolveLinkPreview } = stubs
+const {
+  scrollToPage,
+  renderPageRect,
+  resolveLinkPreview,
+  usePreviewedReference,
+} = stubs
 
 vi.mock('@embedpdf/core/react', () => ({
   useRegistry: () => stubs.registry,
@@ -51,6 +63,11 @@ vi.mock('@embedpdf/plugin-scroll/react', () => ({
 }))
 vi.mock('./link-preview-source', () => ({
   resolveLinkPreview: stubs.resolveLinkPreview,
+}))
+// Sync, which jsdom has no client for. What the preview does with the answer is
+// task 3's; that it asks for the region it drew is asserted here.
+vi.mock('./use-previewed-reference', () => ({
+  usePreviewedReference: stubs.usePreviewedReference,
 }))
 
 const { CitationPreview, goToCoordinates } = await import('./citation-preview')
@@ -133,6 +150,22 @@ describe('CitationPreview', () => {
     expect(renderPageRect).toHaveBeenCalledWith(
       expect.objectContaining({ pageIndex: 10, rect: REGION.rect }),
     )
+  })
+
+  it('looks the shown region up in the open paper’s references', async () => {
+    // The answer is held, not drawn: a preview of a paper in the collection
+    // still shows the crop and "go to" and nothing else until task 3.
+    usePreviewedReference.mockReturnValue({
+      id: 'edge',
+      entryRegions: null,
+      citedArticle: { id: 'article', title: 'Deep Contextualized Word' },
+    })
+    show()
+
+    await screen.findByRole('img', { name: /page 11/ })
+    expect(usePreviewedReference).toHaveBeenCalledWith('doc', REGION)
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(screen.queryByText(/Deep Contextualized/)).toBeNull()
   })
 
   it('scrolls to the region clear of the toolbar, and closes, on "go to"', async () => {

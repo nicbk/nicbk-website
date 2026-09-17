@@ -1,6 +1,6 @@
 # Status: A Citation Opens the Paper
 
-**Feature state:** **Not started** (2026-09-16): 3 tasks.
+**Feature state:** **In progress** (2026-09-16): 3 tasks, 1 complete.
 
 Spec written against `main` at `b570453`, from measurements of GROBID's
 coordinates on two papers and a reading of what #22's preview already resolves.
@@ -19,8 +19,8 @@ with one sub-issue per task. The roadmap entry is **#25** in
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-entry-is-located`](./tasks/the-entry-is-located/status.md) | Not started ([#221](https://github.com/nicbk/nicbk-website/issues/221)) | — | — | — |
-| [`the-preview-knows-the-paper`](./tasks/the-preview-knows-the-paper/status.md) | Not started ([#222](https://github.com/nicbk/nicbk-website/issues/222)) | — | — | — |
+| [`the-entry-is-located`](./tasks/the-entry-is-located/status.md) | **Complete** ([#221](https://github.com/nicbk/nicbk-website/issues/221)) | [#225](https://github.com/nicbk/nicbk-website/pull/225) | green | merged |
+| [`the-preview-knows-the-paper`](./tasks/the-preview-knows-the-paper/status.md) | Implemented, in review ([#222](https://github.com/nicbk/nicbk-website/issues/222)) | — | — | — |
 | [`open-in-tracker`](./tasks/open-in-tracker/status.md) | Not started ([#223](https://github.com/nicbk/nicbk-website/issues/223)) | — | — | — |
 
 ## Definition of Done (feature)
@@ -40,6 +40,13 @@ flow checked in Safari on `nicbk.com` after deploy.
 
 ## Log
 
+- 2026-09-16 — **Task 2 implemented.** The matching rule, measured over the 343
+  located references now in the local collection before the threshold was
+  chosen: the entry a region is showing is covered 1.000, the entry above it at
+  worst 0.406, so half is the line. No region in the collection covered two
+  entries, so the refusal is a guard rather than a common answer.
+- 2026-09-16 — **Task 1 merged** (#225). Older papers gain their rectangles on
+  the next deploy, through #10's re-read.
 - 2026-09-16 — **Spec'd.** Measured GROBID's `ref` and `biblStruct` coordinates
   on RoBERTa and Attention, and confirmed one request path feeds both the first
   extraction and #10's re-read. Two questions decided with the user: the preview

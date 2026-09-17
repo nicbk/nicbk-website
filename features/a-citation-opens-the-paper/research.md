@@ -56,6 +56,34 @@ entry's location belongs beside it rather than in a table of its own: it is one
 value per row, written and rewritten with the row, read only with the row, and
 never filtered on. `jsonb`, like `authors` and the annotations' `payload`.
 
+## 5. How much of an entry a region covers (task 2, 2026-09-16)
+
+Measured over the **343 located references** in the local collection — BERT,
+RoBERTa, Attention, ConvS2S and Layer Normalization, both uploads of each — by
+modelling #22's region for every entry from the entry's own stored rectangle and
+scoring every other entry on the page against it.
+
+The region is not a copy of the entry's rectangle. #22 snaps to a **text run**,
+whose rect carries the line's ascent, while GROBID's boxes are tight to the
+glyphs: in the measurement above, the region begins 7.47pt higher than the entry
+it is showing. That overshoot is what reaches into the entry printed above.
+
+| | coverage of the entry |
+|---|---|
+| the entry the region is showing | **1.000**, all 343 |
+| the entry printed above it, worst case | **0.406** — Layer Normalization, a one-line entry clipped by 3.22pt |
+| the next worst | 0.185 |
+| every other entry on the page | 0 |
+
+So **half** separates them with room on both sides, and **no region in the
+collection covered two entries** — the refusal the spec requires is a guard, not
+a routine answer.
+
+**The page is not a formality.** The region measured in the browser covers
+0.9982 of its entry on page index 10 and 0.9984 of a *different* reference on
+page index 9: a bibliography is set the same way on every page it runs over, so
+a rectangle without a page is ambiguous by construction.
+
 ## Sources
 
 - GROBID 0.9.1-crf on the local stack, and its coordinates documentation.

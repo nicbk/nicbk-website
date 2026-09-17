@@ -12,6 +12,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '~/routes/-shared/components/toast/toaster'
 import { LINK_RENDERERS, LinkTarget } from './link-target'
 
+// The preview a citation opens reads the paper's references from sync, and
+// jsdom has no Zero client. Which reference it finds is asserted where that is
+// decided (`previewed-reference.test.ts`).
+vi.mock('@rocicorp/zero/react', () => ({
+  useQuery: () => [[], { type: 'complete' }],
+}))
+
 /**
  * A paper's link, as the reader answers it.
  *

@@ -1,7 +1,7 @@
 # Status: The Entry Is Located
 
-**State:** Implemented, in review
-([#221](https://github.com/nicbk/nicbk-website/issues/221)).
+**State:** **Complete** ([#221](https://github.com/nicbk/nicbk-website/issues/221),
+PR [#225](https://github.com/nicbk/nicbk-website/pull/225), merged 2026-09-16).
 
 ## What shipped
 
@@ -60,3 +60,10 @@ case it must refuse.
 
 - 2026-09-16 — Spec'd.
 - 2026-09-16 — Implemented, and the coordinate agreement measured.
+- 2026-09-16 — Merged in #225. Task 2 put the same region against **every**
+  located entry rather than the neighbours by eye, and the reading holds: the
+  region covers 0.998 of that entry and touches no other on the page. Two
+  readings of the table to keep: the page is an **index**, so this is the
+  eleventh page; and the identical rectangle on the page before covers a
+  *different* reference just as exactly — which is why task 2's rule reads the
+  page before the rectangle.

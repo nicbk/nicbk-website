@@ -77,7 +77,7 @@ export function SelectionMenu({
 }: SelectionMenuProps) {
   // Before the early return, because hooks must be — the same arrangement the
   // annotation menu documents. It measures nothing until the menu appears.
-  const { ref: menuRef, placement } = useMenuPlacement()
+  const { ref: menuRef, placement, shift } = useMenuPlacement()
 
   // EmbedPDF renders this for the selection layer whether or not there is one.
   if (!selected) {
@@ -96,6 +96,12 @@ export function SelectionMenu({
         // Above the selection by default, below it when the toolbar would cover
         // it there. Same rule, same reason, as the mark's menu.
         data-placement={placement}
+        /*
+         * Slid back onto the screen for a selection near an edge, and `0`
+         * otherwise — the mark menu's file explains why this is `translate`
+         * and not a `transform` (features/it-fits-the-screen).
+         */
+        style={{ translate: `${shift}px` }}
         /*
          * The press must not reach the page, which would begin a new selection
          * and unmount this before its click landed. The annotation menu learned

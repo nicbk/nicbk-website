@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  EDGE_INSET,
+  edgeShift,
   menuPlacement,
   READER_TOOLBAR_ATTRIBUTE,
   useMenuPlacement,
@@ -118,6 +120,88 @@ describe('menuPlacement', () => {
 })
 
 /**
+ * Keeping a menu on the screen sideways.
+ *
+ * A phone, 375px wide, and the widths these menus really have: a mark's
+ * controls are two icon buttons, a selection's bar is capped at 21rem, and the
+ * note editor inside the mark's menu is `min(20rem, 60vw)` — 225px there
+ * (`features/it-fits-the-screen/research.md`).
+ */
+
+const PHONE = 375
+/** A mark's controls: two icon buttons and their padding. */
+const MARK_MENU = 84
+/** A selection's bar at its cap, 21rem. */
+const SELECTION_BAR = 336
+
+/** A mark starting `left` from the screen's edge. */
+function markAt(left: number): Pick<DOMRect, 'left'> {
+  return { left }
+}
+
+describe('edgeShift', () => {
+  it('leaves a menu that fits exactly where it is', () => {
+    // The commonest case by far, and the one criterion 2 protects: a mark in
+    // the middle of a page must not move by a pixel.
+    expect(edgeShift(markAt(120), MARK_MENU, PHONE)).toBe(0)
+  })
+
+  it('leaves a menu near the left edge alone', () => {
+    // Close to an edge is not across it. The rule recovers a menu that cannot
+    // be pressed; it does not tidy one that can.
+    expect(edgeShift(markAt(4), MARK_MENU, PHONE)).toBe(0)
+  })
+
+  it('slides a menu that would hang off the right back inside', () => {
+    // A mark 320px across a 375px screen: its controls would end at 404, which
+    // is 45px past the screen and 61 past where a popup is allowed to stop.
+    const shift = edgeShift(markAt(320), MARK_MENU, PHONE)
+
+    expect(shift).toBe(-45)
+    expect(320 + shift + MARK_MENU).toBe(PHONE - EDGE_INSET)
+  })
+
+  it('stops at the same inset every other popup stops at', () => {
+    // `--space-md`, which is what the portalled surfaces cap themselves with
+    // and what the citation preview hands Base UI. Two families of floating
+    // surface, one edge.
+    const shift = edgeShift(markAt(200), SELECTION_BAR, PHONE)
+
+    expect(200 + shift + SELECTION_BAR).toBe(PHONE - EDGE_INSET)
+  })
+
+  it('gives the same answer however many times it is asked', () => {
+    /*
+     * The property this shape exists for, as `menuPlacement` argues above: the
+     * input is the anchor and the menu's *width*, neither of which a shift
+     * changes. A rule that read the menu's current position would undo itself
+     * on the next measurement and oscillate.
+     */
+    const mark = markAt(320)
+    const first = edgeShift(mark, MARK_MENU, PHONE)
+
+    expect(edgeShift(mark, MARK_MENU, PHONE)).toBe(first)
+    expect(first).not.toBe(0)
+  })
+
+  it('keeps the left edge of a menu too wide for the screen', () => {
+    // 21rem fits a 375px phone with room either side; on the 320px screen at
+    // the bottom of the sweep it does not, and something has to give. It is the
+    // far end: the controls a reader reaches for first are the nearest ones.
+    const narrow = 320
+    const shift = edgeShift(markAt(60), SELECTION_BAR, narrow)
+
+    expect(60 + shift).toBe(EDGE_INSET)
+    expect(60 + shift + SELECTION_BAR).toBeGreaterThan(narrow)
+  })
+
+  it('does not move anything on a wide screen', () => {
+    // The same mark on a desktop is nowhere near an edge.
+    expect(edgeShift(markAt(320), SELECTION_BAR, 1400)).toBe(0)
+  })
+})
+
+/**
  * The hook, and the one thing about it that broke.
  *
  * jsdom lays nothing out, so every rectangle it reports is zero and the
@@ -143,15 +227,27 @@ function stubRects() {
 
 /** A menu that does not draw until it is asked to — as EmbedPDF's do not. */
 function Harness({ shown }: { shown: boolean }) {
-  const { ref, placement } = useMenuPlacement()
+  const { ref, placement, shift } = useMenuPlacement()
 
   if (!shown) {
     return null
   }
   return (
     <div>
-      <div ref={ref} data-testid="menu" data-placement={placement} />
+      <div
+        ref={ref}
+        data-testid="menu"
+        data-placement={placement}
+        style={{ translate: `${shift}px` }}
+      />
     </div>
+  )
+}
+
+/** A screen of `width`, which jsdom otherwise reports as zero. */
+function stubViewport(width: number) {
+  vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(
+    width,
   )
 }
 
@@ -160,6 +256,26 @@ afterEach(() => {
 })
 
 describe('useMenuPlacement', () => {
+  it('slides a menu whose anchor sits near the screen edge', async () => {
+    // The anchor stubbed here starts at 660 and the menu is 120 wide, so on a
+    // 700px screen it would end 80px past where a popup may stop.
+    stubRects()
+    stubViewport(700)
+    render(<Harness shown={true} />)
+
+    const menu = await screen.findByTestId('menu')
+    expect(menu.style.translate).toBe('-96px')
+  })
+
+  it('leaves a menu with room to spare untranslated', async () => {
+    stubRects()
+    stubViewport(1400)
+    render(<Harness shown={true} />)
+
+    const menu = await screen.findByTestId('menu')
+    expect(menu.style.translate).toBe('0px')
+  })
+
   it('measures when the menu appears, not only when the component mounts', async () => {
     /*
      * The regression this file exists for.

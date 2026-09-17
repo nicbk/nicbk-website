@@ -58,7 +58,7 @@ export function AnnotationSelectionMenu({
   const [writing, setWriting] = useState(false)
   // Also before the early return, and for the same reason. It measures nothing
   // until the menu it is given actually appears.
-  const { ref: menuRef, placement } = useMenuPlacement()
+  const { ref: menuRef, placement, shift } = useMenuPlacement()
   useEffect(() => {
     if (!selected) {
       setWriting(false)
@@ -96,6 +96,15 @@ export function AnnotationSelectionMenu({
         // Above the mark by default, below it when the toolbar would cover it
         // there. The bar cannot be painted over — see `menu-placement.ts`.
         data-placement={placement}
+        /*
+         * Slid back onto the screen for a mark near an edge, and `0` for every
+         * other mark (features/it-fits-the-screen). The standalone `translate`
+         * property rather than a `transform`: the stylesheet owns this menu's
+         * transform — which is how it hangs above the mark — and the two
+         * compose, `translate` first, without either having to know the other's
+         * value.
+         */
+        style={{ translate: `${shift}px` }}
         /*
          * The press must not reach the page.
          *

@@ -83,6 +83,7 @@ need them (see Phases 2–3).
 | 23 | A paper opens where you left it (the reader saves your place and reopens there, on any device) | [`a-paper-opens-where-you-left-it`](./a-paper-opens-where-you-left-it/description.md) | **Complete** (2026-09-14; both tasks merged, #195 + #196) | #8, #9 |
 | 24 | A note fits the margin (a text box writes at the size of a margin note, in a box that fits one) | [`a-note-fits-the-margin`](./a-note-fits-the-margin/description.md) | **Complete** (2026-09-16; its one task merged, #218) | #9 |
 | 25 | A citation opens the paper (a previewed reference you own becomes a way into it) | [`a-citation-opens-the-paper`](./a-citation-opens-the-paper/description.md) | **Complete** (2026-09-17; 3 tasks, #220) | #7, #10, #22 |
+| 26 | It fits the screen (no menu off the edge, no sideways scroll, a row that breathes on a phone) | [`it-fits-the-screen`](./it-fits-the-screen/description.md) | **Not started** (2026-09-17; spec'd, 3 tasks, #229) | #8, #9, #10, #16, #19 |
 
 ## How this roadmap is spec'd out
 
@@ -98,11 +99,10 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `controls-look-like-controls` (complete), `the-site-fits-a-phone` (complete),
 `a-popup-keeps-its-clicks` (complete), `a-paper-downloads-once` (complete), `a-link-is-a-link` (complete),
 `a-paper-opens-where-you-left-it` (complete), `citation-graph-traversal`
-(complete), `a-note-fits-the-margin` (complete) and
-`a-citation-opens-the-paper` (complete) have full
-folders today. The rest carry a one-line
-intent here and get their full folder
-(six files + tasks) written when we reach them, so their specs reflect the
+(complete), `a-note-fits-the-margin` (complete),
+`a-citation-opens-the-paper` (complete) and `it-fits-the-screen` (spec'd) have
+full folders today. The rest carry a one-line intent here and get their full
+folder (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
 up-front draft.
 

@@ -1,7 +1,7 @@
 # Status: A Citation Opens the Paper
 
-**Feature state:** **In progress** (2026-09-16): 3 tasks, 2 complete, the third
-in review.
+**Feature state:** **Complete** (2026-09-17): 3 tasks, all merged. Parent issue
+[#220](https://github.com/nicbk/nicbk-website/issues/220) closed by hand.
 
 Spec written against `main` at `b570453`, from measurements of GROBID's
 coordinates on two papers and a reading of what #22's preview already resolves.
@@ -22,7 +22,7 @@ with one sub-issue per task. The roadmap entry is **#25** in
 |---|---|---|---|---|
 | [`the-entry-is-located`](./tasks/the-entry-is-located/status.md) | **Complete** ([#221](https://github.com/nicbk/nicbk-website/issues/221)) | [#225](https://github.com/nicbk/nicbk-website/pull/225) | green | merged |
 | [`the-preview-knows-the-paper`](./tasks/the-preview-knows-the-paper/status.md) | **Complete** ([#222](https://github.com/nicbk/nicbk-website/issues/222)) | [#226](https://github.com/nicbk/nicbk-website/pull/226) | green | merged |
-| [`open-in-tracker`](./tasks/open-in-tracker/status.md) | Implemented, in review ([#223](https://github.com/nicbk/nicbk-website/issues/223)) | — | — | — |
+| [`open-in-tracker`](./tasks/open-in-tracker/status.md) | **Complete** ([#223](https://github.com/nicbk/nicbk-website/issues/223)) | [#227](https://github.com/nicbk/nicbk-website/pull/227) | green | merged |
 
 ## Definition of Done (feature)
 
@@ -41,6 +41,10 @@ flow checked in Safari on `nicbk.com` after deploy.
 
 ## Log
 
+- 2026-09-17 — **Complete.** Task 3 merged (#227) and #220 closed by hand. A
+  citation to a paper in the collection now opens it, with the hop recorded;
+  older papers gain their rectangles through #10's re-read on deploy. The
+  Safari check on `nicbk.com` is the user's, after that deploy.
 - 2026-09-16 — **Task 3 implemented**, and criteria 1, 2 and 3 checked in Chrome
   on BERT: *Vaswani et al. (2017)* opens *Attention Is All You Need* with the
   path reading `›cites`, while a citation to a paper not in the collection and a

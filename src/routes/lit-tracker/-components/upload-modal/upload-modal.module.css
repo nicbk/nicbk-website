@@ -37,6 +37,30 @@
    */
   height: 100%;
   aspect-ratio: 1;
+  /*
+   * **What this button *draws* was 11.1px wider than what it *reserved*.**
+   *
+   * The two lines above are what made that true: the height arrives by
+   * stretching and the width follows it, but intrinsic sizing runs before there
+   * is a height, so the width this button contributed to its row was its
+   * glyph's — 28.4px, against the 39.5px it drew. `.controls` is
+   * `flex-shrink: 0`, so it reserved 28.4 and its children then overflowed it by
+   * exactly the difference, at **every** viewport width, desktop included
+   * (features/it-fits-the-screen). A wide panel hid that inside its own inset; a
+   * phone did not, and the tracker panel turns any overrun into a sideways
+   * scroll.
+   *
+   * A floor is what layout can see. It is deliberately **not** a declared size:
+   * the row still decides the height, and `aspect-ratio` still follows it, so a
+   * row that ever grows taller grows this button with it. The floor only has to
+   * be at least the height the row hands over — 2.5rem against a row measured at
+   * 39.5px (Chrome) and 40px (Safari), which is also why this now draws 40 × 40
+   * in both rather than half a pixel apart in one.
+   *
+   * The browser check that belongs with this is a number, not a look: the row's
+   * `scrollWidth - clientWidth` is 0 at 320, 375, 500 and 1400.
+   */
+  min-width: 2.5rem;
   padding: var(--space-2xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);

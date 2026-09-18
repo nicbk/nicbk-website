@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
@@ -257,5 +259,62 @@ describe('CitationsView', () => {
     expect(
       screen.getByRole('button', { name: 'page menu' }),
     ).toBeInTheDocument()
+  })
+})
+
+/**
+ * The row's own spacing, which only a stylesheet expresses.
+ *
+ * Comments are stripped before matching, so a comment naming a property cannot
+ * satisfy an assertion looking for it (the upload modal's tests explain why).
+ */
+const VIEW_CSS = readFileSync(
+  join(__dirname, 'citations-view.module.css'),
+  'utf8',
+)
+
+/** The narrow tier's declarations, with comments stripped. */
+function narrowTier(): string {
+  const css = VIEW_CSS.replace(/\/\*[\s\S]*?\*\//g, '')
+  const tier = css.match(/@media \(max-width: 768px\) \{[\s\S]*?\n\}/)?.[0]
+  if (!tier) {
+    throw new Error('No narrow-tier rule in the stylesheet.')
+  }
+  return tier
+}
+
+describe('the citations row’s spacing', () => {
+  it('takes the gap for itself only where no sidebar sits beside it', () => {
+    /*
+     * On a desktop this row is held to a tab's height so its rule meets the
+     * sidebar's — measured at 0px apart, from an earlier report, and that must
+     * not change. Below the breakpoint the sidebar is a sheet, so there is
+     * nothing to meet, and the row gains that sheet's *bordered* trigger: the
+     * clearance that was invisible under a borderless glyph became a box
+     * sitting 2.2px off the line with 16px of air above it.
+     *
+     * The rule is declared for the narrow tier alone, and that tier is the one
+     * the sidebar itself disappears at.
+     */
+    const narrow = narrowTier()
+
+    expect(narrow).toMatch(/margin-top:\s*calc\(-1 \* var\(--space-lg\)\)/)
+  })
+
+  it('grows the row from the tabs, so the words stay on the controls’ line', () => {
+    /*
+     * The regression this row exists to prevent. A `min-height` on the row was
+     * the first attempt: `.tabs` is `align-self: stretch` so a selected tab's
+     * underline lands on the rule, and a stretched tab holds its text at its
+     * own top — so the row grew, the buttons centred, and "cites" and "cited
+     * by" stayed up by the header (user-reported).
+     *
+     * Padding on the tab grows the same row with the text between equal
+     * amounts of space, and the underline still the tab's own bottom edge.
+     */
+    const narrow = narrowTier()
+
+    expect(narrow).toMatch(/\.tab\s*\{[^}]*padding-block:/)
+    expect(narrow).not.toMatch(/min-height:/)
   })
 })

@@ -275,3 +275,50 @@
     -webkit-line-clamp: 4;
   }
 }
+
+/*
+ * **Below the breakpoint there is no sidebar to line up with, and the row has a
+ * box in it.**
+ *
+ * The rule above holds this row to a tab's height so its underline meets the
+ * sidebar's — 27.5px, measured. That is exactly right while the sidebar is a
+ * column beside it. Below 768px it is a sheet, so there is nothing to meet; and
+ * the row gains the sheet's trigger, which is *bordered*, where the desktop row
+ * carries only a borderless "⋯". The clearance that was invisible under a glyph
+ * became a box sitting 2.2px off the line, with 16px of air above it
+ * (user-reported, features/it-fits-the-screen).
+ *
+ * So below the breakpoint the row takes that gap instead of sitting under it:
+ * the panel's inset is cancelled and the tabs grow by the same amount, so the
+ * row occupies the air rather than hanging below it. Measured at 500px
+ * afterwards: the row is 43.5px tall, **its rule is at 99.5 — exactly where the
+ * desktop rule leaves it**, so nothing below moves; the controls have 8px above
+ * and 8px below (the 9.1 measured includes the rule's own 1.1px); and the tab
+ * text and the controls share a centre line to within half a pixel.
+ *
+ * 768px is the decided breakpoint for structural shifts, and the one the
+ * sidebar itself disappears at (`lit-tracker-sidebar.module.css`).
+ */
+@media (max-width: 768px) {
+  .view {
+    margin-top: calc(-1 * var(--space-lg));
+  }
+
+  /*
+   * **The row grows from the tabs, not from a height on the row.**
+   *
+   * A `min-height` here was the first attempt and it was wrong: `.tabs` is
+   * `align-self: stretch` so that a selected tab's underline lands on the rule,
+   * and a stretched tab holds its text at its own top. The row got taller, the
+   * buttons centred themselves in it, and the words "cites" and "cited by"
+   * stayed up by the header (user-reported, after the numbers for the buttons
+   * alone looked right).
+   *
+   * Padding on the tab grows the same row while keeping both things true: the
+   * text sits between equal amounts of space, and the underline is still the
+   * tab's own bottom edge, which is still the rule.
+   */
+  .tab {
+    padding-block: var(--space-sm);
+  }
+}

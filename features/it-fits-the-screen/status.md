@@ -1,8 +1,8 @@
 # Status: It Fits the Screen
 
-**Feature state:** **Implemented** (2026-09-17): all 3 tasks merged. Complete
-when the user has seen the three behaviours on a phone, which is what this
-feature's Definition of Done asks for.
+**Feature state:** **Complete** (2026-09-17): all 3 tasks merged, and the three
+behaviours confirmed by the user on a phone. Parent issue
+[#229](https://github.com/nicbk/nicbk-website/issues/229) closed by hand.
 
 Spec written against `main` at `378f656`, from measurements taken in Chrome at
 viewports 320–1400 on the local stack. See [research.md](./research.md) — two of
@@ -45,10 +45,14 @@ three reported behaviours checked by the user on a phone.
 
 ## Log
 
-- 2026-09-17 — **All three tasks merged** (#234, #235, #236). What is left is
+- 2026-09-17 — **Complete.** The user confirmed all three on a phone: a menu by
+  the edge of a page stays on screen, the collection does not move sideways,
+  and the citations row's controls sit with air above and below them. Every
+  defect in this feature came from using the tracker on a phone, and every one
+  of the three had a cause that the symptom did not name.
+- 2026-09-17 — **All three tasks merged** (#234, #235, #236). What was left was
   the phone check: a mark near the right edge of a page, the collection not
   moving sideways, and the citations row's controls with air above and below.
-  #229 is checked and closed by hand when that passes.
 - 2026-09-17 — **Task 3 implemented.** Below 768px the row takes the gap it used
   to sit under, growing from the **tabs'** padding. The first attempt used a
   `min-height` on the row and regressed the tab text's alignment — the controls

@@ -1,7 +1,8 @@
 # Status: It Fits the Screen
 
-**Feature state:** **In progress** (2026-09-17): 3 tasks, two merged and the
-third in review.
+**Feature state:** **Implemented** (2026-09-17): all 3 tasks merged. Complete
+when the user has seen the three behaviours on a phone, which is what this
+feature's Definition of Done asks for.
 
 Spec written against `main` at `378f656`, from measurements taken in Chrome at
 viewports 320–1400 on the local stack. See [research.md](./research.md) — two of
@@ -24,7 +25,7 @@ completion and **closed by hand**.
 |---|---|---|---|---|
 | [`a-menu-stays-on-screen`](./tasks/a-menu-stays-on-screen/status.md) | **Complete** ([#230](https://github.com/nicbk/nicbk-website/issues/230)) | [#234](https://github.com/nicbk/nicbk-website/pull/234) | green | merged |
 | [`the-row-reserves-what-it-draws`](./tasks/the-row-reserves-what-it-draws/status.md) | **Complete** ([#231](https://github.com/nicbk/nicbk-website/issues/231)) | [#235](https://github.com/nicbk/nicbk-website/pull/235) | green | merged |
-| [`the-citations-row-breathes`](./tasks/the-citations-row-breathes/status.md) | Implemented, in review ([#232](https://github.com/nicbk/nicbk-website/issues/232)) | — | — | — |
+| [`the-citations-row-breathes`](./tasks/the-citations-row-breathes/status.md) | **Complete** ([#232](https://github.com/nicbk/nicbk-website/issues/232)) | [#236](https://github.com/nicbk/nicbk-website/pull/236) | green | merged |
 
 ## Definition of Done (feature)
 
@@ -44,6 +45,10 @@ three reported behaviours checked by the user on a phone.
 
 ## Log
 
+- 2026-09-17 — **All three tasks merged** (#234, #235, #236). What is left is
+  the phone check: a mark near the right edge of a page, the collection not
+  moving sideways, and the citations row's controls with air above and below.
+  #229 is checked and closed by hand when that passes.
 - 2026-09-17 — **Task 3 implemented.** Below 768px the row takes the gap it used
   to sit under, growing from the **tabs'** padding. The first attempt used a
   `min-height` on the row and regressed the tab text's alignment — the controls

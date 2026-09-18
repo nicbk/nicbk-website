@@ -1,7 +1,7 @@
 # Status: The Row Reserves What It Draws
 
-**State:** Implemented, in review
-([#231](https://github.com/nicbk/nicbk-website/issues/231)).
+**State:** **Complete** ([#231](https://github.com/nicbk/nicbk-website/issues/231),
+PR [#235](https://github.com/nicbk/nicbk-website/pull/235), merged 2026-09-17).
 
 ## What shipped
 

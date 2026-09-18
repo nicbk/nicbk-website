@@ -1,7 +1,7 @@
 # Status: The Citations Row Breathes
 
-**State:** Implemented, in review
-([#232](https://github.com/nicbk/nicbk-website/issues/232)).
+**State:** **Complete** ([#232](https://github.com/nicbk/nicbk-website/issues/232),
+PR [#236](https://github.com/nicbk/nicbk-website/pull/236), merged 2026-09-17).
 
 ## What shipped
 
@@ -60,6 +60,7 @@ engine gives.
 ## Log
 
 - 2026-09-17 — Spec'd.
+- 2026-09-17 — Merged in #236.
 - 2026-09-17 — Implemented. First attempt regressed the tab text's alignment,
   reported by the user and fixed by growing the row from the tabs rather than
   from the row.

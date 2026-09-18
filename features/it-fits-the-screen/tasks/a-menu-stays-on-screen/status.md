@@ -1,7 +1,7 @@
 # Status: A Menu Stays on Screen
 
-**State:** Implemented, in review
-([#230](https://github.com/nicbk/nicbk-website/issues/230)).
+**State:** **Complete** ([#230](https://github.com/nicbk/nicbk-website/issues/230),
+PR [#234](https://github.com/nicbk/nicbk-website/pull/234), merged 2026-09-17).
 
 ## What shipped
 

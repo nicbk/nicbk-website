@@ -7,7 +7,7 @@ Measured 2026-10-12, before the spec was written.
 - `research/ui-ux/pages/lit-tracker/components/reader-annotation.md`: the
   decided tools; a highlight and a text box are both among them.
 - `features/reader-marking-a-passage/` (#15): the selection menu marks a passage
-  directly through `markSelection` without activating a tool. *note* is built on
+  directly through `markSelection` without activating a tool. *margin note* is built on
   the same path.
 - `features/a-note-fits-the-margin/` (#24): 8pt text, 72pt width.
 - `research/accessibility/conformance-target.md`: WCAG 2.2 AA. The menu's

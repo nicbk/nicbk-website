@@ -33,7 +33,7 @@ Against the signed-in stack with real papers (an ACM two-column paper,
 
 | Check | Engine |
 |---|---|
-| *note* on each column of a two-column paper | Chromium |
+| *margin note* on each column of a two-column paper | Chromium |
 | refusal next to an existing mark, and the menu's words | Chromium |
 | drag and resize do nothing; double-click edits | Chromium |
 | delete the highlight → both gone, also after a reload | Chromium |

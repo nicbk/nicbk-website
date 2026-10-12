@@ -1,6 +1,7 @@
 import type { SelectionSelectionMenuProps } from '@embedpdf/plugin-selection/react'
-import { Check, Copy, X } from 'lucide-react'
+import { Check, Copy, MessageSquareText, X } from 'lucide-react'
 import { TEXT_MARKUP_TOOLS } from './annotation-tools'
+import type { NoteState } from './margin-note/use-margin-note'
 import { useMenuPlacement } from './menu-placement'
 import type { CopyState } from './use-selection-copy'
 import styles from './selection-menu.module.css'
@@ -52,6 +53,36 @@ interface SelectionMenuProps extends SelectionSelectionMenuProps {
   onCopy: () => void
   /** Marks the selected passage with the tool of this id. */
   onMark: (toolId: string) => void
+  /** What *margin note* last reported — nothing, or why it could not write. */
+  noteState: NoteState
+  /** Highlights the passage and opens a note beside it in the margin. */
+  onNote: () => void
+}
+
+/**
+ * What the *margin note* button says when it cannot write.
+ *
+ * **A glyph like the four marks beside it, and a word only to report.** The bar
+ * was capped at 21rem and measured full already: with "margin note" spelled
+ * out, *copy* and the new word were both clipped at rest (336px of 336). So the
+ * button rests as a glyph, named and titled "margin note" as the marks are by
+ * their names, and a refusal appears in words on the control that was pressed —
+ * the same place *copy* reports *copied*. Two short words, because a longer one
+ * would clip *copy* again (the cap went to 22rem for "too narrow" alone; see the
+ * stylesheet); the title carries the whole sentence.
+ */
+const NOTE_REFUSALS: Record<
+  Exclude<NoteState, 'idle'>,
+  { word: string; sentence: string }
+> = {
+  'no-room': {
+    word: 'no room',
+    sentence: 'no room in the margin beside this passage',
+  },
+  'too-narrow': {
+    word: 'too narrow',
+    sentence: 'the margin here is too narrow for a note',
+  },
 }
 
 const LABELS: Record<CopyState, string> = {
@@ -74,6 +105,8 @@ export function SelectionMenu({
   state,
   onCopy,
   onMark,
+  noteState,
+  onNote,
 }: SelectionMenuProps) {
   // Before the early return, because hooks must be — the same arrangement the
   // annotation menu documents. It measures nothing until the menu appears.
@@ -160,6 +193,36 @@ export function SelectionMenu({
               <ToolIcon className={styles.icon} aria-hidden="true" />
             </button>
           ))}
+
+        {/*
+          Highlight and write beside it, in one press
+          (features/a-passage-gets-a-margin-note). After the four marks because
+          it is one of them with a note attached.
+        */}
+        {canMark && (
+          <button
+            type="button"
+            className={`${styles.button} ${styles.tool}`}
+            title={
+              noteState === 'idle'
+                ? 'margin note'
+                : NOTE_REFUSALS[noteState].sentence
+            }
+            aria-label={
+              noteState === 'idle'
+                ? 'margin note'
+                : `margin note: ${NOTE_REFUSALS[noteState].sentence}`
+            }
+            onClick={onNote}
+          >
+            <MessageSquareText className={styles.icon} aria-hidden="true" />
+            {noteState !== 'idle' && (
+              <span className={styles.label} role="status">
+                {NOTE_REFUSALS[noteState].word}
+              </span>
+            )}
+          </button>
+        )}
       </div>
     </div>
   )

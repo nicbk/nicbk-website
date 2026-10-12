@@ -39,6 +39,8 @@ function renderMenu(props: Partial<Parameters<typeof SelectionMenu>[0]> = {}) {
       state={props.state ?? 'idle'}
       onCopy={props.onCopy ?? vi.fn()}
       onMark={props.onMark ?? vi.fn()}
+      noteState={props.noteState ?? 'idle'}
+      onNote={props.onNote ?? vi.fn()}
     />,
   )
 }
@@ -198,5 +200,43 @@ describe('the target a thumb has to hit', () => {
 
     expect(size('width')).toBeGreaterThanOrEqual(24)
     expect(size('height')).toBeGreaterThanOrEqual(24)
+  })
+})
+
+describe('the menu’s note', () => {
+  it('offers a margin note beside the marks', async () => {
+    const onNote = vi.fn()
+    renderMenu({ onNote })
+
+    await userEvent.click(screen.getByRole('button', { name: 'margin note' }))
+
+    expect(onNote).toHaveBeenCalledTimes(1)
+  })
+
+  it('is not offered on a paper that forbids marking (margin note)', () => {
+    renderMenu({ canMark: false })
+
+    expect(screen.queryByRole('button', { name: 'margin note' })).toBeNull()
+  })
+
+  // A refusal is reported on the control that was pressed, as copy's is.
+  it('rests as a glyph, named, with no word to crowd the bar', () => {
+    renderMenu()
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('says why it could not write', () => {
+    renderMenu({ noteState: 'no-room' })
+    expect(screen.getByRole('status')).toHaveTextContent('no room')
+    expect(
+      screen.getByRole('button', {
+        name: 'margin note: no room in the margin beside this passage',
+      }),
+    ).toBeVisible()
+  })
+
+  it('says when the margin is too narrow', () => {
+    renderMenu({ noteState: 'too-narrow' })
+    expect(screen.getByRole('status')).toHaveTextContent('too narrow')
   })
 })

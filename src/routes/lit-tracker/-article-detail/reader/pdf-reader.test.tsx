@@ -50,6 +50,9 @@ const annotationScope = vi.hoisted(() => ({
   setActiveTool: vi.fn(),
   deselectAnnotation: vi.fn(),
   deleteAnnotation: vi.fn(),
+  // What the margin note's empty-note removal subscribes with; it returns the
+  // unsubscribe the effect cleans up with.
+  onAnnotationEvent: vi.fn(() => () => {}),
 }))
 const selectionScope = vi.hoisted(() => ({
   clear: vi.fn(),
@@ -305,6 +308,8 @@ vi.mock('@embedpdf/plugin-annotation/react', async () => {
       provides: annotationScope,
     }),
     useAnnotationCapability: () => ({ provides: annotationCapability }),
+    // The plugin itself, which only the margin note reaches for.
+    useAnnotationPlugin: () => ({ plugin: null }),
     AnnotationLayer: ({
       annotationRenderers = [],
     }: {

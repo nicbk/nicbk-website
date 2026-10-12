@@ -29,7 +29,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 export type CopyState = 'idle' | 'copied' | 'failed'
 
 /** How long "copied" stays on screen before the control goes quiet again. */
-const CONFIRMATION_MS = 1600
+export const CONFIRMATION_MS = 1600
 
 interface SelectionCopy {
   /** Copies the current selection, if there is one and the PDF allows it. */

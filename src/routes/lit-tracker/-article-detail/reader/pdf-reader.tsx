@@ -44,8 +44,10 @@ import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
 import { canAddAnnotations, canCopyText } from './copy-permission'
 import { LINK_RENDERERS } from './link-target'
+import { LinkedPartnerOutline } from './margin-note/linked-partner-outline'
 import { useEmptyNoteRemoval } from './margin-note/use-empty-note-removal'
 import { useMarginNote } from './margin-note/use-margin-note'
+import { useNoteFitsItsText } from './margin-note/use-note-fits-its-text'
 import { READER_PAGE_ATTRIBUTE } from './note-editing/note-being-edited'
 import { useNoteEditingEnds } from './note-editing/use-note-editing-ends'
 import { PinchGuard } from './pinch/pinch-guard'
@@ -375,6 +377,8 @@ function ReaderDocument({
   })
   // A margin note left empty goes when its editing ends; its highlight stays.
   useEmptyNoteRemoval(annotationScope ?? null)
+  // One that was written in fits its text, and the margin makes room for it.
+  useNoteFitsItsText(annotationScope ?? null, documentState?.document ?? null)
 
   /**
    * The way in from the sidebar's annotations list (`reader-jump.tsx`): a row
@@ -711,6 +715,20 @@ function ReaderDocument({
                           }
                         />
                       )}
+                    />
+                    {/*
+                     * The other half of a selected margin note or highlight,
+                     * outlined, so the pair reads as one without a line drawn
+                     * across the paper. See `margin-note/linked-partners.ts`.
+                     */}
+                    <LinkedPartnerOutline
+                      state={annotation}
+                      pageIndex={pageIndex}
+                      scale={
+                        width /
+                        (documentState?.document?.pages[pageIndex]?.size
+                          .width ?? width)
+                      }
                     />
                   </PagePointerProvider>
                 </div>

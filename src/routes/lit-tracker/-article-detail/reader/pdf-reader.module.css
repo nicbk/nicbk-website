@@ -174,6 +174,24 @@
   touch-action: pan-x pan-y !important;
 }
 
+/*
+ * A text box being written in shows everything typed into it, even past its
+ * box.
+ *
+ * The engine's editor clips its text to the annotation's height
+ * (`overflow: hidden`, inline), and a margin note cannot be resized by hand —
+ * its place is its passage's (features/a-passage-gets-a-margin-note). Without
+ * this the reader would type blind past the fourth line until editing ended and
+ * the note grew to fit. Only while editing: at rest the box is the box.
+ *
+ * `!important` for the same narrow reason as the touch-action rule above: it
+ * outranks an inline value written by code this project does not own.
+ */
+.pageLayers [contenteditable="true"] {
+  /* biome-ignore lint/complexity/noImportantStyles: outranking an inline value written by the library — see above. */
+  overflow: visible !important;
+}
+
 .pageImage {
   display: block;
   width: 100%;

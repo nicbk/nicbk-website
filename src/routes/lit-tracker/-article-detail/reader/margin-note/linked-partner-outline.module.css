@@ -1,0 +1,22 @@
+/*
+ * The partner of a selected margin note or highlight: the other half of the
+ * pair, outlined (features/a-passage-gets-a-margin-note).
+ *
+ * Dashed where the engine's own selection box is solid, and in the same accent:
+ * "this belongs with what you picked up", not "this is picked up too". Outside
+ * the partner by a couple of pixels so it frames the words rather than cutting
+ * through their tops.
+ */
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.outline {
+  position: absolute;
+  box-sizing: border-box;
+  outline: 1px dashed var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 1px;
+}

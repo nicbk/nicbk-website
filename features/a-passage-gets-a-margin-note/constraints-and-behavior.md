@@ -38,6 +38,8 @@
 
 - **A margin note may move only within 48pt of its passage** (about four lines
   of body text). It moves vertically and never leaves its page or its margin.
+  That includes the note being made: within its reach it steps round anything
+  fixed in its way, rather than being refused because its exact spot is taken.
 - **Only margin notes move.** Every other annotation is fixed.
 - **Notes keep their order down the page**, and sit at least 4pt apart.
 - **Notes move only when they must:** to make room for a new note, or for one
@@ -46,10 +48,14 @@
 - **If no arrangement satisfies all of the above,** the new note is refused and
   nothing moves.
 - **A note's height fits its text** when editing ends, with one line as the
-  minimum. Growth that cannot be fitted is still shown in full, because the
-  reader's words are never hidden. The margin is re-arranged as far as it can
-  be.
-- **Selecting a margin note shows its passage selected too, and vice versa.**
+  minimum, so a short note takes one line of margin, not four. Growth that
+  cannot be fitted is still shown in full, because the reader's words are never
+  hidden; its neighbours then stay where they are.
+- **While a note is being written, everything typed shows**, even past its box,
+  because the box cannot be resized by hand.
+- **Selecting a margin note outlines its passage, and vice versa**: a dashed
+  outline in the accent colour, distinct from the engine's solid selection
+  box.
 
 ## Constraints
 

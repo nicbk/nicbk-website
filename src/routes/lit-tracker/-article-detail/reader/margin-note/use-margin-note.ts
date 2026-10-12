@@ -11,6 +11,7 @@ import { CONFIRMATION_MS } from '../use-selection-copy'
 import { createMarginNote } from './create-margin-note'
 import { textBlockOf } from './margin'
 import { marginNoteFrom } from './margin-note'
+import { movePatches, pageContents } from './page-contents'
 import type { Refusal } from './placement'
 import { placeMarginNote } from './placement'
 
@@ -19,7 +20,8 @@ import { placeMarginNote } from './placement'
  * the margin (features/a-passage-gets-a-margin-note).
  *
  * **Decide first, then make.** The margin is measured and every annotation on
- * the page consulted before anything is created, so a refusal leaves the paper
+ * the page consulted — margin notes as things that may move, everything else as
+ * things that may not — before anything is created, so a refusal leaves the paper
  * as it was — never a highlight whose note could not be placed. Only then is the
  * passage highlighted, through the same path the menu's highlight button takes
  * (`selection-finish/mark-selection.ts`), and only once the highlight exists is
@@ -111,24 +113,16 @@ export function useMarginNote({
           return
         }
 
-        const state = scope.getState()
-        // Everything on the page, whatever it is — a mark, a text box, a
-        // sticky note, the paper's own links. Before #28's second task, other
-        // margin notes are obstacles like anything else.
-        const obstacles = (state.pages[passage.pageIndex] ?? []).flatMap(
-          (uid) => {
-            const tracked = state.byUid[uid]
-            return tracked && tracked.commitState !== 'deleted'
-              ? [tracked.object.rect]
-              : []
-          },
+        const { obstacles, notes } = pageContents(
+          scope.getState(),
+          passage.pageIndex,
         )
-
         const placement = placeMarginNote({
           page: page.size,
           block,
           passage: passage.rect,
           obstacles,
+          notes,
         })
         if (!placement.placed) {
           report(placement.reason)
@@ -157,6 +151,15 @@ export function useMarginNote({
               highlightId: answered.annotation.id,
               created: new Date(),
             })
+            // Neighbours first, so the note never lands on one still in its way.
+            const patches = movePatches(
+              passage.pageIndex,
+              notes,
+              placement.moves,
+            )
+            if (patches.length > 0) {
+              scope.updateAnnotations(patches)
+            }
             createMarginNote({ plugin, scope, documentId, note })
             // Selected, as a text box placed by a click is: its menu is how it
             // is deleted, and it is the mark the reader is now working on.

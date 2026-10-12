@@ -2,8 +2,9 @@
 
 ## Behavior
 
-- **The selection menu offers *note*** beside the four markup tools. It is
-  offered when, and only when, they are (`canMark`).
+- **The selection menu offers *margin note*** beside the four markup tools: a
+  glyph like them, named and titled "margin note". It is offered when, and only
+  when, they are (`canMark`).
 - **Pressing it, when there is room:**
   - the passage is highlighted with the highlight tool's own defaults;
   - a text box is created as a reply to that highlight and flagged `locked`;
@@ -11,10 +12,13 @@
     first line, and opens for typing;
   - the selection is cleared.
 - **Pressing it, when there is no room:** nothing is created and the selection
-  stays. The menu says why, in its own words, the way *copy* already reports
-  itself:
-  - *no room in the margin here* when the spot is taken;
-  - *margin too narrow* when the usable width is under 36pt.
+  stays. The button itself says why, in a short word beside its glyph, the way
+  *copy* reports *copied*. Its accessible name and title carry the whole
+  sentence:
+  - *no room* ("no room in the margin beside this passage") when the spot is
+    taken;
+  - *too narrow* ("the margin here is too narrow for a note") when the usable
+    width is under 36pt.
 - **The nearer margin** is the left one if the passage's horizontal centre is
   left of the text block's centre, and the right one otherwise.
 - **The note's width** is the margin's width less a 4pt inset at each side,
@@ -51,7 +55,7 @@
 
 - **No new annotation type, no schema change.** The link is `inReplyToId` and
   the lock is the `locked` flag, both stored in the existing `payload`.
-- **No second tool.** *note* is an action on the selection menu, built from the
+- **No second tool.** *margin note* is an action on the selection menu, built from the
   highlight tool and the `freeText` tool that #24 sized. The tool menu is
   unchanged.
 - **One placement module**, pure and unit-tested, owning the margin geometry and
@@ -61,13 +65,13 @@
 
 ## Acceptance criteria
 
-1. On a single-column paper, *note* on a sentence in the body puts a box in the
+1. On a single-column paper, *margin note* on a sentence in the body puts a box in the
    nearer margin, level with the sentence, ready to type. Typing appears there.
 2. On a two-column paper, a passage in the left column writes left and one in
    the right column writes right.
-3. With an annotation already where the note would go, *note* creates nothing
-   and says *no room in the margin here*. The selection is still there.
-4. On a margin under 44pt (36pt usable), *note* says *margin too narrow*.
+3. With an annotation already where the note would go, *margin note* creates
+   nothing and says *no room*. The selection is still there.
+4. On a margin under 44pt (36pt usable), *margin note* says *too narrow*.
 5. A margin note cannot be dragged or resized. It can be edited and deleted.
 6. Deleting the highlight removes the note, on screen and, after a reload, in
    storage.

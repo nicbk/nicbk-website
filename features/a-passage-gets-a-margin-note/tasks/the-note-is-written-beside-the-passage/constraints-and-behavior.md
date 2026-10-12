@@ -13,8 +13,8 @@ opens at #24's 72 × 40pt (width capped by the margin) and does not yet grow.
 - **The highlight is made through `markSelection`**, the path the menu's four
   markup tools already take. The note is created only once the highlight exists,
   so its `inReplyToId` names a real annotation.
-- **The refusal reuses the menu's own status slot**, the one *copy* uses to say
-  *copied*, rather than a toast or a second popup.
+- **The refusal is reported on the button that was pressed**, as *copy* reports
+  *copied*, rather than in a toast or a second popup.
 
 ## Acceptance
 

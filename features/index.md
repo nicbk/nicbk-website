@@ -84,8 +84,8 @@ need them (see Phases 2–3).
 | 24 | A note fits the margin (a text box writes at the size of a margin note, in a box that fits one) | [`a-note-fits-the-margin`](./a-note-fits-the-margin/description.md) | **Complete** (2026-09-16; its one task merged, #218) | #9 |
 | 25 | A citation opens the paper (a previewed reference you own becomes a way into it) | [`a-citation-opens-the-paper`](./a-citation-opens-the-paper/description.md) | **Complete** (2026-09-17; 3 tasks, #220) | #7, #10, #22 |
 | 26 | It fits the screen (no menu off the edge, no sideways scroll, a row that breathes on a phone) | [`it-fits-the-screen`](./it-fits-the-screen/description.md) | **Complete** (2026-09-17; all 3 tasks merged, #234 + #235 + #236; the user's phone check passed) | #8, #9, #10, #16, #19 |
-| 27 | A text box lets go (clicking away from a note ends its typing, so it can be moved) | [`a-text-box-lets-go`](./a-text-box-lets-go/description.md) | **In progress** (2026-10-12; its one task implemented, awaiting review) | #9, #24 |
-| 28 | A passage gets a margin note (one action highlights a passage and opens a note beside it, tied to it) | [`a-passage-gets-a-margin-note`](./a-passage-gets-a-margin-note/description.md) | **Spec'd** (2026-10-12; 2 tasks) | #9, #15, #24, #27 |
+| 27 | A text box lets go (clicking away from a note ends its typing, so it can be moved) | [`a-text-box-lets-go`](./a-text-box-lets-go/description.md) | **Implemented** (2026-10-12; its one task merged, #249; awaiting the user's phone check) | #9, #24 |
+| 28 | A passage gets a margin note (one action highlights a passage and opens a note beside it, tied to it) | [`a-passage-gets-a-margin-note`](./a-passage-gets-a-margin-note/description.md) | **In progress** (2026-10-12; task 1 of 2 implemented) | #9, #15, #24, #27 |
 | 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **Spec'd** (2026-10-12; 4 tasks) | #7, #9, #10, #22 |
 
 ## How this roadmap is spec'd out

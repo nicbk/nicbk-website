@@ -1,6 +1,6 @@
 # Status: The Note Is Put Down
 
-**State:** Implemented, awaiting review ([#242](https://github.com/nicbk/nicbk-website/issues/242); PR [#249](https://github.com/nicbk/nicbk-website/pull/249)).
+**State:** Complete, merged in [#249](https://github.com/nicbk/nicbk-website/pull/249) ([#242](https://github.com/nicbk/nicbk-website/issues/242); PR [#249](https://github.com/nicbk/nicbk-website/pull/249)).
 
 ## What shipped
 
@@ -26,3 +26,4 @@
 
 - 2026-10-11: reproduced and its cause confirmed; spec'd.
 - 2026-10-12: implemented and verified in Chromium.
+- 2026-10-12: #249 merged.

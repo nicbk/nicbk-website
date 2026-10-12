@@ -24,8 +24,12 @@
    * thing that lets a long *message* truncate rather than the thing that
    * squeezes the controls. Still narrower than a 500px panel, which is the width
    * this bar is judged at.
+   *
+   * Raised again to 22rem for the margin note's refusal (#28). Measured with
+   * its glyph added the bar rests at 249px, and reporting "too narrow" takes it
+   * to 337px, a pixel past 21rem, clipping both that word and *copy*.
    */
-  max-width: 21rem;
+  max-width: 22rem;
   padding: var(--space-2xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

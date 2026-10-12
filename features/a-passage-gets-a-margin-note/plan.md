@@ -2,7 +2,7 @@
 
 | # | Task | Sub-issue | Delivers |
 |---|---|---|---|
-| 1 | [`the-note-is-written-beside-the-passage`](./tasks/the-note-is-written-beside-the-passage/description.md) | [#243](https://github.com/nicbk/nicbk-website/issues/243) | *note* on the selection menu: a highlight plus a linked, locked text box in the nearer margin, level with the passage; refused when it would overlap anything; linked deletion |
+| 1 | [`the-note-is-written-beside-the-passage`](./tasks/the-note-is-written-beside-the-passage/description.md) | [#243](https://github.com/nicbk/nicbk-website/issues/243) | *margin note* on the selection menu: a highlight plus a linked, locked text box in the nearer margin, level with the passage; refused when it would overlap anything; linked deletion |
 | 2 | [`notes-make-room-for-each-other`](./tasks/notes-make-room-for-each-other/description.md) | [#244](https://github.com/nicbk/nicbk-website/issues/244) | Margin notes re-arranged within reach of their passages to fit a new one; a note that grows to fit its text; selecting a note or its passage shows both |
 
 ## Why this order
@@ -34,7 +34,7 @@ re-arrangements, and is pure layout on top of a link that task 1 already stores.
 - **Narrow margins.** Measured margins run from 54pt (an ACM two-column paper)
   to 108pt (NeurIPS). The #24 note is 72pt wide, so the note's width becomes the
   margin's, capped at 72. Below a 36pt usable width (about nine characters at
-  8pt), *note* is refused, with the reason.
+  8pt), *margin note* is refused, with the reason.
 - **The engine creates two annotations, and the sync must see both.** The
   highlight has to exist before its reply names it. The task verifies that both
   rows arrive, and that a deletion removes both.

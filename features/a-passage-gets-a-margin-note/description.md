@@ -22,8 +22,11 @@ away from it, and it outlives it when the highlight is deleted.
 
 ## What it delivers
 
-- **One action on a selected passage: *note*.** It highlights the passage and
-  opens a text box in the margin beside it, ready to type.
+- **One action on a selected passage: *margin note*.** It highlights the
+  passage and opens a text box in the margin beside it, ready to type. It is a
+  glyph on the selection menu beside the four marks. Its name is not "note"
+  because the mark menu already has "write a note", a comment kept on the mark,
+  which is a different thing.
 - **In the nearer margin, level with the passage.** The side is decided by which
   half of the text block the passage sits in, so a two-column paper's left
   column writes left and its right column writes right.
@@ -52,11 +55,11 @@ away from it, and it outlives it when the highlight is deleted.
   visual clutter". EmbedPDF can draw a callout if that is ever wanted
   (`research.md`).
 - **No change to the existing text box tool.** A text box placed by hand is
-  still free to move. Margin notes are the ones made by *note*.
-- **No sticky notes, no other markup.** *note* always highlights. The other
+  still free to move. Margin notes are the ones made by *margin note*.
+- **No sticky notes, no other markup.** *margin note* always highlights. The other
   three markup tools stay on the same menu, as now.
 
 ## Exit state
 
-Select a sentence, press *note*, and type. The words appear in the margin beside
+Select a sentence, press *margin note*, and type. The words appear in the margin beside
 the sentence, stay there, and go when the highlight goes.

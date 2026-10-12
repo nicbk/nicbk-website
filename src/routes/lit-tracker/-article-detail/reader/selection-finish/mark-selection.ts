@@ -1,6 +1,7 @@
 import { uuidV4 } from '@embedpdf/models'
 import type { AnnotationTool } from '@embedpdf/plugin-annotation'
 import type { SelectionCapability } from '@embedpdf/plugin-selection'
+import type { PlannedMark } from './markup-marks'
 import { marksFor } from './markup-marks'
 
 /**
@@ -45,6 +46,12 @@ export interface MarkSelection {
   /** The tool whose defaults the marks take. */
   tool: AnnotationTool
   documentId: string
+  /**
+   * Told what was made, once it has been. The margin note needs the highlight's
+   * id to answer it (`margin-note/use-margin-note.ts`), and the id is only
+   * settled here, after the passage's text has been read.
+   */
+  onMarked?: (marks: readonly PlannedMark[]) => void
 }
 
 /**
@@ -58,6 +65,7 @@ export function markSelection({
   tools,
   tool,
   documentId,
+  onMarked,
 }: MarkSelection): void {
   const formatted = selection.getFormattedSelection(documentId)
   if (!tools || formatted.length === 0) {
@@ -68,16 +76,18 @@ export function markSelection({
   const created = new Date()
 
   function create(text: string | undefined): void {
-    for (const mark of marksFor({
+    const marks = marksFor({
       tool,
       selection: formatted,
       text,
       ids,
       created,
-    })) {
+    })
+    for (const mark of marks) {
       tools?.createAnnotation(mark.pageIndex, mark.annotation as never)
     }
     selection.clear(documentId)
+    onMarked?.(marks)
   }
 
   selection.getSelectedText(documentId).wait(

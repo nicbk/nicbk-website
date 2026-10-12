@@ -1,5 +1,6 @@
 import { EmbedPDF, useDocumentState } from '@embedpdf/core/react'
 import { usePdfiumEngine } from '@embedpdf/engines/react'
+import type { PdfEngine } from '@embedpdf/models'
 // Self-hosted rather than fetched from a CDN. `usePdfiumEngine`'s default is
 // `https://cdn.jsdelivr.net/npm/@embedpdf/pdfium@2.15.0/dist/pdfium.wasm`,
 // which this site does not do: the decided CSP is `default-src 'self'`
@@ -11,6 +12,7 @@ import {
   AnnotationLayer,
   useAnnotation,
   useAnnotationCapability,
+  useAnnotationPlugin,
 } from '@embedpdf/plugin-annotation/react'
 import {
   PagePointerProvider,
@@ -42,6 +44,8 @@ import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
 import { canAddAnnotations, canCopyText } from './copy-permission'
 import { LINK_RENDERERS } from './link-target'
+import { useEmptyNoteRemoval } from './margin-note/use-empty-note-removal'
+import { useMarginNote } from './margin-note/use-margin-note'
 import { READER_PAGE_ATTRIBUTE } from './note-editing/note-being-edited'
 import { useNoteEditingEnds } from './note-editing/use-note-editing-ends'
 import { PinchGuard } from './pinch/pinch-guard'
@@ -147,6 +151,7 @@ export function PdfReader({
   return (
     <EmbedPDF engine={engine} plugins={plugins}>
       <ReaderDocument
+        engine={engine}
         articleId={articleId}
         actions={actions}
         readingPosition={readingPosition}
@@ -165,12 +170,19 @@ export function PdfReader({
  * its zoom can be read at all.
  */
 function ReaderDocument({
+  engine,
   articleId,
   actions,
   readingPosition = null,
   onReadingPositionChange,
   hidden = false,
-}: PdfReaderProps) {
+}: PdfReaderProps & {
+  /**
+   * The engine itself, for what no plugin asks of it: the page's text runs,
+   * which a margin note is measured against (`margin-note/margin.ts`).
+   */
+  engine: PdfEngine
+}) {
   const documentState = useDocumentState(articleId)
   const { state: scroll, provides: scrollScope } = useScroll(articleId)
   const { state: zoom, provides: zoomScope } = useZoom(articleId)
@@ -346,6 +358,23 @@ function ReaderDocument({
     },
     [annotations, annotationScope, selectionScope, articleId],
   )
+
+  /*
+   * *margin note*: highlight the passage and open a note beside it in the
+   * margin, or say why not. See `margin-note/use-margin-note.ts`.
+   */
+  const { plugin: annotationPlugin } = useAnnotationPlugin()
+  const { state: noteState, writeNote } = useMarginNote({
+    documentId: articleId,
+    engine,
+    document: documentState?.document ?? null,
+    selection: selectionScope ?? null,
+    annotations: annotations ?? null,
+    scope: annotationScope ?? null,
+    plugin: annotationPlugin,
+  })
+  // A margin note left empty goes when its editing ends; its highlight stays.
+  useEmptyNoteRemoval(annotationScope ?? null)
 
   /**
    * The way in from the sidebar's annotations list (`reader-jump.tsx`): a row
@@ -634,6 +663,8 @@ function ReaderDocument({
                           state={copyState}
                           onCopy={copy}
                           onMark={mark}
+                          noteState={noteState}
+                          onNote={writeNote}
                         />
                       )}
                     />

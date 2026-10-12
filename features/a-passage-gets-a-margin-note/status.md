@@ -1,6 +1,6 @@
 # Status: A Passage Gets a Margin Note
 
-**Feature state:** **Spec'd** (2026-10-12). No task started.
+**Feature state:** **In progress** (2026-10-12). Task 1 implemented, awaiting review.
 
 Spec written against `main` at `b3ae7a2`, from the engine's own source and
 from margins measured on real papers. See [research.md](./research.md).
@@ -18,7 +18,7 @@ Feature parent issue: [#240](https://github.com/nicbk/nicbk-website/issues/240),
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-note-is-written-beside-the-passage`](./tasks/the-note-is-written-beside-the-passage/status.md) | Not started | — | — | — |
+| [`the-note-is-written-beside-the-passage`](./tasks/the-note-is-written-beside-the-passage/status.md) | Implemented | [#250](https://github.com/nicbk/nicbk-website/pull/250) | Running | Awaiting |
 | [`notes-make-room-for-each-other`](./tasks/notes-make-room-for-each-other/status.md) | Not started | — | — | — |
 
 ## Definition of Done (feature)
@@ -38,4 +38,7 @@ or one rule:
 
 ## Log
 
+- 2026-10-12: task 1 implemented. The action is called *margin note*, so it is
+  not confused with the mark menu's "write a note", and it rests as a glyph
+  because the bar was measured full.
 - 2026-10-12: spec'd, with the user's decisions above.

@@ -84,6 +84,9 @@ need them (see Phases 2–3).
 | 24 | A note fits the margin (a text box writes at the size of a margin note, in a box that fits one) | [`a-note-fits-the-margin`](./a-note-fits-the-margin/description.md) | **Complete** (2026-09-16; its one task merged, #218) | #9 |
 | 25 | A citation opens the paper (a previewed reference you own becomes a way into it) | [`a-citation-opens-the-paper`](./a-citation-opens-the-paper/description.md) | **Complete** (2026-09-17; 3 tasks, #220) | #7, #10, #22 |
 | 26 | It fits the screen (no menu off the edge, no sideways scroll, a row that breathes on a phone) | [`it-fits-the-screen`](./it-fits-the-screen/description.md) | **Complete** (2026-09-17; all 3 tasks merged, #234 + #235 + #236; the user's phone check passed) | #8, #9, #10, #16, #19 |
+| 27 | A text box lets go (clicking away from a note ends its typing, so it can be moved) | [`a-text-box-lets-go`](./a-text-box-lets-go/description.md) | **In progress** (2026-10-12; its one task implemented, awaiting review) | #9, #24 |
+| 28 | A passage gets a margin note (one action highlights a passage and opens a note beside it, tied to it) | [`a-passage-gets-a-margin-note`](./a-passage-gets-a-margin-note/description.md) | **Spec'd** (2026-10-12; 2 tasks) | #9, #15, #24, #27 |
+| 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **Spec'd** (2026-10-12; 4 tasks) | #7, #9, #10, #22 |
 
 ## How this roadmap is spec'd out
 
@@ -100,8 +103,9 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `a-popup-keeps-its-clicks` (complete), `a-paper-downloads-once` (complete), `a-link-is-a-link` (complete),
 `a-paper-opens-where-you-left-it` (complete), `citation-graph-traversal`
 (complete), `a-note-fits-the-margin` (complete),
-`a-citation-opens-the-paper` (complete) and `it-fits-the-screen` (complete) have
-full folders today. The rest carry a one-line intent here and get their full
+`a-citation-opens-the-paper` (complete), `it-fits-the-screen` (complete),
+`a-text-box-lets-go`, `a-passage-gets-a-margin-note` and
+`a-paper-shows-its-contents` have full folders today. The rest carry a one-line intent here and get their full
 folder (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
 up-front draft.
@@ -283,3 +287,20 @@ the graph's accuracy is deliberately #10's problem, not #7's. #10 also inherits
 the **Citations tab** #9 deliberately leaves unbuilt: the decided detail page
 has four sidebar tabs, #9 builds three, and the fourth arrives with the citation
 graph it opens rather than as a list #10 would rebuild.
+
+**#27, #28 and #29 came from one message, on 2026-10-11, and the measurement
+split them along a different line than the message did.** The four requests were:
+a stuck text box, a faster way to write a margin note, a section outline, and
+finding that outline automatically. The last two became one feature by the
+user's choice. The first was reproduced before it was spec'd. A note stays in
+typing mode because EmbedPDF ends an edit only for a press whose target is the
+page element itself, and this reader's paper image takes every such press. So
+the defect lived in an assumption the reader made in #9, not in the text box.
+The other two were spec'd against the engine's own source and against real
+papers, and both specs changed because of what was measured:
+- an ACM paper's 54pt margins are narrower than #24's 72pt note, so a margin
+  note takes the margin's width;
+- one paper's embedded outline is a single entry named after an HTML file, so
+  "has an outline" needs a rule;
+- the sidebar's four tabs already fill its 143px rail exactly, so a fifth is a
+  re-fit of the strip, not one more entry in a list.

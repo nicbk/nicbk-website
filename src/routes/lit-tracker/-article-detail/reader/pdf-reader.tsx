@@ -42,6 +42,8 @@ import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
 import { canAddAnnotations, canCopyText } from './copy-permission'
 import { LINK_RENDERERS } from './link-target'
+import { READER_PAGE_ATTRIBUTE } from './note-editing/note-being-edited'
+import { useNoteEditingEnds } from './note-editing/use-note-editing-ends'
 import { PinchGuard } from './pinch/pinch-guard'
 import { usePinchRecovery } from './pinch/use-pinch-recovery'
 import { ReaderNotice } from './reader-notice'
@@ -244,6 +246,14 @@ function ReaderDocument({
    */
   const pointerKind = usePointerKind()
 
+  /*
+   * Puts down the text box being typed into when the reader presses anywhere
+   * else. The engine's own rule for that is never met in this reader — see
+   * `note-editing/use-note-editing-ends.ts` — so each page's annotation layer
+   * carries a generation, below, and ending an edit moves it on.
+   */
+  const { generationOf, endNoteEditing } = useNoteEditingEnds()
+
   const {
     copy,
     state: copyState,
@@ -269,6 +279,9 @@ function ReaderDocument({
       if (event.key !== 'Escape') {
         return
       }
+      // The note being written is a fourth thing held, and Escape is how a
+      // text field is left everywhere else.
+      endNoteEditing()
       selectionScope?.clear()
       annotationScope?.deselectAnnotation()
       annotationScope?.setActiveTool(null)
@@ -276,7 +289,7 @@ function ReaderDocument({
 
     window.addEventListener('keydown', dismiss)
     return () => window.removeEventListener('keydown', dismiss)
-  }, [selectionScope, annotationScope])
+  }, [selectionScope, annotationScope, endNoteEditing])
 
   const state = deriveReaderState({
     isEngineLoading: false,
@@ -452,6 +465,9 @@ function ReaderDocument({
                   key={pageIndex}
                   className={styles.page}
                   style={{ width, height }}
+                  // Which page a note being typed is on — see
+                  // `note-editing/note-being-edited.ts`.
+                  {...{ [READER_PAGE_ATTRIBUTE]: pageIndex }}
                 >
                   {/*
                    * Three layers over each page, and the order is the order they
@@ -622,6 +638,12 @@ function ReaderDocument({
                       )}
                     />
                     <AnnotationLayer
+                      /*
+                       * A new generation is a fresh layer, which is the only
+                       * way to end the engine's private "editing" state. See
+                       * `note-editing/use-note-editing-ends.ts`.
+                       */
+                      key={generationOf(pageIndex)}
                       documentId={articleId}
                       pageIndex={pageIndex}
                       // A paper's own links: fixed, and answered by the reader

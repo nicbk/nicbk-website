@@ -1,6 +1,6 @@
 # Status: A Paper Shows Its Contents
 
-**Feature state:** **In progress** (2026-10-12). Task 1 implemented, awaiting review.
+**Feature state:** **In progress** (2026-10-12). Task 1 merged; task 2 implemented, awaiting review.
 
 Spec written against `main` at `b3ae7a2`, from:
 - outlines read with the installed engine;
@@ -21,8 +21,8 @@ Feature parent issue: [#241](https://github.com/nicbk/nicbk-website/issues/241),
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-contents-are-read`](./tasks/the-contents-are-read/status.md) | Implemented | [#252](https://github.com/nicbk/nicbk-website/pull/252) | Running | Awaiting |
-| [`older-papers-are-read-for-contents`](./tasks/older-papers-are-read-for-contents/status.md) | Not started | — | — | — |
+| [`the-contents-are-read`](./tasks/the-contents-are-read/status.md) | Merged | [#252](https://github.com/nicbk/nicbk-website/pull/252) | Green | Merged by user |
+| [`older-papers-are-read-for-contents`](./tasks/older-papers-are-read-for-contents/status.md) | Implemented | — | — | Awaiting |
 | [`the-contents-tab`](./tasks/the-contents-tab/status.md) | Not started | — | — | — |
 | [`the-toolbar-opens-the-contents`](./tasks/the-toolbar-opens-the-contents/status.md) | Not started | — | — | — |
 
@@ -41,6 +41,9 @@ contents used on a phone.
 
 ## Log
 
+- 2026-10-12: task 2 implemented. Reading the outline of a generated 61 MB,
+  1,000-page book peaks at +212 MB RSS and does not grow with repeated reads.
+- 2026-10-12: task 1 merged ([#252](https://github.com/nicbk/nicbk-website/pull/252)).
 - 2026-10-12: task 1 implemented; the engine's WebAssembly is shipped to the
   production server as a Nitro server asset, found missing by building for
   production.

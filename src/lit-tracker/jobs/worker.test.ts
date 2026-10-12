@@ -24,7 +24,16 @@ vi.mock('~/lit-tracker/citations/reread-stage', async (importOriginal) => ({
   queueReferenceRereads,
 }))
 
-const { queueOlderPaperRereads, startJobWorker } = await import('./worker')
+const queueContentsReads = vi.hoisted(() => vi.fn(async () => 0))
+vi.mock('~/lit-tracker/contents/read-stage', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('~/lit-tracker/contents/read-stage')
+  >()),
+  queueContentsReads,
+}))
+
+const { queueOlderPaperContents, queueOlderPaperRereads, startJobWorker } =
+  await import('./worker')
 
 describe('startJobWorker', () => {
   afterEach(() => {
@@ -65,9 +74,14 @@ describe('startJobWorker', () => {
       'lit-tracker.pdf-cleanup',
       'lit-tracker.reread-references',
       'lit-tracker.reread-references-exhausted',
+      // #29's backfill of older papers' contents.
+      'lit-tracker.read-contents',
+      'lit-tracker.read-contents-exhausted',
     ])
-    // And once they are bound, the older papers are queued for their re-read.
+    // And once they are bound, the older papers are queued for their re-read
+    // and for their contents.
     expect(queueReferenceRereads).toHaveBeenCalledOnce()
+    expect(queueContentsReads).toHaveBeenCalledOnce()
   })
 
   it('starts only once, however many times it is called', async () => {
@@ -103,6 +117,29 @@ describe('queueOlderPaperRereads', () => {
     queueReferenceRereads.mockRejectedValueOnce(new Error('connection lost'))
 
     await expect(queueOlderPaperRereads({} as never)).resolves.toBeUndefined()
+    expect(error).toHaveBeenCalled()
+  })
+})
+
+describe('queueOlderPaperContents', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('says how many older papers it queued', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    queueContentsReads.mockResolvedValueOnce(4)
+
+    await queueOlderPaperContents({} as never)
+
+    expect(log).toHaveBeenCalledWith('Reading the contents of 4 older papers.')
+  })
+
+  it('logs a failure rather than throwing, as the re-read does', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    queueContentsReads.mockRejectedValueOnce(new Error('connection lost'))
+
+    await expect(queueOlderPaperContents({} as never)).resolves.toBeUndefined()
     expect(error).toHaveBeenCalled()
   })
 })

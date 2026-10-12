@@ -3,6 +3,10 @@ import {
   queueReferenceRereads,
   registerReferenceRereadHandlers,
 } from '~/lit-tracker/citations/reread-stage'
+import {
+  queueContentsReads,
+  registerContentsReadHandlers,
+} from '~/lit-tracker/contents/read-stage'
 import { productionServices } from '~/lit-tracker/extraction/services'
 import { registerExtractionHandlers } from '~/lit-tracker/extraction/worker'
 import {
@@ -59,11 +63,13 @@ async function registerUntilConnected(): Promise<void> {
       await registerExtractionHandlers(boss, services)
       await registerPdfCleanupHandler(boss, productionPdfCleanupServices())
       await registerReferenceRereadHandlers(boss, services)
+      await registerContentsReadHandlers(boss, services)
       if (attempt > 0) {
         console.log('Job worker connected.')
       }
       // After the handlers, so the first re-read starts as soon as it is sent.
       await queueOlderPaperRereads(boss)
+      await queueOlderPaperContents(boss)
       return
     } catch (error) {
       attempt += 1
@@ -102,6 +108,24 @@ export async function queueOlderPaperRereads(
     }
   } catch (error) {
     console.error('Could not queue the re-read of older papers:', error)
+  }
+}
+
+/**
+ * Queues the contents read of papers uploaded before the upload read them
+ * (features/a-paper-shows-its-contents). Outside the retry loop, for the reason
+ * the re-read above is: a failure here costs a wait until the next start.
+ */
+export async function queueOlderPaperContents(
+  boss: Awaited<ReturnType<typeof getQueue>>,
+): Promise<void> {
+  try {
+    const queued = await queueContentsReads({ db, pool }, boss)
+    if (queued > 0) {
+      console.log(`Reading the contents of ${queued} older papers.`)
+    }
+  } catch (error) {
+    console.error('Could not queue the contents of older papers:', error)
   }
 }
 

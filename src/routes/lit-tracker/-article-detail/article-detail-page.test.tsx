@@ -49,6 +49,9 @@ vi.mock('@tanstack/react-router', async () => {
 const { ArticleDetailPage, readingPositionOf } = await import(
   './article-detail-page'
 )
+const { SidebarRequestProvider, useSidebarTabRequests } = await import(
+  './sidebar-request'
+)
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
@@ -74,7 +77,13 @@ const ARTICLE = {
  */
 function answerQueries(
   answers: Partial<
-    Record<'articles.byId' | 'tags.mine' | 'articleTags.mine', unknown[]>
+    Record<
+      | 'articles.byId'
+      | 'tags.mine'
+      | 'articleTags.mine'
+      | 'articleContents.forArticle',
+      unknown[]
+    >
   >,
   details: { type: string } = { type: 'complete' },
 ) {
@@ -344,6 +353,94 @@ describe('ArticleDetailPage', () => {
         screen.getByRole('dialog', { name: 'article' }),
       ).toBeInTheDocument()
       expect(onViewChange).not.toHaveBeenCalled()
+    })
+  })
+
+  // features/a-paper-shows-its-contents, task `the-toolbar-opens-the-contents`.
+  describe('the toolbar’s contents button', () => {
+    const CONTENTS = {
+      articleId: ARTICLE_ID,
+      source: 'outline',
+      entries: [
+        { title: '1 Introduction', depth: 1, pageIndex: 0, top: 90 },
+        { title: '2 Method', depth: 1, pageIndex: 3, top: 72 },
+      ],
+    }
+
+    function viewport(narrow: boolean) {
+      vi.stubGlobal('matchMedia', (query: string) => ({
+        media: query,
+        matches: narrow,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }))
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('opens the sheet on contents on a narrow screen', async () => {
+      viewport(true)
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [CONTENTS],
+      })
+      renderPage('reader')
+
+      await userEvent.click(screen.getByRole('button', { name: 'contents' }))
+
+      const sheet = await screen.findByRole('dialog', { name: 'article' })
+      expect(
+        within(sheet).getByRole('tab', { name: 'contents' }),
+      ).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('closes the sheet once an entry is chosen, and forgets the tab', async () => {
+      viewport(true)
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [CONTENTS],
+      })
+      renderPage('reader')
+
+      await userEvent.click(screen.getByRole('button', { name: 'contents' }))
+      const sheet = await screen.findByRole('dialog', { name: 'article' })
+      await userEvent.click(
+        within(sheet).getByRole('button', { name: /Method/ }),
+      )
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'article' })).toBeNull(),
+      )
+
+      // Opened by its own trigger, the sheet is back on the default tab.
+      await userEvent.click(screen.getByRole('button', { name: 'article' }))
+      const again = await screen.findByRole('dialog', { name: 'article' })
+      expect(within(again).getByRole('tab', { name: 'tags' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+    })
+
+    it('asks the rail on a wide screen, and opens no sheet', async () => {
+      viewport(false)
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      const requested = vi.fn()
+      function Rail() {
+        useSidebarTabRequests(requested)
+        return null
+      }
+      render(
+        <SidebarRequestProvider>
+          <Rail />
+          {page('reader')}
+        </SidebarRequestProvider>,
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: 'contents' }))
+
+      expect(requested).toHaveBeenCalledWith('contents')
+      expect(screen.queryByRole('dialog')).toBeNull()
     })
   })
 

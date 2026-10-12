@@ -15,6 +15,16 @@ import styles from './narrow-screen-drawer.module.css'
  */
 const NARROW_VIEWPORT = '(max-width: 768px)'
 
+/**
+ * Whether the window is below the breakpoint right now: whether a side panel is
+ * in its sheet. For a control that has to open whichever form is showing — the
+ * reader's *contents* button. Read at the moment it is needed rather than kept,
+ * so it cannot be stale.
+ */
+export function isNarrowViewport(): boolean {
+  return window.matchMedia(NARROW_VIEWPORT).matches
+}
+
 interface NarrowScreenDrawerProps {
   /**
    * Names the trigger and titles the sheet, so the two read as one thing. Also

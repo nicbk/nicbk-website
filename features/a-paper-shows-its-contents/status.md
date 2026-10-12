@@ -1,6 +1,6 @@
 # Status: A Paper Shows Its Contents
 
-**Feature state:** **In progress** (2026-10-12). Tasks 1 and 2 merged; task 3 implemented, awaiting review.
+**Feature state:** **In progress** (2026-10-12). Tasks 1–3 merged; task 4 implemented, awaiting review. Then the phone check (Safari on an iPhone) remains.
 
 Spec written against `main` at `b3ae7a2`, from:
 - outlines read with the installed engine;
@@ -23,8 +23,8 @@ Feature parent issue: [#241](https://github.com/nicbk/nicbk-website/issues/241),
 |---|---|---|---|---|
 | [`the-contents-are-read`](./tasks/the-contents-are-read/status.md) | Merged | [#252](https://github.com/nicbk/nicbk-website/pull/252) | Green | Merged by user |
 | [`older-papers-are-read-for-contents`](./tasks/older-papers-are-read-for-contents/status.md) | Merged | [#253](https://github.com/nicbk/nicbk-website/pull/253) | Green | Merged by user |
-| [`the-contents-tab`](./tasks/the-contents-tab/status.md) | Implemented | — | — | Awaiting |
-| [`the-toolbar-opens-the-contents`](./tasks/the-toolbar-opens-the-contents/status.md) | Not started | — | — | — |
+| [`the-contents-tab`](./tasks/the-contents-tab/status.md) | Merged | [#254](https://github.com/nicbk/nicbk-website/pull/254) | Green | Merged by user |
+| [`the-toolbar-opens-the-contents`](./tasks/the-toolbar-opens-the-contents/status.md) | Implemented | — | — | Awaiting |
 
 ## Definition of Done (feature)
 
@@ -42,6 +42,9 @@ contents used on a phone.
 
 ## Log
 
+- 2026-10-12: task 4 implemented. Jumps to a point may now start in the page
+  above, so a heading clears a phone's two-row toolbar.
+- 2026-10-12: task 3 merged ([#254](https://github.com/nicbk/nicbk-website/pull/254)).
 - 2026-10-12: task 3 implemented. The "in view" rule revised to the jump's
   landing line; page numbers dropped from the rail's list.
 - 2026-10-12: task 2 merged ([#253](https://github.com/nicbk/nicbk-website/pull/253)).

@@ -57,7 +57,12 @@
 - **A *contents* button in the reader's toolbar**, beside the page field.
 - **It opens the sidebar on *contents***: the rail's tab on a wide screen, the
   sheet on a narrow one. On a narrow screen, choosing an entry closes the sheet,
-  since the reader is what it was opened for.
+  since the reader is what it was opened for. *(At implementation the
+  annotations list in the sheet was given the same behaviour, for the same
+  reason.)*
+- **The heading clears the toolbar at every width.** A jump may start in the
+  page above when the toolbar is deeper than the heading is down its page, as
+  a phone's two-row toolbar is.
 
 ### Older papers
 

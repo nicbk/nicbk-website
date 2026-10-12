@@ -8,7 +8,9 @@ import type { ArticleView } from './article-view'
 import { ContentsPanel } from './contents/contents-panel'
 import { useArticleContents } from './contents/use-article-contents'
 import { NotesPanel } from './notes-panel'
+import type { JumpToPage } from './reader-jump'
 import { useReaderJump } from './reader-jump'
+import { useSidebarTabRequests } from './sidebar-request'
 import { useArticleAnnotations } from './use-article-annotations'
 import { useArticleDetail } from './use-article-detail'
 import styles from './article-sidebar.module.css'
@@ -45,7 +47,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id']
 
 /** The tabs whose panel is the sidebar's own, rather than the page's main area. */
-type PanelTab = Exclude<TabId, 'citations'>
+export type PanelTab = Exclude<TabId, 'citations'>
 
 /** The tab a sidebar opens on, and returns to for each new article. */
 const DEFAULT_TAB: PanelTab = 'tags'
@@ -59,6 +61,17 @@ interface ArticleSidebarProps {
    * choosing Citations, or leaving Citations for any other tab.
    */
   onViewChange: (view: ArticleView) => void
+  /**
+   * The tab to open on, for a sidebar opened to show one thing — the sheet the
+   * toolbar's *contents* button opens. The default tab otherwise.
+   */
+  initialTab?: PanelTab
+  /**
+   * Called after one of the lists has moved the reader. The sheet closes on it:
+   * on a phone the sheet covers the reader, and the reader is what the reader
+   * chose an entry to see.
+   */
+  onReaderJump?: () => void
 }
 
 /**
@@ -95,6 +108,8 @@ export function ArticleSidebar({
   articleId,
   view,
   onViewChange,
+  initialTab,
+  onReaderJump,
 }: ArticleSidebarProps) {
   const { state, article } = useArticleDetail(articleId)
 
@@ -114,6 +129,8 @@ export function ArticleSidebar({
       articleId={articleId}
       view={view}
       onViewChange={onViewChange}
+      initialTab={initialTab}
+      onReaderJump={onReaderJump}
     />
   )
 }
@@ -130,13 +147,34 @@ export function ArticleSidebar({
  * once. Leaving Citations for another tab is what brings the reader back; there
  * is no separate control for that.
  */
-function SidebarTabs({ articleId, view, onViewChange }: ArticleSidebarProps) {
+function SidebarTabs({
+  articleId,
+  view,
+  onViewChange,
+  initialTab = DEFAULT_TAB,
+  onReaderJump,
+}: ArticleSidebarProps) {
   const { article, tags, allTags } = useArticleDetail(articleId)
   const mutations = useArticleMutations()
   const annotations = useArticleAnnotations(articleId)
   const contents = useArticleContents(articleId, article?.extractionStatus)
-  const jumpToPage = useReaderJump()
-  const [panel, setPanel] = useState<PanelTab>(DEFAULT_TAB)
+  const readerJump = useReaderJump()
+  const [panel, setPanel] = useState<PanelTab>(initialTab)
+
+  // The toolbar's *contents* button, reaching the rail's copy of this sidebar
+  // (`sidebar-request.tsx`). Choosing it here as a reader would, so a request
+  // made while the citation graph shows brings the paper back too.
+  useSidebarTabRequests((tab) => choose(tab))
+
+  // Both lists move the reader the same way, and either may close a sheet.
+  const jumpToPage: JumpToPage = (pageIndex, top) => {
+    if (top === undefined) {
+      readerJump(pageIndex)
+    } else {
+      readerJump(pageIndex, top)
+    }
+    onReaderJump?.()
+  }
 
   // Checked by the caller already; narrowed again here for the types.
   if (article === undefined) {

@@ -45,6 +45,11 @@ interface ArticleReaderProps {
    * the engine does: neither has anything to do with the document.
    */
   actions?: ReactNode
+  /**
+   * The page's contents button, beside the page field. Rendered in the
+   * fallback too: the contents arrive by sync, before the paper does.
+   */
+  contents?: ReactNode
   /** Where the paper was left. Read once, when the paper opens. */
   readingPosition?: ReadingPosition | null
   /** Called, at most about once a second, as the reader moves through it. */
@@ -64,6 +69,7 @@ interface ArticleReaderProps {
 export function ArticleReader({
   articleId,
   actions,
+  contents,
   readingPosition,
   onReadingPositionChange,
   hidden = false,
@@ -78,7 +84,7 @@ export function ArticleReader({
         <ReaderNotice state="starting" />
       </div>
       {/* Last, for the paint-order reason `pdf-reader.tsx` explains. */}
-      <InertReaderToolbar actions={actions} />
+      <InertReaderToolbar actions={actions} contents={contents} />
     </div>
   )
 
@@ -88,6 +94,7 @@ export function ArticleReader({
         <PdfReader
           articleId={articleId}
           actions={actions}
+          contents={contents}
           readingPosition={readingPosition}
           onReadingPositionChange={onReadingPositionChange}
           hidden={hidden}

@@ -11,8 +11,8 @@ import {
 } from '@embedpdf/models'
 import type { TrackedAnnotation } from '@embedpdf/plugin-annotation'
 import { describe, expect, it, vi } from 'vitest'
+import { destinationOf } from '~/lit-tracker/pdf/destination'
 import {
-  destinationOf,
   landingsFrom,
   linkText,
   resolveLinkPreview,

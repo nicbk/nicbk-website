@@ -1,6 +1,6 @@
 # Status: A Paper Shows Its Contents
 
-**Feature state:** **Spec'd** (2026-10-12). No task started.
+**Feature state:** **In progress** (2026-10-12). Task 1 implemented, awaiting review.
 
 Spec written against `main` at `b3ae7a2`, from:
 - outlines read with the installed engine;
@@ -21,7 +21,7 @@ Feature parent issue: [#241](https://github.com/nicbk/nicbk-website/issues/241),
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-contents-are-read`](./tasks/the-contents-are-read/status.md) | Not started | — | — | — |
+| [`the-contents-are-read`](./tasks/the-contents-are-read/status.md) | Implemented | TBD | — | — |
 | [`older-papers-are-read-for-contents`](./tasks/older-papers-are-read-for-contents/status.md) | Not started | — | — | — |
 | [`the-contents-tab`](./tasks/the-contents-tab/status.md) | Not started | — | — | — |
 | [`the-toolbar-opens-the-contents`](./tasks/the-toolbar-opens-the-contents/status.md) | Not started | — | — | — |
@@ -41,4 +41,7 @@ contents used on a phone.
 
 ## Log
 
+- 2026-10-12: task 1 implemented; the engine's WebAssembly is shipped to the
+  production server as a Nitro server asset, found missing by building for
+  production.
 - 2026-10-12: spec'd, with the user's decisions above.

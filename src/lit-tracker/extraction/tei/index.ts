@@ -1,8 +1,10 @@
+import type { ContentsEntry } from '~/lit-tracker/contents/contents'
 import type { BibliographyEntry } from './bibliography'
 import { parseBibliography } from './bibliography'
 import { parseTeiDocument } from './document'
 import type { HeaderMetadata } from './header'
 import { parseHeader } from './header'
+import { parseSections } from './sections'
 
 /**
  * GROBID's TEI-XML to the metadata this app stores.
@@ -26,6 +28,11 @@ export type { PaperIdentifiers } from './identifiers'
 /** Everything one TEI document yields. */
 export interface ExtractedMetadata extends HeaderMetadata {
   bibliography: BibliographyEntry[]
+  /**
+   * The paper's numbered section headings — the contents to fall back on when
+   * the PDF carries no outline of its own (`sections.ts`).
+   */
+  headings: ContentsEntry[]
 }
 
 /**
@@ -40,5 +47,6 @@ export function parseTei(xml: string): ExtractedMetadata {
   return {
     ...parseHeader(root),
     bibliography: parseBibliography(root),
+    headings: parseSections(root),
   }
 }

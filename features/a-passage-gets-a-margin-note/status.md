@@ -1,6 +1,6 @@
 # Status: A Passage Gets a Margin Note
 
-**Feature state:** **In progress** (2026-10-12). Task 1 merged; task 2 implemented, awaiting review.
+**Feature state:** **Implemented** (2026-10-12). Both tasks merged (#250, #251). It becomes Complete with the user's phone check.
 
 Spec written against `main` at `b3ae7a2`, from the engine's own source and
 from margins measured on real papers. See [research.md](./research.md).
@@ -19,7 +19,7 @@ Feature parent issue: [#240](https://github.com/nicbk/nicbk-website/issues/240),
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`the-note-is-written-beside-the-passage`](./tasks/the-note-is-written-beside-the-passage/status.md) | Merged | [#250](https://github.com/nicbk/nicbk-website/pull/250) | Pass | Merged |
-| [`notes-make-room-for-each-other`](./tasks/notes-make-room-for-each-other/status.md) | Implemented | [#251](https://github.com/nicbk/nicbk-website/pull/251) | Running | Awaiting |
+| [`notes-make-room-for-each-other`](./tasks/notes-make-room-for-each-other/status.md) | Merged | [#251](https://github.com/nicbk/nicbk-website/pull/251) | Pass | Merged |
 
 ## Definition of Done (feature)
 
@@ -38,6 +38,7 @@ or one rule:
 
 ## Log
 
+- 2026-10-12: #251 merged; awaiting the user's phone check.
 - 2026-10-12: task 2 implemented. Notes pack within reach, fit their text, and
   outline their partner.
 - 2026-10-12: #250 merged.

@@ -1,5 +1,7 @@
 import type { PdfDestinationObject, Rect } from '@embedpdf/models'
 import { PdfZoomMode } from '@embedpdf/models'
+import type { Point } from '~/lit-tracker/pdf/destination'
+import { targetTop } from '~/lit-tracker/pdf/destination'
 
 /**
  * Where a paper's internal link points, as a region worth previewing.
@@ -162,34 +164,6 @@ export function previewRegion({
       size: { width: right - x, height: lower - y },
     },
   }
-}
-
-/** A point on a page, top-left origin. */
-interface Point {
-  x: number
-  y: number
-}
-
-/**
- * The destination's own point, converted to top-left page coordinates.
- *
- * XYZ carries `(x, y)`; FitRectangle carries its box in `view` as
- * `[left, bottom, right, top]`. Any other form — FitPage, FitHorizontal with no
- * parameters — gives only a page, so the region starts at its top.
- */
-export function targetTop(
-  destination: PdfDestinationObject,
-  page: Pick<PageText, 'height'>,
-): Point {
-  const { zoom, view } = destination
-  if (zoom.mode === PdfZoomMode.XYZ) {
-    return { x: zoom.params.x, y: page.height - zoom.params.y }
-  }
-  if (zoom.mode === PdfZoomMode.FitRectangle && view.length === 4) {
-    const [left = 0, , , top = page.height] = view
-    return { x: left, y: page.height - top }
-  }
-  return { x: 0, y: 0 }
 }
 
 /** A citation's number, when the link's text is nothing but one. */

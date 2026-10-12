@@ -166,7 +166,22 @@ export default defineConfig({
       // "-"-prefixed dir as a route and warns it exports no Route.
       router: { routeFileIgnorePattern: '.*\\.test\\.tsx?$' },
     }),
-    nitro(),
+    nitro({
+      /*
+       * The PDF engine's WebAssembly, for the server. The contents of each
+       * uploaded paper are read with it in the job worker
+       * (features/a-paper-shows-its-contents), and a bundled server carries the
+       * engine's code without the file it loads — see
+       * src/lit-tracker/contents/pdfium-wasm.ts, which reads it back from here.
+       */
+      serverAssets: [
+        {
+          baseName: 'pdfium',
+          dir: './node_modules/@embedpdf/pdfium/dist',
+          pattern: 'pdfium.wasm',
+        },
+      ],
+    }),
     // MDX (enforce:'pre') must run immediately before the React plugin so it
     // compiles .mdx → JSX before React's transform sees it; viteReact must
     // then be told to include .mdx so Fast Refresh/JSX handling applies to the

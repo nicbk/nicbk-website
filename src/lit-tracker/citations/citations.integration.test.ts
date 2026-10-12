@@ -88,6 +88,7 @@ function extraction(
     abstract: null,
     publicationYear: 2024,
     venue: null,
+    headings: [],
     identifiers: { doi: null, arxivId: null, pubmedId: null },
     bibliography: [],
     ...overrides,

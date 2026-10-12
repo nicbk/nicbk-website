@@ -24,6 +24,7 @@ import { createServer } from 'node:http'
  *     % grobid-stub {"title":"A Paper","authors":["Marta Oliveira"]}
  *     % grobid-stub {"fail":"unreadable"}
  *     % grobid-stub {"title":"A Paper","doi":"10.5555/known-a-paper"}
+ *     % grobid-stub {"title":"A Paper","sections":[{"n":"1","title":"Introduction"}]}
  *
  * and the stub answers accordingly. Keeping the instruction in the upload is
  * what lets one test submit several files that resolve differently — the case
@@ -124,7 +125,7 @@ function answer(response, instruction) {
  * never sees; this way an e2e failure can still be a parser failure, which is
  * the point of running the whole chain.
  */
-function teiFor({ title, authors = [], doi, references = [] }) {
+function teiFor({ title, authors = [], doi, references = [], sections = [] }) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0">
   <teiHeader xml:lang="en">
@@ -144,7 +145,7 @@ function teiFor({ title, authors = [], doi, references = [] }) {
     </profileDesc>
   </teiHeader>
   <text xml:lang="en">
-    <body><div><p>Body text.</p></div></body>
+    <body><div><p>Body text.</p></div>${sections.map(sectionXml).join('')}</body>
     <back><div type="references"><listBibl>${references.map(referenceXml).join('')}</listBibl></div></back>
   </text>
 </TEI>
@@ -171,6 +172,16 @@ function referenceXml({ title, authors = [], doi }) {
   <monogr><imprint><date type="published" when="2019">2019</date></imprint></monogr>
   <note type="raw_reference">${escapeXml(title)}. 2019.</note>
 </biblStruct>`
+}
+
+/**
+ * A body division with a numbered heading and the box `teiCoordinates=head`
+ * puts on it — `page,x,y,width,height`, one-based page, top-left origin — as
+ * GROBID 0.9.1 emits for a real paper's sections. What a paper without an
+ * outline takes its contents from (features/a-paper-shows-its-contents).
+ */
+function sectionXml({ n, title, page = 1, top = 100 }) {
+  return `<div><head n="${escapeXml(n)}" coords="${page},72.00,${top},120.00,10.00">${escapeXml(title)}</head><p>Section text.</p></div>`
 }
 
 function escapeXml(value) {

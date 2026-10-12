@@ -1,4 +1,6 @@
 import type { DatabaseHandle } from '~/db/create-database'
+import type { ContentsEntry } from '~/lit-tracker/contents/contents'
+import { readOutline } from '~/lit-tracker/contents/read-outline'
 import type { SemanticScholarPaper } from '~/lit-tracker/enrichment/client'
 import { createSemanticScholarClient } from '~/lit-tracker/enrichment/client'
 import type { ReferenceCandidate } from '~/lit-tracker/enrichment/reference-list'
@@ -26,6 +28,11 @@ export interface ExtractionServices {
   fetchPdf: (key: string, userId: string) => Promise<Uint8Array>
   /** One PDF in, structured metadata out. Throws per failure.ts. */
   extractMetadata: (pdf: Uint8Array) => Promise<ExtractedMetadata>
+  /**
+   * The PDF's own outline, as contents entries — empty when it has none
+   * (features/a-paper-shows-its-contents). Throws if the PDF cannot be opened.
+   */
+  readOutline: (pdf: Uint8Array) => Promise<ContentsEntry[]>
   /**
    * Resolves Semantic Scholar lookup keys — the uploaded paper's and its
    * references' together — in as few requests as the API allows.
@@ -62,6 +69,7 @@ export function productionServices(
     queue,
     fetchPdf: getArticlePdf,
     extractMetadata: async (pdf) => parseTei(await requestTei(pdf)),
+    readOutline,
     lookupPapers: semanticScholar.lookupPapers,
     matchPaperByTitle: semanticScholar.matchByTitle,
     fetchReferences: semanticScholar.fetchReferences,

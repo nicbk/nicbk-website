@@ -1,8 +1,9 @@
 import type { PdfDestinationObject } from '@embedpdf/models'
 import { PdfZoomMode } from '@embedpdf/models'
 import { describe, expect, it } from 'vitest'
+import { targetTop } from '~/lit-tracker/pdf/destination'
 import type { LinkLanding, PageText, TextRun } from './link-preview-region'
-import { citationNumber, previewRegion, targetTop } from './link-preview-region'
+import { citationNumber, previewRegion } from './link-preview-region'
 
 /**
  * Synthetic pages, shaped after the papers measured for #22 — positions, label

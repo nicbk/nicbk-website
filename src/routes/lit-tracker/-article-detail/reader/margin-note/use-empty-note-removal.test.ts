@@ -83,4 +83,8 @@ describe('useEmptyNoteRemoval', () => {
     })
     expect(scope.deleteAnnotation).not.toHaveBeenCalled()
   })
+
+  it('waits for the plugin before listening', () => {
+    expect(() => renderHook(() => useEmptyNoteRemoval(null))).not.toThrow()
+  })
 })

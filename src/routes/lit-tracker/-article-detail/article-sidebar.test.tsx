@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '~/routes/-shared/components/toast/toaster'
@@ -26,9 +26,8 @@ vi.mock('@rocicorp/zero/react', () => ({
 }))
 
 const { ArticleSidebar } = await import('./article-sidebar')
-const { ReaderJumpProvider, useRegisterReaderJump } = await import(
-  './reader-jump'
-)
+const { ReaderJumpProvider, useReadingLineReporter, useRegisterReaderJump } =
+  await import('./reader-jump')
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
@@ -51,7 +50,8 @@ function answerQueries(
       | 'articles.byId'
       | 'tags.mine'
       | 'articleTags.mine'
-      | 'annotations.forArticle',
+      | 'annotations.forArticle'
+      | 'articleContents.forArticle',
       unknown[]
     >
   >,
@@ -93,6 +93,7 @@ describe('ArticleSidebar', () => {
       'tags',
       'notes',
       'citations',
+      'contents',
       'annotations',
     ])
   })
@@ -410,6 +411,115 @@ describe('ArticleSidebar', () => {
     expect(handle).toHaveBeenCalledWith(3)
     expect(screen.getByTestId('reader')).toBeInTheDocument()
     expect(onViewChange).not.toHaveBeenCalled()
+  })
+
+  describe('the contents tab', () => {
+    const CONTENTS = {
+      articleId: ARTICLE_ID,
+      source: 'outline',
+      entries: [
+        { title: '1 Introduction', depth: 1, pageIndex: 0, top: 90 },
+        { title: '1.1 Background', depth: 2, pageIndex: 1, top: 300 },
+        { title: '2 Method', depth: 1, pageIndex: 3, top: null },
+      ],
+    }
+
+    /** The reader's half of the channel: a jump handle, and a line it reports. */
+    let reportLine: (line: { pageIndex: number; top: number } | null) => void
+    function ReaderStandIn({ handle }: { handle: () => void }) {
+      useRegisterReaderJump(handle)
+      reportLine = useReadingLineReporter()
+      return <div data-testid="reader" />
+    }
+
+    function renderWithReader(handle: () => void = vi.fn()) {
+      return render(
+        <Toaster>
+          <ReaderJumpProvider>
+            <ReaderStandIn handle={handle} />
+            <ArticleSidebar
+              articleId={ARTICLE_ID}
+              view="reader"
+              onViewChange={onViewChange}
+            />
+          </ReaderJumpProvider>
+        </Toaster>,
+      )
+    }
+
+    it('lists the sections, indented by depth', async () => {
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [CONTENTS],
+      })
+      renderWithReader()
+
+      await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
+
+      const rows = screen.getAllByRole('button', { name: /^\d/ })
+      expect(rows.map((row) => row.getAttribute('data-depth'))).toEqual([
+        '1',
+        '2',
+        '1',
+      ])
+      expect(rows[1]).toHaveTextContent('1.1 Background2')
+    })
+
+    it('steers the reader to the section’s page and point', async () => {
+      const handle = vi.fn()
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [CONTENTS],
+      })
+      renderWithReader(handle)
+
+      await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
+      await userEvent.click(screen.getByRole('button', { name: /Background/ }))
+      await userEvent.click(screen.getByRole('button', { name: /Method/ }))
+
+      expect(handle).toHaveBeenNthCalledWith(1, 1, 300)
+      expect(handle).toHaveBeenNthCalledWith(2, 3, null)
+      expect(screen.getByTestId('reader')).toBeInTheDocument()
+      expect(onViewChange).not.toHaveBeenCalled()
+    })
+
+    it('marks the section the reader is in, as it moves', async () => {
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [CONTENTS],
+      })
+      renderWithReader()
+      await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
+      const current = () =>
+        screen
+          .queryAllByRole('button')
+          .filter(
+            (button) => button.getAttribute('aria-current') === 'location',
+          )
+          .map((button) => button.textContent)
+
+      // Before any report there is nothing to mark.
+      expect(current()).toEqual([])
+
+      act(() => reportLine({ pageIndex: 1, top: 400 }))
+      expect(current()).toEqual(['1.1 Background2'])
+
+      act(() => reportLine({ pageIndex: 5, top: 0 }))
+      expect(current()).toEqual(['2 Method4'])
+
+      // The reader hidden or gone: no longer marking a guess.
+      act(() => reportLine(null))
+      expect(current()).toEqual([])
+    })
+
+    it('says the paper is still being read before its row arrives', async () => {
+      answerQueries({ 'articles.byId': [ARTICLE] })
+      renderSidebar()
+
+      await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
+
+      expect(screen.getByText('reading the contents…')).toBeInTheDocument()
+    })
   })
 
   it('renders nothing until the article has arrived', () => {

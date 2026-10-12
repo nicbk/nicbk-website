@@ -26,12 +26,22 @@
 - **Choosing an entry scrolls the reader** so the section's top is at the top of
   the panel. If the citation graph is showing, choosing an entry brings the
   reader back first.
-- **The section in view is marked**: the last entry whose start is above the
-  panel's top third.
+- **The section in view is marked**: the last entry whose start has reached
+  the line a jump lands on, just below the reader's toolbar. Once the end of
+  the paper is on screen, the line is the panel's bottom. *(Revised at
+  implementation from "the panel's top third": measured against the third,
+  choosing *2 Method* marked *2.1* whenever 2.1 began within a third of a
+  screen of it. At the landing line, the entry chosen is the entry marked.)*
+- **The list keeps the marked entry in view**, centred when the tab opens and
+  moved only as far as needed after that, and never while the pointer is on
+  the list.
+- **Page numbers show where the sidebar has room**: in the sheet, not in the
+  rail, where a textbook's three-digit numbers left titles too narrow to read.
 - **Empty states, one each:**
   - *reading the contents…* while the job has not run;
   - *this paper has no outline or numbered sections* when nothing was found;
-  - *couldn't read the contents* on failure.
+  - *couldn't read the contents* on failure, and for a paper whose extraction
+    failed, which is never read for contents.
 
 ### The strip
 
@@ -39,7 +49,8 @@
   - **Rail (~143px):** five glyph tabs of equal width, about 28px each. That
     meets WCAG 2.2's 24px target minimum.
   - **Sheet:** words where all five fit on one line, glyphs where they do not.
-    At 375px they do not; measured, four words already fill 326 of 327px.
+    At 375px they do not; measured, four words already fill 326 of 327px, and
+    five need 391px, so the glyph threshold is 25rem.
 
 ### The button
 

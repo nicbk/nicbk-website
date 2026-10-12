@@ -1,11 +1,11 @@
 /*
  * The sidebar's tabs and the panel below them.
  *
- * Three tabs today, four by the end of #10 — and the strip stays **one row**
- * at every width: words where they fit, glyphs where they do not (see
- * `.tabLabel` below). A container query rather than a media query because the
- * same component renders at two very different widths on one viewport — the
- * ~175px rail and the near-full-width sheet — and it is the box, not the
+ * Five tabs, and the strip stays **one row** at every width: words where they
+ * fit, glyphs where they do not (see `.tabLabel` below). A container query
+ * rather than a media query because the same component renders at two very
+ * different widths on one viewport — the ~143px rail and the near-full-width
+ * sheet — and it is the box, not the
  * screen, that decides whether the words fit. The same reasoning as the tag
  * controls' container (`article-tag-controls.module.css`).
  */
@@ -74,12 +74,17 @@
 
 /*
  * A word or a glyph, never both. The word is the default; the glyph takes
- * over when the container cannot fit every tab's word on one line. 20rem
- * rather than today's break-even (~14rem for three words) because the
- * threshold is sized for the **decided four tabs** — #10's "citations" must
- * not move it, only render into it. The word stays the accessible name and
- * the tooltip either way (`article-sidebar.tsx`), which is the same trade the
- * reader's toolbar triggers make at their narrow breakpoint.
+ * over when the container cannot fit every tab's word on one line. The word
+ * stays the accessible name and the tooltip either way (`article-sidebar.tsx`),
+ * which is the same trade the reader's toolbar triggers make at their narrow
+ * breakpoint.
+ *
+ * **25rem, measured for five tabs** (#29's contents, 2026-10-12): the five
+ * words with each tab's padding come to 391px in Chromium at the selected
+ * tab's bold weight, so the words show only where the strip has at least
+ * 400px. It was 20rem, sized for four; with five it let a 375px phone's 327px
+ * sheet draw the words, and "annotations" wrapped onto a second row of its
+ * own.
  */
 .tabIcon {
   display: none;
@@ -87,7 +92,19 @@
   height: 1.25em;
 }
 
-@container article-sidebar (max-width: 20rem) {
+@container article-sidebar (max-width: 25rem) {
+  /*
+   * Glyph tabs share the strip equally. Sized by content they would not: each
+   * glyph is the same width, so `auto` would hand the spare space out evenly
+   * anyway — but only by coincidence of equal content, and a tab that ever
+   * carried more (a badge, a count) would quietly take more of the row. Five
+   * equal fifths is the design, so it is stated.
+   */
+  .tab {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
   .tabLabel {
     display: none;
   }

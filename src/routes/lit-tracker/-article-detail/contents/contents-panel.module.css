@@ -1,0 +1,128 @@
+/*
+ * The contents tab: the paper's sections, a column of rows like the annotations
+ * tab's, indented by depth.
+ */
+
+/* "reading the contents…" and the other states — a sentence, not a row. */
+.notice {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/*
+ * The panel's one scroll region, as the annotations list is: a textbook's
+ * hundreds of entries scroll here rather than growing the rail.
+ */
+.list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * A row is one button: the title left, its page right, the page column sized by
+ * its own width so the numbers line up against the edge — the annotations
+ * row's layout, so the two tabs that steer the reader read alike.
+ *
+ * Indented by depth through `--indent`, set on the row, half a rem a level:
+ * in the 143px rail a deeper step would leave a third-level title eight
+ * characters. The page number is not indented, so it keeps its column at every
+ * depth.
+ */
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-xs);
+  align-items: baseline;
+  width: 100%;
+  padding: var(--space-2xs) var(--space-xs);
+  padding-inline-start: calc(
+    var(--space-xs) +
+    var(--indent, 0) *
+    var(--space-xs)
+  );
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+/*
+ * Subsections recede behind the chapters and sections they belong to, so a
+ * long list can be scanned by its top level. Muted, as the annotations list
+ * mutes what is secondary in a row.
+ */
+.row:not([data-depth="1"]) {
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) {
+  .row:hover {
+    color: var(--color-accent);
+  }
+}
+
+/*
+ * The section the reader is in. Weight as well as colour, so it survives
+ * grayscale (WCAG 1.4.1) — the selected tab's treatment, for its reason.
+ * Keyed on `aria-current`, the attribute assistive tech reads, for the reason
+ * the tabs key on `aria-selected` (`article-sidebar.module.css`).
+ *
+ * The same specificity as the muted rule above and after it, so it wins by
+ * order. It lost at first, to a muted rule one attribute selector heavier, and
+ * a marked subsection showed bold but grey: found in the browser.
+ */
+.row[aria-current="location"] {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-bold);
+}
+
+/*
+ * A title wraps rather than clipping: a section's name is the whole of what
+ * identifies it, and its end ("… with Bounded Staleness") is as likely to be
+ * the part that matters as its start.
+ *
+ * **Hyphenated** where a word is wider than the column, which in the rail is
+ * any word past nine characters. Without it the browser broke "Consequences"
+ * as "Consequence / s", which read as a rendering fault. `overflow-wrap` stays
+ * for what hyphenation cannot split (a URL, a formula).
+ */
+.title {
+  min-width: 0;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
+.page {
+  color: var(--color-text-muted);
+  font-weight: normal;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/*
+ * **No page numbers in the rail.** A textbook's are three digits, and at the
+ * rail's 143px that column left a subsection's title nine characters — found
+ * in the browser, "Subsection" broke as "Subsectio / n" on every row past page
+ * 99. The title is what identifies a section and the jump needs no number, so
+ * the number is the one to go: the rail lists titles, as a PDF reader's outline
+ * panel does, and the sheet, with room, keeps them. Measured on the sidebar's
+ * own container (`article-sidebar.module.css`), like the tabs' words.
+ */
+@container article-sidebar (max-width: 15rem) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    display: none;
+  }
+}

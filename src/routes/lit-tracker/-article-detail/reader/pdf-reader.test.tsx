@@ -41,6 +41,9 @@ const scrollScope = vi.hoisted(() => ({
   scrollToPage: vi.fn(),
   scrollToNextPage: vi.fn(),
   scrollToPreviousPage: vi.fn(),
+  // What the reading line is measured from (`use-report-reading-line.ts`).
+  getMetrics: vi.fn(() => ({ pageVisibilityMetrics: [] })),
+  onScroll: vi.fn(() => () => {}),
 }))
 const zoomScope = vi.hoisted(() => ({
   zoomIn: vi.fn(),
@@ -621,10 +624,10 @@ describe('PdfReader', () => {
     })
   })
 
-  describe('the jump the annotations list steers it by', () => {
+  describe('the jump the sidebar’s lists steer it by', () => {
     /** Renders the reader inside the channel and hands the jump out. */
     function renderWithJump() {
-      let jump: (pageIndex: number) => void = () => {}
+      let jump: (pageIndex: number, top?: number | null) => void = () => {}
       function Grab() {
         jump = useReaderJump()
         return null
@@ -635,8 +638,31 @@ describe('PdfReader', () => {
           <Grab />
         </ReaderJumpProvider>,
       )
-      return (pageIndex: number) => jump(pageIndex)
+      return (pageIndex: number, top?: number | null) =>
+        top === undefined ? jump(pageIndex) : jump(pageIndex, top)
     }
+
+    it('goes to a point down the page, stopping short by the toolbar’s depth', () => {
+      // A contents entry names where its heading is. jsdom lays out no toolbar,
+      // so the only clearance is the breathing room `go-to.ts` leaves (8px at a
+      // scale of 1).
+      const jump = renderWithJump()
+
+      jump(2, 300)
+
+      expect(scrollScope.scrollToPage).toHaveBeenCalledWith({
+        pageNumber: 3,
+        pageCoordinates: { x: 0, y: 292 },
+      })
+    })
+
+    it('goes to the page’s top for an entry that names no point', () => {
+      const jump = renderWithJump()
+
+      jump(2, null)
+
+      expect(scrollScope.scrollToPage).toHaveBeenCalledWith({ pageNumber: 3 })
+    })
 
     it('turns a stored 0-based page index into the scroller’s 1-based page', () => {
       const jump = renderWithJump()

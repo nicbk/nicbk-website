@@ -8,9 +8,9 @@ import { Link } from '@tanstack/react-router'
 import type { RefObject } from 'react'
 import { useEffect, useState } from 'react'
 import { nextVia } from '~/lit-tracker/citation-path'
+import { toolbarClearance, topClearOfToolbar } from './go-to'
 import type { PreviewRegion } from './link-preview-region'
 import { resolveLinkPreview } from './link-preview-source'
-import { READER_TOOLBAR_ATTRIBUTE } from './menu-placement'
 import type { PreviewedReference } from './use-previewed-reference'
 import { usePreviewedReference } from './use-previewed-reference'
 import styles from './citation-preview.module.css'
@@ -34,43 +34,22 @@ import styles from './citation-preview.module.css'
 const MAX_PREVIEW_WIDTH = 720
 /** The popover's own side padding and gutter, subtracted from the viewport. */
 const VIEWPORT_MARGIN = 56
-/** Room left between the toolbar and the entry a reader went to. */
-const GO_TO_BREATHING_ROOM = 8
-
 /**
  * Where "go to" scrolls, in top-left page points.
  *
  * The region's own top would land under the reader's floating toolbar — found
  * in the browser, with reference 13 half behind the page controls — so the
- * scroll stops short by the toolbar's depth, converted from screen pixels to
- * page points at the reading zoom.
+ * scroll stops short by the toolbar's depth (`go-to.ts`).
  */
 export function goToCoordinates(
   region: PreviewRegion,
   toolbarClearancePx: number,
   scale: number,
 ): { x: number; y: number } {
-  const clearance = (toolbarClearancePx + GO_TO_BREATHING_ROOM) / scale
   return {
     x: region.rect.origin.x,
-    y: Math.max(0, region.rect.origin.y - clearance),
+    y: topClearOfToolbar(region.rect.origin.y, toolbarClearancePx, scale),
   }
-}
-
-/** How far the toolbar reaches down into the reader, in screen pixels. */
-function toolbarClearance(): number {
-  const bar = globalThis.document?.querySelector(
-    `[${READER_TOOLBAR_ATTRIBUTE}]`,
-  )
-  const reader = bar?.parentElement
-  if (!bar || !reader) {
-    return 0
-  }
-  const groups = [...bar.children].map((child) => child.getBoundingClientRect())
-  const bottom = groups.length
-    ? Math.max(...groups.map((group) => group.bottom))
-    : bar.getBoundingClientRect().bottom
-  return Math.max(0, bottom - reader.getBoundingClientRect().top)
 }
 
 interface Ready {

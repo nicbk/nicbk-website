@@ -204,6 +204,12 @@ async function seedTwoUsers(): Promise<void> {
     await database.db
       .insert(drizzleSchema.referenceReads)
       .values({ articleId, userId, status: 'queued' })
+    await database.db.insert(drizzleSchema.articleContents).values({
+      articleId,
+      userId,
+      source: 'headings',
+      entries: [{ title: '1 Introduction', depth: 1, pageIndex: 0, top: 72 }],
+    })
   }
 }
 
@@ -605,6 +611,32 @@ describe('cross-user isolation', () => {
 
     expect(asA).toEqual([])
     expect(asB.map((row) => row.id)).toEqual([ANNOTATION_B])
+  })
+
+  it('returns only the requesting user’s contents, and none of another’s paper', async () => {
+    // A row exists for both papers, so the empty answer for B's paper as A is
+    // the filter's doing rather than the absence of anything to find.
+    const own = await runAs(
+      queries.articleContents.forArticle,
+      CONTEXT_A,
+      ARTICLE_A,
+    )
+    const foreign = await runAs(
+      queries.articleContents.forArticle,
+      CONTEXT_A,
+      ARTICLE_B,
+    )
+    const theirs = await runAs(
+      queries.articleContents.forArticle,
+      CONTEXT_B,
+      ARTICLE_B,
+    )
+
+    const articleIds = (rows: unknown[]) =>
+      (rows as { articleId: string }[]).map((row) => row.articleId)
+    expect(articleIds(own)).toEqual([ARTICLE_A])
+    expect(articleIds(foreign)).toEqual([])
+    expect(articleIds(theirs)).toEqual([ARTICLE_B])
   })
 
   it('returns nothing when the request carries no session', async () => {

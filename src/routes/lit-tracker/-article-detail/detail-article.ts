@@ -27,6 +27,12 @@ export interface DetailArticle extends EditableArticle {
   /** Where the reader left off; both null until the paper is first read. */
   readingPage: number | null
   readingOffset: number | null
+  /**
+   * How far the paper's reading got, which the contents tab needs to tell
+   * "not read yet" from "never will be" (`contents/contents-view.ts`).
+   * Optional so the many fixtures that build an article need not name it.
+   */
+  extractionStatus?: string | null
 }
 
 /**

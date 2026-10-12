@@ -21,7 +21,7 @@ Feature parent issue: [#241](https://github.com/nicbk/nicbk-website/issues/241),
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-contents-are-read`](./tasks/the-contents-are-read/status.md) | Implemented | TBD | — | — |
+| [`the-contents-are-read`](./tasks/the-contents-are-read/status.md) | Implemented | [#252](https://github.com/nicbk/nicbk-website/pull/252) | Running | Awaiting |
 | [`older-papers-are-read-for-contents`](./tasks/older-papers-are-read-for-contents/status.md) | Not started | — | — | — |
 | [`the-contents-tab`](./tasks/the-contents-tab/status.md) | Not started | — | — | — |
 | [`the-toolbar-opens-the-contents`](./tasks/the-toolbar-opens-the-contents/status.md) | Not started | — | — | — |

@@ -9,7 +9,7 @@ taken before anything was written. See [research.md](./research.md).
 Depends on [`article-detail-and-reader`](../article-detail-and-reader/status.md)
 (#9, Complete).
 
-Feature parent issue: TBD. The roadmap entry is **#27** in
+Feature parent issue: [#239](https://github.com/nicbk/nicbk-website/issues/239), with 1 sub-issue. The roadmap entry is **#27** in
 [../index.md](../index.md).
 
 ## Task states

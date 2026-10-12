@@ -2,7 +2,7 @@
 
 | # | Task | Sub-issue | Delivers |
 |---|---|---|---|
-| 1 | [`the-note-is-put-down`](./tasks/the-note-is-put-down/description.md) | TBD | A press outside the note, or Escape, ends its editing; each page's annotation layer is keyed by a generation that ending an edit moves on |
+| 1 | [`the-note-is-put-down`](./tasks/the-note-is-put-down/description.md) | [#242](https://github.com/nicbk/nicbk-website/issues/242) | A press outside the note, or Escape, ends its editing; each page's annotation layer is keyed by a generation that ending an edit moves on |
 
 ## Why one task
 

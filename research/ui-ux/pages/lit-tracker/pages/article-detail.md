@@ -90,3 +90,27 @@ while Citations is active **the reader is hidden, not unloaded**, so switching
 back is instant and the reading position is where it was. Which view is showing
 is kept in the URL (`?view=citations`), since the rail and the narrow-screen
 sheet are separate sidebar instances.
+
+## Revision (2026-10-12): a fifth tab, Contents
+
+Decided with the user at #29's spec (features/a-paper-shows-its-contents): the
+sidebar gains **Contents**, the paper's sections, found automatically. It sits
+**between Citations and Annotations**, so the two tabs that steer the reader sit
+together. Like Annotations, it does **not** swap the main content area: choosing
+an entry scrolls the reader to that section, with the heading just below the
+reader's toolbar, and the entry for the section in view is marked as the reader
+scrolls.
+
+The user's condition was a sidebar that stays clean and navigable with five
+tabs. The tab strip was re-fitted for that rather than allowed to wrap:
+
+- **In the rail**, five glyph tabs of equal width (~28.6px each, above WCAG
+  2.2's 24px target minimum), the word kept as each tab's name and tooltip.
+- **In the narrow-screen sheet**, words only where all five fit on one line;
+  otherwise glyphs. A 375px phone's sheet shows glyphs.
+- **The rail's contents list shows titles only.** Page numbers appear where the
+  sidebar has room (the sheet), since in the rail a textbook's three-digit page
+  numbers left a subsection's title too narrow to read.
+
+The four-tab arrangement in the first revision's last paragraph is superseded
+by this one; everything else it lists is unchanged.

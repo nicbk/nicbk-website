@@ -43,6 +43,7 @@ import { isBlankPaper, PAPER_ATTRIBUTE } from './blank-paper'
 import { liveToolFrom } from './click-away'
 import { ClickAwayGuard } from './click-away-guard'
 import { canAddAnnotations, canCopyText } from './copy-permission'
+import { toolbarClearance, topClearOfToolbar } from './go-to'
 import { LINK_RENDERERS } from './link-target'
 import { LinkedPartnerOutline } from './margin-note/linked-partner-outline'
 import { useEmptyNoteRemoval } from './margin-note/use-empty-note-removal'
@@ -56,6 +57,7 @@ import { ReaderNotice } from './reader-notice'
 import { BASE_PAGE_SCALE, createReaderPlugins } from './reader-plugins'
 import { deriveReaderState } from './reader-state'
 import { InertReaderToolbar, ReaderToolbar } from './reader-toolbar'
+import { lastPageOf } from './reading-line'
 import type { ReadingPosition } from './reading-position'
 import { markSelection } from './selection-finish/mark-selection'
 import { useFinishSelection } from './selection-finish/use-finish-selection'
@@ -69,6 +71,7 @@ import { useMarginTextBox } from './use-margin-text-box'
 import { useReaderCopyShortcut } from './use-reader-copy-shortcut'
 import { useReadingMode } from './use-reading-mode'
 import { useReadingPosition } from './use-reading-position'
+import { useReportReadingLine } from './use-report-reading-line'
 import { useSelectionCopy } from './use-selection-copy'
 import { absoluteAssetUrl } from './wasm-url'
 import styles from './pdf-reader.module.css'
@@ -381,25 +384,50 @@ function ReaderDocument({
   useNoteFitsItsText(annotationScope ?? null, documentState?.document ?? null)
 
   /**
-   * The way in from the sidebar's annotations list (`reader-jump.tsx`): a row
-   * names a stored 0-based `page_index`, the scroller counts from 1.
+   * The way in from the sidebar's lists (`reader-jump.tsx`): a row names a
+   * stored 0-based `page_index`, the scroller counts from 1.
    *
    * Clamped rather than rejected, the same treatment the page field gives a
    * typed 900 (`use-page-field.ts`): a row can name a page this file does not
    * have — the PDF was replaced, or the count is not known yet — and the end of
    * the document is a better answer than a jump that silently does nothing.
+   *
+   * A contents entry also names a `top`, and goes to that point rather than to
+   * the page's top: placed just below the toolbar, as a citation preview's
+   * **go to** is (`go-to.ts`), so the heading is the first thing in view.
    */
+  const scale = documentState?.scale ?? 1
   const jumpToPage = useCallback(
-    (pageIndex: number) => {
+    (pageIndex: number, top?: number | null) => {
       if (totalPages < 1) {
         return
       }
       const pageNumber = Math.min(Math.max(pageIndex + 1, 1), totalPages)
-      scrollScope?.scrollToPage({ pageNumber })
+      if (top === undefined || top === null) {
+        scrollScope?.scrollToPage({ pageNumber })
+        return
+      }
+      scrollScope?.scrollToPage({
+        pageNumber,
+        pageCoordinates: {
+          x: 0,
+          y: topClearOfToolbar(top, toolbarClearance(), scale),
+        },
+      })
     },
-    [scrollScope, totalPages],
+    [scrollScope, totalPages, scale],
   )
   useRegisterReaderJump(jumpToPage)
+
+  // And the way back out: where the reader is, for the contents list to mark
+  // the section in view (features/a-paper-shows-its-contents).
+  useReportReadingLine({
+    scroll: scrollScope ?? null,
+    viewport: viewport?.forDocument(articleId) ?? null,
+    viewportGap: viewport?.getViewportGap() ?? 0,
+    lastPage: lastPageOf(documentState?.document ?? null),
+    paused: hidden,
+  })
 
   /*
    * Opens the paper where it was left, and keeps note of where that is. See

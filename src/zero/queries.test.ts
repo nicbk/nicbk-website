@@ -241,6 +241,44 @@ describe('annotations.forArticle', () => {
   })
 })
 
+describe('articleContents.forArticle', () => {
+  it('filters by owner as well as by article', () => {
+    const ast = astOf(
+      queries.articleContents.forArticle.fn({
+        args: AN_ARTICLE_ID,
+        ctx: OWNER,
+      }),
+    )
+
+    expect(ast.table).toBe('articleContents')
+    expect(ast.where).toEqual({
+      type: 'and',
+      conditions: [
+        equals('articleId', AN_ARTICLE_ID),
+        equals('userId', OWNER.id),
+      ],
+    })
+  })
+
+  it('rejects an argument that is not an article id', () => {
+    expect(() =>
+      queries.articleContents.forArticle.fn({ args: 'not-a-uuid', ctx: OWNER }),
+    ).toThrow()
+  })
+
+  it('matches nothing without a context', () => {
+    const ast = astOf(
+      queries.articleContents.forArticle.fn({
+        args: AN_ARTICLE_ID,
+        ctx: undefined,
+      }),
+    )
+
+    expect(ast.limit).toBe(0)
+    expect(ast.where).toBeUndefined()
+  })
+})
+
 describe.each([
   ['references', 'citingArticleId', 'citedArticle'],
   ['citedBy', 'citedArticleId', 'citingArticle'],

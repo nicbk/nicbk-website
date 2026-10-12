@@ -152,6 +152,27 @@ export const queries = defineQueries({
     }),
   },
 
+  articleContents: {
+    /**
+     * One paper's contents — its sections, as the extraction found them
+     * (features/a-paper-shows-its-contents) — for the sidebar's contents tab.
+     *
+     * Scoped by owner as well as by article, like `annotations.forArticle` and
+     * for the same reason: naming another user's article id returns nothing.
+     * At most one row, since the table is keyed by its article; a list query
+     * rather than `.one()` so that the signed-out answer, `limit(0)`, has the
+     * same shape.
+     */
+    forArticle: defineQuery(z.uuid(), ({ args: articleId, ctx }) => {
+      if (!ctx) {
+        return zql.articleContents.limit(0)
+      }
+      return zql.articleContents
+        .where('articleId', articleId)
+        .where('userId', ctx.id)
+    }),
+  },
+
   citationEdges: {
     /**
      * One paper's bibliography: every reference it makes, with the article each

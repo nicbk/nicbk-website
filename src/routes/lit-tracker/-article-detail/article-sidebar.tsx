@@ -1,10 +1,12 @@
 import { Tabs } from '@base-ui/react/tabs'
-import { Highlighter, Network, NotebookPen, Tag } from 'lucide-react'
+import { Highlighter, ListTree, Network, NotebookPen, Tag } from 'lucide-react'
 import { useState } from 'react'
 import { ArticleTagControls } from '~/routes/lit-tracker/-components/article-menu/article-tag-controls'
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { AnnotationsPanel } from './annotations-panel'
 import type { ArticleView } from './article-view'
+import { ContentsPanel } from './contents/contents-panel'
+import { useArticleContents } from './contents/use-article-contents'
 import { NotesPanel } from './notes-panel'
 import { useReaderJump } from './reader-jump'
 import { useArticleAnnotations } from './use-article-annotations'
@@ -18,9 +20,11 @@ import styles from './article-sidebar.module.css'
  * its panel, its glyph — cannot drift apart, and so #10's Citations tab is one
  * entry rather than edits in three places.
  *
- * The decided sidebar has **four** tabs, in this order. Citations arrived with
+ * The decided sidebar has **five** tabs, in this order. Citations arrived with
  * the citation graph it opens (#10) — until then it was absent rather than
- * disabled, because a tab is not rendered before its contents exist.
+ * disabled, because a tab is not rendered before its contents exist. Contents
+ * arrived with #29 (features/a-paper-shows-its-contents), between Citations and
+ * Annotations, so the two tabs that steer the reader sit together.
  *
  * **Each tab is a word or a glyph, by container width** (user-decided
  * 2026-08-17): the strip shows the words where they fit on one line — the
@@ -34,6 +38,7 @@ const TABS = [
   { id: 'tags', icon: Tag },
   { id: 'notes', icon: NotebookPen },
   { id: 'citations', icon: Network },
+  { id: 'contents', icon: ListTree },
   { id: 'annotations', icon: Highlighter },
 ] as const
 
@@ -117,8 +122,9 @@ export function ArticleSidebar({
  * The tabs themselves, once there is an article to show them for.
  *
  * **Which tab is selected is partly this instance's and partly the URL's.**
- * Tags, Notes and Annotations are panels inside the sidebar, and which of them
- * is open is nobody else's business — each copy of the sidebar keeps its own.
+ * Tags, Notes, Contents and Annotations are panels inside the sidebar, and
+ * which of them is open is nobody else's business — each copy of the sidebar
+ * keeps its own.
  * Citations is different: it swaps the page's main area, so it is selected
  * exactly when the URL says the citations view is showing, in every copy at
  * once. Leaving Citations for another tab is what brings the reader back; there
@@ -128,6 +134,7 @@ function SidebarTabs({ articleId, view, onViewChange }: ArticleSidebarProps) {
   const { article, tags, allTags } = useArticleDetail(articleId)
   const mutations = useArticleMutations()
   const annotations = useArticleAnnotations(articleId)
+  const contents = useArticleContents(articleId, article?.extractionStatus)
   const jumpToPage = useReaderJump()
   const [panel, setPanel] = useState<PanelTab>(DEFAULT_TAB)
 
@@ -223,6 +230,16 @@ function SidebarTabs({ articleId, view, onViewChange }: ArticleSidebarProps) {
           citations are open on the page. choose another tab to return to the
           paper.
         </p>
+      </Tabs.Panel>
+
+      <Tabs.Panel className={styles.panel} value="contents">
+        {/*
+          Like Annotations, this tab steers the reader and does not replace it.
+          Reaching it from the citation graph has already brought the reader
+          back (`choose` above), so an entry's jump always lands on a reader
+          that is showing.
+        */}
+        <ContentsPanel view={contents} onJump={jumpToPage} />
       </Tabs.Panel>
 
       <Tabs.Panel className={styles.panel} value="annotations">

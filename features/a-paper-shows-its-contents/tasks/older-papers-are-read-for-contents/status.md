@@ -1,6 +1,6 @@
 # Status: Older Papers Are Read for Contents
 
-**State:** Implemented, awaiting review ([#246](https://github.com/nicbk/nicbk-website/issues/246)).
+**State:** Merged ([#246](https://github.com/nicbk/nicbk-website/issues/246); PR [#253](https://github.com/nicbk/nicbk-website/pull/253)).
 
 ## What shipped
 

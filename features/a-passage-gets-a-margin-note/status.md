@@ -18,7 +18,7 @@ Feature parent issue: [#240](https://github.com/nicbk/nicbk-website/issues/240),
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-note-is-written-beside-the-passage`](./tasks/the-note-is-written-beside-the-passage/status.md) | Implemented | TBD | — | — |
+| [`the-note-is-written-beside-the-passage`](./tasks/the-note-is-written-beside-the-passage/status.md) | Implemented | [#250](https://github.com/nicbk/nicbk-website/pull/250) | Running | Awaiting |
 | [`notes-make-room-for-each-other`](./tasks/notes-make-room-for-each-other/status.md) | Not started | — | — | — |
 
 ## Definition of Done (feature)

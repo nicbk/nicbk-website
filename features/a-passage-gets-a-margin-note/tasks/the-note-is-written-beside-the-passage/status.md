@@ -1,6 +1,6 @@
 # Status: The Note Is Written Beside the Passage
 
-**State:** Implemented, awaiting review ([#243](https://github.com/nicbk/nicbk-website/issues/243); PR TBD).
+**State:** Implemented, awaiting review ([#243](https://github.com/nicbk/nicbk-website/issues/243); PR [#250](https://github.com/nicbk/nicbk-website/pull/250)).
 
 ## What shipped
 

@@ -1,6 +1,6 @@
 # Status: Notes Make Room for Each Other
 
-**State:** Implemented, awaiting review ([#244](https://github.com/nicbk/nicbk-website/issues/244); PR TBD).
+**State:** Implemented, awaiting review ([#244](https://github.com/nicbk/nicbk-website/issues/244); PR [#251](https://github.com/nicbk/nicbk-website/pull/251)).
 
 ## What shipped
 

@@ -16,7 +16,7 @@ Feature parent issue: [#239](https://github.com/nicbk/nicbk-website/issues/239),
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`the-note-is-put-down`](./tasks/the-note-is-put-down/status.md) | Implemented | TBD | — | — |
+| [`the-note-is-put-down`](./tasks/the-note-is-put-down/status.md) | Implemented | [#249](https://github.com/nicbk/nicbk-website/pull/249) | Running | Awaiting |
 
 ## Definition of Done (feature)
 

@@ -1,6 +1,6 @@
 # Status: The Note Is Put Down
 
-**State:** Implemented, awaiting review ([#242](https://github.com/nicbk/nicbk-website/issues/242); PR TBD).
+**State:** Implemented, awaiting review ([#242](https://github.com/nicbk/nicbk-website/issues/242); PR [#249](https://github.com/nicbk/nicbk-website/pull/249)).
 
 ## What shipped
 

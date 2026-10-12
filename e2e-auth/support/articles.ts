@@ -265,3 +265,32 @@ export async function clearUploadsOf(userId: string): Promise<void> {
     userId,
   ])
 }
+
+/** A paper's contents as stored (features/a-paper-shows-its-contents). */
+export interface StoredContents {
+  source: string
+  entries: {
+    title: string
+    depth: number
+    pageIndex: number
+    top: number | null
+  }[]
+}
+
+/**
+ * The contents row of the article with this title, or undefined before the
+ * pipeline has written one. Read from the database because the contents tab is
+ * #29's third task; until then this is the only surface they reach.
+ */
+export async function contentsOfArticle(
+  userId: string,
+  title: string,
+): Promise<StoredContents | undefined> {
+  const { rows } = await connection().query<StoredContents>(
+    `select c.source, c.entries
+       from article_contents c join articles a on a.id = c.article_id
+      where a.user_id = $1 and a.title = $2`,
+    [userId, title],
+  )
+  return rows[0]
+}

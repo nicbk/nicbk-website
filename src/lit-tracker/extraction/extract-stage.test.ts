@@ -3,7 +3,8 @@
 // Server module: the doubles below stand in for Postgres, Garage and GROBID.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DatabaseHandle } from '~/db/create-database'
-import { citationEdges } from '~/db/schema'
+import { articleContents, citationEdges } from '~/db/schema'
+import type { ContentsEntry } from '~/lit-tracker/contents/contents'
 import type { ExtractJob } from '~/lit-tracker/jobs/queue'
 import { PdfOwnershipError } from '~/storage/pdf-storage'
 import { runExhaustedExtractStage, runExtractStage } from './extract-stage'
@@ -42,6 +43,7 @@ const COMPLETE: ExtractedMetadata = {
   venue: 'Journal of Practical Replication',
   identifiers: { ...NO_IDENTIFIERS, doi: '10.1145/3612345.3612399' },
   bibliography: [],
+  headings: [],
 }
 
 /** Two references: one Semantic Scholar can resolve, one it cannot. */
@@ -72,6 +74,7 @@ interface Recorded {
   article: Record<string, unknown> | undefined
   articleOnConflict: Record<string, unknown> | undefined
   jobUpdate: Record<string, unknown> | undefined
+  contents: Record<string, unknown> | undefined
   edges: Record<string, unknown>[]
   sent: { queue: string; job: unknown }[]
 }
@@ -94,6 +97,16 @@ function fakeDatabase(
   const tx = {
     insert: (table: unknown) => ({
       values: (values: Record<string, unknown> | Record<string, unknown>[]) => {
+        // The contents, likewise repeatable, and recorded on their own so a
+        // test can say what was written.
+        if (table === articleContents) {
+          return {
+            onConflictDoUpdate: async () => {
+              recorded.steps.push('insert-contents')
+              recorded.contents = values as Record<string, unknown>
+            },
+          }
+        }
         // Edges are inserted plainly, so this call is awaited as it stands.
         if (table === citationEdges) {
           recorded.steps.push('insert-edges')
@@ -171,6 +184,7 @@ function fakeServices(options: {
   uploadJob?: { filename: string } | undefined
   extract?: () => Promise<ExtractedMetadata>
   fetchPdf?: () => Promise<Uint8Array>
+  outline?: () => Promise<ContentsEntry[]>
 }): ExtractionServices {
   return {
     database: fakeDatabase(
@@ -195,6 +209,12 @@ function fakeServices(options: {
         recorded.steps.push('extract')
         return COMPLETE
       }),
+    readOutline:
+      options.outline ??
+      (async () => {
+        recorded.steps.push('read-outline')
+        return []
+      }),
     // This stage never reaches Semantic Scholar — enrichment is a stage of its
     // own, and calling one from here would be the failure these doubles exist
     // to make visible.
@@ -216,6 +236,7 @@ beforeEach(() => {
     article: undefined,
     articleOnConflict: undefined,
     jobUpdate: undefined,
+    contents: undefined,
     edges: [],
     sent: [],
   }
@@ -232,9 +253,11 @@ describe('a successful extraction', () => {
       'load-job',
       'fetch-pdf',
       'extract',
+      'read-outline',
       'begin',
       'insert-article',
       'update-job',
+      'insert-contents',
       // An empty bibliography still clears whatever a replay left behind.
       'delete-edges',
       'enqueue-next',
@@ -520,5 +543,88 @@ describe('a job with nothing left to work on', () => {
 
     expect(recorded.jobUpdate).toMatchObject({ status: 'failed' })
     expect(recorded.article).toMatchObject({ extractionStatus: 'failed' })
+  })
+})
+
+describe('the contents (features/a-paper-shows-its-contents)', () => {
+  const heading = (title: string) => ({
+    title,
+    depth: 1,
+    pageIndex: 0,
+    top: 100,
+  })
+  const WITH_HEADINGS: ExtractedMetadata = {
+    ...COMPLETE,
+    headings: [heading('1 Introduction')],
+  }
+
+  it('keeps the PDF’s own outline when it has a usable one', async () => {
+    const outline = [heading('Chapter 1'), heading('Chapter 2')]
+    await runExtractStage(
+      JOB,
+      fakeServices({
+        extract: async () => WITH_HEADINGS,
+        outline: async () => outline,
+      }),
+    )
+    expect(recorded.contents).toMatchObject({
+      articleId: JOB.uploadJobId,
+      userId: JOB.userId,
+      source: 'outline',
+      entries: outline,
+    })
+  })
+
+  it('falls back to the numbered headings without one', async () => {
+    await runExtractStage(
+      JOB,
+      fakeServices({ extract: async () => WITH_HEADINGS }),
+    )
+    expect(recorded.contents).toMatchObject({
+      source: 'headings',
+      entries: WITH_HEADINGS.headings,
+    })
+  })
+
+  it('records that there are none, rather than nothing', async () => {
+    await runExtractStage(JOB, fakeServices({}))
+    expect(recorded.contents).toMatchObject({ source: 'none', entries: [] })
+  })
+
+  // A second pass over a PDF GROBID already accepted must not cost the upload.
+  it('finishes the upload when the outline cannot be read, and says so', async () => {
+    await runExtractStage(
+      JOB,
+      fakeServices({
+        outline: async () => {
+          throw new Error('pdfium could not open it')
+        },
+      }),
+    )
+    expect(recorded.jobUpdate).toMatchObject({ status: 'processing' })
+    expect(recorded.contents).toMatchObject({ source: 'failed', entries: [] })
+  })
+
+  it('still uses the headings when only the outline failed', async () => {
+    await runExtractStage(
+      JOB,
+      fakeServices({
+        extract: async () => WITH_HEADINGS,
+        outline: async () => {
+          throw new Error('pdfium could not open it')
+        },
+      }),
+    )
+    expect(recorded.contents).toMatchObject({ source: 'headings' })
+  })
+
+  it('writes no contents for an extraction that failed', async () => {
+    await runExtractStage(
+      JOB,
+      fakeServices({
+        extract: async () => ({ ...COMPLETE, title: null, authors: [] }),
+      }),
+    )
+    expect(recorded.contents).toBeUndefined()
   })
 })

@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { sql } from 'drizzle-orm'
 import {
   afterAll,
@@ -82,6 +83,7 @@ const EXTRACTED: ExtractedMetadata = {
     pubmedId: null,
   },
   bibliography: [],
+  headings: [],
 }
 
 function pdf(marker: string): Uint8Array {
@@ -180,6 +182,13 @@ async function articleRow(id: string) {
   return rows[0]
 }
 
+async function contentsRow(id: string) {
+  const { rows } = await database.db.execute<Record<string, unknown>>(
+    sql`select * from article_contents where article_id = ${id}`,
+  )
+  return rows[0]
+}
+
 async function uploadJobRow(id: string) {
   const { rows } = await database.db.execute<Record<string, unknown>>(
     sql`select * from upload_jobs where id = ${id}`,
@@ -218,6 +227,59 @@ describe('the extract stage, against real services', () => {
     expect(await uploadJobRow(upload.id)).toMatchObject({
       article_id: upload.id,
       status: 'processing',
+    })
+  })
+
+  // features/a-paper-shows-its-contents: the real engine, reading the stored
+  // PDF's own outline, written beside the article in its transaction.
+  it('writes the paper’s contents from its own outline', async () => {
+    const outlined = new Uint8Array(
+      await readFile(
+        new URL('../contents/fixtures/outlined.pdf', import.meta.url),
+      ),
+    )
+    const upload = await uploadedJob('outlined.pdf', outlined)
+
+    await runExtractStage(
+      {
+        uploadJobId: upload.id,
+        userId: USER_A,
+        pdfObjectKey: pdfObjectKey(USER_A, upload.id),
+      },
+      servicesWith(async () => EXTRACTED),
+    )
+
+    const contents = await contentsRow(upload.id)
+    expect(contents).toMatchObject({ user_id: USER_A, source: 'outline' })
+    expect(
+      (contents?.['entries'] as { title: string; depth: number }[]).map(
+        ({ title, depth }) => ({ title, depth }),
+      ),
+    ).toEqual([
+      { title: '1 Introduction', depth: 1 },
+      { title: '1.1 Background', depth: 2 },
+      { title: '2 Method', depth: 1 },
+    ])
+  })
+
+  it('falls back to the headings for a PDF the engine cannot open', async () => {
+    const upload = await uploadedJob('paper.pdf', pdf('extract-headings'))
+    const headings = [
+      { title: '1 Introduction', depth: 1, pageIndex: 0, top: 90 },
+    ]
+
+    await runExtractStage(
+      {
+        uploadJobId: upload.id,
+        userId: USER_A,
+        pdfObjectKey: pdfObjectKey(USER_A, upload.id),
+      },
+      servicesWith(async () => ({ ...EXTRACTED, headings })),
+    )
+
+    expect(await contentsRow(upload.id)).toMatchObject({
+      source: 'headings',
+      entries: headings,
     })
   })
 
@@ -444,6 +506,9 @@ describe('what Zero replicates', () => {
       // Added by #9's fourth task, in the migration that creates it: a mark
       // drawn in one window reaches another by sync and by nothing else.
       'annotations',
+      // Added by #29's first task, in the migration that creates it: the
+      // article page's contents tab reads a paper's sections by sync.
+      'article_contents',
       // Both added by #8's second task, in the migration that creates them:
       // the card draws an article's tags and the filter rail will list them.
       'article_tags',

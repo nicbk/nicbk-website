@@ -1,11 +1,16 @@
 import { eq, sql } from 'drizzle-orm'
 import { fromDrizzle } from 'pg-boss'
 import type { DatabaseHandle } from '~/db/create-database'
-import { articles, uploadJobs } from '~/db/schema'
+import { articleContents, articles, uploadJobs } from '~/db/schema'
 import {
   graduateEdgesCiting,
   writeBibliography,
 } from '~/lit-tracker/citations/edges'
+import { chooseContents } from '~/lit-tracker/contents/choose'
+import type {
+  ContentsEntry,
+  ContentsSource,
+} from '~/lit-tracker/contents/contents'
 import { lookupKeyFor } from '~/lit-tracker/enrichment/client'
 import type { EnrichJob, ExtractJob } from '~/lit-tracker/jobs/queue'
 import { ENRICH_QUEUE } from '~/lit-tracker/jobs/queue'
@@ -73,8 +78,9 @@ export async function runExtractStage(
   }
 
   let metadata: ExtractedMetadata
+  let pdf: Uint8Array
   try {
-    const pdf = await services.fetchPdf(job.pdfObjectKey, job.userId)
+    pdf = await services.fetchPdf(job.pdfObjectKey, job.userId)
     metadata = await services.extractMetadata(pdf)
   } catch (error) {
     const reason = terminalReasonFor(error)
@@ -101,7 +107,39 @@ export async function runExtractStage(
     return
   }
 
-  await recordOutcome(services, job, uploadJob, { kind: 'extracted', metadata })
+  await recordOutcome(services, job, uploadJob, {
+    kind: 'extracted',
+    metadata,
+    contents: await contentsOf(services, pdf, metadata),
+  })
+}
+
+/**
+ * The paper's contents: its own outline if it has a usable one, else its
+ * numbered headings (`contents/choose.ts`).
+ *
+ * **Never the reason an upload fails.** Reading the outline is a second pass
+ * over a PDF GROBID has already accepted, for something the paper is complete
+ * without. If the engine cannot open it, the headings can still stand in; if
+ * there are none either, the row says the read failed, so the reader is told
+ * rather than shown an empty list as if the paper had no sections.
+ */
+async function contentsOf(
+  services: ExtractionServices,
+  pdf: Uint8Array,
+  metadata: ExtractedMetadata,
+): Promise<{ source: ContentsSource; entries: ContentsEntry[] }> {
+  let outline: ContentsEntry[] | null
+  try {
+    outline = await services.readOutline(pdf)
+  } catch (error) {
+    console.warn('Could not read the PDF for its outline:', error)
+    outline = null
+  }
+  const chosen = chooseContents(outline, metadata.headings)
+  return outline === null && chosen.source === 'none'
+    ? { source: 'failed', entries: [] }
+    : chosen
 }
 
 /**
@@ -178,7 +216,11 @@ function missingRequiredFields(metadata: ExtractedMetadata): string | null {
 
 /** How this job ended. */
 type Outcome =
-  | { kind: 'extracted'; metadata: ExtractedMetadata }
+  | {
+      kind: 'extracted'
+      metadata: ExtractedMetadata
+      contents: { source: ContentsSource; entries: ContentsEntry[] }
+    }
   | { kind: 'failed'; reason: string; metadata: ExtractedMetadata | null }
 
 /**
@@ -252,6 +294,20 @@ async function recordOutcome(
       // not yet a citing node worth putting in the graph.
       return
     }
+
+    // The contents, in the same transaction, so a paper is never finished
+    // without them and a replay writes them again rather than twice.
+    await tx
+      .insert(articleContents)
+      .values({
+        articleId: job.uploadJobId,
+        userId: job.userId,
+        ...outcome.contents,
+      })
+      .onConflictDoUpdate({
+        target: articleContents.articleId,
+        set: { ...outcome.contents, updatedAt: new Date() },
+      })
 
     // The bibliography is written here, in the transaction that creates the
     // article, rather than in the stage that enriches it. Enrichment reaches a

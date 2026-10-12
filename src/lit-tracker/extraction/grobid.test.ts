@@ -116,7 +116,9 @@ describe('requesting extraction', () => {
     // Where each reference is printed, which is what lets a previewed
     // reference be matched back to its row
     // (features/a-citation-opens-the-paper).
-    expect(init.body.get('teiCoordinates')).toBe('biblStruct')
+    // …and where each section heading is, which a paper without an outline
+    // takes its contents from (features/a-paper-shows-its-contents).
+    expect(init.body.getAll('teiCoordinates')).toEqual(['biblStruct', 'head'])
   })
 
   it('returns the TEI on success', async () => {

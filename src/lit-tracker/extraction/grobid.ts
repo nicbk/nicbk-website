@@ -155,6 +155,14 @@ export async function requestTei(pdf: Uint8Array): Promise<string> {
    * 51 entries come back located.
    */
   form.append('teiCoordinates', 'biblStruct')
+  /*
+   * Where each section heading is printed — the same field again, which GROBID
+   * accepts repeated. It is what a paper without an outline of its own falls
+   * back on for its contents (features/a-paper-shows-its-contents): the
+   * heading's box is the page and the place to jump to. Measured on a real PLDI
+   * paper with GROBID 0.9.1: every numbered section came back with one.
+   */
+  form.append('teiCoordinates', 'head')
 
   const response = await fetch(`${env.GROBID_URL}${FULLTEXT_PATH}`, {
     method: 'POST',

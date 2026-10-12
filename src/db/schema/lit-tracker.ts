@@ -15,6 +15,10 @@ import type {
   AnnotationType,
 } from '~/lit-tracker/annotation-type'
 import type { ArticleStatus } from '~/lit-tracker/article-status'
+import type {
+  ContentsEntry,
+  ContentsSource,
+} from '~/lit-tracker/contents/contents'
 import type { EntryRegion } from '~/lit-tracker/extraction/tei/regions'
 import { user } from './identity'
 
@@ -203,6 +207,43 @@ export const referenceReads = pgTable(
       .notNull(),
   },
   (table) => [index('reference_reads_user_id_idx').on(table.userId)],
+)
+
+/**
+ * A paper's contents: its sections, found once from the paper itself
+ * (features/a-paper-shows-its-contents).
+ *
+ * **One row per article, keyed by it** — the same shape as `reference_reads`:
+ * the contents are read and replaced whole, never edited entry by entry, so the
+ * list is a `jsonb` array rather than a table of rows. **A table of its own**
+ * rather than a column on `articles` because the collection syncs every article
+ * row, and a textbook's hundreds of entries have no business in that sync; this
+ * row is read only on the paper's own page.
+ *
+ * A row's presence means "read": the backfill of older papers looks for its
+ * absence, and the tab tells "not yet read" from "read, nothing found" by it.
+ */
+export const articleContents = pgTable(
+  'article_contents',
+  {
+    articleId: uuid('article_id')
+      .primaryKey()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    source: text('source').$type<ContentsSource>().notNull(),
+    entries: jsonb('entries').$type<ContentsEntry[]>().notNull(),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index('article_contents_user_id_idx').on(table.userId)],
 )
 
 export const uploadJobs = pgTable(
@@ -600,3 +641,17 @@ export const referenceReadsRelations = relations(referenceReads, ({ one }) => ({
     references: [articles.id],
   }),
 }))
+
+export const articleContentsRelations = relations(
+  articleContents,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [articleContents.userId],
+      references: [user.id],
+    }),
+    article: one(articles, {
+      fields: [articleContents.articleId],
+      references: [articles.id],
+    }),
+  }),
+)

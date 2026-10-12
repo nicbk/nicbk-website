@@ -6,12 +6,13 @@ import type {
 } from '@embedpdf/models'
 import { PdfActionType, PdfAnnotationSubtype } from '@embedpdf/models'
 import type { TrackedAnnotation } from '@embedpdf/plugin-annotation'
+import { destinationOf, targetTop } from '~/lit-tracker/pdf/destination'
 import type {
   LinkLanding,
   PageText,
   PreviewRegion,
 } from './link-preview-region'
-import { previewRegion, targetTop } from './link-preview-region'
+import { previewRegion } from './link-preview-region'
 
 /**
  * Feeding `previewRegion` from the open document.
@@ -31,17 +32,6 @@ type TextEngine = Pick<
   PdfEngine,
   'getPageGlyphs' | 'getPageTextRuns' | 'getTextSlices'
 >
-
-/** The destination a link points to in this document, if it has one. */
-export function destinationOf(target: PdfLinkTarget | undefined) {
-  if (target?.type === 'destination') {
-    return target.destination
-  }
-  if (target?.type === 'action' && target.action.type === PdfActionType.Goto) {
-    return target.action.destination
-  }
-  return null
-}
 
 /** Where every internal link in the loaded annotations lands. */
 export function landingsFrom(

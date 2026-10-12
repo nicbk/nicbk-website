@@ -170,6 +170,9 @@ function fakeServices(
     extractMetadata: async () => {
       throw new Error('the enrich stage must not call GROBID again')
     },
+    readOutline: async () => {
+      throw new Error('the enrich stage must not read the PDF again')
+    },
     lookupPapers:
       options.lookup ??
       (async (keys: string[]) => {

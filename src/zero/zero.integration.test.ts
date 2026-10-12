@@ -289,6 +289,7 @@ describe('the committed migrations', () => {
 
     expect(rows.map((row) => row.tablename)).toEqual([
       'annotations',
+      'article_contents',
       'article_tags',
       'articles',
       'citation_edges',

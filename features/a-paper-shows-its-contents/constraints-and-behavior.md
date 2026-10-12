@@ -61,11 +61,15 @@
 - **Server-side reading only.** The browser displays a stored list; it never
   reads the outline itself. There is one source of truth.
 - **No new PDF dependency.** The pdfium engine from `@embedpdf/engines` and
-  `@embedpdf/pdfium`, already installed, is used.
+  `@embedpdf/pdfium`, already installed, is used. Its WebAssembly is shipped to
+  the production server as a Nitro server asset, because the self-contained
+  bundle does not carry the file the engine would otherwise look for.
 - **The TEI request changes by one field** (`teiCoordinates=head`), so new
   uploads pay no second GROBID call.
 - **The table follows the project's Zero conventions** (`research/data-modeling/`):
-  - UUIDv7 key;
+  - keyed by its article, one row per paper, as `reference_reads` is (decided
+    at implementation; a separate UUIDv7 key would only add a uniqueness
+    constraint to keep);
   - `user_id` FK;
   - epoch-ms timestamps;
   - hard delete, cascading with its article;

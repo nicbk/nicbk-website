@@ -141,6 +141,9 @@ function fakeServices(
         recorded.steps.push('grobid')
         return METADATA
       }),
+    readOutline: async () => {
+      throw new Error('the re-read must not read the outline')
+    },
     lookupPapers:
       (options.lookup as ExtractionServices['lookupPapers']) ??
       (async () => {

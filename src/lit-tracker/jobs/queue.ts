@@ -72,6 +72,24 @@ export const REFERENCE_REREAD_DEAD_LETTER_QUEUE =
   'lit-tracker.reread-references-exhausted'
 
 /**
+ * Reads an older paper's contents: its outline, or its numbered headings
+ * (features/a-paper-shows-its-contents, task `older-papers-are-read-for-contents`).
+ *
+ * **Not part of the upload chain.** Queued when the worker starts, for each
+ * finished paper with no contents row — those uploaded before the upload began
+ * reading them. It writes the contents row and nothing else.
+ */
+export const CONTENTS_READ_QUEUE = 'lit-tracker.read-contents'
+
+/**
+ * Where a contents read lands once its retries are exhausted: the paper is
+ * recorded as one whose contents could not be read, so the tab says so and the
+ * next worker start does not queue it again.
+ */
+export const CONTENTS_READ_DEAD_LETTER_QUEUE =
+  'lit-tracker.read-contents-exhausted'
+
+/**
  * Where an extract job lands once its retries are exhausted.
  *
  * Without this a transient failure that never stopped being transient — GROBID
@@ -124,6 +142,12 @@ export interface EnrichJob {
 
 /** What a re-read carries: the paper, and whose it is. */
 export interface ReferenceRereadJob {
+  articleId: string
+  userId: string
+}
+
+/** What a contents read carries: the paper, and whose it is. */
+export interface ContentsReadJob {
   articleId: string
   userId: string
 }
@@ -213,6 +237,21 @@ const REFERENCE_REREAD_RETRY_POLICY = {
 } as const
 
 /**
+ * How hard a contents read tries before it is recorded as failed.
+ *
+ * The re-read's policy, for the re-read's reason: the one call that fails for a
+ * while and then works is GROBID reloading after a deploy, which is when these
+ * are queued. **`exclusive`, keyed by article**, so a paper is read once however
+ * many times the worker starts while it waits.
+ */
+const CONTENTS_READ_RETRY_POLICY = {
+  retryLimit: 5,
+  retryDelay: 30,
+  retryBackoff: true,
+  deadLetter: CONTENTS_READ_DEAD_LETTER_QUEUE,
+} as const
+
+/**
  * How hard the cleanup tries before an object is left behind.
  *
  * **No dead-letter queue**, unlike the two stages above, because there is
@@ -253,6 +292,7 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
   await boss.createQueue(EXTRACT_DEAD_LETTER_QUEUE)
   await boss.createQueue(ENRICH_DEAD_LETTER_QUEUE)
   await boss.createQueue(REFERENCE_REREAD_DEAD_LETTER_QUEUE)
+  await boss.createQueue(CONTENTS_READ_DEAD_LETTER_QUEUE)
   await boss.createQueue(FINALIZE_QUEUE)
   await boss.createQueue(EXTRACT_QUEUE, EXTRACT_RETRY_POLICY)
   await boss.createQueue(ENRICH_QUEUE, ENRICH_RETRY_POLICY)
@@ -261,6 +301,10 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
     ...REFERENCE_REREAD_RETRY_POLICY,
     // Only at creation: pg-boss refuses a policy in `updateQueue`, even the
     // same one, so the loop below re-applies the retry settings alone.
+    policy: 'exclusive',
+  })
+  await boss.createQueue(CONTENTS_READ_QUEUE, {
+    ...CONTENTS_READ_RETRY_POLICY,
     policy: 'exclusive',
   })
   // `createQueue` is a no-op on a queue that already exists — including its
@@ -272,6 +316,7 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
   await boss.updateQueue(ENRICH_QUEUE, ENRICH_RETRY_POLICY)
   await boss.updateQueue(PDF_CLEANUP_QUEUE, PDF_CLEANUP_RETRY_POLICY)
   await boss.updateQueue(REFERENCE_REREAD_QUEUE, REFERENCE_REREAD_RETRY_POLICY)
+  await boss.updateQueue(CONTENTS_READ_QUEUE, CONTENTS_READ_RETRY_POLICY)
   return boss
 }
 

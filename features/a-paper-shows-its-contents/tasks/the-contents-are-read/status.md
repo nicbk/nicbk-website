@@ -1,6 +1,6 @@
 # Status: The Contents Are Read
 
-**State:** Implemented, awaiting review ([#245](https://github.com/nicbk/nicbk-website/issues/245); PR [#252](https://github.com/nicbk/nicbk-website/pull/252)).
+**State:** Merged ([#245](https://github.com/nicbk/nicbk-website/issues/245); PR [#252](https://github.com/nicbk/nicbk-website/pull/252)).
 
 ## What shipped
 

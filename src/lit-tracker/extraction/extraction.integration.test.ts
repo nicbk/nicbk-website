@@ -482,6 +482,189 @@ describe('the pipeline under real pg-boss', () => {
   })
 })
 
+// features/a-paper-shows-its-contents, task `older-papers-are-read-for-contents`:
+// the backfill for papers uploaded before the upload read their contents.
+describe('reading the contents of an older paper', () => {
+  type ReadStageModule = typeof import('~/lit-tracker/contents/read-stage')
+  let readStage: ReadStageModule
+
+  beforeEach(async () => {
+    readStage = await import('~/lit-tracker/contents/read-stage')
+  })
+
+  async function outlinedPdf(): Promise<Uint8Array> {
+    return new Uint8Array(
+      await readFile(
+        new URL('../contents/fixtures/outlined.pdf', import.meta.url),
+      ),
+    )
+  }
+
+  /**
+   * A finished paper as one uploaded before this feature looks: an article, no
+   * upload job left, and no contents row. Its `updated_at` is set far in the
+   * past so a write that touched it could not go unnoticed.
+   */
+  async function olderPaper(bytes: Uint8Array): Promise<string> {
+    const upload = await uploadedJob('older.pdf', bytes)
+    const services = servicesWith(async () => EXTRACTED)
+    await runExtractStage(
+      {
+        uploadJobId: upload.id,
+        userId: USER_A,
+        pdfObjectKey: pdfObjectKey(USER_A, upload.id),
+      },
+      services,
+    )
+    await runFinalizeStage({ uploadJobId: upload.id }, services)
+    await database.db.execute(
+      sql`delete from article_contents where article_id = ${upload.id}`,
+    )
+    await database.db.execute(
+      sql`update articles set updated_at = '2020-01-01T00:00:00Z' where id = ${upload.id}`,
+    )
+    return upload.id
+  }
+
+  async function queuedArticles(): Promise<string[]> {
+    const { rows } = await database.db.execute<{
+      data: { articleId: string }
+    }>(
+      sql`select data from pgboss.job where name = ${queueModule.CONTENTS_READ_QUEUE}`,
+    )
+    return rows.map((row) => row.data.articleId).sort()
+  }
+
+  it('queues each finished paper without contents, once', async () => {
+    const older = await olderPaper(pdf('older'))
+    // Read by the upload already: it has its row.
+    const current = await uploadedJob('current.pdf', pdf('current'))
+    await runExtractStage(
+      {
+        uploadJobId: current.id,
+        userId: USER_A,
+        pdfObjectKey: pdfObjectKey(USER_A, current.id),
+      },
+      servicesWith(async () => EXTRACTED),
+    )
+    await runFinalizeStage(
+      { uploadJobId: current.id },
+      servicesWith(async () => EXTRACTED),
+    )
+    // Still uploading: its upload will read it.
+    await uploadedJob('uploading.pdf', pdf('uploading'))
+
+    expect(await readStage.queueContentsReads(database, queue)).toBe(1)
+    // A second start, with the job still waiting, sends no second job.
+    expect(await readStage.queueContentsReads(database, queue)).toBe(1)
+    expect(await queuedArticles()).toEqual([older])
+  })
+
+  it('leaves alone a paper whose extraction failed', async () => {
+    const id = await olderPaper(pdf('failed'))
+    await database.db.execute(
+      sql`update articles set extraction_status = 'failed' where id = ${id}`,
+    )
+    expect(await readStage.queueContentsReads(database, queue)).toBe(0)
+  })
+
+  it('reads the stored outline, and writes nothing but the contents', async () => {
+    const id = await olderPaper(await outlinedPdf())
+    const before = await articleRow(id)
+    let grobidCalls = 0
+
+    await readStage.runContentsRead(
+      { articleId: id, userId: USER_A },
+      servicesWith(async () => {
+        grobidCalls += 1
+        return EXTRACTED
+      }),
+    )
+
+    const contents = await contentsRow(id)
+    expect(contents).toMatchObject({ user_id: USER_A, source: 'outline' })
+    expect(
+      (contents?.['entries'] as { title: string }[]).map(({ title }) => title),
+    ).toEqual(['1 Introduction', '1.1 Background', '2 Method'])
+    // A usable outline costs no GROBID call.
+    expect(grobidCalls).toBe(0)
+    // The article — `updated_at` included — is exactly as it was.
+    expect(await articleRow(id)).toEqual(before)
+    // And, once read, it is not queued again.
+    expect(await readStage.queueContentsReads(database, queue)).toBe(0)
+  })
+
+  it('asks GROBID for the headings of a paper without an outline', async () => {
+    const id = await olderPaper(pdf('no-outline'))
+    const before = await articleRow(id)
+    const headings = [
+      { title: '1 Introduction', depth: 1, pageIndex: 0, top: 90 },
+      { title: '2 Method', depth: 1, pageIndex: 0, top: 400 },
+    ]
+
+    await readStage.runContentsRead(
+      { articleId: id, userId: USER_A },
+      servicesWith(async () => ({ ...EXTRACTED, headings })),
+    )
+
+    expect(await contentsRow(id)).toMatchObject({
+      source: 'headings',
+      entries: headings,
+    })
+    expect(await articleRow(id)).toEqual(before)
+  })
+
+  it('keeps a row the upload wrote while the job waited', async () => {
+    const id = await olderPaper(pdf('raced'))
+    const entries = [{ title: 'Written first', depth: 1, pageIndex: 0, top: 0 }]
+    await database.db.execute(
+      sql`insert into article_contents (article_id, user_id, source, entries)
+          values (${id}, ${USER_A}, 'headings', ${JSON.stringify(entries)}::jsonb)`,
+    )
+
+    await readStage.runContentsRead(
+      { articleId: id, userId: USER_A },
+      servicesWith(async () => EXTRACTED),
+    )
+
+    expect(await contentsRow(id)).toMatchObject({ source: 'headings', entries })
+  })
+
+  it('retries a GROBID that is down, then records the paper as failed', async () => {
+    const id = await olderPaper(pdf('down'))
+    const before = await articleRow(id)
+    await queue.updateQueue(queueModule.CONTENTS_READ_QUEUE, {
+      retryDelay: 0,
+      retryBackoff: false,
+      retryLimit: 2,
+    })
+    let attempts = 0
+    await readStage.registerContentsReadHandlers(
+      queue,
+      servicesWith(async () => {
+        attempts += 1
+        throw new Error('GROBID returned 503: no engine available')
+      }),
+    )
+
+    await readStage.queueContentsReads(database, queue)
+
+    await vi.waitFor(
+      async () => {
+        expect(await contentsRow(id)).toMatchObject({
+          source: 'failed',
+          entries: [],
+        })
+      },
+      { timeout: 60_000, interval: 250 },
+    )
+    expect(attempts).toBeGreaterThan(1)
+    expect(await articleRow(id)).toEqual(before)
+    // Recorded, so the next start does not ask again.
+    expect(await readStage.queueContentsReads(database, queue)).toBe(0)
+  })
+})
+
 describe('what Zero replicates', () => {
   it('leaves pg-boss own tables out of the publication', async () => {
     // The queue's tables exist by now — `startQueue` installs them — so this is

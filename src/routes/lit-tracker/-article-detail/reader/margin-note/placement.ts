@@ -2,19 +2,24 @@ import type { Rect, Size } from '@embedpdf/models'
 import { MARGIN_BOX_HEIGHT, MARGIN_BOX_WIDTH } from '../margin-text-box'
 import type { MarginSide, TextBlock } from './margin'
 import { marginWidth, nearerMargin } from './margin'
+import type { MovableNote } from './packing'
+import { packNotes } from './packing'
 
 /**
  * Where a margin note goes, or why it cannot go anywhere
  * (features/a-passage-gets-a-margin-note).
  *
- * Pure: page geometry, the passage and the rectangles already on the page in;
- * a rectangle or a reason out. Nothing is created until this has said yes, so a
- * refusal leaves the paper exactly as it was — no highlight without its note.
+ * Pure: page geometry, the passage and what is already on the page in; a
+ * rectangle — with any moves other margin notes must make for it — or a reason
+ * out. Nothing is created until this has said yes, so a refusal leaves the
+ * paper exactly as it was — no highlight without its note, no note moved for a
+ * note that never came.
  *
  * **The nearer margin or nothing** (user-decided 2026-10-12). A note that would
  * overlap something there is refused rather than overlapping, and is never
  * moved to the far margin, where it would no longer read as belonging to the
- * passage.
+ * passage. Other margin notes may make room for it (`packing.ts`); nothing
+ * else ever moves.
  */
 
 /**
@@ -32,8 +37,19 @@ export const NARROWEST_NOTE = 36
 
 export type Refusal = 'too-narrow' | 'no-room'
 
+/** A margin note already on the page, as placement needs to know it. */
+export interface PlacedNote {
+  id: string
+  rect: Rect
+  /** The top of the passage it answers (its highlight's top). */
+  anchor: number
+}
+
+/** Where other margin notes move to make room, by id: their new tops. */
+export type Moves = Map<string, number>
+
 export type Placement =
-  | { placed: true; rect: Rect; side: MarginSide }
+  | { placed: true; rect: Rect; side: MarginSide; moves: Moves }
   | { placed: false; reason: Refusal }
 
 export interface PlacementInput {
@@ -43,15 +59,21 @@ export interface PlacementInput {
   block: TextBlock
   /** The passage on this page — the selection's rectangle. */
   passage: Rect
-  /** Every annotation already on the page. Any overlap refuses. */
+  /** Every annotation on the page that is not a margin note. Never moved. */
   obstacles: readonly Rect[]
+  /** The margin notes already on the page. These may move to make room. */
+  notes: readonly PlacedNote[]
 }
+
+/** The id the note being made goes by while it is packed. */
+const NEW_NOTE = '\u0000new'
 
 export function placeMarginNote({
   page,
   block,
   passage,
   obstacles,
+  notes,
 }: PlacementInput): Placement {
   const side = nearerMargin(block, passage)
   const usable = marginWidth(block, page, side) - 2 * MARGIN_INSET
@@ -62,33 +84,103 @@ export function placeMarginNote({
   // As wide as #24 decided, or as the margin allows if that is less: an ACM
   // paper's 54pt margin takes a 46pt note.
   const width = Math.min(MARGIN_BOX_WIDTH, usable)
-  const height = MARGIN_BOX_HEIGHT
   // Against the text rather than the page's edge, so the note sits by the
   // passage it is about.
   const x =
     side === 'left'
       ? block.left - MARGIN_INSET - width
       : block.right + MARGIN_INSET
-  // Level with the passage's first line — unless that would run the note off
-  // the foot of the page, in which case it ends where the page does.
-  const y = Math.max(
-    MARGIN_INSET,
-    Math.min(passage.origin.y, page.height - MARGIN_INSET - height),
-  )
 
-  const rect: Rect = { origin: { x, y }, size: { width, height } }
-  if (obstacles.some((obstacle) => overlaps(rect, obstacle))) {
+  const packing = packColumn({
+    column: { left: x, right: x + width },
+    page,
+    obstacles,
+    notes,
+    // Level with the passage's first line, if the margin allows.
+    adding: {
+      id: NEW_NOTE,
+      height: MARGIN_BOX_HEIGHT,
+      anchor: passage.origin.y,
+    },
+  })
+  const top = packing?.get(NEW_NOTE)
+  if (!packing || top === undefined) {
     return { placed: false, reason: 'no-room' }
   }
-  return { placed: true, rect, side }
+  packing.delete(NEW_NOTE)
+
+  return {
+    placed: true,
+    side,
+    rect: { origin: { x, y: top }, size: { width, height: MARGIN_BOX_HEIGHT } },
+    moves: packing,
+  }
 }
 
-/** Whether two rectangles share any area. Touching edges do not count. */
-export function overlaps(a: Rect, b: Rect): boolean {
-  return (
-    a.origin.x < b.origin.x + b.size.width &&
-    b.origin.x < a.origin.x + a.size.width &&
-    a.origin.y < b.origin.y + b.size.height &&
-    b.origin.y < a.origin.y + a.size.height
-  )
+export interface ColumnInput {
+  /** The column's horizontal extent, in page points. */
+  column: { left: number; right: number }
+  page: Size
+  /** Every annotation on the page that is not a margin note. */
+  obstacles: readonly Rect[]
+  /** The margin notes on the page; only those in the column take part. */
+  notes: readonly PlacedNote[]
+  /** A note joining the column, if any: the one being made. */
+  adding?: { id: string; height: number; anchor: number }
+  /** A note in the column whose height has changed, if any. */
+  resized?: { id: string; height: number }
+}
+
+/**
+ * Packs the margin notes of one column (`packing.ts`), returning a top for
+ * every note that has to move — and for the note being added — or null when
+ * there is no arrangement that keeps every note within reach of its passage.
+ *
+ * A note that need not move is left out of the answer, so applying it changes
+ * exactly what has to change.
+ */
+export function packColumn({
+  column,
+  page,
+  obstacles,
+  notes,
+  adding,
+  resized,
+}: ColumnInput): Moves | null {
+  const inColumn = (rect: Rect) =>
+    rect.origin.x < column.right &&
+    column.left < rect.origin.x + rect.size.width
+
+  const movable: MovableNote[] = notes
+    .filter((note) => inColumn(note.rect))
+    .map((note) => ({
+      id: note.id,
+      height: note.id === resized?.id ? resized.height : note.rect.size.height,
+      anchor: note.anchor,
+      current: note.rect.origin.y,
+    }))
+  if (adding) {
+    movable.push({ ...adding, current: null })
+  }
+
+  const packing = packNotes({
+    notes: movable,
+    obstacles: obstacles.filter(inColumn).map((rect) => ({
+      top: rect.origin.y,
+      height: rect.size.height,
+    })),
+    bounds: { top: MARGIN_INSET, bottom: page.height - MARGIN_INSET },
+  })
+  if (!packing) {
+    return null
+  }
+
+  const moves: Moves = new Map()
+  for (const note of movable) {
+    const top = packing.get(note.id)
+    if (top !== undefined && top !== note.current) {
+      moves.set(note.id, top)
+    }
+  }
+  return moves
 }

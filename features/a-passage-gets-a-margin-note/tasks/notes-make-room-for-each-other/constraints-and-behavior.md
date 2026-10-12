@@ -12,7 +12,9 @@ The feature's "Notes make room" behavior, plus:
   sync writes them together and a reload never shows a half-moved margin.
 - **The note's height is measured from the engine's own editor** as editing
   ends: the rendered text's height in page points, at the note's width. It is
-  not estimated from a character count.
+  not estimated from a character count. The editor carries no id, so the
+  measurement is taken in a capture-phase `focusout` and matched to the engine's
+  save, which follows in the same task.
 - **Shared selection is drawn by this reader**, as an outline on the linked
   partner. `replyType: Group` is not used (`../../research.md` §1).
 

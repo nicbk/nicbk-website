@@ -30,7 +30,11 @@ const engine = vi.hoisted(() => ({
 const documentState = vi.hoisted(() => ({
   current: null as {
     status: string
-    document: { pageCount: number } | null
+    document: {
+      pageCount: number
+      // Each page's size, which the margin note's outline scales by.
+      pages: { size: { width: number; height: number } }[]
+    } | null
   } | null,
 }))
 const scrollScope = vi.hoisted(() => ({
@@ -100,6 +104,9 @@ const annotationState = vi.hoisted(() => ({
     // What the reader reads to say a mark is selected, so a finger can scroll
     // the paper while one is — see `pdf-reader.module.css`.
     selectedUids: [] as string[],
+    // The annotations themselves, by id — what a selected margin note's
+    // partner is looked up in (`margin-note/linked-partners.ts`).
+    byUid: {} as Record<string, unknown>,
   },
 }))
 /**
@@ -390,9 +397,17 @@ const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
 beforeEach(() => {
   engine.current = { engine: {}, isLoading: false, error: null }
-  documentState.current = { status: 'loaded', document: { pageCount: 15 } }
+  documentState.current = {
+    status: 'loaded',
+    document: {
+      pageCount: 15,
+      pages: Array.from({ length: 15 }, () => ({
+        size: { width: 612, height: 792 },
+      })),
+    },
+  }
   scrollState.current = { currentPage: 1, totalPages: 0 }
-  annotationState.current = { activeToolId: null, selectedUids: [] }
+  annotationState.current = { activeToolId: null, selectedUids: [], byUid: {} }
   zoomGestureProps.current = null
   marked.length = 0
   vi.clearAllMocks()
@@ -541,7 +556,11 @@ describe('PdfReader', () => {
       // The active tool lives in the plugin's own state, keyed by document —
       // holding a second copy here is how a toolbar starts disagreeing with the
       // thing it controls.
-      annotationState.current = { activeToolId: 'ink', selectedUids: [] }
+      annotationState.current = {
+        activeToolId: 'ink',
+        selectedUids: [],
+        byUid: {},
+      }
       render(<PdfReader articleId={ARTICLE_ID} />)
 
       expect(
@@ -733,7 +752,11 @@ describe('PdfReader', () => {
      * the state the rule keys on.
      */
     it('says when a mark is selected', () => {
-      annotationState.current = { activeToolId: 'square', selectedUids: ['a'] }
+      annotationState.current = {
+        activeToolId: 'square',
+        selectedUids: ['a'],
+        byUid: {},
+      }
       const { container } = render(<PdfReader articleId={ARTICLE_ID} />)
 
       expect(container.querySelector('[data-mark-selected]')).not.toBeNull()

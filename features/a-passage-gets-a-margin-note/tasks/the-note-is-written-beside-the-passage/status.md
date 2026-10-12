@@ -1,6 +1,6 @@
 # Status: The Note Is Written Beside the Passage
 
-**State:** Implemented, awaiting review ([#243](https://github.com/nicbk/nicbk-website/issues/243); PR [#250](https://github.com/nicbk/nicbk-website/pull/250)).
+**State:** Complete, merged in [#250](https://github.com/nicbk/nicbk-website/pull/250) ([#243](https://github.com/nicbk/nicbk-website/issues/243); PR [#250](https://github.com/nicbk/nicbk-website/pull/250)).
 
 ## What shipped
 
@@ -72,3 +72,4 @@
 
 - 2026-10-12: spec'd.
 - 2026-10-12: implemented and verified in Chromium.
+- 2026-10-12: #250 merged.

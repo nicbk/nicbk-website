@@ -43,12 +43,15 @@ function setup({
   obstacles = [] as Rect[],
   selection = [{ pageIndex: 0, rect: PASSAGE, segmentRects: [PASSAGE] }],
   pluginOpens = true,
+  existing = [] as object[],
 }: {
   runs?: { text: string; rect: Rect }[]
   runsFail?: boolean
   obstacles?: Rect[]
   selection?: { pageIndex: number; rect: Rect; segmentRects: Rect[] }[]
   pluginOpens?: boolean
+  /** Annotations already on the page, as the engine holds them. */
+  existing?: object[]
 } = {}) {
   const engine = {
     getPageTextRuns: vi.fn(() => task({ runs }, runsFail)),
@@ -73,15 +76,25 @@ function setup({
   const annotations = { getTool: vi.fn((id: string) => tools[id]) }
   const scope = {
     getState: () => ({
-      pages: { 0: obstacles.map((_, i) => `o${i}`) },
-      byUid: Object.fromEntries(
-        obstacles.map((r, i) => [
+      pages: {
+        0: [
+          ...obstacles.map((_, i) => `o${i}`),
+          ...existing.map((o) => (o as { id: string }).id),
+        ],
+      },
+      byUid: Object.fromEntries([
+        ...obstacles.map((r, i) => [
           `o${i}`,
           { commitState: 'synced', object: { rect: r } },
         ]),
-      ),
+        ...existing.map((o) => [
+          (o as { id: string }).id,
+          { commitState: 'synced', object: o },
+        ]),
+      ]),
     }),
     createAnnotation: vi.fn(),
+    updateAnnotations: vi.fn(),
     selectAnnotation: vi.fn(),
   }
   const pluginCreate = vi.fn()
@@ -161,6 +174,39 @@ describe('useMarginNote', () => {
     expect(hook.result.current.state).toBe('idle')
   })
 
+  // Task 2: a margin note already there makes room rather than refusing.
+  it('moves a margin note out of the way, before the new one lands', () => {
+    const highlight = {
+      id: 'h0',
+      type: PdfAnnotationSubtype.HIGHLIGHT,
+      pageIndex: 0,
+      rect: rect(120, 300, 150, 10),
+    }
+    const neighbour = {
+      id: 'n0',
+      type: PdfAnnotationSubtype.FREETEXT,
+      pageIndex: 0,
+      rect: rect(32, 300, 72, 40),
+      inReplyToId: 'h0',
+      flags: ['print', 'locked'],
+    }
+    // Something fixed just below the spot, so the new note cannot go under
+    // the neighbour: the neighbour has to rise to let it in.
+    const { hook, scope, pluginCreate } = setup({
+      existing: [highlight, neighbour],
+      obstacles: [rect(40, 340, 50, 60)],
+    })
+
+    act(() => hook.result.current.writeNote())
+
+    expect(scope.updateAnnotations).toHaveBeenCalledTimes(1)
+    expect(pluginCreate).toHaveBeenCalledTimes(1)
+    // The neighbour moved first, so the note never lands on it.
+    expect(scope.updateAnnotations.mock.invocationCallOrder[0]).toBeLessThan(
+      pluginCreate.mock.invocationCallOrder[0] ?? 0,
+    )
+  })
+
   it('still makes the note, closed, when the plugin is not as expected', () => {
     const { hook, scope } = setup({ pluginOpens: false })
     act(() => hook.result.current.writeNote())
@@ -170,13 +216,15 @@ describe('useMarginNote', () => {
 
   it('refuses, and makes nothing, when the spot is taken', () => {
     const { hook, scope, selectionScope } = setup({
-      obstacles: [rect(40, 310, 50, 10)],
+      obstacles: [rect(40, 240, 50, 120)],
     })
 
     act(() => hook.result.current.writeNote())
 
     expect(hook.result.current.state).toBe('no-room')
     expect(scope.createAnnotation).not.toHaveBeenCalled()
+    // Nor is anything moved for a note that never came.
+    expect(scope.updateAnnotations).not.toHaveBeenCalled()
     // The selection is left for the reader to do something else with.
     expect(selectionScope.clear).not.toHaveBeenCalled()
   })
@@ -205,7 +253,7 @@ describe('useMarginNote', () => {
   })
 
   it('reports a refusal for as long as copy reports copied', () => {
-    const { hook } = setup({ obstacles: [rect(40, 310, 50, 10)] })
+    const { hook } = setup({ obstacles: [rect(40, 240, 50, 120)] })
     act(() => hook.result.current.writeNote())
     act(() => {
       vi.advanceTimersByTime(CONFIRMATION_MS - 1)
@@ -219,7 +267,7 @@ describe('useMarginNote', () => {
 
   // A second refusal restarts the clock rather than being cut short by the first.
   it('restarts the report when refused again', () => {
-    const { hook } = setup({ obstacles: [rect(40, 310, 50, 10)] })
+    const { hook } = setup({ obstacles: [rect(40, 240, 50, 120)] })
     act(() => hook.result.current.writeNote())
     act(() => {
       vi.advanceTimersByTime(CONFIRMATION_MS - 100)
@@ -254,7 +302,7 @@ describe('useMarginNote', () => {
   })
 
   it('leaves no timer running when the reader goes', () => {
-    const { hook } = setup({ obstacles: [rect(40, 310, 50, 10)] })
+    const { hook } = setup({ obstacles: [rect(40, 240, 50, 120)] })
     act(() => hook.result.current.writeNote())
     hook.unmount()
     expect(vi.getTimerCount()).toBe(0)

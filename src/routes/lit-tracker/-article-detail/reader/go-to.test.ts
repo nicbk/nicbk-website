@@ -11,8 +11,10 @@ describe('topClearOfToolbar', () => {
     expect(topClearOfToolbar(336, 124, 1.52)).toBeCloseTo(336 - 132 / 1.52)
   })
 
-  it('never asks for a point above the page', () => {
-    expect(topClearOfToolbar(10, 124, 1)).toBe(0)
+  // A phone's toolbar can be deeper than a heading is down its page; the jump
+  // then starts in the page above, or the heading lands under the controls.
+  it('reaches above the page when the toolbar is deeper than the point', () => {
+    expect(topClearOfToolbar(78, 85, 0.55)).toBeCloseTo(78 - 93 / 0.55)
   })
 })
 

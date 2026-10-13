@@ -2,16 +2,22 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { PanelLeft } from 'lucide-react'
 import { useState } from 'react'
 import { ArticleMenu } from '~/routes/lit-tracker/-components/article-menu/article-menu'
-import { NarrowScreenDrawer } from '~/routes/lit-tracker/-components/narrow-screen-drawer/narrow-screen-drawer'
+import {
+  isNarrowViewport,
+  NarrowScreenDrawer,
+} from '~/routes/lit-tracker/-components/narrow-screen-drawer/narrow-screen-drawer'
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { ArticleDetails } from './article-details'
+import type { PanelTab } from './article-sidebar'
 import { ArticleSidebar, SIDEBAR_LABEL } from './article-sidebar'
 import type { ArticleView } from './article-view'
 import { CitationsView } from './citations/citations-view'
 import { useCitations } from './citations/use-citations'
+import { ContentsButton } from './contents/contents-button'
 import type { DetailArticle } from './detail-article'
 import { ArticleReader } from './reader/article-reader'
 import type { ReadingPosition } from './reader/reading-position'
+import { useRequestSidebarTab } from './sidebar-request'
 import { useArticleDetail } from './use-article-detail'
 import styles from './article-detail-page.module.css'
 
@@ -90,6 +96,28 @@ export function ArticleDetailPage({
   const mutations = useArticleMutations()
   const navigate = useNavigate()
   const [sheetOpen, setSheetOpen] = useState(false)
+  // The tab the sheet opens on: contents when the toolbar's button opened it,
+  // the sidebar's default when its own trigger did.
+  const [sheetTab, setSheetTab] = useState<PanelTab | undefined>(undefined)
+  const requestSidebarTab = useRequestSidebarTab()
+
+  /**
+   * The toolbar's *contents* button: the contents tab, in whichever form the
+   * sidebar is showing.
+   *
+   * On a wide screen that is the rail, which renders outside this page, so it
+   * is asked (`sidebar-request.tsx`). On a narrow one it is the sheet, which is
+   * this page's, and which mounts only as it opens — too late to hear a request
+   * — so it is opened on its tab instead.
+   */
+  function openContents() {
+    if (isNarrowViewport()) {
+      setSheetTab('contents')
+      setSheetOpen(true)
+      return
+    }
+    requestSidebarTab('contents')
+  }
 
   if (state === 'syncing') {
     return <p className={styles.notice}>{SYNCING_MESSAGE}</p>
@@ -125,7 +153,14 @@ export function ArticleDetailPage({
         label={SIDEBAR_LABEL}
         icon={PanelLeft}
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(open) => {
+          setSheetOpen(open)
+          // Shut, it forgets: opened next by its own trigger, it opens on the
+          // sidebar's default tab rather than on the last one asked for.
+          if (!open) {
+            setSheetTab(undefined)
+          }
+        }}
       >
         {/*
                 An element, not a rendered tree: the sheet mounts it only while
@@ -135,6 +170,12 @@ export function ArticleDetailPage({
         <ArticleSidebar
           articleId={articleId}
           view={view}
+          initialTab={sheetTab}
+          // A list moved the reader the sheet is covering: get out of its way.
+          onReaderJump={() => {
+            setSheetOpen(false)
+            setSheetTab(undefined)
+          }}
           onViewChange={(next) => {
             // Choosing Citations in the sheet closes it, so what the
             // reader sees is the lists they asked for rather than the
@@ -210,6 +251,7 @@ export function ArticleDetailPage({
           }
           hidden={showingCitations}
           actions={showingCitations ? undefined : actions}
+          contents={<ContentsButton onOpen={openContents} />}
         />
       </div>
 

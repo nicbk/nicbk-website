@@ -1,0 +1,50 @@
+/*
+ * The toolbar's contents button: a floating group of one, the same surface and
+ * the same trigger shape as the annotate group beside it
+ * (`reader/annotation-tool-control.module.css`) — one bar, one idea of what a
+ * control looks like.
+ */
+.group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: var(--space-2xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  /* The bar's one control height — see reader-toolbar.module.css. */
+  height: var(--reader-control-height);
+  padding: 0 var(--space-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .button:hover {
+    color: var(--color-accent);
+  }
+}
+
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+/* The word goes where the annotate trigger's does, for its reason. */
+@media (max-width: 40rem) {
+  .label {
+    display: none;
+  }
+}

@@ -1,6 +1,6 @@
 # Status: The Contents Tab
 
-**State:** Implemented, awaiting review ([#247](https://github.com/nicbk/nicbk-website/issues/247)).
+**State:** Merged ([#247](https://github.com/nicbk/nicbk-website/issues/247); PR [#254](https://github.com/nicbk/nicbk-website/pull/254)).
 
 ## What shipped
 

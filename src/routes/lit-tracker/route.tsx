@@ -11,6 +11,7 @@ import { SIDEBAR_LABEL } from './-article-detail/article-sidebar'
 import { articleViewOf } from './-article-detail/article-view'
 import { ArticlePath } from './-article-detail/path/article-path'
 import { ReaderJumpProvider } from './-article-detail/reader-jump'
+import { SidebarRequestProvider } from './-article-detail/sidebar-request'
 import { FilterRail } from './-collection-filters/filter-rail'
 import { collectionSearchSchema } from './-collection-filters/search-schema'
 import { LitTrackerShell } from './-components/lit-tracker-shell/lit-tracker-shell'
@@ -88,43 +89,46 @@ function LitTrackerLayout() {
     // Around the shell rather than inside the article page, because the two
     // ends of the jump — the annotations list in the shell's rail, the reader
     // in the page — are siblings, and this is the only level that sees both.
-    // See reader-jump.tsx.
+    // See reader-jump.tsx. The toolbar's request for a sidebar tab crosses the
+    // same gap the other way (sidebar-request.tsx).
     <ReaderJumpProvider>
-      <LitTrackerShell
-        account={auth.user}
-        onSignedOut={leave}
-        onDeleted={leave}
-        // An element, not a rendered tree: the shell renders it inside the Zero
-        // provider, which is where its queries need to run. Named here rather than
-        // inside the shell so the shell stays chrome with no page-specific
-        // contents compiled into it.
-        filters={
-          articleMatch ? (
-            <ArticleRail
-              articleId={articleMatch.params.articleId}
-              label={SIDEBAR_LABEL}
-              view={articleViewOf(articleMatch.search)}
-            />
-          ) : (
-            <FilterRail label={FILTER_RAIL_LABEL} />
-          )
-        }
-        // The header's title slot names the article being read, and — when the
-        // reader followed citations to reach it — the way back
-        // (research/ui-ux/pages/lit-tracker/components/header.md). Chosen here for
-        // the same reason the rail is: the header is a sibling of the page, so
-        // what the two share is decided one level up.
-        pageTitle={
-          articleMatch ? (
-            <ArticlePath
-              articleId={articleMatch.params.articleId}
-              via={articleViaOf(articleMatch.search)}
-            />
-          ) : undefined
-        }
-      >
-        <Outlet />
-      </LitTrackerShell>
+      <SidebarRequestProvider>
+        <LitTrackerShell
+          account={auth.user}
+          onSignedOut={leave}
+          onDeleted={leave}
+          // An element, not a rendered tree: the shell renders it inside the Zero
+          // provider, which is where its queries need to run. Named here rather than
+          // inside the shell so the shell stays chrome with no page-specific
+          // contents compiled into it.
+          filters={
+            articleMatch ? (
+              <ArticleRail
+                articleId={articleMatch.params.articleId}
+                label={SIDEBAR_LABEL}
+                view={articleViewOf(articleMatch.search)}
+              />
+            ) : (
+              <FilterRail label={FILTER_RAIL_LABEL} />
+            )
+          }
+          // The header's title slot names the article being read, and — when the
+          // reader followed citations to reach it — the way back
+          // (research/ui-ux/pages/lit-tracker/components/header.md). Chosen here for
+          // the same reason the rail is: the header is a sibling of the page, so
+          // what the two share is decided one level up.
+          pageTitle={
+            articleMatch ? (
+              <ArticlePath
+                articleId={articleMatch.params.articleId}
+                via={articleViaOf(articleMatch.search)}
+              />
+            ) : undefined
+          }
+        >
+          <Outlet />
+        </LitTrackerShell>
+      </SidebarRequestProvider>
     </ReaderJumpProvider>
   )
 }

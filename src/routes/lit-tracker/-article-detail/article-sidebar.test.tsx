@@ -28,6 +28,9 @@ vi.mock('@rocicorp/zero/react', () => ({
 const { ArticleSidebar } = await import('./article-sidebar')
 const { ReaderJumpProvider, useReadingLineReporter, useRegisterReaderJump } =
   await import('./reader-jump')
+const { SidebarRequestProvider, useRequestSidebarTab } = await import(
+  './sidebar-request'
+)
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
@@ -510,6 +513,78 @@ describe('ArticleSidebar', () => {
       // The reader hidden or gone: no longer marking a guess.
       act(() => reportLine(null))
       expect(current()).toEqual([])
+    })
+
+    it('opens on contents when asked to, from outside the sidebar', async () => {
+      // The toolbar's button reaching the rail (`sidebar-request.tsx`).
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [CONTENTS],
+      })
+      let request: (tab: 'contents') => void = () => {}
+      function Toolbar() {
+        request = useRequestSidebarTab()
+        return null
+      }
+      render(
+        <Toaster>
+          <SidebarRequestProvider>
+            <Toolbar />
+            <ArticleSidebar
+              articleId={ARTICLE_ID}
+              view="reader"
+              onViewChange={onViewChange}
+            />
+          </SidebarRequestProvider>
+        </Toaster>,
+      )
+      expect(screen.getByRole('tab', { name: 'tags' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+
+      act(() => request('contents'))
+
+      expect(screen.getByRole('tab', { name: 'contents' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+    })
+
+    it('opens on the tab it is given, and reports a jump made from it', async () => {
+      const handle = vi.fn()
+      const jumped = vi.fn()
+      function ReaderStandIn2() {
+        useRegisterReaderJump(handle)
+        return null
+      }
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [CONTENTS],
+      })
+      render(
+        <Toaster>
+          <ReaderJumpProvider>
+            <ReaderStandIn2 />
+            <ArticleSidebar
+              articleId={ARTICLE_ID}
+              view="reader"
+              onViewChange={onViewChange}
+              initialTab="contents"
+              onReaderJump={jumped}
+            />
+          </ReaderJumpProvider>
+        </Toaster>,
+      )
+
+      expect(screen.getByRole('tab', { name: 'contents' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+      await userEvent.click(screen.getByRole('button', { name: /Method/ }))
+
+      expect(handle).toHaveBeenCalledWith(3, null)
+      expect(jumped).toHaveBeenCalledOnce()
     })
 
     it('says the paper is still being read before its row arrives', async () => {

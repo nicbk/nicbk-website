@@ -223,6 +223,18 @@ describe('the reader toolbar', () => {
     expect(screen.getByRole('button', { name: 'options' })).toBeInTheDocument()
   })
 
+  it('puts the contents control beside the page field, before the tools', () => {
+    // Both are ways of getting somewhere in the paper
+    // (features/a-paper-shows-its-contents).
+    renderToolbar({ contents: <button type="button">contents</button> })
+
+    const order = screen
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label') ?? button.textContent)
+    const next = order.indexOf('next page')
+    expect(order[next + 1]).toBe('contents')
+  })
+
   describe('with no document', () => {
     it('stays on screen, inert', () => {
       // A paper that never arrives must not take the page's frame with it — but

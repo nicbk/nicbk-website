@@ -15,9 +15,17 @@ import { READER_TOOLBAR_ATTRIBUTE } from './menu-placement'
 const GO_TO_BREATHING_ROOM = 8
 
 /**
- * The page top to scroll to, in page points, so that `top` sits just below the
- * toolbar: short by the toolbar's depth, converted from screen pixels to page
- * points at the reading zoom.
+ * The point on the page to scroll to the reader's top, in page points, so that
+ * `top` sits just below the toolbar: short by the toolbar's depth, converted
+ * from screen pixels to page points at the reading zoom.
+ *
+ * **It may be negative**: above the page, in the gap and the page before it.
+ * It was clamped to the page's top at first, and on a phone that put headings
+ * under the toolbar — measured at 375px, the two-row toolbar at 55% zoom is
+ * 169pt deep, so a heading 78pt down its page was sent to the page's top and
+ * landed 38px behind the controls. The scroller places a point linearly from
+ * the page's origin, so a negative one is simply further up the paper, and the
+ * viewport itself stops at the top of the first page.
  */
 export function topClearOfToolbar(
   top: number,
@@ -25,7 +33,7 @@ export function topClearOfToolbar(
   scale: number,
 ): number {
   const clearance = (toolbarClearancePx + GO_TO_BREATHING_ROOM) / scale
-  return Math.max(0, top - clearance)
+  return top - clearance
 }
 
 /**

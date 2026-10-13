@@ -306,3 +306,23 @@ decision was checked against *the library's* API surface — `wantsRawTouch` is
 per-mode, so the model looked expressible — and not against **the platform's
 arbitration rules**, which is where it actually failed. A gesture model is a
 negotiation with the browser before it is a configuration of a library.
+
+## Revision (2026-10-12): a *contents* button beside the page field
+
+Decided with the user at #29's spec (features/a-paper-shows-its-contents): the
+toolbar gains a **contents** button, its own floating group placed straight
+after the page group, since both are ways of getting somewhere in the paper.
+It opens the article sidebar's *contents* tab rather than an outline of its
+own: in the rail on a wide screen, and in the sheet, already on that tab, on a
+narrow one. It carries a glyph and a word like the *annotate* trigger, and drops
+the word at the same 40rem breakpoint.
+
+Measured with it in place, the toolbar keeps its row count: one row at 1400px
+and 1024px, and two at 375px, as before.
+
+**A jump to a point may now start in the page above.** Both jumps that place a
+point below the toolbar, the contents entry and the citation preview's **go to**,
+used to clamp their scroll target to the top of the point's page. On a phone the
+two-row toolbar at 55% zoom is 169pt deep, so a heading 78pt down its page was
+sent to the page's top and landed behind the controls. The target is no longer
+clamped, so the heading lands just below the toolbar at every width.

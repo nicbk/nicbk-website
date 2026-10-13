@@ -98,6 +98,8 @@ interface PdfReaderProps {
   articleId: string
   /** The page's own controls, for the end of the toolbar. See `ReaderToolbar`. */
   actions?: ReactNode
+  /** The page's contents button, beside the page field. See `ReaderToolbar`. */
+  contents?: ReactNode
   /** Where the paper was left. Read once, when the paper opens. */
   readingPosition?: ReadingPosition | null
   /** Called as the reader moves through the paper. See `useReadingPosition`. */
@@ -109,6 +111,7 @@ interface PdfReaderProps {
 export function PdfReader({
   articleId,
   actions,
+  contents,
   readingPosition,
   onReadingPositionChange,
   hidden = false,
@@ -148,7 +151,7 @@ export function PdfReader({
           />
         </div>
         {/* Last, for the paint-order reason `ReaderDocument` explains. */}
-        <InertReaderToolbar actions={actions} />
+        <InertReaderToolbar actions={actions} contents={contents} />
       </div>
     )
   }
@@ -159,6 +162,7 @@ export function PdfReader({
         engine={engine}
         articleId={articleId}
         actions={actions}
+        contents={contents}
         readingPosition={readingPosition}
         onReadingPositionChange={onReadingPositionChange}
         hidden={hidden}
@@ -178,6 +182,7 @@ function ReaderDocument({
   engine,
   articleId,
   actions,
+  contents,
   readingPosition = null,
   onReadingPositionChange,
   hidden = false,
@@ -787,6 +792,7 @@ function ReaderDocument({
         // nothing to act on until the document is drawn.
         disabled={state !== 'ready'}
         actions={actions}
+        contents={contents}
       />
     </div>
   )

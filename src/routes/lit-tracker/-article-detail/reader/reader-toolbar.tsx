@@ -71,6 +71,13 @@ interface ReaderToolbarProps {
    * status, or sheets.
    */
   actions?: ReactNode
+  /**
+   * The page's way to the paper's contents, beside the page field: both are
+   * ways of getting somewhere in the paper. An element for the reason `actions`
+   * is one — what it opens is the page's sidebar, which the reader knows
+   * nothing about.
+   */
+  contents?: ReactNode
 }
 
 export function ReaderToolbar({
@@ -88,6 +95,7 @@ export function ReaderToolbar({
   onSelectTool,
   disabled,
   actions,
+  contents,
 }: ReaderToolbarProps) {
   return (
     // biome-ignore lint/a11y/useSemanticElements: <fieldset> is for form controls; this groups a document's controls, and a labelled group is the role with no keyboard contract this bar would break (see above).
@@ -108,6 +116,8 @@ export function ReaderToolbar({
         onNext={onNextPage}
         disabled={disabled}
       />
+
+      {contents}
 
       <AnnotationToolControl
         activeToolId={activeToolId}
@@ -143,10 +153,17 @@ export function ReaderToolbar({
  * shape steady: the frame is there from the first paint, and only its contents
  * change.
  */
-export function InertReaderToolbar({ actions }: { actions?: ReactNode }) {
+export function InertReaderToolbar({
+  actions,
+  contents,
+}: {
+  actions?: ReactNode
+  contents?: ReactNode
+}) {
   return (
     <ReaderToolbar
       actions={actions}
+      contents={contents}
       currentPage={1}
       totalPages={0}
       onGoToPage={() => {}}

@@ -170,14 +170,16 @@ describe('goToCoordinates', () => {
     expect(goToCoordinates(REGION, 124, 1.52).x).toBe(105)
   })
 
-  it('never scrolls above the top of the page', () => {
+  // A region near its page's top, under a deep toolbar: the scroll starts in
+  // the page above rather than leaving the region behind the controls.
+  it('reaches above the page for a region nearer its top than the toolbar is deep', () => {
     expect(
       goToCoordinates(
         { ...REGION, rect: { ...REGION.rect, origin: { x: 0, y: 20 } } },
         124,
         1,
       ).y,
-    ).toBe(0)
+    ).toBe(20 - 132)
   })
 })
 

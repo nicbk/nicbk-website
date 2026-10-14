@@ -1,6 +1,7 @@
 # Research: DevOps / Deployment & CI
 
-Status: all 8 topics researched and decided (2026-07-05).
+Status: all 8 topics researched and decided (2026-07-05); a revision to
+`backup-and-disaster-recovery.md` researched 2026-10-14, awaiting decision.
 
 Build, deployment, and hosting practices, and continuous integration setup —
 the "how it ships and stays running," as distinct from
@@ -107,6 +108,9 @@ Guiding principles for every topic in this category:
   service (no second physical machine exists). Standard
   daily/weekly/monthly retention, with periodic `restic check` and test
   restores, not just written-and-assumed-good backups.
+  Revision researched 2026-10-14; awaiting decision: `pg_dump` and an
+  S3-level Garage copy into one staging snapshot per checkpoint, the `.env`
+  and a manifest included, a restore script, and automated restore drills.
 - [monitoring-and-observability.md](./monitoring-and-observability.md) —
   Decided. The `journald` Docker logging driver for all containers, no new
   aggregator. Self-hosted **GlitchTip** (MIT, one new container + a new

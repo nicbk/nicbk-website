@@ -33,6 +33,9 @@ incrementally.
   given the open-source-only constraint.
 - [documentation-content-conventions/index.md](./documentation-content-conventions/index.md) —
   Conventions for docs and MDX blog content.
+- [requests/index.md](./requests/index.md) — The user's feature requests,
+  recorded verbatim and itemized before research or planning starts; each
+  batch tracks which requests have been researched, planned, and built.
 
 Status: `technologies/` fully researched and decided (2026-07-02, 9/9
 topics; `orm.md` added 2026-07-05, 10/10); `ui-ux/` fully researched and

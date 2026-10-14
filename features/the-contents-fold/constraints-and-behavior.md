@@ -25,9 +25,13 @@
 
 ### The first visit
 
-- **Every entry is closed**: only depth-1 entries show. This is the stored
-  default, so nothing is written for a paper never folded. *(But see
-  [plan.md](./plan.md#to-decide-with-the-user), question 1, on a lone root.)*
+- **Every entry is closed**: only depth-1 entries show.
+- **Except a lone root.** When the top level is a single entry, it is open,
+  and its sections show closed. One row is not an outline (decided with the
+  user, 2026-10-14).
+- **The first-visit view is computed, not stored.** Nothing is written for a
+  paper never folded. Once the user folds anything, what they set is kept
+  exactly, including a lone root they closed.
 
 ### The section in view
 
@@ -46,7 +50,7 @@
 - **A fold changed on another device shows here as it syncs.** It changes only
   which rows show, never the reader.
 - **When a paper's contents are read again** and the entries are replaced, its
-  folds reset to all closed.
+  folds reset to the first-visit view.
 
 ## Constraints
 
@@ -56,17 +60,22 @@
   hears the levels. The stored entries stay a flat array; the nesting is built
   when rendering.
 - **The folds live in `article_contents.expanded`**: a `jsonb` array of entry
-  indices, default `[]`, not null (research §3). Its migration follows
+  indices, **nullable, default null** (research §3). Null means *never folded*:
+  show the first-visit view. An array, `[]` included, is what the user set.
+  Without the null, a lone root the user had closed (`[]`) would reopen on the
+  next visit. Its migration follows
   `research/data-modeling/zero-schema-conventions.md`. The Zero schema is
   regenerated, not hand-edited.
 - **One mutator, `articleContents.setExpanded({ articleId, index, open })`**:
   - ownership checked;
   - an anonymous caller refused;
   - an index outside the entries refused;
-  - idempotent, with no `updated_at` bump.
+  - idempotent, with no `updated_at` bump;
+  - on a null column, it starts from the first-visit view's open set, so the
+    first press changes one entry rather than also closing a lone root.
 
   `articles.setReadingPosition` is the model.
-- **The upload's rewrite resets `expanded`** in the same `onConflictDoUpdate`.
+- **The upload's rewrite resets `expanded` to null** in the same `onConflictDoUpdate`.
   The backfill never rewrites (`on conflict do nothing`), so it needs no
   change.
 - **Uniform rows.** Rows that fold and rows that don't share height, padding and
@@ -74,8 +83,8 @@
 
 ## Acceptance criteria
 
-1. On a paper whose contents have never been opened, the tab shows only the
-   top-level entries (O3).
+1. On a paper whose contents have never been folded, the tab shows only the
+   top-level entries, or a lone root's sections under it (O3).
 2. Each entry with sections opens and closes from its own control, and its
    title still moves the reader to it (O1). The title does not fold.
 3. On the 252-entry textbook, the first view is the chapters alone, and

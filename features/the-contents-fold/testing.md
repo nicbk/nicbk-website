@@ -10,7 +10,8 @@
   - the empty list.
 - **What shows** (pure): only the top level when nothing is open; an open
   entry's sections; a closed entry inside an open one hides its own; the
-  lone-root rule, if adopted.
+  lone root open on the first visit; null (never folded) versus `[]` (all
+  closed, a lone root included).
 - **The marked row** (pure): the section in view when it shows, otherwise its
   nearest shown ancestor.
 - **The panel**:
@@ -23,6 +24,7 @@
   - not-owner and anonymous callers refused;
   - an index out of range refused;
   - open twice equals open once;
+  - the first press on a null column starts from the first-visit view;
   - `updated_at` is not written.
 
 ## Integration (task 2)
@@ -31,7 +33,7 @@
   - the column round-trips;
   - ownership is enforced;
   - `updated_at` is unchanged.
-- The upload's rewrite of a paper's contents resets `expanded` to `[]`.
+- The upload's rewrite of a paper's contents resets `expanded` to null.
 - The migration applies from the committed files, and the publication still
   carries the table.
 

@@ -1,7 +1,8 @@
 # Status: The Contents Fold
 
-**Feature state:** Planned (2026-10-14). Waiting on the user's answers to
-[plan.md](./plan.md#to-decide-with-the-user) and their go-ahead.
+**Feature state:** Planned (2026-10-14). The user's three decisions are
+recorded in [plan.md](./plan.md#decided-with-the-user-2026-10-14). Waiting on
+their go-ahead.
 
 Spec written against `main` at `bd0d719`. See [research.md](./research.md).
 
@@ -21,4 +22,5 @@ Feature parent issue: not yet created. Roadmap entry **#30**.
 
 ## Log
 
+- 2026-10-14: the user decided the three open questions, all as recommended.
 - 2026-10-14: spec'd from the request of 2026-10-14.

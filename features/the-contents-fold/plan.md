@@ -13,22 +13,13 @@ because its UI could not exist without the columns. Folding can.
 Between the two merges, the contents reopen fully folded each time. That
 matches O3 for a first visit, and nothing is lost.
 
-## To decide with the user
+## Decided with the user (2026-10-14)
 
-1. **A lone root.** Some PDFs nest the whole outline under one entry, the
-   book's or paper's title. Fully folded, that is one row. **Recommendation:**
-   when the top level is a single entry, open it on the first visit, so the
-   first view is the chapters. That is the intent of "fully collapsed": the
-   fewest rows that still say what the paper contains.
-2. **The section in view inside a closed entry.** **Recommendation:** mark the
-   closed entry it belongs to, and open nothing by itself (see
-   [constraints-and-behavior.md](./constraints-and-behavior.md)). The
-   alternative, opening the path to it, would rewrite the user's saved folds
-   while they read.
-3. **The title does not fold.** **Recommendation:** a separate chevron.
-   Pressing a chapter's title to go there would otherwise also open or close
-   it, and a jump would change what is saved. The cost is a second press to
-   see a chapter's sections after jumping to it.
+| Question | Decision |
+|---|---|
+| a lone root: some PDFs nest the whole outline under one entry, the book's or paper's title, which fully folded is one row | **Opened on the first visit**, so the first view is the chapters: the fewest rows that still say what the paper contains |
+| the section in view inside a closed entry | **The closed entry it belongs to is marked**, and nothing opens by itself; opening the path would rewrite the user's saved folds while they read |
+| does pressing a title fold? | **No: a separate chevron.** A jump never changes what is saved; the cost, a second press to see a chapter's sections after jumping to it, is accepted |
 
 ## Risks
 

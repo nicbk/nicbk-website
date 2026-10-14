@@ -54,14 +54,16 @@ the case the user describes. Every row is visible at once.
 ## 3. Where the folds are kept
 
 - **On `article_contents`, as an `expanded` column**: the indices of the open
-  entries, which is empty by default.
-  - "Fully collapsed" is the column's default, so a first visit writes nothing.
+  entries, null until the user first folds anything.
+  - Null is the first-visit view, so a first visit writes nothing. It is
+    distinct from `[]`, which means the user closed everything, a lone root
+    included.
   - The row is the list's own: it is read only on the paper's page. It is
     already in the publication and already scoped by `user_id`.
   - Indices are stable because entries are only ever replaced whole, never
     edited (#29). The one write that replaces them, the upload's
-    `onConflictDoUpdate` in `extract-stage.ts`, resets the column in the same
-    statement, so saved indices never point into a different list.
+    `onConflictDoUpdate` in `extract-stage.ts`, resets the column to null in
+    the same statement, so saved indices never point into a different list.
 - **Not on `articles`**, where the reading place lives: the collection syncs
   every article row, and a paper's folds have no business there. #29 put the
   entries in their own table for the same reason.
@@ -73,6 +75,6 @@ the case the user describes. Every row is visible at once.
   set. Two devices folding different chapters both keep their change, and a
   repeated write is harmless.
 
-## 4. Open questions for the user
+## 4. Decided with the user
 
-See [plan.md](./plan.md#to-decide-with-the-user).
+See [plan.md](./plan.md#decided-with-the-user-2026-10-14).

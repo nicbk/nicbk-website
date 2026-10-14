@@ -1,12 +1,14 @@
 import { Tabs } from '@base-ui/react/tabs'
 import { Highlighter, ListTree, Network, NotebookPen, Tag } from 'lucide-react'
 import { useState } from 'react'
+import type { ContentsEntry } from '~/lit-tracker/contents/contents'
 import { ArticleTagControls } from '~/routes/lit-tracker/-components/article-menu/article-tag-controls'
 import { useArticleMutations } from '~/routes/lit-tracker/-hooks/use-article-mutations'
 import { AnnotationsPanel } from './annotations-panel'
 import type { ArticleView } from './article-view'
 import { ContentsPanel } from './contents/contents-panel'
 import { useArticleContents } from './contents/use-article-contents'
+import { useContentsFolds } from './contents/use-contents-folds'
 import { NotesPanel } from './notes-panel'
 import type { JumpToPage } from './reader-jump'
 import { useReaderJump } from './reader-jump'
@@ -51,6 +53,9 @@ export type PanelTab = Exclude<TabId, 'citations'>
 
 /** The tab a sidebar opens on, and returns to for each new article. */
 const DEFAULT_TAB: PanelTab = 'tags'
+
+/** A paper with no entries to fold, as one stable value. */
+const NO_ENTRIES: readonly ContentsEntry[] = []
 
 interface ArticleSidebarProps {
   articleId: string
@@ -158,6 +163,10 @@ function SidebarTabs({
   const mutations = useArticleMutations()
   const annotations = useArticleAnnotations(articleId)
   const contents = useArticleContents(articleId, article?.extractionStatus)
+  const folds = useContentsFolds(
+    articleId,
+    contents.kind === 'entries' ? contents.entries : NO_ENTRIES,
+  )
   const readerJump = useReaderJump()
   const [panel, setPanel] = useState<PanelTab>(initialTab)
 
@@ -277,7 +286,7 @@ function SidebarTabs({
           back (`choose` above), so an entry's jump always lands on a reader
           that is showing.
         */}
-        <ContentsPanel view={contents} onJump={jumpToPage} />
+        <ContentsPanel view={contents} folds={folds} onJump={jumpToPage} />
       </Tabs.Panel>
 
       <Tabs.Panel className={styles.panel} value="annotations">

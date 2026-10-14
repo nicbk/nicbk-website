@@ -1,0 +1,7 @@
+# Status: The Folds Are Kept
+
+**State:** Planned (2026-10-14).
+
+## Log
+
+- 2026-10-14: spec'd.

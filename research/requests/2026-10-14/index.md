@@ -81,7 +81,7 @@ depend on the answers:
 
 | Request | Research | Plan | Implementation |
 |---|---|---|---|
-| Collapsible outline | not needed | — | — |
+| Collapsible outline | not needed | [#30 `the-contents-fold`](../../../features/the-contents-fold/description.md), awaiting the user | — |
 | Privacy and hardening | — | — | — |
 | Backups | — | — | — |
 | Roles and billing | — | — | — |

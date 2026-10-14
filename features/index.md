@@ -87,6 +87,7 @@ need them (see Phases 2–3).
 | 27 | A text box lets go (clicking away from a note ends its typing, so it can be moved) | [`a-text-box-lets-go`](./a-text-box-lets-go/description.md) | **Complete** (2026-10-14; its one task merged, #249; the user's phone check passed) | #9, #24 |
 | 28 | A passage gets a margin note (one action highlights a passage and opens a note beside it, tied to it) | [`a-passage-gets-a-margin-note`](./a-passage-gets-a-margin-note/description.md) | **Complete** (2026-10-14; both tasks merged, #250 + #251; the user's phone check passed) | #9, #15, #24, #27 |
 | 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **Complete** (2026-10-14; all 4 tasks merged, #252 + #253 + #254 + #255; the user's phone check passed) | #7, #9, #10, #22 |
+| 30 | The contents fold (an entry with sections folds; every entry starts folded; the folds are kept with the paper on the account) | [`the-contents-fold`](./the-contents-fold/description.md) | **Planned** (2026-10-14; 2 tasks; awaiting the user's answers and go-ahead) | #23, #29 |
 
 ## How this roadmap is spec'd out
 

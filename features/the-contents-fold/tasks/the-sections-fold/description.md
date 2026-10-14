@@ -1,6 +1,7 @@
 # Task: The Sections Fold
 
-Task 1 of 2 of [#30](../../description.md). Sub-issue: not yet created.
+Task 1 of 2 of [#30](../../description.md). Sub-issue
+[#258](https://github.com/nicbk/nicbk-website/issues/258).
 
 The contents list becomes nested. An entry with sections under it gets a fold
 control, and every entry starts closed, except a lone root, which starts open. The marked section falls back to its

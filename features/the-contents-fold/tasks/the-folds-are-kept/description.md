@@ -1,6 +1,7 @@
 # Task: The Folds Are Kept
 
-Task 2 of 2 of [#30](../../description.md). Sub-issue: not yet created.
+Task 2 of 2 of [#30](../../description.md). Sub-issue
+[#259](https://github.com/nicbk/nicbk-website/issues/259).
 
 The open set moves from page state to the account, so a paper's contents reopen
 as they were left, on any device.

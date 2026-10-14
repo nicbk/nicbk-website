@@ -1,6 +1,6 @@
 /*
  * The contents tab: the paper's sections, a column of rows like the annotations
- * tab's, indented by depth.
+ * tab's, nested and indented, with a fold beside each entry that has sections.
  */
 
 /* "reading the contents…" and the other states — a sentence, not a row. */
@@ -23,28 +23,97 @@
   list-style: none;
 }
 
+/* A folded entry's sections: a list inside its item, with no marks of its own. */
+.sections {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 /*
- * A row is one button: the title left, its page right, the page column sized by
- * its own width so the numbers line up against the edge — the annotations
- * row's layout, so the two tabs that steer the reader read alike.
+ * A row is the fold control's column and the entry's button. Every row keeps
+ * the column, folding or not, so a level's titles start on one line whether or
+ * not each of them has sections (features/the-contents-fold): ragged titles
+ * would read as a rendering fault.
  *
- * Indented by depth through `--indent`, set on the row, half a rem a level:
- * in the 143px rail a deeper step would leave a third-level title eight
- * characters. The page number is not indented, so it keeps its column at every
- * depth.
+ * Indented by level through `--indent`, set on the row, half a rem a level: in
+ * the 143px rail a deeper step would leave a third-level title eight
+ * characters. The fold column takes the place of the row's old left padding,
+ * so the control costs the titles as little width as it can.
  */
 .row {
+  display: grid;
+  grid-template-columns: var(--fold-size) 1fr;
+  align-items: start;
+  padding-inline-start: calc(var(--indent, 0) * var(--space-xs));
+
+  /*
+   * 24px: WCAG 2.2's target minimum (research/accessibility), met by the
+   * control itself because rows sit flush and no spacing exception applies.
+   */
+  --fold-size: 1.5rem;
+}
+
+/*
+ * The fold control. A chevron that turns to point down when its entry is open;
+ * quiet, as every secondary control in the sidebar is, and accented on hover
+ * like the rows. Placed at the top of the row and as tall as a title's first
+ * line with its padding, so it sits beside the line it folds.
+ */
+.fold {
+  display: grid;
+  place-items: center;
+  width: var(--fold-size);
+  height: calc(
+    var(--font-size-sm) *
+    var(--line-height-base) +
+    2 *
+    var(--space-2xs)
+  );
+  min-height: var(--fold-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.chevron {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.fold[data-panel-open] .chevron {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chevron {
+    transition: transform var(--motion-duration-fast) var(--motion-ease);
+  }
+}
+
+/*
+ * The entry: one button, the title left, its page right, the page column sized
+ * by its own width so the numbers line up against the edge — the annotations
+ * row's layout, so the two tabs that steer the reader read alike. The page
+ * number is not indented, so it keeps its column at every depth.
+ */
+.entry {
+  /*
+   * Always the second column. A row with no sections has nothing in the first,
+   * and auto-placement would put the title there: found in the browser, a
+   * subsection's title stacked a letter to a line in the 24px fold column.
+   */
+  grid-column: 2;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: var(--space-xs);
   align-items: baseline;
   width: 100%;
-  padding: var(--space-2xs) var(--space-xs);
-  padding-inline-start: calc(
-    var(--space-xs) +
-    var(--indent, 0) *
-    var(--space-xs)
-  );
+  min-width: 0;
+  padding: var(--space-2xs) var(--space-xs) var(--space-2xs) var(--space-2xs);
   border: none;
   border-radius: var(--radius-sm);
   background: none;
@@ -56,31 +125,33 @@
 }
 
 /*
- * Subsections recede behind the chapters and sections they belong to, so a
- * long list can be scanned by its top level. Muted, as the annotations list
- * mutes what is secondary in a row.
+ * Sections recede behind the entries they belong to, so a long list can be
+ * scanned by its top level. Muted, as the annotations list mutes what is
+ * secondary in a row.
  */
-.row:not([data-depth="1"]) {
+.entry:not([data-top-level]) {
   color: var(--color-text-muted);
 }
 
 @media (hover: hover) {
-  .row:hover {
+  .entry:hover,
+  .fold:hover {
     color: var(--color-accent);
   }
 }
 
 /*
- * The section the reader is in. Weight as well as colour, so it survives
- * grayscale (WCAG 1.4.1) — the selected tab's treatment, for its reason.
- * Keyed on `aria-current`, the attribute assistive tech reads, for the reason
- * the tabs key on `aria-selected` (`article-sidebar.module.css`).
+ * The section the reader is in — or the folded entry it is inside. Weight as
+ * well as colour, so it survives grayscale (WCAG 1.4.1) — the selected tab's
+ * treatment, for its reason. Keyed on `aria-current`, the attribute assistive
+ * tech reads, for the reason the tabs key on `aria-selected`
+ * (`article-sidebar.module.css`).
  *
  * The same specificity as the muted rule above and after it, so it wins by
  * order. It lost at first, to a muted rule one attribute selector heavier, and
  * a marked subsection showed bold but grey: found in the browser.
  */
-.row[aria-current="location"] {
+.entry[aria-current="location"] {
   color: var(--color-accent);
   font-weight: var(--font-weight-bold);
 }
@@ -118,7 +189,7 @@
  * own container (`article-sidebar.module.css`), like the tabs' words.
  */
 @container article-sidebar (max-width: 15rem) {
-  .row {
+  .entry {
     grid-template-columns: 1fr;
   }
 

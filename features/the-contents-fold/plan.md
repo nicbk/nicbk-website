@@ -2,8 +2,8 @@
 
 | # | Task | Sub-issue | Delivers |
 |---|---|---|---|
-| 1 | [`the-sections-fold`](./tasks/the-sections-fold/description.md) | — | The nested list, the fold control, everything closed on open, the marked ancestor. Folds are held for the page visit only. |
-| 2 | [`the-folds-are-kept`](./tasks/the-folds-are-kept/description.md) | — | `article_contents.expanded`, its migration and mutator, the upload's reset, and the panel reading and writing it. |
+| 1 | [`the-sections-fold`](./tasks/the-sections-fold/description.md) | [#258](https://github.com/nicbk/nicbk-website/issues/258) | The nested list, the fold control, everything closed on open, the marked ancestor. Folds are held for the page visit only. |
+| 2 | [`the-folds-are-kept`](./tasks/the-folds-are-kept/description.md) | [#259](https://github.com/nicbk/nicbk-website/issues/259) | `article_contents.expanded`, its migration and mutator, the upload's reset, and the panel reading and writing it. |
 
 **Task 1 first.** It is the part to judge by eye, so it reaches review on its
 own: the control's place in a 143px rail, and the list on a textbook. Task 2

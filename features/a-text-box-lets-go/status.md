@@ -1,8 +1,7 @@
 # Status: A Text Box Lets Go
 
-**Feature state:** **Implemented** (2026-10-12). Its one task merged
-([#249](https://github.com/nicbk/nicbk-website/pull/249)). It becomes Complete
-with the user's phone check.
+**Feature state:** **Complete** (2026-10-14). Its one task merged (#249), and
+the user's phone check passed.
 
 Spec written against `main` at `b3ae7a2`, from a reproduction in the browser
 taken before anything was written. See [research.md](./research.md).
@@ -26,6 +25,7 @@ user's phone check passed.
 
 ## Log
 
+- 2026-10-14: the user's iPhone check passed. Complete.
 - 2026-10-12: #249 merged. Awaiting the user's phone check.
 - 2026-10-12: implemented and verified in Chromium.
 - 2026-10-11: reported by the user, reproduced, cause found (a private,

@@ -1,6 +1,6 @@
 # Status: A Passage Gets a Margin Note
 
-**Feature state:** **Implemented** (2026-10-12). Both tasks merged (#250, #251). It becomes Complete with the user's phone check.
+**Feature state:** **Complete** (2026-10-14). Both tasks merged (#250, #251), and the user's phone check passed.
 
 Spec written against `main` at `b3ae7a2`, from the engine's own source and
 from margins measured on real papers. See [research.md](./research.md).
@@ -38,6 +38,7 @@ or one rule:
 
 ## Log
 
+- 2026-10-14: the user's iPhone check passed. Complete.
 - 2026-10-12: #251 merged; awaiting the user's phone check.
 - 2026-10-12: task 2 implemented. Notes pack within reach, fit their text, and
   outline their partner.

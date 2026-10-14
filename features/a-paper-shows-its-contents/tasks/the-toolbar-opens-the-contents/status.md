@@ -1,6 +1,6 @@
 # Status: The Toolbar Opens the Contents
 
-**State:** Implemented, awaiting review ([#248](https://github.com/nicbk/nicbk-website/issues/248)).
+**State:** Merged ([#248](https://github.com/nicbk/nicbk-website/issues/248); PR [#255](https://github.com/nicbk/nicbk-website/pull/255)).
 
 ## What shipped
 
@@ -41,9 +41,11 @@
   - choosing *3.2 Section* closes the sheet, and the heading lands 7.5px below
     the toolbar;
   - the sheet's own trigger then opens it on *tags*.
-- **Not yet checked**: Safari on an iPhone (the user's check).
+- **Safari on an iPhone**: checked by the user, 2026-10-14.
 
 ## Log
 
+- 2026-10-14: the user's iPhone check passed.
+- 2026-10-13: merged.
 - 2026-10-12: implemented and verified in Chromium.
 - 2026-10-12: spec'd.

@@ -70,7 +70,7 @@ title of 80 characters.
 - **The whole list** was scrolled end to end in the rail and the sheet.
   Empty states were checked: *no outline or numbered sections* on TraceMonkey
   with no headings, and *couldn't read* on a file the engine cannot open.
-- **Not yet checked**: Safari on an iPhone (the user's check).
+- **Safari on an iPhone**: checked by the user, 2026-10-14.
 
 ## Log
 

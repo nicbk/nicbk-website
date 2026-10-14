@@ -1,6 +1,6 @@
 # Status: The Folds Are Kept
 
-**State:** In review ([#259](https://github.com/nicbk/nicbk-website/issues/259)).
+**State:** Merged ([#259](https://github.com/nicbk/nicbk-website/issues/259); PR [#261](https://github.com/nicbk/nicbk-website/pull/261)).
 
 ## What shipped
 
@@ -56,5 +56,6 @@
 
 ## Log
 
+- 2026-10-14: merged.
 - 2026-10-14: implemented and verified.
 - 2026-10-14: spec'd.

@@ -46,8 +46,21 @@ describe('contentsView', () => {
     for (const source of ['outline', 'headings'] as const) {
       expect(
         contentsView('ready', { source, entries: [ENTRY] }, 'enriched'),
-      ).toEqual({ kind: 'entries', entries: [ENTRY] })
+      ).toEqual({ kind: 'entries', entries: [ENTRY], expanded: null })
     }
+  })
+
+  it('carries the folds, keeping never folded apart from all closed', () => {
+    const row = { source: 'outline' as const, entries: [ENTRY] }
+    expect(
+      contentsView('ready', { ...row, expanded: [0] }, 'enriched'),
+    ).toMatchObject({ expanded: [0] })
+    expect(
+      contentsView('ready', { ...row, expanded: [] }, 'enriched'),
+    ).toMatchObject({ expanded: [] })
+    expect(
+      contentsView('ready', { ...row, expanded: null }, 'enriched'),
+    ).toMatchObject({ expanded: null })
   })
 
   it('treats a source with no entries as none', () => {

@@ -78,6 +78,7 @@ function stubTransaction({ reads }: { reads?: boolean[] } = {}) {
       annotations: table('annotations'),
       uploadJobs: table('uploadJobs'),
       referenceReads: table('referenceReads'),
+      articleContents: table('articleContents'),
     },
   }
 
@@ -469,6 +470,94 @@ describe('referenceReads.retry', () => {
 
     await expect(
       mutators.referenceReads.retry.fn({ args, tx, ctx } as never),
+    ).rejects.toThrow()
+    expect(writes).toEqual([])
+  })
+})
+
+describe('articleContents.setExpanded', () => {
+  // A lone root, 0, over a chapter, 1, with a section, 2.
+  const ENTRIES = [1, 2, 3].map((depth) => ({
+    title: `depth ${depth}`,
+    depth,
+    pageIndex: 0,
+    top: null,
+  }))
+
+  /** A transaction whose lookup finds this contents row, or none. */
+  function withContents(expanded: number[] | null | 'missing') {
+    const { tx, writes } = stubTransaction()
+    const run = async () =>
+      expanded === 'missing'
+        ? []
+        : [{ articleId: ARTICLE, entries: ENTRIES, expanded }]
+    return { tx: { ...tx, run }, writes }
+  }
+
+  async function press(
+    expanded: number[] | null | 'missing',
+    args: Record<string, unknown>,
+    ctx: ZeroContext | undefined = CONTEXT,
+  ) {
+    const { tx, writes } = withContents(expanded)
+    await mutators.articleContents.setExpanded.fn({ args, tx, ctx } as never)
+    return writes
+  }
+
+  it('writes the open set and nothing else', async () => {
+    // Not `updatedAt`: it says when the contents were read.
+    expect(
+      await press([1], { articleId: ARTICLE, index: 2, open: true }),
+    ).toEqual([
+      {
+        table: 'articleContents',
+        operation: 'update',
+        values: { articleId: ARTICLE, expanded: [1, 2] },
+      },
+    ])
+  })
+
+  it('starts a paper never folded from the first-visit view', async () => {
+    // The lone root is open on the first visit, and stays open.
+    const writes = await press(null, {
+      articleId: ARTICLE,
+      index: 1,
+      open: true,
+    })
+    expect(writes[0]?.values).toEqual({ articleId: ARTICLE, expanded: [0, 1] })
+  })
+
+  it('is the same write when run twice', async () => {
+    const writes = await press([0, 1], {
+      articleId: ARTICLE,
+      index: 1,
+      open: true,
+    })
+    expect(writes[0]?.values).toEqual({ articleId: ARTICLE, expanded: [0, 1] })
+  })
+
+  it.each([
+    ['contents that are not the caller’s', 'missing', { index: 0 }, CONTEXT],
+    ['an anonymous caller', [], { index: 0 }, undefined],
+    ['an index past the entries', [], { index: 3 }, CONTEXT],
+    ['a negative index', [], { index: -1 }, CONTEXT],
+    ['a fractional index', [], { index: 0.5 }, CONTEXT],
+    [
+      'a malformed article id',
+      [],
+      { index: 0, articleId: 'article-1' },
+      CONTEXT,
+    ],
+  ] as const)('refuses %s without writing', async (_case, expanded, args, ctx) => {
+    const { tx, writes } = withContents(
+      expanded === 'missing' ? 'missing' : [...expanded],
+    )
+    await expect(
+      mutators.articleContents.setExpanded.fn({
+        args: { articleId: ARTICLE, open: true, ...args },
+        tx,
+        ctx,
+      } as never),
     ).rejects.toThrow()
     expect(writes).toEqual([])
   })

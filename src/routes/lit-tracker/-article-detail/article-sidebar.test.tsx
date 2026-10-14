@@ -31,7 +31,6 @@ const { ReaderJumpProvider, useReadingLineReporter, useRegisterReaderJump } =
 const { SidebarRequestProvider, useRequestSidebarTab } = await import(
   './sidebar-request'
 )
-const { forgetContentsFolds } = await import('./contents/use-contents-folds')
 
 const ARTICLE_ID = '018f5b6c-0000-7000-8000-000000000001'
 
@@ -85,9 +84,6 @@ beforeEach(() => {
   useQuery.mockReset()
   mutate.mockClear()
   onViewChange.mockClear()
-  // The folds are kept for the visit outside any component, so one test's
-  // would otherwise be the next one's.
-  forgetContentsFolds()
 })
 
 describe('ArticleSidebar', () => {
@@ -454,28 +450,30 @@ describe('ArticleSidebar', () => {
       )
     }
 
-    /** Opens an entry's sections, as a reader presses its chevron. */
-    async function openSections(title: string) {
-      await userEvent.click(
-        screen.getByRole('button', { name: `sections of ${title}` }),
-      )
-    }
+    /** The same paper, with its first chapter open on the account. */
+    const OPENED = { ...CONTENTS, expanded: [0] }
 
-    it('lists the top level folded, and an entry’s sections once opened', async () => {
+    const rows = () =>
+      screen
+        .getAllByRole('button', { name: /^\d/ })
+        .map((row) => row.textContent)
+
+    it('lists the top level on a paper never folded, and what is open on the account', async () => {
       answerQueries({
         'articles.byId': [ARTICLE],
         'articleContents.forArticle': [CONTENTS],
       })
-      renderWithReader()
-
+      const { unmount } = renderWithReader()
       await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
-      const rows = () =>
-        screen
-          .getAllByRole('button', { name: /^\d/ })
-          .map((row) => row.textContent)
       expect(rows()).toEqual(['1 Introduction1', '2 Method4'])
+      unmount()
 
-      await openSections('1 Introduction')
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [OPENED],
+      })
+      renderWithReader()
+      await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
       expect(rows()).toEqual([
         '1 Introduction1',
         '1.1 Background2',
@@ -483,16 +481,36 @@ describe('ArticleSidebar', () => {
       ])
     })
 
-    it('steers the reader to the section’s page and point', async () => {
-      const handle = vi.fn()
+    it('keeps a fold on the account', async () => {
       answerQueries({
         'articles.byId': [ARTICLE],
         'articleContents.forArticle': [CONTENTS],
       })
+      renderWithReader()
+      await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'sections of 1 Introduction' }),
+      )
+
+      await waitFor(() =>
+        expect(mutate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            args: { articleId: ARTICLE_ID, index: 0, open: true },
+          }),
+        ),
+      )
+    })
+
+    it('steers the reader to the section’s page and point', async () => {
+      const handle = vi.fn()
+      answerQueries({
+        'articles.byId': [ARTICLE],
+        'articleContents.forArticle': [OPENED],
+      })
       renderWithReader(handle)
 
       await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
-      await openSections('1 Introduction')
       await userEvent.click(screen.getByRole('button', { name: /Background/ }))
       await userEvent.click(screen.getByRole('button', { name: /Method/ }))
 
@@ -505,11 +523,10 @@ describe('ArticleSidebar', () => {
     it('marks the section the reader is in, as it moves', async () => {
       answerQueries({
         'articles.byId': [ARTICLE],
-        'articleContents.forArticle': [CONTENTS],
+        'articleContents.forArticle': [OPENED],
       })
       renderWithReader()
       await userEvent.click(screen.getByRole('tab', { name: 'contents' }))
-      await openSections('1 Introduction')
       const current = () =>
         screen
           .queryAllByRole('button')

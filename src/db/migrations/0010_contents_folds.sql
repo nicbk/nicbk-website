@@ -1,0 +1,1 @@
+ALTER TABLE "article_contents" ADD COLUMN "expanded" jsonb;

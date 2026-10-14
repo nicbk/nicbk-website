@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import type { ContentsEntry } from '~/lit-tracker/contents/contents'
+import type { ContentsEntry } from './contents'
 import type { ContentsNode } from './contents-tree'
-import { contentsTree, firstVisitOpen, markedRow } from './contents-tree'
+import {
+  contentsTree,
+  firstVisitOpen,
+  foldsAfter,
+  markedRow,
+} from './contents-tree'
 
 function entries(...depths: number[]): ContentsEntry[] {
   return depths.map((depth, index) => ({
@@ -88,5 +93,28 @@ describe('markedRow', () => {
 
   it('marks nothing before the first section', () => {
     expect(markedRow(-1, parentOf, new Set())).toBe(-1)
+  })
+})
+
+describe('foldsAfter', () => {
+  // A lone root, 0, over a chapter, 1, with a section, 2.
+  const lone = entries(1, 2, 3)
+
+  it('opens and closes one entry, sorted and without duplicates', () => {
+    expect(foldsAfter(lone, [1], 0, true)).toEqual([0, 1])
+    expect(foldsAfter(lone, [0, 1], 1, true)).toEqual([0, 1])
+    expect(foldsAfter(lone, [0, 1], 0, false)).toEqual([1])
+    expect(foldsAfter(lone, [1], 0, false)).toEqual([1])
+  })
+
+  it('starts the first press from the first-visit view', () => {
+    // The lone root is open on the first visit; opening the chapter keeps it so.
+    expect(foldsAfter(lone, null, 1, true)).toEqual([0, 1])
+    // Closing the root is the one press that empties the set.
+    expect(foldsAfter(lone, null, 0, false)).toEqual([])
+  })
+
+  it('starts from what the reader set, not the first-visit view, once they have', () => {
+    expect(foldsAfter(lone, [], 1, true)).toEqual([1])
   })
 })

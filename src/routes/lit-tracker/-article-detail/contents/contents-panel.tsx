@@ -3,13 +3,16 @@ import { ChevronRight } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
 import { useEffect, useMemo, useRef } from 'react'
 import type { ContentsEntry } from '~/lit-tracker/contents/contents'
+import type { ContentsNode } from '~/lit-tracker/contents/contents-tree'
+import {
+  contentsTree,
+  firstVisitOpen,
+  markedRow,
+} from '~/lit-tracker/contents/contents-tree'
 import { useReadingLine } from '../reader-jump'
-import type { ContentsNode } from './contents-tree'
-import { contentsTree, firstVisitOpen, markedRow } from './contents-tree'
 import type { ContentsView } from './contents-view'
 import { keepInView } from './keep-in-view'
 import { sectionInView } from './section-in-view'
-import type { ContentsFolds } from './use-contents-folds'
 import styles from './contents-panel.module.css'
 
 /**
@@ -22,8 +25,9 @@ import styles from './contents-panel.module.css'
  * channel, to mark the section in view — selected down to an index, so the
  * list re-renders when the section changes rather than on every scroll frame.
  *
- * An entry with sections folds them away (features/the-contents-fold); which
- * are open is the sidebar's to supply too (`use-contents-folds.ts`).
+ * An entry with sections folds them away (features/the-contents-fold). Which
+ * are open arrives with the entries, from the synced row; a press is handed
+ * back to the sidebar to keep (`onFold`).
  */
 
 const MESSAGES = {
@@ -43,40 +47,50 @@ const DEEPEST_INDENT = 2
 
 interface ContentsPanelProps {
   view: ContentsView
-  /** Which entries are open, and the way to open or close one. */
-  folds: ContentsFolds
+  /** Opens or closes the entry at a stored index. */
+  onFold: (index: number, open: boolean) => void
   /** Moves the reader to a stored 0-based page, and the point down it. */
   onJump: (pageIndex: number, top: number | null) => void
 }
 
-export function ContentsPanel({ view, folds, onJump }: ContentsPanelProps) {
+export function ContentsPanel({ view, onFold, onJump }: ContentsPanelProps) {
   if (view.kind !== 'entries') {
     return <p className={styles.notice}>{MESSAGES[view.kind]}</p>
   }
-  return <ContentsList entries={view.entries} folds={folds} onJump={onJump} />
+  return (
+    <ContentsList
+      entries={view.entries}
+      expanded={view.expanded}
+      onFold={onFold}
+      onJump={onJump}
+    />
+  )
 }
 
 /** What every row needs from the list, passed down the tree unchanged. */
 interface RowContext {
   open: ReadonlySet<number>
   marked: number
-  fold: ContentsFolds['fold']
+  fold: ContentsPanelProps['onFold']
   onJump: ContentsPanelProps['onJump']
 }
 
 function ContentsList({
   entries,
-  folds,
+  expanded,
+  onFold,
   onJump,
 }: {
   entries: readonly ContentsEntry[]
-  folds: ContentsFolds
+  /** The open entries, or null for a paper never folded. */
+  expanded: readonly number[] | null
+  onFold: ContentsPanelProps['onFold']
   onJump: ContentsPanelProps['onJump']
 }) {
   const tree = useMemo(() => contentsTree(entries), [entries])
   const open = useMemo(
-    () => new Set(folds.expanded ?? firstVisitOpen(tree)),
-    [folds.expanded, tree],
+    () => new Set(expanded ?? firstVisitOpen(tree)),
+    [expanded, tree],
   )
   const inView = useReadingLine((line) => sectionInView(entries, line))
   const marked = markedRow(inView, tree.parentOf, open)
@@ -125,7 +139,7 @@ function ContentsList({
     keepInView(element, item, first ? 'center' : 'nearest')
   }, [inView])
 
-  const context: RowContext = { open, marked, fold: folds.fold, onJump }
+  const context: RowContext = { open, marked, fold: onFold, onJump }
   return (
     <ol ref={list} className={styles.list} aria-label="contents">
       {tree.roots.map((node) => (

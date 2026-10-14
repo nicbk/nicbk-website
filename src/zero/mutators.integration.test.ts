@@ -1170,3 +1170,96 @@ describe('the registry', () => {
     ).rejects.toThrow()
   })
 })
+
+describe('articleContents.setExpanded', () => {
+  // A lone root over a chapter with one section: the case where "never
+  // folded" and "all closed" differ.
+  const ENTRIES = [1, 2, 3].map((depth) => ({
+    title: `depth ${depth}`,
+    depth,
+    pageIndex: 0,
+    top: null,
+  }))
+
+  async function seedContents(userId: string, articleId: string) {
+    await database.db.insert(drizzleSchema.articleContents).values({
+      articleId,
+      userId,
+      source: 'outline',
+      entries: ENTRIES,
+    })
+  }
+
+  async function contentsOf(articleId: string) {
+    const [row] = await database.db
+      .select()
+      .from(drizzleSchema.articleContents)
+      .where(eq(drizzleSchema.articleContents.articleId, articleId))
+    return row
+  }
+
+  beforeEach(async () => {
+    await seedContents(USER_A, ARTICLE_A)
+    await seedContents(USER_B, ARTICLE_B)
+  })
+
+  it('starts never folded, and keeps never folded apart from all closed', async () => {
+    expect((await contentsOf(ARTICLE_A))?.expanded).toBeNull()
+
+    // The lone root is open on the first visit; closing it stores `[]`.
+    await runAs('articleContents.setExpanded', CONTEXT_A, {
+      articleId: ARTICLE_A,
+      index: 0,
+      open: false,
+    })
+    expect((await contentsOf(ARTICLE_A))?.expanded).toEqual([])
+
+    await runAs('articleContents.setExpanded', CONTEXT_A, {
+      articleId: ARTICLE_A,
+      index: 1,
+      open: true,
+    })
+    expect((await contentsOf(ARTICLE_A))?.expanded).toEqual([1])
+  })
+
+  it('leaves updated_at alone', async () => {
+    const before = await contentsOf(ARTICLE_A)
+    await runAs('articleContents.setExpanded', CONTEXT_A, {
+      articleId: ARTICLE_A,
+      index: 1,
+      open: true,
+    })
+    const after = await contentsOf(ARTICLE_A)
+    expect(after?.expanded).toEqual([0, 1])
+    expect(after?.updatedAt.getTime()).toBe(before?.updatedAt.getTime())
+  })
+
+  it('refuses another user’s contents and leaves them alone', async () => {
+    await expect(
+      runAs('articleContents.setExpanded', CONTEXT_A, {
+        articleId: ARTICLE_B,
+        index: 1,
+        open: true,
+      }),
+    ).rejects.toThrow()
+    expect((await contentsOf(ARTICLE_B))?.expanded).toBeNull()
+  })
+
+  it('refuses an index past the entries, and an anonymous caller', async () => {
+    await expect(
+      runAs('articleContents.setExpanded', CONTEXT_A, {
+        articleId: ARTICLE_A,
+        index: 3,
+        open: true,
+      }),
+    ).rejects.toThrow()
+    await expect(
+      runAs('articleContents.setExpanded', undefined, {
+        articleId: ARTICLE_A,
+        index: 1,
+        open: true,
+      }),
+    ).rejects.toThrow()
+    expect((await contentsOf(ARTICLE_A))?.expanded).toBeNull()
+  })
+})

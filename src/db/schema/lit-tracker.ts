@@ -234,6 +234,24 @@ export const articleContents = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     source: text('source').$type<ContentsSource>().notNull(),
     entries: jsonb('entries').$type<ContentsEntry[]>().notNull(),
+    /**
+     * Which entries the reader has open in the contents tab: their indices in
+     * `entries` (features/the-contents-fold). Kept with the paper on the
+     * account, as the reading place is, so the contents reopen as they were
+     * left on any device.
+     *
+     * **Null until the reader first folds anything**, and null means the
+     * first-visit view: every entry closed except a lone root. It is distinct
+     * from `[]`, which is a reader who closed everything, a lone root
+     * included, and must stay so.
+     *
+     * Here rather than on `articles`, where the reading place is: the
+     * collection syncs every article row and a paper's folds are no business
+     * of it. Indices are safe as names because `entries` is only ever replaced
+     * whole, and the one write that replaces it (the upload's, in
+     * `extract-stage.ts`) sets this back to null in the same statement.
+     */
+    expanded: jsonb('expanded').$type<number[]>(),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()

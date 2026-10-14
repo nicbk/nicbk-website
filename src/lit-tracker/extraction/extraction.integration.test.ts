@@ -262,6 +262,37 @@ describe('the extract stage, against real services', () => {
     ])
   })
 
+  // features/the-contents-fold: folds name entries by index, so contents
+  // written again must not keep them.
+  it('forgets the reader’s folds when a replay writes the contents again', async () => {
+    const outlined = new Uint8Array(
+      await readFile(
+        new URL('../contents/fixtures/outlined.pdf', import.meta.url),
+      ),
+    )
+    const upload = await uploadedJob('outlined.pdf', outlined)
+    const job = {
+      uploadJobId: upload.id,
+      userId: USER_A,
+      pdfObjectKey: pdfObjectKey(USER_A, upload.id),
+    }
+
+    await runExtractStage(
+      job,
+      servicesWith(async () => EXTRACTED),
+    )
+    await database.db.execute(
+      sql`update article_contents set expanded = '[0]'::jsonb where article_id = ${upload.id}`,
+    )
+    expect(await contentsRow(upload.id)).toMatchObject({ expanded: [0] })
+
+    await runExtractStage(
+      job,
+      servicesWith(async () => EXTRACTED),
+    )
+    expect(await contentsRow(upload.id)).toMatchObject({ expanded: null })
+  })
+
   it('falls back to the headings for a PDF the engine cannot open', async () => {
     const upload = await uploadedJob('paper.pdf', pdf('extract-headings'))
     const headings = [

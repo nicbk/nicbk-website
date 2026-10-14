@@ -109,6 +109,7 @@ export default drizzleZeroConfig(drizzleSchema, {
       userId: true,
       source: true,
       entries: true,
+      expanded: true,
       createdAt: true,
       updatedAt: true,
     },

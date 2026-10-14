@@ -297,6 +297,10 @@ async function recordOutcome(
 
     // The contents, in the same transaction, so a paper is never finished
     // without them and a replay writes them again rather than twice.
+    //
+    // A rewrite also forgets the reader's folds (features/the-contents-fold):
+    // they name entries by index, and new entries would give those indices to
+    // different sections. Null is "never folded", the first-visit view.
     await tx
       .insert(articleContents)
       .values({
@@ -306,7 +310,7 @@ async function recordOutcome(
       })
       .onConflictDoUpdate({
         target: articleContents.articleId,
-        set: { ...outcome.contents, updatedAt: new Date() },
+        set: { ...outcome.contents, expanded: null, updatedAt: new Date() },
       })
 
     // The bibliography is written here, in the transaction that creates the

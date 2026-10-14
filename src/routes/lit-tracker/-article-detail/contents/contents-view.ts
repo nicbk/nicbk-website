@@ -22,11 +22,17 @@ export type ContentsView =
   | { kind: 'none' }
   /** Reading the contents went wrong. */
   | { kind: 'failed' }
-  | { kind: 'entries'; entries: readonly ContentsEntry[] }
+  | {
+      kind: 'entries'
+      entries: readonly ContentsEntry[]
+      /** The open entries, or null for a paper never folded. */
+      expanded: readonly number[] | null
+    }
 
 export interface ContentsRow {
   source: ContentsSource
   entries: readonly ContentsEntry[]
+  expanded?: readonly number[] | null | undefined
 }
 
 export function contentsView(
@@ -55,5 +61,9 @@ export function contentsView(
   if (row.source === 'none' || row.entries.length === 0) {
     return { kind: 'none' }
   }
-  return { kind: 'entries', entries: row.entries }
+  return {
+    kind: 'entries',
+    entries: row.entries,
+    expanded: row.expanded ?? null,
+  }
 }

@@ -1,6 +1,6 @@
 # Status: The Sections Fold
 
-**State:** In review ([#258](https://github.com/nicbk/nicbk-website/issues/258)).
+**State:** Merged ([#258](https://github.com/nicbk/nicbk-website/issues/258); PR [#260](https://github.com/nicbk/nicbk-website/pull/260)).
 
 ## What shipped
 
@@ -69,5 +69,6 @@ root.
 
 ## Log
 
+- 2026-10-14: merged.
 - 2026-10-14: implemented and verified in Chromium.
 - 2026-10-14: spec'd.

@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ContentsEntry } from '~/lit-tracker/contents/contents'
+import { foldsAfter } from '~/lit-tracker/contents/contents-tree'
 import type { ReadingLine } from '../reader-jump'
-import type { ContentsFolds } from './use-contents-folds'
 
 const keepInView = vi.hoisted(() => vi.fn())
 vi.mock('./keep-in-view', () => ({ keepInView }))
@@ -34,8 +34,8 @@ function Reader() {
 }
 
 /**
- * Folds held in the test, as the sidebar holds them: a press re-renders the
- * list with what it asked for.
+ * Folds held in the test as sync holds them for the sidebar: a press writes
+ * what the mutator would (`foldsAfter`), and the list re-renders from it.
  */
 function Harness({
   entries,
@@ -46,26 +46,17 @@ function Harness({
   entries: readonly ContentsEntry[]
   initial: readonly number[] | null
   onJump: (pageIndex: number, top: number | null) => void
-  fold: ContentsFolds['fold']
+  fold: (index: number, open: boolean) => void
 }) {
   const [expanded, setExpanded] = useState(initial)
   return (
     <ReaderJumpProvider>
       <Reader />
       <ContentsPanel
-        view={{ kind: 'entries', entries }}
-        folds={{
-          expanded,
-          fold: (index, open) => {
-            fold(index, open)
-            const current = new Set(expanded ?? [])
-            if (open) {
-              current.add(index)
-            } else {
-              current.delete(index)
-            }
-            setExpanded([...current])
-          },
+        view={{ kind: 'entries', entries, expanded }}
+        onFold={(index, open) => {
+          fold(index, open)
+          setExpanded(foldsAfter(entries, expanded, index, open))
         }}
         onJump={onJump}
       />
@@ -109,13 +100,7 @@ describe('ContentsPanel', () => {
     ['none', 'this paper has no outline or numbered sections.'],
     ['failed', 'couldn’t read the contents of this paper.'],
   ] as const)('says so when %s', (kind, sentence) => {
-    render(
-      <ContentsPanel
-        view={{ kind }}
-        folds={{ expanded: null, fold: vi.fn() }}
-        onJump={vi.fn()}
-      />,
-    )
+    render(<ContentsPanel view={{ kind }} onFold={vi.fn()} onJump={vi.fn()} />)
     expect(screen.getByText(sentence)).toBeInTheDocument()
   })
 

@@ -6,6 +6,7 @@ import { z } from 'zod'
 // dialect.
 import { ANNOTATION_TYPES } from '~/lit-tracker/annotation-type'
 import { ARTICLE_STATUSES } from '~/lit-tracker/article-status'
+import { foldsAfter } from '~/lit-tracker/contents/contents-tree'
 import type { ZeroContext } from './context'
 import {
   MutationRefusedError,
@@ -25,7 +26,7 @@ export { MutationRefusedError } from './ownership'
  * permissions layer behind this file — every write-authorization decision on the
  * site's user-owned data. `queries.ts` is the mirror image of this for reads.
  *
- * Three properties hold across all six, and each is a rule rather than a
+ * Three properties hold across all of them, and each is a rule rather than a
  * coincidence:
  *
  * - **The owner comes from `ctx`, never from arguments.** `ctx` is derived
@@ -289,6 +290,59 @@ export const mutators = defineMutators({
             })
           }
         }
+      },
+    ),
+  },
+
+  articleContents: {
+    /**
+     * Opens or closes one entry of a paper's contents
+     * (features/the-contents-fold).
+     *
+     * **One entry and a direction, not the whole open set.** Two devices
+     * folding different chapters both keep their change; a whole-set write
+     * would let the later one undo the earlier. Opening an open entry changes
+     * nothing, which is what makes this safe to re-run on rebase.
+     *
+     * On a paper never folded the stored value is null, and the first press
+     * starts from the first-visit view (`foldsAfter`): the same rule the panel
+     * shows, imported from one place, so the client's optimistic write and the
+     * server's agree.
+     *
+     * The row is read under the caller's id, as every write here is, and an
+     * index past the end of the entries is refused: it names nothing, and a
+     * stored index that names nothing would be waiting to mean something if
+     * the list ever grew.
+     *
+     * `updatedAt` is left alone. It says when the contents were read, and a
+     * fold is not a reading.
+     */
+    setExpanded: defineMutator(
+      z.object({
+        articleId: z.uuid(),
+        index: z.int().min(0),
+        open: z.boolean(),
+      }),
+      async ({ args, ctx, tx }) => {
+        const session = requireSession(ctx)
+        const [contents] = await tx.run(
+          zql.articleContents
+            .where('articleId', args.articleId)
+            .where('userId', session.id)
+            .limit(1),
+        )
+        if (!contents || args.index >= contents.entries.length) {
+          throw new MutationRefusedError()
+        }
+        await tx.mutate.articleContents.update({
+          articleId: args.articleId,
+          expanded: foldsAfter(
+            contents.entries,
+            contents.expanded ?? null,
+            args.index,
+            args.open,
+          ),
+        })
       },
     ),
   },

@@ -1,4 +1,4 @@
-import type { ContentsEntry } from '~/lit-tracker/contents/contents'
+import type { ContentsEntry } from './contents'
 
 /**
  * The contents as a tree, so an entry's sections can fold under it
@@ -109,4 +109,30 @@ export function markedRow(
     ancestors.unshift(at)
   }
   return ancestors.find((ancestor) => !open.has(ancestor)) ?? inView
+}
+
+/**
+ * The open set after one entry is opened or closed, sorted and without
+ * duplicates, so opening an open entry changes nothing.
+ *
+ * **On a paper never folded (`expanded` null) it starts from the first-visit
+ * view**, so the first press changes the entry pressed and nothing else.
+ * Starting from `[]` would close a lone root the reader never touched.
+ *
+ * Shared by the mutator, which computes the stored value on the server and
+ * again in the browser, so both apply one rule.
+ */
+export function foldsAfter(
+  entries: readonly ContentsEntry[],
+  expanded: readonly number[] | null,
+  index: number,
+  open: boolean,
+): number[] {
+  const next = new Set(expanded ?? firstVisitOpen(contentsTree(entries)))
+  if (open) {
+    next.add(index)
+  } else {
+    next.delete(index)
+  }
+  return [...next].sort((a, b) => a - b)
 }

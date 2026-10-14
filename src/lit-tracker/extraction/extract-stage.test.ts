@@ -75,6 +75,7 @@ interface Recorded {
   articleOnConflict: Record<string, unknown> | undefined
   jobUpdate: Record<string, unknown> | undefined
   contents: Record<string, unknown> | undefined
+  contentsOnConflict: Record<string, unknown> | undefined
   edges: Record<string, unknown>[]
   sent: { queue: string; job: unknown }[]
 }
@@ -101,9 +102,14 @@ function fakeDatabase(
         // test can say what was written.
         if (table === articleContents) {
           return {
-            onConflictDoUpdate: async () => {
+            onConflictDoUpdate: async ({
+              set,
+            }: {
+              set: Record<string, unknown>
+            }) => {
               recorded.steps.push('insert-contents')
               recorded.contents = values as Record<string, unknown>
+              recorded.contentsOnConflict = set
             },
           }
         }
@@ -237,6 +243,7 @@ beforeEach(() => {
     articleOnConflict: undefined,
     jobUpdate: undefined,
     contents: undefined,
+    contentsOnConflict: undefined,
     edges: [],
     sent: [],
   }
@@ -572,6 +579,20 @@ describe('the contents (features/a-paper-shows-its-contents)', () => {
       userId: JOB.userId,
       source: 'outline',
       entries: outline,
+    })
+  })
+
+  it('forgets the reader’s folds when it writes the contents again', async () => {
+    // features/the-contents-fold: folds name entries by index, so new entries
+    // would hand those indices to different sections. Null is "never folded".
+    await runExtractStage(
+      JOB,
+      fakeServices({ extract: async () => WITH_HEADINGS }),
+    )
+    expect(recorded.contentsOnConflict).toMatchObject({
+      source: 'headings',
+      entries: WITH_HEADINGS.headings,
+      expanded: null,
     })
   })
 

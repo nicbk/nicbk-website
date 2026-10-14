@@ -102,6 +102,15 @@ export interface ArticleMutations {
    * A refusal is a toast: this one the reader did ask for.
    */
   retryReferenceReads: (articleIds: string[]) => Promise<void>
+  /**
+   * Opens or closes one entry of a paper's contents, kept on the account
+   * (features/the-contents-fold). A refusal is a toast: the reader pressed it.
+   */
+  setContentsFold: (
+    articleId: string,
+    index: number,
+    open: boolean,
+  ) => Promise<void>
 }
 
 export function useArticleMutations(): ArticleMutations {
@@ -183,6 +192,13 @@ export function useArticleMutations(): ArticleMutations {
 
       retryReferenceReads: (articleIds) =>
         run(() => zero.mutate(mutators.referenceReads.retry({ articleIds }))),
+
+      setContentsFold: (articleId, index, open) =>
+        run(() =>
+          zero.mutate(
+            mutators.articleContents.setExpanded({ articleId, index, open }),
+          ),
+        ),
     }),
     [report, run, zero],
   )

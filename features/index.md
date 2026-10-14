@@ -84,9 +84,9 @@ need them (see Phases 2–3).
 | 24 | A note fits the margin (a text box writes at the size of a margin note, in a box that fits one) | [`a-note-fits-the-margin`](./a-note-fits-the-margin/description.md) | **Complete** (2026-09-16; its one task merged, #218) | #9 |
 | 25 | A citation opens the paper (a previewed reference you own becomes a way into it) | [`a-citation-opens-the-paper`](./a-citation-opens-the-paper/description.md) | **Complete** (2026-09-17; 3 tasks, #220) | #7, #10, #22 |
 | 26 | It fits the screen (no menu off the edge, no sideways scroll, a row that breathes on a phone) | [`it-fits-the-screen`](./it-fits-the-screen/description.md) | **Complete** (2026-09-17; all 3 tasks merged, #234 + #235 + #236; the user's phone check passed) | #8, #9, #10, #16, #19 |
-| 27 | A text box lets go (clicking away from a note ends its typing, so it can be moved) | [`a-text-box-lets-go`](./a-text-box-lets-go/description.md) | **Implemented** (2026-10-12; its one task merged, #249; awaiting the user's phone check) | #9, #24 |
-| 28 | A passage gets a margin note (one action highlights a passage and opens a note beside it, tied to it) | [`a-passage-gets-a-margin-note`](./a-passage-gets-a-margin-note/description.md) | **Implemented** (2026-10-12; both tasks merged, #250 + #251; awaiting the user's phone check) | #9, #15, #24, #27 |
-| 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **In progress** (2026-10-12; tasks 1–3 of 4 merged, task 4 implemented) | #7, #9, #10, #22 |
+| 27 | A text box lets go (clicking away from a note ends its typing, so it can be moved) | [`a-text-box-lets-go`](./a-text-box-lets-go/description.md) | **Complete** (2026-10-14; its one task merged, #249; the user's phone check passed) | #9, #24 |
+| 28 | A passage gets a margin note (one action highlights a passage and opens a note beside it, tied to it) | [`a-passage-gets-a-margin-note`](./a-passage-gets-a-margin-note/description.md) | **Complete** (2026-10-14; both tasks merged, #250 + #251; the user's phone check passed) | #9, #15, #24, #27 |
+| 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **Complete** (2026-10-14; all 4 tasks merged, #252 + #253 + #254 + #255; the user's phone check passed) | #7, #9, #10, #22 |
 
 ## How this roadmap is spec'd out
 
@@ -104,8 +104,8 @@ Following the decided one-at-a-time, gated process, features are fleshed out
 `a-paper-opens-where-you-left-it` (complete), `citation-graph-traversal`
 (complete), `a-note-fits-the-margin` (complete),
 `a-citation-opens-the-paper` (complete), `it-fits-the-screen` (complete),
-`a-text-box-lets-go`, `a-passage-gets-a-margin-note` and
-`a-paper-shows-its-contents` have full folders today. The rest carry a one-line intent here and get their full
+`a-text-box-lets-go` (complete), `a-passage-gets-a-margin-note` (complete) and
+`a-paper-shows-its-contents` (complete) have full folders today. The rest carry a one-line intent here and get their full
 folder (six files + tasks) written when we reach them, so their specs reflect the
 actual state of `main` at that point instead of drifting from a speculative
 up-front draft.

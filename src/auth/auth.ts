@@ -1,5 +1,7 @@
 import { db, pool } from '~/db/client'
 import { env } from '~/env'
+import { getQueue } from '~/lit-tracker/jobs/queue'
+import { queueAccountPurge } from '~/lit-tracker/pdf/purge-stage'
 import { createAuth } from './create-auth'
 import type { AuthSession } from './session'
 import { getSessionFrom } from './session'
@@ -25,6 +27,11 @@ export const auth = createAuth(
     },
     trustedOrigins: [env.BETTER_AUTH_URL],
     useSecureCookies: env.BETTER_AUTH_URL.startsWith('https://'),
+    // The deleted account's PDFs, which live in Garage and so cannot cascade
+    // with its rows (features/what-the-research-found). A future app with
+    // files of its own adds its clean-up here.
+    onUserDeleted: async (userId) =>
+      queueAccountPurge(await getQueue(), userId),
   },
 )
 

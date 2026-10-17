@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm'
 import {
   afterAll,
   afterEach,
@@ -57,6 +58,9 @@ let respondWithArticlePdf: typeof import('./pdf-endpoint').respondWithArticlePdf
 let putArticlePdf: typeof import('~/storage/pdf-storage').putArticlePdf
 let runPdfCleanupStage: typeof import('./cleanup-stage').runPdfCleanupStage
 let productionPdfCleanupServices: typeof import('./cleanup-stage').productionPdfCleanupServices
+let runAccountPurge: typeof import('./purge-stage').runAccountPurge
+let queueDeletedAccountPurges: typeof import('./purge-stage').queueDeletedAccountPurges
+let productionAccountPurgeServices: typeof import('./purge-stage').productionAccountPurgeServices
 
 /** A small but genuine PDF: a header, a marker, and an EOF. */
 function pdf(marker: string): Uint8Array {
@@ -81,6 +85,10 @@ beforeAll(async () => {
   const cleanup = await import('./cleanup-stage')
   runPdfCleanupStage = cleanup.runPdfCleanupStage
   productionPdfCleanupServices = cleanup.productionPdfCleanupServices
+  const purge = await import('./purge-stage')
+  runAccountPurge = purge.runAccountPurge
+  queueDeletedAccountPurges = purge.queueDeletedAccountPurges
+  productionAccountPurgeServices = purge.productionAccountPurgeServices
 }, 300_000)
 
 afterAll(async () => {
@@ -397,5 +405,76 @@ describe('the PDF cleanup job', () => {
     const response = await ask(OWNED_ARTICLE, OWNER)
 
     expect(response.status).toBe(500)
+  })
+})
+
+// features/what-the-research-found, F2: what deleting an account leaves in the
+// bucket, and the purge that empties it.
+describe('purging a deleted account', () => {
+  const OWNERS_SECOND = '0199a1b2-c3d4-7e5f-8a9b-000000000003'
+
+  /** The account gone, as Better Auth's delete leaves it: rows cascaded. */
+  async function deleteAccount(userId: string) {
+    await database.db.delete(user).where(eq(user.id, userId))
+  }
+
+  it('empties the deleted account’s folder and nobody else’s', async () => {
+    await plantArticle(OWNED_ARTICLE, OWNER)
+    await plantArticle(OWNERS_SECOND, OWNER)
+    await plantArticle(OTHERS_ARTICLE, OTHER)
+    await deleteAccount(OWNER)
+
+    const removed = await runAccountPurge(
+      { userId: OWNER },
+      productionAccountPurgeServices(database),
+    )
+
+    expect(removed).toBe(2)
+    expect(await garage.has(pdfObjectKey(OWNER, OWNED_ARTICLE))).toBe(false)
+    expect(await garage.has(pdfObjectKey(OWNER, OWNERS_SECOND))).toBe(false)
+    expect(await garage.has(pdfObjectKey(OTHER, OTHERS_ARTICLE))).toBe(true)
+  })
+
+  it('deletes nothing for an account that still exists', async () => {
+    const warned = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    await plantArticle(OWNED_ARTICLE, OWNER)
+
+    const removed = await runAccountPurge(
+      { userId: OWNER },
+      productionAccountPurgeServices(database),
+    )
+
+    expect(removed).toBe(0)
+    expect(await garage.has(pdfObjectKey(OWNER, OWNED_ARTICLE))).toBe(true)
+    warned.mockRestore()
+  })
+
+  it('is done on a second run', async () => {
+    await plantArticle(OWNED_ARTICLE, OWNER)
+    await deleteAccount(OWNER)
+    const services = productionAccountPurgeServices(database)
+
+    await runAccountPurge({ userId: OWNER }, services)
+
+    expect(await runAccountPurge({ userId: OWNER }, services)).toBe(0)
+  })
+
+  it('finds, at start, the folder an account deleted before this fix left behind', async () => {
+    await plantArticle(OWNED_ARTICLE, OWNER)
+    await plantArticle(OTHERS_ARTICLE, OTHER)
+    await deleteAccount(OWNER)
+    const send = vi.fn(async () => 'job-id')
+
+    const queued = await queueDeletedAccountPurges(
+      { send },
+      productionAccountPurgeServices(database),
+    )
+
+    expect(queued).toBe(1)
+    expect(send).toHaveBeenCalledWith(
+      'lit-tracker.purge-account',
+      { userId: OWNER },
+      { singletonKey: OWNER },
+    )
   })
 })

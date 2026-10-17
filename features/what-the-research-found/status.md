@@ -9,7 +9,7 @@ Feature parent issue: [**#262**](https://github.com/nicbk/nicbk-website/issues/2
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`signing-in-is-not-shared`](./tasks/signing-in-is-not-shared/status.md) | In review ([#263](https://github.com/nicbk/nicbk-website/issues/263)) | — | — | — |
-| [`a-deleted-account-leaves-nothing`](./tasks/a-deleted-account-leaves-nothing/status.md) | Planned ([#264](https://github.com/nicbk/nicbk-website/issues/264)) | — | — | — |
+| [`a-deleted-account-leaves-nothing`](./tasks/a-deleted-account-leaves-nothing/status.md) | In review ([#264](https://github.com/nicbk/nicbk-website/issues/264)) | — | — | — |
 
 ## Log
 

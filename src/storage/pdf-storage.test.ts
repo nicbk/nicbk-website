@@ -29,10 +29,15 @@ vi.mock('@aws-sdk/client-s3', () => ({
   DeleteObjectCommand: class {
     constructor(readonly input: unknown) {}
   },
+  ListObjectsV2Command: class {
+    constructor(readonly input: unknown) {}
+  },
 }))
 
 const {
   deleteArticlePdf,
+  listPdfOwners,
+  listUserPdfKeys,
   getArticlePdf,
   openArticlePdf,
   putArticlePdf,
@@ -243,5 +248,66 @@ describe('deleteArticlePdf', () => {
     await expect(
       deleteArticlePdf(pdfObjectKey(OWNER, ARTICLE), OWNER),
     ).resolves.toBeUndefined()
+  })
+})
+
+/**
+ * The two listings an account purge stands on (features/what-the-research-found):
+ * that they follow every page, and that the owners' listing names only real
+ * user folders. Against Garage itself they are `pdf.integration.test.ts`'s.
+ */
+describe('listing for an account purge', () => {
+  beforeEach(() => {
+    send.mockReset()
+  })
+
+  it('lists every key under the user’s folder, across pages', async () => {
+    send
+      .mockResolvedValueOnce({
+        Contents: [{ Key: 'lit-tracker/user-a/1/source.pdf' }],
+        IsTruncated: true,
+        NextContinuationToken: 'page-2',
+      })
+      .mockResolvedValueOnce({
+        Contents: [{ Key: 'lit-tracker/user-a/2/source.pdf' }, {}],
+        IsTruncated: false,
+      })
+
+    expect(await listUserPdfKeys('user-a')).toEqual([
+      'lit-tracker/user-a/1/source.pdf',
+      'lit-tracker/user-a/2/source.pdf',
+    ])
+    const requests = send.mock.calls.map(([command]) => command.input)
+    expect(requests[0]).toMatchObject({ Prefix: 'lit-tracker/user-a/' })
+    expect(requests[1]).toMatchObject({ ContinuationToken: 'page-2' })
+  })
+
+  it('lists the users with a folder, one per folder, across pages', async () => {
+    send
+      .mockResolvedValueOnce({
+        CommonPrefixes: [{ Prefix: 'lit-tracker/user-a/' }, {}],
+        IsTruncated: true,
+        NextContinuationToken: 'page-2',
+      })
+      .mockResolvedValueOnce({
+        CommonPrefixes: [
+          { Prefix: 'lit-tracker/user-b/' },
+          // Not a user's folder: named by nothing, so purged for nobody.
+          { Prefix: 'lit-tracker/' },
+        ],
+        IsTruncated: false,
+      })
+
+    expect(await listPdfOwners()).toEqual(['user-a', 'user-b'])
+    expect(send.mock.calls[0]?.[0].input).toMatchObject({
+      Prefix: 'lit-tracker/',
+      Delimiter: '/',
+    })
+  })
+
+  it('answers empty for an empty bucket', async () => {
+    send.mockResolvedValueOnce({ IsTruncated: false })
+
+    expect(await listPdfOwners()).toEqual([])
   })
 })

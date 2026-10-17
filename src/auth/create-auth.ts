@@ -51,6 +51,17 @@ export interface AuthConfig {
    * Secure cookie would simply never be stored.
    */
   useSecureCookies: boolean
+  /**
+   * Called once an account is gone, with its id: for the data that does not
+   * cascade from the `user` row, which today is the Literature Tracker's PDFs
+   * (features/what-the-research-found). Each app that keeps files supplies its
+   * own clean-up here, through `auth.ts`, so auth itself knows no app.
+   *
+   * Its failure is logged, never thrown: by the time it runs the account has
+   * been deleted, and an error would tell the user it had not. What it misses,
+   * a sweep at worker start finds.
+   */
+  onUserDeleted?: (userId: string) => Promise<void>
 }
 
 /**
@@ -89,7 +100,19 @@ export function createAuth({ db }: DatabaseHandle, config: AuthConfig) {
       // Off by default in Better Auth: without this, `/delete-user` 404s.
       // Users own their identity here, so they get to remove it — and once
       // sub-app tables exist (#7) the ownership foreign keys cascade from it.
-      deleteUser: { enabled: true },
+      deleteUser: {
+        enabled: true,
+        afterDelete: async (deleted) => {
+          try {
+            await config.onUserDeleted?.(deleted.id)
+          } catch (error) {
+            console.error(
+              `Could not queue the clean-up of deleted account ${deleted.id}:`,
+              error,
+            )
+          }
+        },
+      },
     },
     trustedOrigins: config.trustedOrigins,
     advanced: {

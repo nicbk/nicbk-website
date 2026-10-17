@@ -32,8 +32,18 @@ vi.mock('~/lit-tracker/contents/read-stage', async (importOriginal) => ({
   queueContentsReads,
 }))
 
-const { queueOlderPaperContents, queueOlderPaperRereads, startJobWorker } =
-  await import('./worker')
+const queueDeletedAccountPurges = vi.hoisted(() => vi.fn(async () => 0))
+vi.mock('~/lit-tracker/pdf/purge-stage', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~/lit-tracker/pdf/purge-stage')>()),
+  queueDeletedAccountPurges,
+}))
+
+const {
+  queueLeftoverAccountPurges,
+  queueOlderPaperContents,
+  queueOlderPaperRereads,
+  startJobWorker,
+} = await import('./worker')
 
 describe('startJobWorker', () => {
   afterEach(() => {
@@ -77,11 +87,15 @@ describe('startJobWorker', () => {
       // #29's backfill of older papers' contents.
       'lit-tracker.read-contents',
       'lit-tracker.read-contents-exhausted',
+      // #31's purge of a deleted account's PDFs.
+      'lit-tracker.purge-account',
     ])
     // And once they are bound, the older papers are queued for their re-read
     // and for their contents.
     expect(queueReferenceRereads).toHaveBeenCalledOnce()
     expect(queueContentsReads).toHaveBeenCalledOnce()
+    // And whatever deleted accounts left in the bucket is queued for purging.
+    expect(queueDeletedAccountPurges).toHaveBeenCalledOnce()
   })
 
   it('starts only once, however many times it is called', async () => {
@@ -140,6 +154,31 @@ describe('queueOlderPaperContents', () => {
     queueContentsReads.mockRejectedValueOnce(new Error('connection lost'))
 
     await expect(queueOlderPaperContents({} as never)).resolves.toBeUndefined()
+    expect(error).toHaveBeenCalled()
+  })
+})
+
+describe('queueLeftoverAccountPurges', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('says how many deleted accounts it queued', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    queueDeletedAccountPurges.mockResolvedValueOnce(2)
+
+    await queueLeftoverAccountPurges({} as never)
+
+    expect(log).toHaveBeenCalledWith('Purging the PDFs of 2 deleted accounts.')
+  })
+
+  it('logs a failure rather than throwing, as the re-read does', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    queueDeletedAccountPurges.mockRejectedValueOnce(new Error('bucket down'))
+
+    await expect(
+      queueLeftoverAccountPurges({} as never),
+    ).resolves.toBeUndefined()
     expect(error).toHaveBeenCalled()
   })
 })

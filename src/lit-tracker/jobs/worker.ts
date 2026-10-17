@@ -13,6 +13,11 @@ import {
   productionPdfCleanupServices,
   registerPdfCleanupHandler,
 } from '~/lit-tracker/pdf/cleanup-stage'
+import {
+  productionAccountPurgeServices,
+  queueDeletedAccountPurges,
+  registerAccountPurgeHandler,
+} from '~/lit-tracker/pdf/purge-stage'
 import { getQueue } from './queue'
 
 /**
@@ -64,12 +69,17 @@ async function registerUntilConnected(): Promise<void> {
       await registerPdfCleanupHandler(boss, productionPdfCleanupServices())
       await registerReferenceRereadHandlers(boss, services)
       await registerContentsReadHandlers(boss, services)
+      await registerAccountPurgeHandler(
+        boss,
+        productionAccountPurgeServices({ db, pool }),
+      )
       if (attempt > 0) {
         console.log('Job worker connected.')
       }
       // After the handlers, so the first re-read starts as soon as it is sent.
       await queueOlderPaperRereads(boss)
       await queueOlderPaperContents(boss)
+      await queueLeftoverAccountPurges(boss)
       return
     } catch (error) {
       attempt += 1
@@ -126,6 +136,28 @@ export async function queueOlderPaperContents(
     }
   } catch (error) {
     console.error('Could not queue the contents of older papers:', error)
+  }
+}
+
+/**
+ * Queues a purge for every folder in the bucket whose account is gone
+ * (features/what-the-research-found): a deletion whose hook failed to send,
+ * and every account deleted before deletions purged at all. Outside the retry
+ * loop, for the reason the re-read above is.
+ */
+export async function queueLeftoverAccountPurges(
+  boss: Awaited<ReturnType<typeof getQueue>>,
+): Promise<void> {
+  try {
+    const queued = await queueDeletedAccountPurges(
+      boss,
+      productionAccountPurgeServices({ db, pool }),
+    )
+    if (queued > 0) {
+      console.log(`Purging the PDFs of ${queued} deleted accounts.`)
+    }
+  } catch (error) {
+    console.error('Could not queue the purge of deleted accounts:', error)
   }
 }
 

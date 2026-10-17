@@ -1,11 +1,17 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
 import { env } from '~/env'
-import { isOwnedBy } from './object-key'
+import {
+  isOwnedBy,
+  ownerOfPrefix,
+  PDF_ROOT_PREFIX,
+  userPdfPrefix,
+} from './object-key'
 
 /**
  * Reading, writing and removing article PDFs in Garage.
@@ -260,6 +266,69 @@ export async function deleteArticlePdf(
   await s3.send(
     new DeleteObjectCommand({ Bucket: env.GARAGE_BUCKET, Key: key }),
   )
+}
+
+/**
+ * Every key stored under one user's folder: what an account purge deletes
+ * (features/what-the-research-found).
+ *
+ * Paged, because a listing answers at most a thousand keys at a time and a
+ * long-standing collection can hold more.
+ */
+export async function listUserPdfKeys(userId: string): Promise<string[]> {
+  const keys: string[] = []
+  let continuationToken: string | undefined
+  do {
+    const page = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: env.GARAGE_BUCKET,
+        Prefix: userPdfPrefix(userId),
+        ContinuationToken: continuationToken,
+      }),
+    )
+    for (const object of page.Contents ?? []) {
+      if (object.Key) {
+        keys.push(object.Key)
+      }
+    }
+    continuationToken = page.IsTruncated
+      ? page.NextContinuationToken
+      : undefined
+  } while (continuationToken)
+  return keys
+}
+
+/**
+ * The users with at least one PDF in the bucket, read from the folder names
+ * (`lit-tracker/<userId>/`). The sweep compares them with the accounts that
+ * exist, to find what a deleted account left behind.
+ *
+ * A delimiter listing names each folder once, however many papers are in it,
+ * so this costs one request per thousand users rather than one per paper.
+ */
+export async function listPdfOwners(): Promise<string[]> {
+  const owners: string[] = []
+  let continuationToken: string | undefined
+  do {
+    const page = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: env.GARAGE_BUCKET,
+        Prefix: PDF_ROOT_PREFIX,
+        Delimiter: '/',
+        ContinuationToken: continuationToken,
+      }),
+    )
+    for (const { Prefix } of page.CommonPrefixes ?? []) {
+      const owner = Prefix ? ownerOfPrefix(Prefix) : null
+      if (owner) {
+        owners.push(owner)
+      }
+    }
+    continuationToken = page.IsTruncated
+      ? page.NextContinuationToken
+      : undefined
+  } while (continuationToken)
+  return owners
 }
 
 /**

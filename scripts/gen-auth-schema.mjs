@@ -46,8 +46,18 @@ function run(command, args) {
 
 // Pinned to the installed better-auth version: the CLI must generate the
 // schema of the library actually in use, not whatever is newest on npm.
+//
+// **`--legacy-peer-deps`: npx resolves the CLI's dependency tree afresh on
+// every run**, and the pin above covers only the CLI itself. On 2026-10-17 a
+// newly published peer set (vitest 4.1.x, which the CLI's dependencies list
+// as an optional peer) made npm 10 crash while resolving it ("Cannot read
+// properties of null (reading 'edgesOut')", in arborist's `#loadPeerSet`).
+// That turned this drift check red on every branch with no change in this
+// repository. Peers are not needed to generate a schema, so they are not
+// resolved.
 run('npx', [
   '--yes',
+  '--legacy-peer-deps',
   'auth@1.6.25',
   'generate',
   '--config',

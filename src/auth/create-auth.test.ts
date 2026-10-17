@@ -64,6 +64,16 @@ describe('createAuth', () => {
     expect(session?.updateAge).toBe(60 * 60 * 24)
   })
 
+  it('does not rate-limit by an address every visitor shares', () => {
+    // Behind the relay every request comes from the relay's address, so
+    // per-address limits would be one limit for the whole site. With IP
+    // tracking off, Better Auth skips them (its `resolveRateLimitConfig`
+    // returns no rule) rather than sharing one bucket among everyone.
+    const { advanced } = buildAuth().options
+
+    expect(advanced?.ipAddress?.disableIpTracking).toBe(true)
+  })
+
   it('trusts only this app and offers only Google', () => {
     const options = buildAuth().options
 

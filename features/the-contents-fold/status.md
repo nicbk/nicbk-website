@@ -1,8 +1,8 @@
 # Status: The Contents Fold
 
-**Feature state:** Planned (2026-10-14). The user's three decisions are
+**Feature state:** **Merged** (2026-10-14): both tasks merged (#260, #261). Safari on an iPhone not yet checked by the user. The user's three decisions are
 recorded in [plan.md](./plan.md#decided-with-the-user-2026-10-14). Go-ahead
-given 2026-10-14. Task 1 merged; task 2 in review.
+given 2026-10-14.
 
 Spec written against `main` at `bd0d719`. See [research.md](./research.md).
 
@@ -19,10 +19,11 @@ with one sub-issue per task. Roadmap entry **#30**.
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
 | [`the-sections-fold`](./tasks/the-sections-fold/status.md) | Complete ([#258](https://github.com/nicbk/nicbk-website/issues/258)) | [#260](https://github.com/nicbk/nicbk-website/pull/260) | Pass | Merged |
-| [`the-folds-are-kept`](./tasks/the-folds-are-kept/status.md) | In review ([#259](https://github.com/nicbk/nicbk-website/issues/259)) | — | — | — |
+| [`the-folds-are-kept`](./tasks/the-folds-are-kept/status.md) | Complete ([#259](https://github.com/nicbk/nicbk-website/issues/259)) | [#261](https://github.com/nicbk/nicbk-website/pull/261) | Pass | Merged |
 
 ## Log
 
+- 2026-10-14: task 2 merged (#261).
 - 2026-10-14: task 2 implemented and verified.
 - 2026-10-14: task 1 merged (#260).
 - 2026-10-14: task 1 implemented and verified in Chromium.

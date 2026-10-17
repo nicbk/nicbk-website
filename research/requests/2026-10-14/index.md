@@ -6,6 +6,9 @@ step starts from it. The user: *"every bullet point I wrote is important"*.
 
 - [as-written.md](./as-written.md): the message, **verbatim**. It is the source
   of truth. Every file below quotes it.
+- [decisions.md](./decisions.md): every question the research left for the
+  user, numbered and deduplicated, with a recommended answer for each. Start
+  there to unblock planning.
 
 ## The requests and their path
 
@@ -81,13 +84,13 @@ depend on the answers:
 
 | Request | Research | Plan | Implementation |
 |---|---|---|---|
-| Collapsible outline | not needed | [#30 `the-contents-fold`](../../../features/the-contents-fold/description.md), awaiting the user | — |
-| Privacy and hardening | — | — | — |
-| Backups | — | — | — |
-| Roles and billing | — | — | — |
-| Quotas | — | — | — |
-| Profile role and quota | — | — | — |
-| Admin dashboards | — | — | — |
+| Collapsible outline | not needed | [#30 `the-contents-fold`](../../../features/the-contents-fold/description.md) | merged (#260, #261); phone check pending |
+| Privacy and hardening | researched; awaiting decisions: [user-data-encryption](../../security-privacy/user-data-encryption.md), [operator-liability-and-policies](../../security-privacy/operator-liability-and-policies.md), [production-hardening](../../security-privacy/production-hardening.md) | — | — |
+| Backups | researched; awaiting decisions: [backup-and-disaster-recovery, proposed revision](../../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user) | — | — |
+| Roles and billing | researched; awaiting decisions: [roles-and-administrators](../../system-architecture/roles-and-administrators.md), [payment-processor](../../technologies/payment-processor.md) | — | — |
+| Quotas | researched; awaiting decisions: [quotas-and-usage-metering](../../system-architecture/quotas-and-usage-metering.md) | — | — |
+| Profile role and quota | researched; awaiting decisions: [roles-and-administrators](../../system-architecture/roles-and-administrators.md) (U1), [quotas-and-usage-metering](../../system-architecture/quotas-and-usage-metering.md) (U2, U3), [payment-processor](../../technologies/payment-processor.md) (U4) | — | — |
+| Admin dashboards | researched; awaiting decisions: [roles-and-administrators](../../system-architecture/roles-and-administrators.md) (D1–D4, D7), [quotas-and-usage-metering](../../system-architecture/quotas-and-usage-metering.md) (D6) | — | — |
 
 Update this table as each step finishes. Link the research documents and
 `features/` folders it produces.

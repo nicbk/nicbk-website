@@ -93,6 +93,25 @@ export function createAuth({ db }: DatabaseHandle, config: AuthConfig) {
     },
     trustedOrigins: config.trustedOrigins,
     advanced: {
+      // **This server cannot tell its visitors apart, so it does not try.**
+      // The EC2 relay masquerades every public client onto the tunnel, and
+      // every request reaches here from the relay's own address
+      // (research/devops-deployment/hosting-and-infrastructure.md). Better
+      // Auth's rate limits are per address, so they were one limit for the
+      // whole site: three sign-in attempts per ten seconds, for everyone at
+      // once, which a busy minute or a single abuser would use up for all
+      // (features/what-the-research-found, F1).
+      //
+      // Disabling IP tracking makes Better Auth skip those limits, and stop
+      // recording the relay's address on sessions as though it were the
+      // user's. Sign-in is Google's, so there is no password to guess; what a
+      // limit here could have stopped is volume, which one shared bucket
+      // could not stop either.
+      //
+      // The way back: pass real client addresses through the relay or Caddy
+      // (H2 in research/requests/2026-10-14/decisions.md), then name the
+      // proxies in `ipAddress.trustedProxies` and remove this.
+      ipAddress: { disableIpTracking: true },
       useSecureCookies: config.useSecureCookies,
       defaultCookieAttributes: {
         // Not readable from JavaScript, so an XSS bug can't exfiltrate a

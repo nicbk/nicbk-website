@@ -8,9 +8,11 @@ Feature parent issue: [**#262**](https://github.com/nicbk/nicbk-website/issues/2
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`signing-in-is-not-shared`](./tasks/signing-in-is-not-shared/status.md) | In review ([#263](https://github.com/nicbk/nicbk-website/issues/263)) | — | — | — |
+| [`signing-in-is-not-shared`](./tasks/signing-in-is-not-shared/status.md) | Complete ([#263](https://github.com/nicbk/nicbk-website/issues/263)) | [#265](https://github.com/nicbk/nicbk-website/pull/265) | Pass | Merged |
 | [`a-deleted-account-leaves-nothing`](./tasks/a-deleted-account-leaves-nothing/status.md) | In review ([#264](https://github.com/nicbk/nicbk-website/issues/264)) | — | — | — |
 
 ## Log
 
+- 2026-10-18: task 1 merged (#265), with a CI fix: the auth schema generator stopped resolving npm peers after a vitest release crashed npm's resolver.
+- 2026-10-17: task 2 implemented and verified.
 - 2026-10-17: spec'd; the user decided to fix F1 and F2.

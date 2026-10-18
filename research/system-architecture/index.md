@@ -1,6 +1,7 @@
 # Research: System Architecture
 
-Status: all decided (2026-07-04), 5/5 researched.
+Status: 5/5 decided (2026-07-04); 2 more researched 2026-10-14, awaiting
+decision.
 
 How the shared infrastructure and sub-applications fit together (service
 boundaries, reactivity propagation, multi-app data sharing), per the
@@ -40,3 +41,12 @@ Semantic Scholar).
   `useQuery` auto-re-renders, auth only at subscription time, and
   confirmed write-origin-agnostic (job-status writes propagate exactly
   like user mutations).
+- [roles-and-administrators.md](./roles-and-administrators.md) — Researched
+  2026-10-14; awaiting decision. Admins named by Better Auth `user.id` in
+  `.env` with an own `isAdmin()` (no admin plugin); paid derived from a
+  webhook-written subscription mirror; admin dashboards behind one guard and a
+  read-only Postgres role.
+- [quotas-and-usage-metering.md](./quotas-and-usage-metering.md) — Researched
+  2026-10-14; awaiting decision. Storage from a byte ledger checked under a
+  per-user lock; bandwidth = PDF downloads + uploads per UTC month,
+  reserve-then-refund; Zero sync not attributable per user.

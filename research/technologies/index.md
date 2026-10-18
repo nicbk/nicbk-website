@@ -1,7 +1,8 @@
 # Research: Technologies
 
 Status: all 10 topics researched and decided (9/9 on 2026-07-02; `orm.md`
-added 2026-07-05). See each topic file for the chosen option, reasoning,
+added 2026-07-05); `payment-processor.md` researched 2026-10-14, awaiting
+decision. See each topic file for the chosen option, reasoning,
 and open items carried to other categories.
 
 What technologies/services to use, evaluated against the open-source and
@@ -26,6 +27,10 @@ shared-infrastructure constraints in
 - [orm.md](./orm.md) — ORM/migration tooling. **Decision: Drizzle** (Drizzle
   Kit + the official `drizzle-zero` generator), settled in
   [../devops-deployment/database-migrations.md](../devops-deployment/database-migrations.md).
+- [payment-processor.md](./payment-processor.md) — Payment processor for the
+  $5/month paid role. Researched 2026-10-14; awaiting decision.
+  Recommendation: Polar (merchant of record) via its Better Auth plugin,
+  Stripe Billing as fallback; needs an open-source exception.
 
 ## Lit Tracker specific
 

@@ -1,6 +1,7 @@
 # Research: Security & Privacy
 
-Status: fully researched and decided (2026-07-05), 5/5.
+Status: 5/5 decided (2026-07-05); 3 more researched 2026-10-14, awaiting
+decision.
 
 Auth/session handling, data protection for uploaded PDFs/annotations, the
 GPG signing/encryption capability mentioned on the about page, and
@@ -45,3 +46,17 @@ explicitly deferred by
   strict `style-src 'self'` is achievable given the already-decided
   Shiki/`rehype-pretty-code` output uses data attributes, not inline
   styles.
+- [user-data-encryption.md](./user-data-encryption.md) — Researched
+  2026-10-14; awaiting decision. Client-side encryption across devices is
+  possible; recommends "zero-access" encryption (server processes uploads
+  transiently, stores everything encrypted to the user's public key), or
+  server-held keys if permanent data loss on lost keys is unacceptable.
+- [operator-liability-and-policies.md](./operator-liability-and-policies.md) —
+  Researched 2026-10-14; awaiting decision. Research, not legal advice:
+  no-sharing plus legal hygiene (DMCA agent, Terms, Privacy Policy, abuse
+  contact, NCMEC registration) protects the operator; encryption adds little
+  legally.
+- [production-hardening.md](./production-hardening.md) — Researched
+  2026-10-14; awaiting decision. Two live defects (shared rate-limit bucket
+  behind the relay; account deletion leaves PDFs in Garage), plus a
+  MUST/SHOULD hardening list for public launch.

@@ -88,7 +88,7 @@ need them (see Phases 2–3).
 | 28 | A passage gets a margin note (one action highlights a passage and opens a note beside it, tied to it) | [`a-passage-gets-a-margin-note`](./a-passage-gets-a-margin-note/description.md) | **Complete** (2026-10-14; both tasks merged, #250 + #251; the user's phone check passed) | #9, #15, #24, #27 |
 | 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **Complete** (2026-10-14; all 4 tasks merged, #252 + #253 + #254 + #255; the user's phone check passed) | #7, #9, #10, #22 |
 | 30 | The contents fold (an entry with sections folds; every entry starts folded; the folds are kept with the paper on the account) | [`the-contents-fold`](./the-contents-fold/description.md) | **Merged** (2026-10-14; both tasks merged, #260 + #261; the user's phone check pending) | #23, #29 |
-| 31 | What the research found (signing in stops sharing one rate limit across the site; a deleted account's PDFs leave the bucket) | [`what-the-research-found`](./what-the-research-found/description.md) | **In progress** (2026-10-18; task 1 merged, #265; task 2 in review) | #6, #7, #11 |
+| 31 | What the research found (signing in stops sharing one rate limit across the site; a deleted account's PDFs leave the bucket) | [`what-the-research-found`](./what-the-research-found/description.md) | **Complete** (2026-10-20; both tasks merged, #265 + #266) | #6, #7, #11 |
 
 ## How this roadmap is spec'd out
 

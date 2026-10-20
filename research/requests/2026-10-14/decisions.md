@@ -20,7 +20,9 @@ Research documents:
 ## Fix regardless of decisions
 
 Two live defects found during research, both confirmed first-hand. Neither
-depends on any question below.
+depends on any question below. **Both fixed**: #31
+[`what-the-research-found`](../../../features/what-the-research-found/description.md),
+F1 in #265 and F2 in #266 (2026-10-20).
 
 | # | Defect | Fix | Details |
 |---|---|---|---|

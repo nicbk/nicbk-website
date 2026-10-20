@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { isOwnedBy, pdfObjectKey } from './object-key'
+import {
+  isOwnedBy,
+  ownerOfPrefix,
+  pdfObjectKey,
+  userPdfPrefix,
+} from './object-key'
 
 const USER = 'user_2abc'
 const ARTICLE = '01930000-0000-7000-8000-000000000001'
@@ -50,5 +55,34 @@ describe('isOwnedBy', () => {
     expect(isOwnedBy(`other-app/${USER}/${ARTICLE}/source.pdf`, USER)).toBe(
       false,
     )
+  })
+})
+
+describe('userPdfPrefix', () => {
+  it('is the folder every one of the user’s keys starts with', () => {
+    expect(
+      pdfObjectKey('user-1', 'article-1').startsWith(userPdfPrefix('user-1')),
+    ).toBe(true)
+  })
+
+  it('ends with a slash, so one id is never the start of another’s folder', () => {
+    expect(
+      pdfObjectKey('user-10', 'a').startsWith(userPdfPrefix('user-1')),
+    ).toBe(false)
+  })
+})
+
+describe('ownerOfPrefix', () => {
+  it('reads the user from their folder', () => {
+    expect(ownerOfPrefix(userPdfPrefix('user-1'))).toBe('user-1')
+  })
+
+  it.each([
+    'lit-tracker/',
+    'lit-tracker/user-1',
+    'lit-tracker/user-1/article/',
+    'other-app/user-1/',
+  ])('names no user for %s', (prefix) => {
+    expect(ownerOfPrefix(prefix)).toBeNull()
   })
 })

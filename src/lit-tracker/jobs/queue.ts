@@ -54,6 +54,17 @@ export const FINALIZE_QUEUE = 'lit-tracker.finalize'
 export const PDF_CLEANUP_QUEUE = 'lit-tracker.pdf-cleanup'
 
 /**
+ * Removes every PDF a deleted account left in the object store
+ * (features/what-the-research-found).
+ *
+ * The account's rows go in Postgres, by cascade from Better Auth's `user`; its
+ * files cannot join that, so they follow from here. Queued by Better Auth's
+ * `afterDelete` (`auth.ts`), and at every worker start for any folder whose
+ * account is gone, which catches a purge that was never queued.
+ */
+export const ACCOUNT_PURGE_QUEUE = 'lit-tracker.purge-account'
+
+/**
  * Reads an older paper's bibliography again, keeping what the paper printed.
  *
  * **Not part of the upload chain either.** Queued when the worker starts, for
@@ -172,6 +183,15 @@ export interface PdfCleanupJob {
 }
 
 /**
+ * What an account purge carries: whose folder to empty. The keys are listed
+ * under that user's prefix when it runs, never carried, for the reason
+ * `PdfCleanupJob` derives its key.
+ */
+export interface AccountPurgeJob {
+  userId: string
+}
+
+/**
  * What the upload path actually needs from pg-boss.
  *
  * Narrower than `PgBoss` so a caller can see, from the type alone, that
@@ -269,6 +289,13 @@ const PDF_CLEANUP_RETRY_POLICY = {
 } as const
 
 /**
+ * How hard a purge tries. The PDF cleanup's reasoning holds here too: no
+ * dead letter, because an exhausted purge has nothing left to tell anyone, and
+ * the next worker start queues it again from the bucket itself.
+ */
+const ACCOUNT_PURGE_RETRY_POLICY = PDF_CLEANUP_RETRY_POLICY
+
+/**
  * Connects to the queue and makes sure its schema and queues exist.
  *
  * `start()` creates and migrates the `pgboss` schema, and `createQueue` is
@@ -307,6 +334,12 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
     ...CONTENTS_READ_RETRY_POLICY,
     policy: 'exclusive',
   })
+  // Exclusive, keyed by the user: a deletion and a worker start can both ask
+  // for the same account, and one purge is all it needs.
+  await boss.createQueue(ACCOUNT_PURGE_QUEUE, {
+    ...ACCOUNT_PURGE_RETRY_POLICY,
+    policy: 'exclusive',
+  })
   // `createQueue` is a no-op on a queue that already exists — including its
   // options — so a database that already carries the extract queue from an
   // earlier version would keep that version's retry policy. Applying it again
@@ -317,6 +350,7 @@ export async function startQueue(connectionString: string): Promise<PgBoss> {
   await boss.updateQueue(PDF_CLEANUP_QUEUE, PDF_CLEANUP_RETRY_POLICY)
   await boss.updateQueue(REFERENCE_REREAD_QUEUE, REFERENCE_REREAD_RETRY_POLICY)
   await boss.updateQueue(CONTENTS_READ_QUEUE, CONTENTS_READ_RETRY_POLICY)
+  await boss.updateQueue(ACCOUNT_PURGE_QUEUE, ACCOUNT_PURGE_RETRY_POLICY)
   return boss
 }
 

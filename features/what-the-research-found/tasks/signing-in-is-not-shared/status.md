@@ -1,6 +1,6 @@
 # Status: Signing In Is Not Shared
 
-**State:** In review ([#263](https://github.com/nicbk/nicbk-website/issues/263)).
+**State:** Merged ([#263](https://github.com/nicbk/nicbk-website/issues/263); PR [#265](https://github.com/nicbk/nicbk-website/pull/265)).
 
 ## What shipped
 
@@ -28,5 +28,6 @@ back (real client addresses, H2, then `trustedProxies`).
 
 ## Log
 
+- 2026-10-18: merged.
 - 2026-10-17: implemented and verified.
 - 2026-10-17: spec'd.

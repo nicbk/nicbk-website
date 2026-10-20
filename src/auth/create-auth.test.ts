@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { DatabaseHandle } from '~/db/create-database'
 import { createAuth } from './create-auth'
 
@@ -13,14 +13,31 @@ import { createAuth } from './create-auth'
 /** The auth factory only stores the handle; nothing here opens a connection. */
 const databaseStub = { db: {}, pool: {} } as unknown as DatabaseHandle
 
-function buildAuth(overrides: { useSecureCookies?: boolean } = {}) {
+function buildAuth(
+  overrides: {
+    useSecureCookies?: boolean
+    onUserDeleted?: (userId: string) => Promise<void>
+  } = {},
+) {
   return createAuth(databaseStub, {
     baseURL: 'https://nicbk.com',
     secret: 'unit-test-secret-value-of-at-least-32-chars',
     google: { clientId: 'client-id', clientSecret: 'client-secret' },
     trustedOrigins: ['https://nicbk.com'],
     useSecureCookies: overrides.useSecureCookies ?? true,
+    ...(overrides.onUserDeleted
+      ? { onUserDeleted: overrides.onUserDeleted }
+      : {}),
   })
+}
+
+/** Better Auth's `afterDelete`, as it would call it with a deleted user. */
+function afterDelete(auth: ReturnType<typeof buildAuth>) {
+  const hook = auth.options.user?.deleteUser?.afterDelete
+  if (!hook) {
+    throw new Error('no afterDelete hook')
+  }
+  return hook({ id: 'deleted-user' } as never)
 }
 
 describe('createAuth', () => {
@@ -72,6 +89,29 @@ describe('createAuth', () => {
     const { advanced } = buildAuth().options
 
     expect(advanced?.ipAddress?.disableIpTracking).toBe(true)
+  })
+
+  it('hands a deleted account’s id on for the clean-up that cannot cascade', async () => {
+    const onUserDeleted = vi.fn(async () => {})
+
+    await afterDelete(buildAuth({ onUserDeleted }))
+
+    expect(onUserDeleted).toHaveBeenCalledWith('deleted-user')
+  })
+
+  it('does not fail a deletion that has happened because its clean-up could not be queued', async () => {
+    // The account is gone by now; an error here would tell the user it was
+    // not. The start-time sweep finds what this misses.
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const onUserDeleted = vi.fn(async () => {
+      throw new Error('queue down')
+    })
+
+    await expect(afterDelete(buildAuth({ onUserDeleted }))).resolves.toBe(
+      undefined,
+    )
+    expect(error).toHaveBeenCalled()
+    error.mockRestore()
   })
 
   it('trusts only this app and offers only Google', () => {

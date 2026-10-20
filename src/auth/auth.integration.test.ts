@@ -59,7 +59,11 @@ afterAll(async () => {
   await testDatabase.stop()
 })
 
+/** What `auth.ts` queues a purge from; recorded here instead. */
+const onUserDeleted = vi.fn(async (_userId: string) => {})
+
 beforeEach(async () => {
+  onUserDeleted.mockClear()
   // Back to a migrated-but-empty database. The pool must be opened after the
   // restore — it drops and recreates the database underneath any open
   // connection (see test-database.ts).
@@ -74,6 +78,7 @@ beforeEach(async () => {
     },
     trustedOrigins: [BASE_URL],
     useSecureCookies: true,
+    onUserDeleted,
   })
 })
 
@@ -319,6 +324,7 @@ describe('account actions', () => {
 
   it('deletes the identity rows and every session with them', async () => {
     const cookie = toCookieHeader(await signInWithGoogle())
+    const deletedId = (await sessionFor(cookie))?.user.id
 
     const response = await postSignedIn('delete-user', cookie)
     expect(response.status).toBe(200)
@@ -330,6 +336,11 @@ describe('account actions', () => {
     expect(await database.db.select().from(schema.account)).toHaveLength(0)
     expect(await database.db.select().from(schema.session)).toHaveLength(0)
     expect(await sessionFor(cookie)).toBeNull()
+
+    // And what cannot cascade is handed on, once, for that account
+    // (features/what-the-research-found): its PDFs, in Garage.
+    expect(onUserDeleted).toHaveBeenCalledOnce()
+    expect(onUserDeleted).toHaveBeenCalledWith(deletedId)
   })
 
   it('refuses to delete with a session older than the freshness window', async () => {
@@ -357,5 +368,6 @@ describe('account actions', () => {
     // Still signed in, and still there to delete once they re-authenticate.
     expect(await sessionFor(cookie)).not.toBeNull()
     expect(await database.db.select().from(schema.user)).toHaveLength(1)
+    expect(onUserDeleted).not.toHaveBeenCalled()
   })
 })

@@ -51,5 +51,32 @@ export function pdfObjectKey(userId: string, articleId: string): string {
  * served to another.
  */
 export function isOwnedBy(key: string, userId: string): boolean {
-  return key.startsWith(`${LIT_TRACKER_PREFIX}/${userId}/`)
+  return key.startsWith(userPdfPrefix(userId))
+}
+
+/**
+ * The folder every one of a user's PDFs lives under: what deleting an account
+ * empties (features/what-the-research-found).
+ *
+ * The trailing slash is part of it, so one user's prefix is never the start of
+ * another user's whose id happens to begin with the same characters.
+ */
+export function userPdfPrefix(userId: string): string {
+  return `${LIT_TRACKER_PREFIX}/${userId}/`
+}
+
+/** The folder above every user's: what is listed to find whose PDFs exist. */
+export const PDF_ROOT_PREFIX = `${LIT_TRACKER_PREFIX}/`
+
+/**
+ * The user a listed folder belongs to, from a prefix such as
+ * `lit-tracker/<userId>/`, or null for anything that is not exactly one user's
+ * folder.
+ */
+export function ownerOfPrefix(prefix: string): string | null {
+  if (!prefix.startsWith(PDF_ROOT_PREFIX) || !prefix.endsWith('/')) {
+    return null
+  }
+  const userId = prefix.slice(PDF_ROOT_PREFIX.length, -1)
+  return userId !== '' && !userId.includes('/') ? userId : null
 }

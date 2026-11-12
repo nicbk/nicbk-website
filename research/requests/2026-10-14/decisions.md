@@ -238,3 +238,50 @@ the metering, the pop-up and the profile.
 | H6 | Is a CDN ever acceptable as an open-source exception? | Not now; only if attacked | [DoS](../../security-privacy/production-hardening.md#headers-sessions-admin-dos-incident-response) |
 | H7 | Maximum page count per PDF for the pdfium step? | About 2000 pages | [Parser isolation](../../security-privacy/production-hardening.md#upload-safety-and-parser-isolation) |
 | H8 | Approve the MUST list as the hardening scope? | Yes | [Recommendation](../../security-privacy/production-hardening.md#recommendation) |
+
+## Round 3 (2026-11-12): after the round-2 answers
+
+The answers are verbatim in
+[answers-2026-11-12.md](./answers-2026-11-12.md#answers-to-the-round-2-questions-as-written).
+
+**Decided:**
+
+| # | Decision |
+|---|---|
+| R2-1 | **Sign-in stays Google OAuth only. No app-level 2FA.** |
+| R2-2 | The recovery code is optional, generated or reset from the settings menu, and is not asked for at sign-up. |
+| R2-3 | **Encrypt everything in E4**, including the fold state and annotation page numbers. Each device decrypts what Zero syncs into the React views, and encrypts each write before it is sent. **Costs:** the fold state becomes a whole-value write, so two devices folding at the same moment keep the later write. Annotations are sorted by page in the browser. |
+| R2-4 | Citation links to the rest of the library are computed in the browser, which has the decrypted library, **as soon as the upload's processing finishes** while the app is open. If the app is closed before then, they are computed the next time it opens. This is as immediate as zero-access allows: the server cannot read the rest of the library. |
+| R2-5 | Scan each upload with a cloud CSAM service **before** the extraction pipeline, and run the pipeline only on a pass. |
+| R2-6 | No virtual mailbox until there is revenue. |
+| R2-7 | California, so an LLC costs $800 a year (a $400 first year in 2027–2029). **No LLC now.** |
+| R2-8 | The node's disk stays as it is, with no LUKS. |
+
+**The constraint behind R2-1 and R2-2: Google sign-in alone cannot unlock a zero-access key.**
+- With OAuth, the user's credentials never reach this app. Google gives the
+  server a token, and anything the browser could derive from what Google
+  sends, the server could derive too.
+- So a key that "only the user, not the server" can use has to be held by
+  something the server never sees:
+  - a key stored on a device, made in that device's browser;
+  - a passkey with PRF, held by the user's password manager;
+  - a recovery code.
+- A device gets the key at first use. A second device gets it by approval
+  from a device that has it, or from a passkey or recovery code. No
+  per-sign-in step is needed.
+- **The risk with nothing durable saved:** a browser keeps site storage only
+  so long.
+  - Safari deletes a site's storage after 7 days of browser use without
+    visiting it.
+  - Clearing browsing data deletes it too.
+  - A user with one device and no passkey or recovery code would lose the
+    whole library to that, which is far likelier than the "lost every device"
+    E2 accepted.
+
+**Round 3 questions:**
+
+| # | Question | Recommended |
+|---|---|---|
+| R3-1 | How a library key survives:<br>**(A)** one prompt, once, the first time a paper is saved: "save your library key" as a passkey (one Face ID or fingerprint tap; syncs through iCloud or Google Password Manager) or as a recovery code. It is a key, not a sign-in step.<br>**(B)** nothing prompted: a recovery code and passkey only if the user goes to settings, accepting that clearing browser data on the only device loses the library.<br>**(C)** step back from zero-access to server-held per-user keys: OAuth only and no user steps, but the operator could read data. | (A) |
+| R3-2 | Until a scanner approves this site, are uploads processed unscanned (there is no duty to scan), or refused? Apply to which services first? | Process meanwhile. Apply to Tech Coalition Pathways (PhotoDNA) and to Microsoft's PhotoDNA Cloud Service. Project Arachnid Shield is the fallback, since it sends image bytes to Canada. |
+| R3-3 | The DMCA agent without a street address:<br>**(a)** defer registration until there is revenue. This gives up the §512(c) safe harbor meanwhile, but nothing is shared, and notices are still handled by the runbook through an email contact.<br>**(b)** a USPS P.O. box for the agent (about $21–$100+ every 6 months) plus a waiver request for the provider address (granted only in exceptional circumstances). | (a) |

@@ -1,6 +1,7 @@
 # Task: A Restore That Relaunches
 
-Task 3 of 5 of [#32](../../description.md).
+Task 3 of 5 of [#32](../../description.md). Sub-issue
+[#270](https://github.com/nicbk/nicbk-website/issues/270).
 
 One script takes a checkpoint and gives back the site. It replaces state, so it
 is safe to repeat.

@@ -1,6 +1,7 @@
 # Task: Deletions Wait a Day
 
-Task 1 of 5 of [#32](../../description.md).
+Task 1 of 5 of [#32](../../description.md). Sub-issue
+[#268](https://github.com/nicbk/nicbk-website/issues/268).
 
 A deleted paper's PDF, and a deleted account's folder, stay in Garage for 24
 hours before they are erased (BK9). Without the wait, a paper deleted between

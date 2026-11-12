@@ -1,6 +1,7 @@
 # Task: A Checkpoint Every Six Hours
 
-Task 2 of 5 of [#32](../../description.md).
+Task 2 of 5 of [#32](../../description.md). Sub-issue
+[#269](https://github.com/nicbk/nicbk-website/issues/269).
 
 Every six hours the node takes one checked, encrypted checkpoint and sends it to
 B2. Nothing in this task restores. That is task 3.

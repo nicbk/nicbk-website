@@ -32,7 +32,7 @@ function queueSpy() {
       (
         name: string,
         job: unknown,
-        options?: { db?: unknown },
+        options?: { db?: unknown; startAfter?: number },
       ) => Promise<string>
     >()
   send.mockResolvedValue('job-id')
@@ -73,6 +73,22 @@ describe('runServerEffect', () => {
     })
 
     expect(send.mock.calls[0]?.[2]?.db).toBeDefined()
+  })
+
+  it('leaves the PDF in place for a day, so a backup taken meanwhile still has it', async () => {
+    // The row goes now; the bytes after PHYSICAL_DELETION_DELAY_SECONDS. A
+    // cleanup that ran at once could erase the object between a checkpoint's
+    // dump and its copy of the bucket (features/backups-you-can-relaunch-from).
+    const { queue, send } = queueSpy()
+
+    await runServerEffect(mutators.articles.delete.mutatorName, {
+      args: { id: ARTICLE },
+      ctx: CONTEXT,
+      tx: SERVER_TX,
+      getQueue: async () => queue,
+    })
+
+    expect(send.mock.calls[0]?.[2]?.startAfter).toBe(24 * 60 * 60)
   })
 
   it('does nothing for a mutation that owes nothing', async () => {

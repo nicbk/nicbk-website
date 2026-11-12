@@ -1,22 +1,22 @@
 # Status: Backups You Can Relaunch From
 
-**Feature state:** **Spec'd** (2026-11-12). P32-1 and P32-2 are decided
-([plan.md](./plan.md#decided-with-the-user-2026-11-12)). Awaiting the user's
-go-ahead.
+**Feature state:** **In progress** (2026-11-12). P32-1 and P32-2 are decided
+([plan.md](./plan.md#decided-with-the-user-2026-11-12)); the go-ahead was given
+2026-11-12.
 
 Spec written against `main` plus the docs-only research commits on
 `claude/modest-shannon-jew14d` (at `315a836`). See [research.md](./research.md).
 
 Depends on #7, #11 and #31, all complete.
 
-Feature parent issue: not yet created. It and one sub-issue per task are opened
-on the go-ahead. Roadmap entry **#32**.
+Feature parent issue: [**#267**](https://github.com/nicbk/nicbk-website/issues/267),
+with one sub-issue per task (#268–#272). Roadmap entry **#32**.
 
 ## Task states
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/status.md) | Spec'd | — | — | — |
+| [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/status.md) | In progress ([#268](https://github.com/nicbk/nicbk-website/issues/268)) | — | — | — |
 | [`a-checkpoint-every-six-hours`](./tasks/a-checkpoint-every-six-hours/status.md) | Spec'd | — | — | — |
 | [`a-restore-that-relaunches`](./tasks/a-restore-that-relaunches/status.md) | Spec'd | — | — | — |
 | [`drills-and-a-watcher`](./tasks/drills-and-a-watcher/status.md) | Spec'd | — | — | — |
@@ -37,6 +37,7 @@ after that task merges:
 
 ## Log
 
+- 2026-11-12: go-ahead given; issues #267–#272 opened; task 1 started.
 - 2026-11-12: P32-1 (30 days) and P32-2 (the size ceiling; the one-year limit
   until encryption) decided.
 - 2026-11-12: spec'd from the request of 2026-10-14 and the decided revision.

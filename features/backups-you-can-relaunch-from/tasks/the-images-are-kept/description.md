@@ -1,6 +1,7 @@
 # Task: The Images Are Kept
 
-Task 5 of 5 of [#32](../../description.md).
+Task 5 of 5 of [#32](../../description.md). Sub-issue
+[#272](https://github.com/nicbk/nicbk-website/issues/272).
 
 A relaunch does not depend on Docker Hub (BK11).
 

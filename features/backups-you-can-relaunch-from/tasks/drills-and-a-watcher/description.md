@@ -1,6 +1,7 @@
 # Task: Drills and a Watcher
 
-Task 4 of 5 of [#32](../../description.md).
+Task 4 of 5 of [#32](../../description.md). Sub-issue
+[#271](https://github.com/nicbk/nicbk-website/issues/271).
 
 Restores are rehearsed on a schedule, and a machine off the node notices when
 checkpoints stop.

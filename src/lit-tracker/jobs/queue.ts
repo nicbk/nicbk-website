@@ -46,7 +46,7 @@ export const FINALIZE_QUEUE = 'lit-tracker.finalize'
  * **Not part of the chain above**, and the only queue here that is not: the
  * other three run one after another to turn an upload into an article, while
  * this one runs once, at the other end of that life, when #11 deletes the
- * article again. It is a job rather than a line in the mutator for a reason the
+ * article again — a day later, after `PHYSICAL_DELETION_DELAY_SECONDS`. It is a job rather than a line in the mutator for a reason the
  * mutator cannot get around — every mutator on this site runs in the browser
  * too, and a browser has no business holding bucket credentials
  * (research/security-privacy/pdf-and-annotation-data-protection.md).
@@ -60,9 +60,29 @@ export const PDF_CLEANUP_QUEUE = 'lit-tracker.pdf-cleanup'
  * The account's rows go in Postgres, by cascade from Better Auth's `user`; its
  * files cannot join that, so they follow from here. Queued by Better Auth's
  * `afterDelete` (`auth.ts`), and at every worker start for any folder whose
- * account is gone, which catches a purge that was never queued.
+ * account is gone, which catches a purge that was never queued. Like the PDF
+ * cleanup, it runs a day after it is queued (`PHYSICAL_DELETION_DELAY_SECONDS`).
  */
 export const ACCOUNT_PURGE_QUEUE = 'lit-tracker.purge-account'
+
+/**
+ * How long a deleted article's PDF, or a deleted account's folder, stays in
+ * the object store before it is erased: **24 hours**
+ * (features/backups-you-can-relaunch-from, BK9).
+ *
+ * **The delay is for the backups, not an undo.** The rows go at once, so the
+ * paper leaves every device the moment it is deleted. Only the bytes wait.
+ *
+ * Why the bytes must wait: a backup checkpoint dumps Postgres first and copies
+ * the bucket second (`deploy/backup.sh`). Erasing an object straight away would
+ * let a paper deleted between those two steps land in the checkpoint as a row
+ * whose PDF is missing. A restore would then bring back a paper that cannot be
+ * opened.
+ *
+ * So this must stay longer than a run's dump-to-copy time, which is minutes. A
+ * day is far past that, and is simple to state in the Privacy Policy (#36).
+ */
+export const PHYSICAL_DELETION_DELAY_SECONDS = 24 * 60 * 60
 
 /**
  * Reads an older paper's bibliography again, keeping what the paper printed.

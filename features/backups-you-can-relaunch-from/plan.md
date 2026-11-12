@@ -2,11 +2,11 @@
 
 | # | Task | Sub-issue | Delivers |
 |---|---|---|---|
-| 1 | [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/description.md) | — | A deleted paper's PDF, and a deleted account's folder, are erased 24 hours later instead of at once (BK9). App code only. |
-| 2 | [`a-checkpoint-every-six-hours`](./tasks/a-checkpoint-every-six-hours/description.md) | — | `deploy/backup.sh`, the checkpoint layout and manifest, the scratch-restore check, and the prune with its size ceiling (P32-2). Also the NixOS module's backup timer, alerts and lock, a CI round trip to a local repository, and the operator's setup runbook. |
-| 3 | [`a-restore-that-relaunches`](./tasks/a-restore-that-relaunches/description.md) | — | `deploy/restore.sh` and `deploy/verify-restore.sh`, Zero's reset on restore, account tombstones re-applied on restore (BK10), the relaunch runbook, and CI going backup → restore → verify. |
-| 4 | [`drills-and-a-watcher`](./tasks/drills-and-a-watcher/description.md) | — | The weekly light and monthly full drills on the node at night, the off-node freshness watcher for the relay, and the quarterly manual drill checklist. |
-| 5 | [`the-images-are-kept`](./tasks/the-images-are-kept/description.md) | — | The pinned container images archived in the backup repository, so a relaunch does not depend on Docker Hub (BK11). |
+| 1 | [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/description.md) | [#268](https://github.com/nicbk/nicbk-website/issues/268) | A deleted paper's PDF, and a deleted account's folder, are erased 24 hours later instead of at once (BK9). App code only. |
+| 2 | [`a-checkpoint-every-six-hours`](./tasks/a-checkpoint-every-six-hours/description.md) | [#269](https://github.com/nicbk/nicbk-website/issues/269) | `deploy/backup.sh`, the checkpoint layout and manifest, the scratch-restore check, and the prune with its size ceiling (P32-2). Also the NixOS module's backup timer, alerts and lock, a CI round trip to a local repository, and the operator's setup runbook. |
+| 3 | [`a-restore-that-relaunches`](./tasks/a-restore-that-relaunches/description.md) | [#270](https://github.com/nicbk/nicbk-website/issues/270) | `deploy/restore.sh` and `deploy/verify-restore.sh`, Zero's reset on restore, account tombstones re-applied on restore (BK10), the relaunch runbook, and CI going backup → restore → verify. |
+| 4 | [`drills-and-a-watcher`](./tasks/drills-and-a-watcher/description.md) | [#271](https://github.com/nicbk/nicbk-website/issues/271) | The weekly light and monthly full drills on the node at night, the off-node freshness watcher for the relay, and the quarterly manual drill checklist. |
+| 5 | [`the-images-are-kept`](./tasks/the-images-are-kept/description.md) | [#272](https://github.com/nicbk/nicbk-website/issues/272) | The pinned container images archived in the backup repository, so a relaunch does not depend on Docker Hub (BK11). |
 
 **Why this order:**
 

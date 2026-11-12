@@ -10,6 +10,7 @@ import type {
 } from '~/lit-tracker/jobs/queue'
 import {
   PDF_CLEANUP_QUEUE,
+  PHYSICAL_DELETION_DELAY_SECONDS,
   REFERENCE_REREAD_QUEUE,
 } from '~/lit-tracker/jobs/queue'
 import type { ZeroContext } from './context'
@@ -134,6 +135,9 @@ async function enqueuePdfCleanup({
   }
   await queue.send(PDF_CLEANUP_QUEUE, job, {
     db: fromDrizzle(drizzleTransactionOf(tx), sql),
+    // The row is gone now; the PDF a day from now, so a backup taken in
+    // between still finds it (`PHYSICAL_DELETION_DELAY_SECONDS`).
+    startAfter: PHYSICAL_DELETION_DELAY_SECONDS,
   })
 }
 

@@ -4,7 +4,10 @@ import type { DatabaseHandle } from '~/db/create-database'
 import { user } from '~/db/schema'
 import { handleEach } from '~/lit-tracker/jobs/handle-batch'
 import type { AccountPurgeJob, JobQueue } from '~/lit-tracker/jobs/queue'
-import { ACCOUNT_PURGE_QUEUE } from '~/lit-tracker/jobs/queue'
+import {
+  ACCOUNT_PURGE_QUEUE,
+  PHYSICAL_DELETION_DELAY_SECONDS,
+} from '~/lit-tracker/jobs/queue'
 import {
   deleteArticlePdf,
   listPdfOwners,
@@ -91,13 +94,24 @@ export async function runAccountPurge(
   return keys.length
 }
 
-/** Asks for one account's folder to be emptied. */
+/**
+ * Asks for one account's folder to be emptied, a day from now.
+ *
+ * The delay is `PHYSICAL_DELETION_DELAY_SECONDS`, for the backups' sake: the
+ * account's rows are already gone, and its files must outlive any checkpoint
+ * whose dump still holds them. The queue is exclusive by user, so while one
+ * purge is waiting out the delay, another send for the same account (the sweep
+ * at the next worker start, say) adds nothing.
+ */
 export async function queueAccountPurge(
   queue: JobQueue,
   userId: string,
 ): Promise<void> {
   const job: AccountPurgeJob = { userId }
-  await queue.send(ACCOUNT_PURGE_QUEUE, job, { singletonKey: userId })
+  await queue.send(ACCOUNT_PURGE_QUEUE, job, {
+    singletonKey: userId,
+    startAfter: PHYSICAL_DELETION_DELAY_SECONDS,
+  })
 }
 
 /**

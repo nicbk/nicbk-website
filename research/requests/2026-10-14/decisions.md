@@ -48,7 +48,6 @@ BK10, BK12, BK13, H1, H2, H3, H7, H8.
 | BK5 | The node has at least a couple of terabytes free. |
 | BK9 | Delay physical PDF deletion (and disclose it). |
 | H4 | No invite or allowlist mode: the app stays public. |
-| H5 | `system.autoUpgrade` is enabled on the node. |
 | H6 | A CDN is acceptable. |
 | RB3 | The operator accepts Polar's one-time seller identity check (ID and selfie through Stripe Identity). Users are never asked for ID. |
 | RB8 | No checkout for administrators: they already have full access. |

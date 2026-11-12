@@ -1,7 +1,8 @@
 # Status: Backups You Can Relaunch From
 
-**Feature state:** **Spec'd** (2026-11-12). Awaiting the user's go-ahead and
-questions P32-1 and P32-2 ([plan.md](./plan.md#questions-for-the-user)).
+**Feature state:** **Spec'd** (2026-11-12). P32-1 and P32-2 are decided
+([plan.md](./plan.md#decided-with-the-user-2026-11-12)). Awaiting the user's
+go-ahead.
 
 Spec written against `main` plus the docs-only research commits on
 `claude/modest-shannon-jew14d` (at `315a836`). See [research.md](./research.md).
@@ -36,4 +37,6 @@ after that task merges:
 
 ## Log
 
+- 2026-11-12: P32-1 (30 days) and P32-2 (the size ceiling; the one-year limit
+  until encryption) decided.
 - 2026-11-12: spec'd from the request of 2026-10-14 and the decided revision.

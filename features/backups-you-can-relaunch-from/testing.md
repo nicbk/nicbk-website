@@ -42,7 +42,15 @@ On the GitHub runner, with Docker:
 5. Run `deploy/restore.sh latest --replace` into a **different** Compose project
    with fresh volumes (task 3), then `deploy/verify-restore.sh`.
 6. Restore again and assert identical counts (idempotence).
-7. Tombstones: restore the first of two checkpoints, with a user deleted between
+7. The size ceiling (task 2), against a local repository with a lowered
+   floor:
+   - backdated checkpoints over the ceiling are thinned oldest first;
+   - nothing under 30 days old is thinned;
+   - an emptied database does not lower the ceiling.
+
+   The ceiling arithmetic is a small pure function with its own unit tests if
+   it is written in a testable language, and table-driven shell tests if not.
+8. Tombstones: restore the first of two checkpoints, with a user deleted between
    them, and assert the user is absent.
 
 ## Browser (manual, on the sandbox, for task 3's PR)

@@ -90,8 +90,8 @@ depend on the answers:
 - **Done along the way:** #30 the contents fold (complete), and #31 the two live
   defects F1 and F2 (complete).
 - **#32 is spec'd:** [`backups-you-can-relaunch-from`](../../../features/backups-you-can-relaunch-from/description.md).
-  Next: the user's go-ahead and question P32-1
-  ([plan](../../../features/backups-you-can-relaunch-from/plan.md#questions-for-the-user)),
+  P32-1 and P32-2 decided. Next: the user's go-ahead
+  ([plan](../../../features/backups-you-can-relaunch-from/plan.md#decided-with-the-user-2026-11-12)),
   then the issues and task 1.
 
 ## Progress

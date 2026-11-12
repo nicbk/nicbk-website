@@ -32,11 +32,12 @@ is safe to repeat.
     read, and deletes those users after `pg_restore` (cascading). The worker's
     start-up sweep then purges their folders;
   - entries older than 13 months, longer than any checkpoint is kept, are
-    trimmed by the backup run.
+    trimmed by the backup run. When #39+ removes the one-year limit, the trim
+    follows the oldest kept checkpoint instead.
 - **The relaunch runbook**, a section of `deploy/README-backups.md`:
   - step 0, by hand: rebuild the NixOS host from the system flake, restore the
     WireGuard key, re-point the relay, clone this repository, and place the
     backup environment file from the break-glass set;
   - then `restore.sh latest --replace`;
   - then what to check in a browser.
-- **CI:** the round trip's steps 5–7.
+- **CI:** the round trip's steps 5, 6 and 8.

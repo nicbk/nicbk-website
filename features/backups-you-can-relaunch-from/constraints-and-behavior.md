@@ -67,6 +67,7 @@ directory:
   - `forget --tag checkpoint --keep-within 2d --keep-daily 7 --keep-weekly 4 --keep-monthly 12 --prune`;
   - `forget --tag images --keep-last 4`;
   - `check` after the prune.
+- **The size ceiling** runs after the prune, as described below.
 - **Drills:**
   - light, weekly at night;
   - full, monthly at night;
@@ -78,13 +79,49 @@ directory:
   `restic snapshots --no-lock`. It alerts if the newest `checkpoint` snapshot is
   older than **12 hours**, or if there is none (BK12).
 
+## The size ceiling (P32-2)
+
+The repository must not grow without bound, whatever the time-based policy
+keeps. restic has no size-based retention, so `prune.sh` applies a ceiling after
+the time-based policy:
+
+- **Measure** the repository's stored size with `restic stats --mode raw-data`
+  over all snapshots.
+- **Work out the ceiling:** 10× the **largest** `checkpoint` snapshot of the
+  last 30 days, measured the same way for that one snapshot. It is never below
+  a floor of **5 GiB**, about 3¢ a month, so it never thins history to save a
+  fraction of a cent.
+- **While over the ceiling:**
+  - forget the oldest `checkpoint` snapshot;
+  - prune;
+  - measure again.
+- **Never thinned:**
+  - a snapshot under 30 days old;
+  - the newest snapshot;
+  - `images` snapshots, which have their own `--keep-last`.
+- **Every time it removes anything**, the operator is alerted with the before
+  and after sizes and the dates removed. In normal use it should never bind,
+  because restic stores data shared between checkpoints once. The repository is
+  about the current library plus what was deleted within the kept history. So a
+  binding ceiling means unusual churn, worth a look.
+- **If it cannot get under the ceiling** without touching a protected
+  snapshot, it stops, keeps everything, and alerts.
+
+**The one-year limit (`--keep-monthly 12`) is temporary.** It stays until
+zero-access encryption lands (#39+), because until then an old checkpoint is a
+readable copy of a deleted account's data (BK10). That feature removes it,
+leaving the ceiling as the only limit on how far back history goes, with
+monthly checkpoints kept as far back as it allows. The tombstone trim (task 3)
+then follows the oldest kept checkpoint instead of a fixed 13 months.
+
 ## Where it goes, and who can destroy it (B6, BK8)
 
 - **The store** is a Backblaze B2 bucket, reached over S3.
 - **The node's key** can list, read and write, but **cannot delete**: a delete
   hides the file.
-- **A lifecycle rule** erases hidden files after N days (P32-1: 30 recommended,
-  1 as decided).
+- **A lifecycle rule** erases hidden files after **30 days** (P32-1). That is
+  the window in which history "deleted" by a compromised node can still be
+  recovered.
 - **The watcher's key** is read-only.
 - **The account's own login** never touches the node.
 - **The break-glass set**, kept in the operator's password manager plus a
@@ -162,3 +199,6 @@ Running it twice with the same snapshot gives the same site.
 9. Prune leaves the retention described above and `restic check` passes.
 10. A relaunch on a machine with no registry access succeeds from the archived
     images.
+11. With the repository over its ceiling, prune removes the oldest checkpoints
+    until it fits, never one under 30 days old, and alerts. With the database
+    emptied, the ceiling does not fall, and the old history survives.

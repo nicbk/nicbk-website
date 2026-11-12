@@ -3,7 +3,7 @@
 | # | Task | Sub-issue | Delivers |
 |---|---|---|---|
 | 1 | [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/description.md) | — | A deleted paper's PDF, and a deleted account's folder, are erased 24 hours later instead of at once (BK9). App code only. |
-| 2 | [`a-checkpoint-every-six-hours`](./tasks/a-checkpoint-every-six-hours/description.md) | — | `deploy/backup.sh`, the checkpoint layout and manifest, the scratch-restore check, and the prune. Also the NixOS module's backup timer, alerts and lock, a CI round trip to a local repository, and the operator's setup runbook. |
+| 2 | [`a-checkpoint-every-six-hours`](./tasks/a-checkpoint-every-six-hours/description.md) | — | `deploy/backup.sh`, the checkpoint layout and manifest, the scratch-restore check, and the prune with its size ceiling (P32-2). Also the NixOS module's backup timer, alerts and lock, a CI round trip to a local repository, and the operator's setup runbook. |
 | 3 | [`a-restore-that-relaunches`](./tasks/a-restore-that-relaunches/description.md) | — | `deploy/restore.sh` and `deploy/verify-restore.sh`, Zero's reset on restore, account tombstones re-applied on restore (BK10), the relaunch runbook, and CI going backup → restore → verify. |
 | 4 | [`drills-and-a-watcher`](./tasks/drills-and-a-watcher/description.md) | — | The weekly light and monthly full drills on the node at night, the off-node freshness watcher for the relay, and the quarterly manual drill checklist. |
 | 5 | [`the-images-are-kept`](./tasks/the-images-are-kept/description.md) | — | The pinned container images archived in the backup repository, so a relaunch does not depend on Docker Hub (BK11). |
@@ -58,15 +58,19 @@ Implementation choices this plan makes, each explained where it is built:
   is wiped. The restored database is not trusted to describe a replication slot
   that no longer exists. Clients then re-sync, as Zero documents.
 
-## Questions for the user
+## Decided with the user (2026-11-12)
 
-| # | Question | Recommendation |
+The user's words: [answers](../../research/requests/2026-10-14/answers-2026-11-12.md#answers-to-p32-1-and-p32-2-as-written),
+after [their comment on the spec](../../research/requests/2026-10-14/answers-2026-11-12.md#comments-on-the-32-spec-as-written).
+
+| # | Question | Decision |
 |---|---|---|
-| P32-1 | **How long a "deleted" backup file stays recoverable on B2.** BK8 was decided as "keep only the last version", which erases a hidden file after **1 day**. If the node were compromised and told to delete the backups, the history would be gone within a day. The relay watcher checks daily, so that window is racy. A **30-day** window costs the storage of one month of pruned data, a few cents. | **30 days** |
+| P32-1 | How long a "deleted" backup file stays recoverable on B2. BK8's "keep only the last version" erases a hidden file after 1 day, so a compromised node could destroy the history before the daily watcher noticed | **30 days.** The lifecycle rule's `daysFromHidingToDeleting` is 30. It costs the storage of a month of pruned data, a few cents |
+| P32-2 | A size ceiling on the repository, so the backup cannot grow without bound | **A ceiling of 10× the largest checkpoint of the last 30 days**, applied after the time-based policy. See [constraints](./constraints-and-behavior.md#the-size-ceiling-p32-2). **The one-year limit stays until zero-access encryption lands (#39+), and is then removed**, leaving the ceiling as the only limit on how far back history goes |
 
-| P32-2 | **A size ceiling on the repository** (the user's comment, [as written](../../research/requests/2026-10-14/answers-2026-11-12.md#comments-on-the-32-spec-as-written)). Proposed rule, under discussion: <ul><li>the repository's stored size (`restic stats --mode raw-data`) stays at or below **10×** a reference checkpoint;</li><li>the reference is **the largest checkpoint of the last 30 days, not the latest**, so a bug or attack that empties the database cannot shrink the ceiling and delete the good history;</li><li>when over, the oldest checkpoints are forgotten one at a time and pruned until it fits;</li><li>nothing under 30 days old is ever thinned;</li><li>every time the ceiling binds, the operator is alerted;</li><li>a floor of a few GiB keeps it from thinning for savings of a fraction of a cent.</li></ul>restic has no size-based retention of its own ([forget](https://restic.readthedocs.io/en/stable/060_forget.html)), so this is a step in `prune.sh` after the time-based policy. Also open: whether history may go past 12 months when space allows (BK10: deleted accounts' data). | Ceiling as proposed; keep the 12-month limit until encryption (#39+) |
-
-Apart from those, the go-ahead to build.
+The ceiling's reference is the largest recent checkpoint, not the latest. If a
+bug or an attacker empties the database, the next checkpoint is tiny, and a
+ceiling of "10× the latest" would then delete the history needed to recover.
 
 ## Risks
 

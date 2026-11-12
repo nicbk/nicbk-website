@@ -16,7 +16,9 @@ B2. Nothing in this task restores. That is task 3.
   - manifest, `.env` and tombstones file (empty until task 3);
   - `restic backup`.
   Each step says in a comment why it is in that place.
-- **`deploy/prune.sh`**: the two `forget` policies, then `check`.
+- **`deploy/prune.sh`**: the two `forget` policies, then the size ceiling
+  ([P32-2](../../constraints-and-behavior.md#the-size-ceiling-p32-2)), then
+  `check`.
 - **`docker-compose.yml`**: a `backup` profile with two one-shot services,
   `restic` (`restic/restic:0.19.1`) and `rclone` (a pinned
   `rclone/rclone` tag). Both are on `app-internal`, so rclone reaches Garage
@@ -49,7 +51,7 @@ B2. Nothing in this task restores. That is task 3.
   - creating the bucket;
   - creating the node key (no `deleteFiles`), the watcher key (read-only) and
     the break-glass key (read-only);
-  - the lifecycle rule (P32-1);
+  - the lifecycle rule: hidden files erased after 30 days (P32-1);
   - **the deletion-as-hide check**;
   - `restic init`;
   - the ntfy topic;

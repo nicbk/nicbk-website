@@ -1,6 +1,15 @@
 # User Data Encryption
 
-Researched: 2026-10-14. Decided: not yet — awaiting the user.
+Researched: 2026-10-14. Decided: 2026-11-12. The user chose option (d),
+zero-access (E1, E2 and E3 decided; their words are in
+[answers-2026-11-12.md](../requests/2026-10-14/answers-2026-11-12.md)). The
+round-2 follow-up research (2026-11-12) is in two sibling files:
+[user-data-encryption-round-2.md](./user-data-encryption-round-2.md) for E4
+(what stays plaintext under Zero) and the user's new E7 feature (re-processing
+with consent), and
+[user-data-encryption-2fa-and-recovery.md](./user-data-encryption-2fa-and-recovery.md)
+for E6 (2FA, passkeys and the recovery code). The rest of this document is the
+round-1 research as written on 2026-10-14.
 
 Whether user data in the Literature Tracker can be encrypted so that it is still
 reachable from several devices, and how existing data moves into that scheme.
@@ -63,7 +72,7 @@ cannot also see, so the key must come from a second, independent factor.
 | Mechanism | How a new device gets the key | Notes |
 |---|---|---|
 | **Recovery code** | The user enters a random code (e.g. 24 words) | Universal. Needs no slow KDF because it is random. Ente, Notesnook, Standard Notes, Proton, Apple ADP and 1Password all use one |
-| **Passkey + WebAuthn PRF** | A synced passkey yields a stable secret that unwraps the key | **Uneven support; sources conflict** ([Corbado](https://www.corbado.com/blog/passkeys-prf-webauthn), [mera](https://mera.category.xyz/authenticator-support/)). Chrome profile passkeys return no PRF; 1Password's extension was reported broken in mid-2026 ([1Password community](https://www.1password.community/developers-69/browser-extension-webauthn-prf-extension-not-spec-compliant-24672)). Must be optional with a fallback, as Bitwarden does ([Bitwarden](https://bitwarden.com/help/login-with-passkeys)). Whether Better Auth's passkey plugin exposes PRF output to client code is unconfirmed ([Better Auth](https://better-auth.com/docs/beta/plugins/passkey)) |
+| **Passkey + WebAuthn PRF** | A synced passkey yields a stable secret that unwraps the key | **Uneven support; sources conflict** ([Corbado](https://www.corbado.com/blog/passkeys-prf-webauthn), [mera](https://mera.category.xyz/authenticator-support/)). Chrome profile passkeys return no PRF; 1Password's extension was reported broken in mid-2026 ([1Password community](https://www.1password.community/developers-69/browser-extension-webauthn-prf-extension-not-spec-compliant-24672)). Must be optional with a fallback, as Bitwarden does ([Bitwarden](https://bitwarden.com/help/login-with-passkeys)). Whether Better Auth's passkey plugin exposes PRF output to client code is unconfirmed ([Better Auth](https://better-auth.com/docs/beta/plugins/passkey)); *settled in round 2: it does* ([round 2](./user-data-encryption-2fa-and-recovery.md#the-passkey-plugin)) |
 | **Device linking** | An unlocked device seals the key to a new device's ephemeral key, set up by QR code or in-app approval | App logic. 1Password Setup Code ([1Password](https://support.1password.com/secret-key/)), Bitwarden trusted devices ([Bitwarden](https://bitwarden.com/help/about-trusted-devices/)), Matrix session verification ([FU Berlin](https://wiki.physik.fu-berlin.de/it/services:matrix:encryption)) |
 | **Passphrase** | The user types a second password | Argon2id is not in browser WebCrypto; it would come from WASM or JS ([mojoauth](https://mojoauth.com/security-guides/argon2-in-javascript-in-browser)). A second password on top of Google |
 | **Device-held key** (stay unlocked) | A non-extractable `CryptoKey` in IndexedDB ([W3C list](https://lists.w3.org/Archives/Public/public-webcrypto/2012Dec/0025.html), [WebKit](https://bugs.webkit.org/show_bug.cgi?id=183167)) | Safari deletes script-written storage after 7 days without interaction ([Didomi](https://docs.didomi.io/releases-and-announcements/announcements/apple-implements-7-day-cap-on-script-writable-storage), [mjtsai](https://mjtsai.com/blog/2020/03/26/safari-13-1-third-party-cookie-blocking-and-7-day-script-writeable-storage/)), so occasional Safari users unlock again |
@@ -205,7 +214,12 @@ read data. (c) is not recommended.
 
 ## Questions for the user
 
-Numbered as in [decisions.md](../requests/2026-10-14/decisions.md).
+Numbered as in [decisions.md](../requests/2026-10-14/decisions.md). Answered
+by the user on 2026-11-12, except E4 and E6, which became follow-up research
+([E4](./user-data-encryption-round-2.md#round-2-2026-11-12-what-stays-plaintext-under-zero-e4),
+[E6](./user-data-encryption-2fa-and-recovery.md#round-2-2026-11-12-2fa-passkeys-and-the-recovery-code-e6));
+E7 was answered with a new feature,
+[re-processing with consent](./user-data-encryption-round-2.md#e7-re-processing-with-consent).
 
 - **E1.** Must the operator be *unable* to read stored content (needs d or c),
   or is protection against thieves and backup leaks enough (a)?

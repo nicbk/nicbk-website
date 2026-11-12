@@ -16,6 +16,11 @@ Research documents:
 - [quotas-and-usage-metering.md](../../system-architecture/quotas-and-usage-metering.md) (QM)
 - [backup-and-disaster-recovery.md, proposed revision](../../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user) (BK)
 - [production-hardening.md](../../security-privacy/production-hardening.md) (H)
+- Round 2 (2026-11-12):
+  [user-data-encryption-round-2.md](../../security-privacy/user-data-encryption-round-2.md) (E4, E7),
+  [user-data-encryption-2fa-and-recovery.md](../../security-privacy/user-data-encryption-2fa-and-recovery.md) (E6) and
+  [operator-liability-and-policies-round-2.md](../../security-privacy/operator-liability-and-policies-round-2.md) (E3, L4, L5) — questions in
+  [Round 2 questions for the user](#round-2-questions-for-the-user-2026-11-12)
 
 ## Status after the user's answers of 2026-11-12
 
@@ -34,10 +39,10 @@ BK10, BK12, BK13, H1, H2, H3, H7, H8.
 | E1 | Zero-access encryption (option d): the server processes an upload in memory, so GROBID and Semantic Scholar still work, then stores it encrypted to the user's key. |
 | E3 | Plaintext at upload time, mindful of DMCA and CSAM (see the follow-up research). |
 | E5 | **Paid accounts never expire.** Free accounts: deleted after **5 years** without a sign-in, unless the user signs in or upgrades. Notices are emailed once a year after the last sign-in, then monthly in the final year, then daily in the final month. |
-| E7 | **New feature:** when the server wants to re-process old papers, the user is notified, through the existing upload-status notifications, and approves or denies a temporary decryption for that job. |
+| E7 | **New feature:** when the server wants to re-process old papers, the user is notified, through the existing upload-status notifications, and approves or denies a temporary decryption for that job. What it needs: [E7 in round 2](../../security-privacy/user-data-encryption-round-2.md#e7-re-processing-with-consent). |
 | L1 | United States. There must be a written procedure for DMCA notices and for CSAM. |
 | L3 | EU/UK users accepted, and sold to through Polar. |
-| L4 | No home address published: a P.O. box or a commercial DMCA agent. |
+| L4 | No home address published: a P.O. box or a commercial DMCA agent. *Round 2 correction:* a P.O. box covers only the agent's address; the service provider's own address must be a street address ([address](../../security-privacy/operator-liability-and-policies-round-2.md#the-public-address-l4-a-correction); question R2-6). |
 | RB1, RB2 | A closed-source processor is accepted. **Polar**, fiat first. **Crypto payments are a likely future addition**, so billing must not be Polar-shaped all the way down. |
 | RB5 | A paid period is honoured to its end once paid in full; a 7-day grace for failed renewals. |
 | RB6 | Over-quota after a downgrade means **read-only**: no uploads, and no annotating or editing existing papers. Nothing is auto-deleted except dormant accounts (E5). |
@@ -62,14 +67,56 @@ Literature Tracker uses, not features built into it.
 display), RB12 (Better Auth line), BK3 (offsite store), BK11 (image
 archiving). Each is decided in planning, with the reason written down.
 
-**Still open (follow-up research, 2026-11-12):**
+**Still open (follow-up research, 2026-11-12):** all four researched in round
+2 on 2026-11-12. What remains for the user is in
+[Round 2 questions for the user](#round-2-questions-for-the-user-2026-11-12).
 
-| # | What is open |
-|---|---|
-| E4 | How much can be encrypted while Zero's reactive sync still works? |
-| E6 | 2FA and a recovery code. Is the code still needed with 2FA? What is seamless with Google sign-in? |
-| E3 | Screening uploads for CSAM and DMCA while they are plaintext. |
-| L5 | What an LLC costs and involves, and whether it makes sense at this scale. |
+| # | What was open | Status |
+|---|---|---|
+| E4 | How much can be encrypted while Zero's reactive sync still works? | **Researched (round 2):** all content can be sealed; ids, foreign keys, timestamps and statuses stay plaintext. [What stays plaintext under Zero](../../security-privacy/user-data-encryption-round-2.md#round-2-2026-11-12-what-stays-plaintext-under-zero-e4). Questions R2-3, R2-4 |
+| E6 | 2FA and a recovery code. Is the code still needed with 2FA? What is seamless with Google sign-in? | **Researched (round 2):** yes, the recovery code stays mandatory; passkey-first optional 2FA; Google 2SV cannot be enforced. [2FA, passkeys and the recovery code](../../security-privacy/user-data-encryption-2fa-and-recovery.md#round-2-2026-11-12-2fa-passkeys-and-the-recovery-code-e6). Questions R2-1, R2-2 |
+| E3 | Screening uploads for CSAM and DMCA while they are plaintext. | **Researched (round 2):** do not scan at launch; register with NCMEC; apply to Pathways; leave a hook. [Screening uploads](../../security-privacy/operator-liability-and-policies-round-2.md#screening-uploads-for-csam-and-dmca-e3), with the [DMCA](../../security-privacy/operator-liability-and-policies-round-2.md#runbook-a-dmca-notice) and [CSAM](../../security-privacy/operator-liability-and-policies-round-2.md#runbook-csam-discovered-or-reported) runbooks. Question R2-5 |
+| L5 | What an LLC costs and involves, and whether it makes sense at this scale. | **Researched (round 2):** a few hours; $0 to $800 a year depending on the state; not now. [Should the operator form an LLC?](../../security-privacy/operator-liability-and-policies-round-2.md#should-the-operator-form-an-llc-l5). Question R2-7 |
+
+## Round 2 questions for the user (2026-11-12)
+
+Only what the user must decide; the implementer's calls from round 2 (for
+example the blind index for citation linking, moving search text out of the
+URL, collapsing the upload pipeline into one job) are decided in planning.
+Answer by number ("R2-1: yes, …"). The recommended answers are the research's
+recommendations, not decisions. The legal items are research, not legal advice.
+
+| # | Question | Recommended answer | Where |
+|---|---|---|---|
+| R2-1 | Optional 2FA as one switch, "Require a passkey to sign in", where a single passkey gesture both signs in and unlocks the library, with authenticator-app codes (TOTP) deferred to a later phase? Better Auth's 2FA plugin does not challenge Google sign-ins, and TOTP can never unlock the data on a new device. | Yes | [Passkey-first 2FA](../../security-privacy/user-data-encryption-2fa-and-recovery.md#recommended-passkey-first-optional-2fa) |
+| R2-2 | One recovery code or two? **One:** a single code that unlocks the data and also gets past 2FA, through a small custom endpoint that replaces Better Auth's backup codes (a deviation from the adopted plugin). **Two:** keep Better Auth's backup codes beside the data recovery code, both printed on one recovery kit with clear labels. | One code | [One code or two](../../security-privacy/user-data-encryption-2fa-and-recovery.md#open-choice-one-recovery-code-or-two) |
+| R2-3 | Keep the contents fold state (`expanded`) and the annotation page index in plaintext? Plaintext reveals which contents entries are open and which pages carry marks; sealing the fold state loses the merge when two devices fold different chapters (the later write wins). | Yes, keep both plaintext | [The split](../../security-privacy/user-data-encryption-round-2.md#the-plaintextencrypted-split) |
+| R2-4 | Accept that a new paper's citation links to and from the rest of the collection appear only once a device is next unlocked and online? The server can no longer read the other papers, so the browser does the linking. | Yes | [Citation linking](../../security-privacy/user-data-encryption-round-2.md#citation-linking-moves-to-a-client-finishing-step) |
+| R2-5 | No upload scanning at launch, with NCMEC ESP registration now, a Tech Coalition Pathways application now, and a hook in the upload stage turned on by the listed triggers (sharing, non-PDF images or video, a CSAM report, a STOP CSAM-style law, real public growth)? Or PhotoDNA from day one, accepting a quarantine store outside zero-access? | No scanning at launch; register with NCMEC and apply to Pathways now | [Screening uploads](../../security-privacy/operator-liability-and-policies-round-2.md#screening-uploads-for-csam-and-dmca-e3) |
+| R2-6 | One virtual mailbox (CMRA) street address, about $10–$20 a month, as both DMCA directory addresses and as the contact address in the Terms, Privacy Policy and emails, once the Copyright Office (or a lawyer) confirms it is accepted? Round 1's "P.O. box with a free waiver" was wrong: a P.O. box covers only the agent's address. | Yes; fallback: a P.O. box for the agent plus a waiver request | [The address](../../security-privacy/operator-liability-and-policies-round-2.md#the-public-address-l4-a-correction) |
+| R2-7 | Which US state do you live in? It sets an LLC's yearly cost, from $0 (New Mexico) to $800 (California), and forming in another state usually means paying both. | Name the state. Either way, no LLC now; form one when the paid tier opens publicly if it costs about $100 a year or less there | [LLC](../../security-privacy/operator-liability-and-policies-round-2.md#should-the-operator-form-an-llc-l5) |
+| R2-8 | H5, disk encryption on the node, given `system.autoUpgrade` with `allowReboot = true`: full-disk LUKS with remote unlock, encrypt only the data volumes, or accept the disk as is? | No recommendation; a trade-off for you (options below) | [Supply chain and host](../../security-privacy/production-hardening.md#supply-chain-and-host) |
+
+The H5 options (R2-8), described neutrally:
+
+- **Full-disk LUKS with remote unlock** (for example SSH into the initrd, or
+  TPM, as round 1 named). Everything on the disk is encrypted at rest,
+  including account rows, secrets, backup staging and logs. An unattended
+  reboot stops at the unlock prompt until someone unlocks it remotely
+  ([production-hardening.md](../../security-privacy/production-hardening.md#supply-chain-and-host)),
+  so the site is down until then. The effort of converting the existing disk
+  was not researched.
+- **Encrypt only the data volumes** (for example Postgres, Garage, backup
+  staging and the secrets). The system boots and stays reachable after an
+  unattended reboot; the data stays locked until those volumes are unlocked.
+  How they are unlocked after a reboot decides how much of the reboot problem
+  remains; this was not researched.
+- **Accept the disk as is.** Unattended reboots keep working. Zero-access
+  still covers stored content (PDFs and sealed columns), but account rows
+  (names, emails), secrets in the env file, backup staging and logs are
+  readable by anyone who gets the disk.
+  [pdf-and-annotation-data-protection.md](../../security-privacy/pdf-and-annotation-data-protection.md)
+  assumed LUKS and would need updating.
 
 ## Fix regardless of decisions
 

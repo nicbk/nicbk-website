@@ -7,7 +7,7 @@ directory:
 
 | Path | What | Why it is enough |
 |---|---|---|
-| `postgres/<db>.dump` | `pg_dump --format=custom` of the app database, run inside the `db` container | Holds every table: Better Auth (users, sessions, accounts), the Literature Tracker, pg-boss and the `zero_data` publication. Custom format allows selective restore |
+| `postgres/database.dump` | `pg_dump --format=custom` of the app database, run inside the `db` container | Holds every table: Better Auth (users, sessions, accounts), the Literature Tracker, pg-boss and the `zero_data` publication. Custom format allows selective restore |
 | `objects/<bucket>/…` | An `rclone sync` mirror of the Garage bucket, made through its S3 API | Restores into a fresh Garage through the existing `garage-init`. No dependence on Garage's on-disk format |
 | `config/.env` | The production `.env` | Every secret the stack runs with, including `BETTER_AUTH_SECRET`, so sessions stay valid (BK13) |
 | `tombstones.txt` | Ids of deleted accounts (task 3) | Lets an older checkpoint be restored without bringing deleted accounts back (BK10) |
@@ -106,6 +106,10 @@ the time-based policy:
   binding ceiling means unusual churn, worth a look.
 - **If it cannot get under the ceiling** without touching a protected
   snapshot, it stops, keeps everything, and alerts.
+- **If there is no checkpoint in the last 30 days**, it removes nothing.
+  Backups have stopped, the watcher is already alerting, and there is no
+  reference to judge size by. Thinning then would spend the history while
+  nothing replaces it.
 
 **The one-year limit (`--keep-monthly 12`) is temporary.** It stays until
 zero-access encryption lands (#39+), because until then an old checkpoint is a

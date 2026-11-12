@@ -163,7 +163,7 @@ upload/download cache-action cycle (e.g. `docker/build-push-action`'s
   `testing-qa/` and `security-privacy/` respectively (rather than deciding
   them here) follows this category's existing boundary pattern — e.g. how
   `hosting-and-infrastructure.md` deferred backup responsibility to
-  `backup-and-disaster-recovery.md` — so this doc owns "a step exists and
+  `backup-and-disaster-recovery/index.md` — so this doc owns "a step exists and
   gates the PR," not the tool underneath it.
 
 ## Addendum (2026-07-06): Runner Decision Revised — GitHub-Hosted

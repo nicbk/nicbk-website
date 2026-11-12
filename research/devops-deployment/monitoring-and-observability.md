@@ -121,7 +121,7 @@ changing how GlitchTip publishes to it.
 ## Reasoning
 
 - `journald` over `json-file`/Loki follows the same minimal-manual-config
-  reasoning as `backup-and-disaster-recovery.md`'s tool choices: reuse
+  reasoning as `backup-and-disaster-recovery/index.md`'s tool choices: reuse
   infrastructure the NixOS host already has rather than add a second
   surface that needs its own upkeep.
 - The error-tracking decision changed twice as better information arrived,

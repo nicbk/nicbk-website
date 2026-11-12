@@ -276,11 +276,66 @@ services:
     networks:
       - app-internal
 
+  # The backup tools (features/backups-you-can-relaunch-from). One-shot
+  # services in the `backup` profile, so a plain `up` never starts them; the
+  # scripts in deploy/ run them with `docker compose run`. Pinned images rather
+  # than host packages, so their versions are reviewed here and CI runs exactly
+  # what production runs.
+  #
+  # Both mount the host's backup directory at /backup. Its `staging/` holds the
+  # checkpoint being assembled: the Postgres dump, the mirror of the bucket, a
+  # copy of the .env and the manifest (deploy/backup.sh). CI also keeps a local
+  # restic repository there, in place of the off-site one.
+  restic:
+    image: restic/restic:0.19.1
+    profiles: ["backup"]
+    environment:
+      # Passed through from the environment of whoever runs `compose run`,
+      # never written here or in the app's .env: the backup credentials are a
+      # separate, root-only file (deploy/backup.env.example), so the app never
+      # holds them. Listing a name without a value is what passes it through.
+      - RESTIC_REPOSITORY
+      - RESTIC_PASSWORD
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION
+    volumes:
+      - ${NICBK_BACKUP_DIR:-/var/lib/nicbk-website-backup}:/backup
+      # restic's local index cache. Losing it costs a slower next run, not
+      # data, so a named volume is enough.
+      - restic-cache:/root/.cache/restic
+    restart: "no"
+    networks:
+      - app-internal
+
+  rclone:
+    image: rclone/rclone:1.75.2
+    profiles: ["backup"]
+    environment:
+      # A remote named `garage`, configured entirely here so no rclone config
+      # file holds a secret. The values match the app's own S3 client
+      # (src/storage/s3-client.ts): Garage's fixed region, path-style URLs.
+      RCLONE_CONFIG_GARAGE_TYPE: s3
+      RCLONE_CONFIG_GARAGE_PROVIDER: Other
+      RCLONE_CONFIG_GARAGE_ENDPOINT: http://garage:3900
+      RCLONE_CONFIG_GARAGE_REGION: garage
+      RCLONE_CONFIG_GARAGE_FORCE_PATH_STYLE: "true"
+      RCLONE_CONFIG_GARAGE_ACCESS_KEY_ID: ${GARAGE_ACCESS_KEY_ID:?set GARAGE_ACCESS_KEY_ID in .env}
+      RCLONE_CONFIG_GARAGE_SECRET_ACCESS_KEY: ${GARAGE_SECRET_ACCESS_KEY:?set GARAGE_SECRET_ACCESS_KEY in .env}
+    volumes:
+      - ${NICBK_BACKUP_DIR:-/var/lib/nicbk-website-backup}:/backup
+    restart: "no"
+    # On the internal network, so it reaches Garage's S3 port without that
+    # port ever being published to the host.
+    networks:
+      - app-internal
+
 volumes:
   db-data:
   zero-replica:
   garage-meta:
   garage-data:
+  restic-cache:
 
 networks:
   app-internal:

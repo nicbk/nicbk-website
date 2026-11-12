@@ -24,7 +24,7 @@ config used during deploy belongs to
 belongs to [database-migrations.md](./database-migrations.md) (not yet
 researched) — this doc doesn't address migration ordering. Backup/recovery
 of data (as opposed to code/image rollback) belongs to
-[backup-and-disaster-recovery.md](./backup-and-disaster-recovery.md) (not
+[backup-and-disaster-recovery/index.md](./backup-and-disaster-recovery/index.md) (not
 yet researched).
 
 ## Decision

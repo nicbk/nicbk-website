@@ -167,7 +167,7 @@ are recorded in the "Notes" section below rather than left implicit — per
   — every new variable is **server-only, never `VITE_`-prefixed**, provisioned
   by hand in the git-ignored `.env` on the host (the repo is public — no
   committed ciphertext), documented in `.env.example`.
-- [../../research/devops-deployment/backup-and-disaster-recovery.md](../../research/devops-deployment/backup-and-disaster-recovery.md)
+- [../../research/devops-deployment/backup-and-disaster-recovery/index.md](../../research/devops-deployment/backup-and-disaster-recovery/index.md)
   — referenced because this feature adds the **first data that is not
   reconstructible from the repository**: uploaded PDFs in Garage and their
   extracted rows. Backup coverage of the Garage volume is a deployment
@@ -309,7 +309,7 @@ are recorded in the "Notes" section below rather than left implicit — per
   prerequisite** to be done before real PDFs are stored in production. Also
   worth carrying into that deploy: GROBID's ~4 GB RAM footprint alongside
   zero-cache and Garage, and extending backup coverage
-  ([backup-and-disaster-recovery.md](../../research/devops-deployment/backup-and-disaster-recovery.md))
+  ([backup-and-disaster-recovery/index.md](../../research/devops-deployment/backup-and-disaster-recovery/index.md))
   to the Garage volume — this is the first data on the site that cannot be
   rebuilt from the repository.
 - **`pgboss` must be excluded from the Zero publication.** Not a preference:

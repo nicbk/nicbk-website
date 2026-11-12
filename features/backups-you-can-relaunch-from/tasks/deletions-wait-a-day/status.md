@@ -1,6 +1,6 @@
 # Status: Deletions Wait a Day
 
-**State:** In review ([#268](https://github.com/nicbk/nicbk-website/issues/268); PR [#273](https://github.com/nicbk/nicbk-website/pull/273)).
+**State:** Merged ([#268](https://github.com/nicbk/nicbk-website/issues/268); PR [#273](https://github.com/nicbk/nicbk-website/pull/273)).
 
 ## What shipped
 

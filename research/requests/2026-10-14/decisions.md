@@ -14,7 +14,7 @@ Research documents:
 - [payment-processor.md](../../technologies/payment-processor.md) and
   [roles-and-administrators.md](../../system-architecture/roles-and-administrators.md) (RB)
 - [quotas-and-usage-metering.md](../../system-architecture/quotas-and-usage-metering.md) (QM)
-- [backup-and-disaster-recovery.md, proposed revision](../../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user) (BK)
+- [backup-and-disaster-recovery/index.md, proposed revision](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md) (BK)
 - [production-hardening.md](../../security-privacy/production-hardening.md) (H)
 - Round 2 (2026-11-12):
   [user-data-encryption-round-2.md](../../security-privacy/user-data-encryption-round-2.md) (E4, E7),
@@ -212,19 +212,19 @@ the metering, the pop-up and the profile.
 
 | # | Question | Recommended answer | Where |
 |---|---|---|---|
-| BK1 | Acceptable data loss (RPO), and is "tens of minutes to hours" acceptable as "immediately"? | 6 hours; yes | [Changes](../../devops-deployment/backup-and-disaster-recovery.md#what-the-decided-design-misses-against-b1b6) |
-| BK2 | Approve the revision (staging directory, `pg_dump -Fc`, S3-level Garage copy, one snapshot per checkpoint, restore script, drills)? | Yes | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery.md#proposed-changes) |
-| BK3 | Offsite store: B2, R2 or a Hetzner Storage Box? | R2 if drills are frequent (free egress), otherwise B2; both cost cents | [Cost](../../devops-deployment/backup-and-disaster-recovery.md#cost) |
-| BK4 | Do the system flake, WireGuard key, relay config and LUKS keys count; where is each kept; is different hardware in scope? | Yes; the runbook names where each lives | [Changes](../../devops-deployment/backup-and-disaster-recovery.md#what-the-decided-design-misses-against-b1b6) |
-| BK5 | How much free disk does the home node have? | Answer needed (a PDF mirror plus a drill copy) | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery.md#proposed-changes) |
-| BK6 | Run drills on the production node at night, or elsewhere? | Production at night, at low CPU and I/O priority | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery.md#proposed-changes) |
-| BK7 | Where does the break-glass set live; who else may restore? | Password manager plus a printed copy | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery.md#proposed-changes) |
-| BK8 | Protect backups from a compromised node? | Yes, the cheap tier: a scoped key and "keep only last version" lifecycle | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery.md#proposed-changes) |
-| BK9 | Delay physical PDF deletion up to a day, or accept the race and rely on the reconcile report? | No firm recommendation; a delay is simplest and must be disclosed | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery.md#proposed-changes) |
+| BK1 | Acceptable data loss (RPO), and is "tens of minutes to hours" acceptable as "immediately"? | 6 hours; yes | [Changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#what-the-decided-design-misses-against-b1b6) |
+| BK2 | Approve the revision (staging directory, `pg_dump -Fc`, S3-level Garage copy, one snapshot per checkpoint, restore script, drills)? | Yes | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#proposed-changes) |
+| BK3 | Offsite store: B2, R2 or a Hetzner Storage Box? | R2 if drills are frequent (free egress), otherwise B2; both cost cents | [Cost](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#cost) |
+| BK4 | Do the system flake, WireGuard key, relay config and LUKS keys count; where is each kept; is different hardware in scope? | Yes; the runbook names where each lives | [Changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#what-the-decided-design-misses-against-b1b6) |
+| BK5 | How much free disk does the home node have? | Answer needed (a PDF mirror plus a drill copy) | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#proposed-changes) |
+| BK6 | Run drills on the production node at night, or elsewhere? | Production at night, at low CPU and I/O priority | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#proposed-changes) |
+| BK7 | Where does the break-glass set live; who else may restore? | Password manager plus a printed copy | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#proposed-changes) |
+| BK8 | Protect backups from a compromised node? | Yes, the cheap tier: a scoped key and "keep only last version" lifecycle | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#proposed-changes) |
+| BK9 | Delay physical PDF deletion up to a day, or accept the race and rely on the reconcile report? | No firm recommendation; a delay is simplest and must be disclosed | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#proposed-changes) |
 | BK10 | Backups keep deleted users' data ~12 months: acceptable, or shorten monthly retention? | Keep a tombstone list re-applied on restore, disclose the window, consider shorter monthly retention | [Deletion](../../security-privacy/production-hardening.md#deletion-completeness-and-data-export) |
-| BK11 | Depend on Docker Hub/GHCR during relaunch, or archive the pinned images? | No recommendation | [Changes](../../devops-deployment/backup-and-disaster-recovery.md#what-the-decided-design-misses-against-b1b6) |
-| BK12 | A small read-only watcher on the EC2 relay? | Yes (the uptime check, H3, can share it) | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery.md#proposed-changes) |
-| BK13 | Users stay signed in across a restore, or sign in again? | Stay signed in; the checkpoint holds the secret and session rows | [Questions](../../devops-deployment/backup-and-disaster-recovery.md#questions-for-the-user) |
+| BK11 | Depend on Docker Hub/GHCR during relaunch, or archive the pinned images? | No recommendation | [Changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#what-the-decided-design-misses-against-b1b6) |
+| BK12 | A small read-only watcher on the EC2 relay? | Yes (the uptime check, H3, can share it) | [Proposed changes](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#proposed-changes) |
+| BK13 | Users stay signed in across a restore, or sign in again? | Stay signed in; the checkpoint holds the secret and session rows | [Questions](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md#questions-for-the-user) |
 
 ## Hardening
 

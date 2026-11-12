@@ -16,8 +16,8 @@ with one sub-issue per task (#268–#272). Roadmap entry **#32**.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/status.md) | In review ([#268](https://github.com/nicbk/nicbk-website/issues/268)) | [#273](https://github.com/nicbk/nicbk-website/pull/273) | Pending | Pending |
-| [`a-checkpoint-every-six-hours`](./tasks/a-checkpoint-every-six-hours/status.md) | Spec'd | — | — | — |
+| [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/status.md) | Complete ([#268](https://github.com/nicbk/nicbk-website/issues/268)) | [#273](https://github.com/nicbk/nicbk-website/pull/273) | Pass | Merged |
+| [`a-checkpoint-every-six-hours`](./tasks/a-checkpoint-every-six-hours/status.md) | In review ([#269](https://github.com/nicbk/nicbk-website/issues/269)) | pending | Pending | Pending |
 | [`a-restore-that-relaunches`](./tasks/a-restore-that-relaunches/status.md) | Spec'd | — | — | — |
 | [`drills-and-a-watcher`](./tasks/drills-and-a-watcher/status.md) | Spec'd | — | — | — |
 | [`the-images-are-kept`](./tasks/the-images-are-kept/status.md) | Spec'd | — | — | — |
@@ -37,6 +37,8 @@ after that task merges:
 
 ## Log
 
+- 2026-11-12: task 2 implemented and verified.
+- 2026-11-12: task 1 merged (#273).
 - 2026-11-12: go-ahead given; issues #267–#272 opened; task 1 started.
 - 2026-11-12: P32-1 (30 days) and P32-2 (the size ceiling; the one-year limit
   until encryption) decided.

@@ -65,7 +65,7 @@ B2. Nothing in this task restores. That is task 3.
   - the first half of the "Backup round trip" job, backing up to a local
     repository and asserting the snapshot and manifest, plus the negative case.
 - **Research housekeeping** (revision change 12):
-  - mark the revision in `backup-and-disaster-recovery.md` as decided
+  - mark the revision in `backup-and-disaster-recovery/index.md` as decided
     (2026-11-12, BK2), with the BK3 and BK11 planning decisions;
   - split it into a `backup-and-disaster-recovery/` folder (decision, revision,
     cost), fixing the links into it;

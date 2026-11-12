@@ -2,7 +2,7 @@
 
 ## Decided research this implements
 
-- [backup-and-disaster-recovery.md](../../research/devops-deployment/backup-and-disaster-recovery.md):
+- [backup-and-disaster-recovery/index.md](../../research/devops-deployment/backup-and-disaster-recovery/index.md):
   - the decision (restic, a systemd timer, an off-site S3-compatible store, GFS
     retention, no WAL recovery, `restic check`);
   - the 2026-10-14 revision, changes 1–12, approved as BK2.

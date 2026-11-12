@@ -16,7 +16,7 @@ each merge belongs to
 [deployment-strategy.md](./deployment-strategy.md) (not yet researched);
 backup/upgrade responsibility for the now-containerized Postgres/Garage is
 carried forward to
-[backup-and-disaster-recovery.md](./backup-and-disaster-recovery.md) (not
+[backup-and-disaster-recovery/index.md](./backup-and-disaster-recovery/index.md) (not
 yet researched).
 
 ## Decision
@@ -53,7 +53,7 @@ modules would have given Postgres/Garage some upgrade handling and
 potential backup hooks "for free." Trading that away for one genuinely
 unified local/prod definition means backup and upgrade responsibility for
 containerized Postgres/Garage has to be explicitly designed, not assumed —
-carried forward to `backup-and-disaster-recovery.md`.
+carried forward to `backup-and-disaster-recovery/index.md`.
 
 **Why plain Compose, not Arion or NixOS-native modules:**
 - **Arion** (a Nix-expression wrapper around Compose with a real NixOS

@@ -139,6 +139,44 @@ jobs:
       - name: Integration tests
         run: npm run test:integration
 
+  backup:
+    name: Backups (shellcheck, NixOS module, round trip)
+    # The backup feature is shell scripts and systemd units, which the unit-test
+    # ratchet cannot see, so they are proven by running them against a real,
+    # throwaway copy of the stack (features/backups-you-can-relaunch-from,
+    # testing.md). ubuntu-latest has Docker, jq and shellcheck.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: shellcheck
+        run: shellcheck -x deploy/*.sh deploy/lib/*.sh deploy/test/*.sh
+
+      - name: The size ceiling's rule
+        run: deploy/test/ceiling.test.sh
+
+      # The module is evaluated inside a real NixOS system, so a module that
+      # would break the host's next rebuild fails here instead.
+      - name: Install Nix
+        uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31.11.5
+
+      - name: NixOS module evaluates
+        run: deploy/test/eval-module.sh .
+
+      - name: Throwaway .env
+        run: deploy/test/make-test-env.sh .
+
+      # Neither profile may be broken silently: the plain stack, and the stack
+      # with the backup tools.
+      - name: Compose files are valid
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.yml --profile backup config --quiet
+
+      - name: Backup round trip
+        run: deploy/test/round-trip.sh .
+
   # Both e2e jobs below are SUSPENDED while the Lit Tracker is being built out —
   # see the 2026-08-09 addendum in research/testing-qa/e2e-testing.md. Together
   # they were adding ~15 minutes to every PR on surfaces whose shape is still

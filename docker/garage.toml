@@ -16,7 +16,7 @@ db_engine = "sqlite"
 
 # One node, so one copy. Garage refuses to start with a replication factor it
 # cannot satisfy, and there is nothing to replicate to — durability here comes
-# from the host's backups (research/devops-deployment/backup-and-disaster-recovery.md),
+# from the host's backups (research/devops-deployment/backup-and-disaster-recovery/index.md),
 # not from Garage.
 replication_factor = 1
 

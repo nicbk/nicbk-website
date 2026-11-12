@@ -89,6 +89,21 @@ need them (see Phases 2–3).
 | 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **Complete** (2026-10-14; all 4 tasks merged, #252 + #253 + #254 + #255; the user's phone check passed) | #7, #9, #10, #22 |
 | 30 | The contents fold (an entry with sections folds; every entry starts folded; the folds are kept with the paper on the account) | [`the-contents-fold`](./the-contents-fold/description.md) | **Complete** (2026-11-12; both tasks merged, #260 + #261; the user's phone check passed) | #23, #29 |
 | 31 | What the research found (signing in stops sharing one rate limit across the site; a deleted account's PDFs leave the bucket) | [`what-the-research-found`](./what-the-research-found/description.md) | **Complete** (2026-10-20; both tasks merged, #265 + #266) | #6, #7, #11 |
+| 32 | Backups you can relaunch from (agreed, not yet spec'd) | — | **Proposed** (2026-11-12) | — |
+| 33 | Hardening before growth (agreed, not yet spec'd) | — | **Proposed** | — |
+| 34 | Roles, site-wide (agreed, not yet spec'd) | — | **Proposed** | #6 |
+| 35 | Quotas and usage, site-wide with per-app limits (agreed, not yet spec'd) | — | **Proposed** | #34 |
+| 36 | Terms, privacy and consent (agreed, not yet spec'd) | — | **Proposed** | #6 |
+| 37 | Paid plan, site-wide billing with Polar first (agreed, not yet spec'd) | — | **Proposed** | #34, #35, #36 |
+| 38 | Admin dashboards (agreed, not yet spec'd) | — | **Proposed** | #34, #35, #37 |
+| 39+ | Zero-access encryption, several features (agreed, not yet spec'd) | — | **Proposed** | #34–#38 |
+| — | Dormant free accounts (agreed, after encryption; needs email) | — | **Proposed** | #36, email |
+
+The rows above come from
+[../research/requests/2026-10-14/proposed-features.md](../research/requests/2026-10-14/proposed-features.md),
+agreed by the user on 2026-11-12. Each gets its folder and number confirmed
+when it is spec'd.
+
 
 ## How this roadmap is spec'd out
 

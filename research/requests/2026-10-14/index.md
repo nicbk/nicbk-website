@@ -80,6 +80,18 @@ depend on the answers:
 - **The payment processor** is needed before a user can move to "paid" from the
   profile.
 
+## Where things stand (2026-11-12)
+
+- **Research is complete.** Every decision is in [decisions.md](./decisions.md)
+  (rounds 1–8), and the user's own words are in
+  [answers-2026-11-12.md](./answers-2026-11-12.md).
+- **The features are agreed**, in this order:
+  [proposed-features.md](./proposed-features.md).
+- **Done along the way:** #30 the contents fold (complete), and #31 the two live
+  defects F1 and F2 (complete).
+- **Next:** spec #32, *Backups you can relaunch from*, and discuss it with the
+  user before building.
+
 ## Progress
 
 | Request | Research | Plan | Implementation |

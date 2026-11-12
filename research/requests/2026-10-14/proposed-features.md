@@ -1,6 +1,14 @@
 # Proposed Features for the Requests of 2026-10-14
 
-**For discussion; nothing here is planned yet.** It breaks the decided
+**Agreed by the user on 2026-11-12**: the breakdown and its order, with the
+three discussion points accepted as written below
+([answers](./answers-2026-11-12.md#agreement-to-the-proposed-features-as-written)).
+Each feature is still spec'd in `features/`, and discussed, before it is built.
+
+**Next step:** spec feature #32, *Backups you can relaunch from*, in
+`features/`, and bring it to the user before building.
+
+*Originally written for discussion.* It breaks the decided
 research ([decisions.md](./decisions.md), with the user's answers in
 [answers-2026-11-12.md](./answers-2026-11-12.md)) into roadmap features, each
 a vertical slice with one PR per task. Each one is spec'd in `features/` only
@@ -24,7 +32,12 @@ apps reuse them. Per-app pieces (quotas, a dashboard page) plug into them.
 | 39–4x | **Zero-access encryption**, several features | The largest change; built on the modules above | Key management: Drive `appDataFolder` plus an optional recovery code, and the sign-up disclaimer. The browser crypto layer around Zero: decrypt into views, encrypt before every mutator. Sealed columns for everything in E4 (R2-3). The single in-memory upload job. Citation linking in the browser (R2-4). Consent jobs for re-processing (E7). The migration of existing data, then removal of the old paths (P7, P8). Search text out of the URL. Crypto-shredding on deletion (BK10). The exact split is planned when the time comes |
 | 4x | **Dormant free accounts** | Needs email, which the app cannot send today | The 5-year policy with yearly, then monthly, then daily notices (E5); paid accounts never expire |
 
-## Questions for this discussion
+## Questions for this discussion (agreed 2026-11-12)
+
+The user agreed to all three as proposed: this order; research email sending
+when the dormant-accounts feature comes up; the listed steps are the
+operator's, each with instructions written by the feature that needs it.
+
 
 1. **The order.** Backups and hardening first, because there is no backup
    today. Encryption is last of the large pieces, because it touches

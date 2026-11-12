@@ -84,7 +84,7 @@ depend on the answers:
 
 | Request | Research | Plan | Implementation |
 |---|---|---|---|
-| Collapsible outline | not needed | [#30 `the-contents-fold`](../../../features/the-contents-fold/description.md) | merged (#260, #261); phone check pending |
+| Collapsible outline | not needed | [#30 `the-contents-fold`](../../../features/the-contents-fold/description.md) | complete (#260, #261) |
 | Privacy and hardening | researched; awaiting decisions: [user-data-encryption](../../security-privacy/user-data-encryption.md), [operator-liability-and-policies](../../security-privacy/operator-liability-and-policies.md), [production-hardening](../../security-privacy/production-hardening.md) | — | — |
 | Backups | researched; awaiting decisions: [backup-and-disaster-recovery, proposed revision](../../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user) | — | — |
 | Roles and billing | researched; awaiting decisions: [roles-and-administrators](../../system-architecture/roles-and-administrators.md), [payment-processor](../../technologies/payment-processor.md) | — | — |

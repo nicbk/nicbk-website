@@ -17,6 +17,61 @@ Research documents:
 - [backup-and-disaster-recovery.md, proposed revision](../../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user) (BK)
 - [production-hardening.md](../../security-privacy/production-hardening.md) (H)
 
+## Status after the user's answers of 2026-11-12
+
+The answers are recorded verbatim in
+[answers-2026-11-12.md](./answers-2026-11-12.md), which wins over any summary
+here.
+
+**Decided as recommended:** E2, L2, L6, L7, L8, L9, RB4, RB10, RB11, RB13,
+RB14, RB16, QM2, QM3, QM4, QM5, QM7, QM8, QM9, BK1, BK2, BK4, BK6, BK7, BK8,
+BK10, BK12, BK13, H1, H2, H3, H7, H8.
+
+**Decided, with the user's own terms:**
+
+| # | Decision |
+|---|---|
+| E1 | Zero-access encryption (option d): the server processes an upload in memory, so GROBID and Semantic Scholar still work, then stores it encrypted to the user's key. |
+| E3 | Plaintext at upload time, mindful of DMCA and CSAM (see the follow-up research). |
+| E5 | **Paid accounts never expire.** Free accounts: deleted after **5 years** without a sign-in, unless the user signs in or upgrades. Notices are emailed once a year after the last sign-in, then monthly in the final year, then daily in the final month. |
+| E7 | **New feature:** when the server wants to re-process old papers, the user is notified, through the existing upload-status notifications, and approves or denies a temporary decryption for that job. |
+| L1 | United States. There must be a written procedure for DMCA notices and for CSAM. |
+| L3 | EU/UK users accepted, and sold to through Polar. |
+| L4 | No home address published: a P.O. box or a commercial DMCA agent. |
+| RB1, RB2 | A closed-source processor is accepted. **Polar**, fiat first. **Crypto payments are a likely future addition**, so billing must not be Polar-shaped all the way down. |
+| RB5 | A paid period is honoured to its end once paid in full; a 7-day grace for failed renewals. |
+| RB6 | Over-quota after a downgrade means **read-only**: no uploads, and no annotating or editing existing papers. Nothing is auto-deleted except dormant accounts (E5). |
+| RB7 | No refunds for now. |
+| RB15 | Admins see names, emails, **per-user paper counts** and the platform-wide paper count, and nothing more. |
+| QM1 | The free limits stay as tight as written (25 MiB stored, 50 MiB a month), to deter abuse. |
+| QM6 | Quotas are per app. |
+| BK5 | The node has at least a couple of terabytes free. |
+| BK9 | Delay physical PDF deletion (and disclose it). |
+| H4 | No invite or allowlist mode: the app stays public. |
+| H5 | `system.autoUpgrade` is enabled on the node. |
+| H6 | A CDN is acceptable. |
+
+**A new cross-cutting requirement (the user, 2026-11-12):** payments,
+dashboards, accounts and roles must be **modular**, so that they carry over to
+the other services the site will add. They are site-wide modules that the
+Literature Tracker uses, not features built into it.
+
+**Delegated to the implementer ("whatever makes the most sense"):** RB9 (tax
+display), RB12 (Better Auth line), BK3 (offsite store), BK11 (image
+archiving). Each is decided in planning, with the reason written down.
+
+**Still open (follow-up research, 2026-11-12):**
+
+| # | What is open |
+|---|---|
+| E4 | How much can be encrypted while Zero's reactive sync still works? |
+| E6 | 2FA and a recovery code. Is the code still needed with 2FA? What is seamless with Google sign-in? |
+| E3 | Screening uploads for CSAM and DMCA while they are plaintext. |
+| L5 | What an LLC costs and involves, and whether it makes sense at this scale. |
+| RB3 | **A clarification is needed.** The question was about the operator's own identity check, which Polar requires before paying out; users are never asked for ID. |
+| RB8 | **A clarification is needed.** The question was whether an administrator can buy the paid plan; admins are unlimited anyway. The recommendation stands: no checkout for admins. |
+| H5 | Does `autoUpgrade` reboot the node unattended, and can its LUKS disk unlock remotely? |
+
 ## Fix regardless of decisions
 
 Two live defects found during research, both confirmed first-hand. Neither

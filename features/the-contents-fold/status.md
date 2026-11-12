@@ -1,6 +1,6 @@
 # Status: The Contents Fold
 
-**Feature state:** **Merged** (2026-10-14): both tasks merged (#260, #261). Safari on an iPhone not yet checked by the user. The user's three decisions are
+**Feature state:** **Complete** (2026-11-12): both tasks merged (#260, #261); the user's iPhone check passed. The user's three decisions are
 recorded in [plan.md](./plan.md#decided-with-the-user-2026-10-14). Go-ahead
 given 2026-10-14.
 
@@ -23,6 +23,7 @@ with one sub-issue per task. Roadmap entry **#30**.
 
 ## Log
 
+- 2026-11-12: the user's iPhone check passed; complete.
 - 2026-10-14: task 2 merged (#261).
 - 2026-10-14: task 2 implemented and verified.
 - 2026-10-14: task 1 merged (#260).

@@ -15,7 +15,7 @@ prefer open-source tooling, minimize manual configuration.
 
 Boundary notes: backup/recovery of the actual application *data* (Postgres,
 Garage) belongs to
-[backup-and-disaster-recovery.md](./backup-and-disaster-recovery.md) (not
+[backup-and-disaster-recovery/index.md](./backup-and-disaster-recovery/index.md) (not
 yet researched) — this doc only covers backing up the *secret values
 themselves*. Database migration sequencing belongs to
 [database-migrations.md](./database-migrations.md) (not yet researched).
@@ -34,8 +34,8 @@ themselves*. Database migration sequencing belongs to
 - **Garage**: an S3-style access key + secret key (created via
   `garage key create`, used by the app server as an S3 client) and
   `rpc_secret` (inter-node RPC auth — irrelevant in single-node mode
-  operationally, but Garage still requires it be set). No static
-  `admin_token` (see below).
+  operationally, but Garage still requires it be set). A static
+  `admin_token` after all, as `GARAGE_ADMIN_TOKEN` (see the note below).
 - **Zero (`zero-cache`)**: `ZERO_UPSTREAM_DB` (upstream Postgres connection
   string), `ZERO_ADMIN_PASSWORD` (required in production for zero-cache's
   own admin/inspector endpoints), and one shared `ZERO_PUSH_API_KEY`-style
@@ -55,6 +55,15 @@ themselves*. Database migration sequencing belongs to
   a launch requirement.
 
 ### Garage's admin token: avoided entirely, not templated
+
+> **Superseded in practice (noted 2026-11-12, #32).** The stack does set a
+> static admin token: `GARAGE_ADMIN_TOKEN` in `.env`, which Garage reads as an
+> override of `admin_token` (`docker/garage.toml`), so no templating is
+> needed after all. The bootstrap job (`scripts/garage-init.mjs`) uses it to
+> apply the layout, import the app's key and create the bucket, and a fresh
+> Garage after a restore needs the same. It is reachable only on the internal
+> Compose network (the admin port is never published). The reasoning below is
+> kept as it was written.
 
 Garage's `admin_token` has no confirmed native environment-variable or
 file-path override (unlike `rpc_secret`, which supports

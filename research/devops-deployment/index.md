@@ -1,7 +1,7 @@
 # Research: DevOps / Deployment & CI
 
-Status: all 8 topics researched and decided (2026-07-05); a revision to
-`backup-and-disaster-recovery.md` researched 2026-10-14, awaiting decision.
+Status: all 8 topics researched and decided (2026-07-05); the backup topic
+revised 2026-10-14 and decided 2026-11-12.
 
 Build, deployment, and hosting practices, and continuous integration setup —
 the "how it ships and stays running," as distinct from
@@ -98,8 +98,13 @@ Guiding principles for every topic in this category:
   Expand/contract migrations are mandatory given the revert-code-not-schema
   rollback model, with contracting changes deployed separately given
   Zero's larger full-resync blast radius on detected schema changes.
-- [backup-and-disaster-recovery.md](./backup-and-disaster-recovery.md) —
-  Decided. **restic** as the single backup tool for both Postgres
+- [backup-and-disaster-recovery/index.md](./backup-and-disaster-recovery/index.md) —
+  Decided, then **revised** ([revision of 2026-10-14](./backup-and-disaster-recovery/revision-2026-10-14.md),
+  decided 2026-11-12, and the [planning decisions](./backup-and-disaster-recovery/planning-2026-11-12.md):
+  `pg_dump -Fc`, an S3-level copy of the bucket, one snapshot per checkpoint
+  every 6 hours to Backblaze B2, a restore script and drills, a size ceiling).
+  The operator's runbook is [deploy/README-backups.md](../../deploy/README-backups.md).
+  The revision wins where it differs from the original decision, summarised here: **restic** as the single backup tool for both Postgres
   (`pg_dumpall` piped via stdin) and Garage (`metadata_dir`/`data_dir`
   backed up directly, per Garage's own cookbook), on one systemd timer
   consistent with `deployment-strategy.md`'s pattern. Scheduled logical

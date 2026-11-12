@@ -13,6 +13,14 @@ set -euo pipefail
 
 repo_dir="${1:?usage: deploy.sh <path-to-repo-checkout>}"
 cd "$repo_dir"
+REPO_DIR="$(pwd)"
+# shellcheck source=deploy/lib/common.sh
+. "$REPO_DIR/deploy/lib/common.sh"
+
+# The lock the backup jobs take too: a deploy restarts Postgres and Garage,
+# which would fail a backup mid-dump, so the two never overlap. A deploy waits
+# for a running backup (minutes), then goes ahead.
+take_lock
 
 git fetch origin main
 

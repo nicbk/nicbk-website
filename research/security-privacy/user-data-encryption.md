@@ -151,7 +151,7 @@ existing data. Proposed phases for (d):
    **new** object key, flip the row in one transaction, delete the plaintext.
    Idempotent and resumable. Never overwrite an object in place (see the
    backup revision in
-   [backup-and-disaster-recovery.md](../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user)).
+   [backup-and-disaster-recovery/index.md](../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md)).
 4. Purge residues: Postgres dead tuples (`VACUUM`, or a table rewrite), Garage
    garbage collection, the zero-cache replica, and every pre-migration backup
    (by retention expiry or purge).

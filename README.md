@@ -291,6 +291,11 @@ the internal Compose network, and every PDF read and write is proxied through
 the app server's own authorization rather than a presigned URL, so nothing else
 needs to reach it.
 
+**Backups**: a checkpoint every six hours to Backblaze B2, enabled with
+`services.nicbk-website.backup` once its bucket, keys and environment file
+exist. Setting up, reading the alerts, and restoring are in
+[deploy/README-backups.md](./deploy/README-backups.md).
+
 **Rollback** = revert the offending commit on `main` through a normal
 reviewed PR; the next poll redeploys the reverted state. Module changes in
 `flake.nix` reach the host only via a flake-input lock update, not the

@@ -100,7 +100,7 @@ depend on the answers:
 |---|---|---|---|
 | Collapsible outline | not needed | [#30 `the-contents-fold`](../../../features/the-contents-fold/description.md) | complete (#260, #261) |
 | Privacy and hardening | researched; awaiting decisions: [user-data-encryption](../../security-privacy/user-data-encryption.md), [operator-liability-and-policies](../../security-privacy/operator-liability-and-policies.md), [production-hardening](../../security-privacy/production-hardening.md) | — | — |
-| Backups | decided (BK1–BK13; BK3 and BK11 in planning): [backup-and-disaster-recovery](../../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user) | [#32 `backups-you-can-relaunch-from`](../../../features/backups-you-can-relaunch-from/description.md) | — |
+| Backups | decided (BK1–BK13; BK3 and BK11 in planning): [backup-and-disaster-recovery](../../devops-deployment/backup-and-disaster-recovery/revision-2026-10-14.md) | [#32 `backups-you-can-relaunch-from`](../../../features/backups-you-can-relaunch-from/description.md) | — |
 | Roles and billing | researched; awaiting decisions: [roles-and-administrators](../../system-architecture/roles-and-administrators.md), [payment-processor](../../technologies/payment-processor.md) | — | — |
 | Quotas | researched; awaiting decisions: [quotas-and-usage-metering](../../system-architecture/quotas-and-usage-metering.md) | — | — |
 | Profile role and quota | researched; awaiting decisions: [roles-and-administrators](../../system-architecture/roles-and-administrators.md) (U1), [quotas-and-usage-metering](../../system-architecture/quotas-and-usage-metering.md) (U2, U3), [payment-processor](../../technologies/payment-processor.md) (U4) | — | — |

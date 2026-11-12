@@ -16,7 +16,7 @@ with one sub-issue per task (#268–#272). Roadmap entry **#32**.
 
 | Task | State | PR | CI | Review |
 |---|---|---|---|---|
-| [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/status.md) | In progress ([#268](https://github.com/nicbk/nicbk-website/issues/268)) | — | — | — |
+| [`deletions-wait-a-day`](./tasks/deletions-wait-a-day/status.md) | In review ([#268](https://github.com/nicbk/nicbk-website/issues/268)) | [#273](https://github.com/nicbk/nicbk-website/pull/273) | Pending | Pending |
 | [`a-checkpoint-every-six-hours`](./tasks/a-checkpoint-every-six-hours/status.md) | Spec'd | — | — | — |
 | [`a-restore-that-relaunches`](./tasks/a-restore-that-relaunches/status.md) | Spec'd | — | — | — |
 | [`drills-and-a-watcher`](./tasks/drills-and-a-watcher/status.md) | Spec'd | — | — | — |

@@ -505,3 +505,18 @@ finds CSAM, and whether a cloud service would file a case naming them.
 - **Recommendation:** a lawyer's one-time review before scanning is switched
   on, because it creates automatic legal duties. Use a hash-only service.
   Until then, process uploads unscanned (R3-2).
+
+## Round 8 (2026-11-12): R3-2 decided; research complete
+
+**R3-2: uploads continue to be processed without CSAM scanning.** Read from
+the user's reply: the IWF sign-up is complicated, and the pipeline sends no
+media to third parties (GROBID runs locally; Semantic Scholar receives only
+citation details). *Reading confirmed back to the user in the same message
+that recorded it.*
+- Scanning is deferred, and the upload stage keeps a hook where a scanner can
+  be added.
+- The round-2 runbooks still apply to anything reported to the operator.
+
+**Research for the requests of 2026-10-14 is complete.** The proposed feature
+breakdown, for discussion before any planning, is in
+[proposed-features.md](./proposed-features.md).

@@ -5,8 +5,9 @@ three discussion points accepted as written below
 ([answers](./answers-2026-11-12.md#agreement-to-the-proposed-features-as-written)).
 Each feature is still spec'd in `features/`, and discussed, before it is built.
 
-**Next step:** spec feature #32, *Backups you can relaunch from*, in
-`features/`, and bring it to the user before building.
+**Next step:** #32 is spec'd in
+[`features/backups-you-can-relaunch-from/`](../../../features/backups-you-can-relaunch-from/description.md);
+it awaits the user's go-ahead.
 
 *Originally written for discussion.* It breaks the decided
 research ([decisions.md](./decisions.md), with the user's answers in

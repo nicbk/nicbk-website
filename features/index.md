@@ -89,7 +89,7 @@ need them (see Phases 2–3).
 | 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **Complete** (2026-10-14; all 4 tasks merged, #252 + #253 + #254 + #255; the user's phone check passed) | #7, #9, #10, #22 |
 | 30 | The contents fold (an entry with sections folds; every entry starts folded; the folds are kept with the paper on the account) | [`the-contents-fold`](./the-contents-fold/description.md) | **Complete** (2026-11-12; both tasks merged, #260 + #261; the user's phone check passed) | #23, #29 |
 | 31 | What the research found (signing in stops sharing one rate limit across the site; a deleted account's PDFs leave the bucket) | [`what-the-research-found`](./what-the-research-found/description.md) | **Complete** (2026-10-20; both tasks merged, #265 + #266) | #6, #7, #11 |
-| 32 | Backups you can relaunch from (agreed, not yet spec'd) | — | **Proposed** (2026-11-12) | — |
+| 32 | Backups you can relaunch from (a checked checkpoint every six hours to B2, one script to relaunch from it, drills, an off-node watcher, deletions wait a day) | [`backups-you-can-relaunch-from`](./backups-you-can-relaunch-from/description.md) | **Spec'd** (2026-11-12; awaiting the go-ahead and P32-1) | #7, #11, #31 |
 | 33 | Hardening before growth (agreed, not yet spec'd) | — | **Proposed** | — |
 | 34 | Roles, site-wide (agreed, not yet spec'd) | — | **Proposed** | #6 |
 | 35 | Quotas and usage, site-wide with per-app limits (agreed, not yet spec'd) | — | **Proposed** | #34 |

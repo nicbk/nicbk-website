@@ -457,3 +457,51 @@ in the PDF in memory and checks those.
 
 **Open:** R3-2. Until one service approves, are uploads processed unscanned or
 refused? Apply to IWF Image Intercept and Arachnid Shield first.
+
+## Round 7 (2026-11-12): what scanning sets in motion legally
+
+*Research, not legal advice.* The user asked what happens legally if scanning
+finds CSAM, and whether a cloud service would file a case naming them.
+
+- **The reporting duty is the operator's, and the operator is the reporter,
+  not the subject.**
+  - On actual knowledge, a provider must report to NCMEC's CyberTipline "as
+    soon as reasonably possible" (18 U.S.C. §2258A). NCMEC passes reports to
+    law enforcement.
+  - A report describes the **uploader**: account, IP address, time, file. The
+    operator's contact details appear as the reporting provider, so that law
+    enforcement can ask for more.
+  - Scanning vendors generally do not file reports for the platform:
+    Cloudflare's docs say operators "are still expected to … file their own
+    reports" (see round 2), and Microsoft gives NCMEC aggregate match counts
+    only.
+- **Legal protection for reporting.** §2258B bars civil claims and criminal
+  charges against a provider "arising from" its reporting and preservation
+  duties, except for intentional misconduct or actual malice. The REPORT Act
+  (May 2024) raised preservation to **1 year** and extended NCMEC's
+  limited-liability protection to NCMEC's own contracted vendors
+  ([WSGR](https://wsgr.com/en/insights/new-minor-safety-obligations-for-online-services-report-act-expands-child-sexual-exploitation-reporting-requirements.html),
+  [Thorn](https://www.thorn.org/blog/the-report-act-explained/)).
+  - *Uncertain:* whether sending a file to a third-party scanner *before*
+    knowledge is itself covered. Hash-only services avoid the question.
+- **Whether imagery leaves the server depends on the service.**
+  - PhotoDNA Cloud receives the image, or a URL to it, and hashes it in the
+    cloud
+    ([third-party integration guide](https://help.withpersona.com/articles/1GLwOKRvCzuaphwwUD0E7s.md)).
+  - Cyacomb matches against IWF lists "without compromising users' privacy"
+    through an SDK (see round 6), so matching appears to be local.
+  - IWF Image Intercept and Arachnid Shield: *whether they take hashes or
+    media is unconfirmed.*
+  - **Prefer a hash-only service**, so that no image leaves this server.
+- **Reporting carries some risk.** In *Lawshe v. Verizon* (2025), Verizon and
+  its cloud vendor had to face a suit over a mistaken report: §2258B did not
+  end it at the pleading stage
+  ([Goldman](https://blog.ericgoldman.org/archives/2025/03/verizon-and-its-cloud-vendor-must-face-lawsuit-for-reporting-csam-that-wasnt-lawshe-v-verizon-guest-blog-post.htm)).
+- **Once there is a match:** report, preserve for 1 year in restricted
+  storage, disable the account, never open the file, and call a lawyer (the
+  round-2 runbook).
+- **Without scanning,** knowledge, and so the duty, arises only if someone
+  tells the operator.
+- **Recommendation:** a lawyer's one-time review before scanning is switched
+  on, because it creates automatic legal duties. Use a hash-only service.
+  Until then, process uploads unscanned (R3-2).

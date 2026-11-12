@@ -353,3 +353,67 @@ rather than refused. Applicable free services:
   a one-tap passkey.
 - R3-2: until a service approves this site, process uploads unscanned or
   refuse them.
+
+## Round 5 (2026-11-12): a key unlocked by the OAuth provider
+
+The user asked whether the OAuth provider itself can supply the decryption
+capability, so that the server holds no master key. They accept that the
+server sees the key in passing.
+
+**Standard OAuth/OIDC hands out no stable per-user secret.** The ID token
+and access token change with every sign-in, and the user id (`sub`) is not
+secret. But Google offers a place the key can live that only the user's
+Google sign-in unlocks:
+- **The Drive application data folder (`appDataFolder`).** It is a hidden,
+  per-app folder in the user's own Google Drive, reachable only by this app
+  with a token from that user's sign-in.
+  - Scope `drive.appdata`, which Google lists as **non-sensitive** and
+    recommended; it needs only basic app verification
+    ([Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth)).
+  - Its contents are "only accessible by your app" and "hidden from the user
+    and from other Google Drive apps", but **the user can delete the folder
+    manually**
+    ([appdata guide](https://developers.google.com/workspace/drive/api/guides/appdata?authuser=9)),
+    under Drive settings → Manage apps → Delete hidden app data
+    ([third-party description](https://workalizer.com/insights/drive/still-full-after-deleting-files-check-your-google-drive-dashboard-for-hidden-app-data/);
+    *the exact label is unconfirmed in Google's own help*).
+
+**The design ("the key lives with Google"):**
+- **First sign-in:** a random data key is made and written to the user's
+  appDataFolder. Our server stores no key, wrapped or otherwise.
+- **Each Google sign-in:** the sign-in's fresh token reads the key from Drive.
+  The server passes it to the browser and discards the token. The browser
+  keeps the key on that device, so later visits need nothing. If the browser
+  storage is cleared, signing in with Google again fetches it again.
+- **Zero syncs ciphertext only.** The browser decrypts into the views and
+  encrypts each write (R2-3). Postgres, zero-cache, IndexedDB, Garage and
+  the backups hold only ciphertext, and **nothing on the server or in a
+  backup can unlock it**.
+- **Uploads** are processed in memory with the key from the user's session,
+  then sealed. **Old papers** are re-processed only while the user is present
+  (E7 consent, which now follows naturally).
+- **Deletion:** delete the Drive file while the user is signed in, plus our
+  data. Old backups become unreadable (BK10).
+
+**Caveats to weigh:**
+- Better Auth by default stores Google's access and refresh tokens in
+  `account`. A stored refresh token would let the server read the key at any
+  time, quietly undoing the point. Planning must make sure no refresh token
+  is requested or kept and the access token is dropped after use.
+  *To verify against Better Auth's options.*
+- A compromised running server can read keys of users who sign in while it
+  is compromised (accepted by the user).
+- If the user deletes the hidden app data, or loses their Google account,
+  the library becomes unreadable. The optional recovery code (R2-2) is the
+  backstop.
+- A Google Workspace account whose administrator has disabled Drive cannot
+  hold the key. *Uncertain how common this is; a fallback is needed.*
+- The consent screen gains "See, create, and delete its own configuration
+  data in your Google Drive".
+- This is Google-specific. Another OAuth provider added later needs its own
+  key home.
+
+**Open:**
+- R5-1: adopt this design.
+- R3-2: until a scanner approves this site, process uploads unscanned or
+  refuse them.

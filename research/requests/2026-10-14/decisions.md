@@ -285,3 +285,71 @@ The answers are verbatim in
 | R3-1 | How a library key survives:<br>**(A)** one prompt, once, the first time a paper is saved: "save your library key" as a passkey (one Face ID or fingerprint tap; syncs through iCloud or Google Password Manager) or as a recovery code. It is a key, not a sign-in step.<br>**(B)** nothing prompted: a recovery code and passkey only if the user goes to settings, accepting that clearing browser data on the only device loses the library.<br>**(C)** step back from zero-access to server-held per-user keys: OAuth only and no user steps, but the operator could read data. | (A) |
 | R3-2 | Until a scanner approves this site, are uploads processed unscanned (there is no duty to scan), or refused? Apply to which services first? | Process meanwhile. Apply to Tech Coalition Pathways (PhotoDNA) and to Microsoft's PhotoDNA Cloud Service. Project Arachnid Shield is the fallback, since it sends image bytes to Canada. |
 | R3-3 | The DMCA agent without a street address:<br>**(a)** defer registration until there is revenue. This gives up the §512(c) safe harbor meanwhile, but nothing is shared, and notices are still handled by the runbook through an email contact.<br>**(b)** a USPS P.O. box for the agent (about $21–$100+ every 6 months) plus a waiver request for the provider address (granted only in exceptional circumstances). | (a) |
+
+## Round 4 (2026-11-12): after the round-3 answers
+
+The answers are verbatim in
+[answers-2026-11-12.md](./answers-2026-11-12.md#answers-to-the-round-3-questions-as-written).
+
+**Decided:** R2-6 (a). DMCA agent registration is deferred until there is
+revenue, and nothing is shared between users. Notices are still handled by the
+runbook, through an email contact.
+
+**R3-1: the user chose (C), with minimal friction on a new device, and asked
+whether OAuth can unlock the key.**
+
+What OAuth can and cannot do:
+- An OAuth sign-in proves to *this server* who the user is. It does not give
+  the user any secret the server lacks: the server runs the sign-in and sees
+  everything Google returns.
+- So a key that "only the OAuth login can decrypt" is in practice a key the
+  server unwraps for a signed-in session. That is (C), not zero-access.
+
+(C) can still be built as the user described, and it is far from pointless
+when the keys are not kept beside the data:
+- Each user has a random data key, stored only **wrapped** (encrypted) by a
+  server master key. The master key lives in the host's secret file, never in
+  Postgres, Garage or the backups.
+- After Google sign-in, the browser asks for its key. The server checks the
+  session, unwraps the key and returns it over TLS. The browser holds it in
+  memory.
+- **Zero syncs only ciphertext.** The browser decrypts into the views and
+  encrypts each write. Postgres, zero-cache's replica, the browser's
+  IndexedDB, Garage and the off-site backups hold ciphertext only.
+- It protects against:
+  - leaked or stolen backups, and a copied database or bucket;
+  - an admin query or dashboard showing content by mistake;
+  - **crypto-shredding**: deleting a user's wrapped key makes every copy,
+    old backups included, unreadable at once. That resolves BK10.
+- It does **not** protect against the operator, or anyone controlling the
+  running server, who can unwrap any key. With the node's disk unencrypted
+  (R2-8), someone holding the whole disk has the master key and the data
+  together, though not the off-site backups.
+- New devices: zero friction. Sign in with Google and everything opens.
+- Upload processing, backfills and citation linking may run on the server
+  again. The server can unwrap with the job's consent or by policy; E7 consent
+  becomes optional.
+
+The alternative with near-minimal friction is still on the table: zero-access,
+with a passkey as the library key. On a new device in the same ecosystem
+(iCloud Keychain, Google Password Manager), the only step is one Face ID or
+fingerprint tap at first use.
+
+**R2-5: why vetting.** The services do not exclude individuals by rule.
+Access to PhotoDNA and to hash lists is restricted "due to the sensitive
+nature of the technology" ([Wikipedia](https://en.wikipedia.org/wiki/PhotoDNA))
+and is granted to vetted, qualifying organizations
+([IWF hash list](https://iwf.org.uk/our-services/hash-list)). The eligibility
+criteria are not published, so an individual's application is uncertain
+rather than refused. Applicable free services:
+- Tech Coalition Pathways (PhotoDNA);
+- Microsoft PhotoDNA Cloud Service;
+- Google's Content Safety API
+  ([overview](https://stellapolaris.childhood.se/digital-tools-combating-child-sexual-abuse/child-abuse-material-removal-and-blocking));
+- Project Arachnid Shield.
+
+**Open:**
+- R4-1: confirm (C) server-held keys, as designed above, over zero-access with
+  a one-tap passkey.
+- R3-2: until a service approves this site, process uploads unscanned or
+  refuse them.

@@ -417,3 +417,43 @@ Google sign-in unlocks:
 - R5-1: adopt this design.
 - R3-2: until a scanner approves this site, process uploads unscanned or
   refuse them.
+
+## Round 6 (2026-11-12): R5-1 decided; CSAM services re-examined
+
+**R5-1: decided.** The library key lives in the user's Google Drive
+`appDataFolder`.
+- **At account creation**, a disclaimer says where the key is kept, and that
+  deleting the hidden app data permanently disables access to all account
+  data. It also says a recovery code can be generated in the profile settings
+  as a backup.
+- **Two ways to unlock, as the user specified.** One random library key (DK)
+  encrypts the data, directly or through per-item keys. DK can be recovered
+  in either of two ways:
+  1. **from the user's Drive** (`appDataFolder`), read with the sign-in's
+     token;
+  2. **from the recovery code.** A key is derived from the code (a KDF such
+     as Argon2id or HKDF over a high-entropy random code) and wraps DK. Only
+     that wrapped blob is stored on the server, which is safe because the
+     code never reaches the server and is too long to guess.
+- Generating or resetting the code in settings re-wraps DK under the new code
+  and deletes the old blob. DK itself, and so the data, is unchanged.
+
+**R3-2: there *are* cloud CSAM services. None is sign-up-and-go**, because
+access to hash lists and matching is vetted ("due to the sensitive nature of
+the technology"). Several are aimed squarely at small platforms:
+
+| Service | What it is | Fit |
+|---|---|---|
+| **IWF Image Intercept** | Hash-matching of image and video uploads against the IWF's list; **free for platforms under 1 million checks a month**; built "for smaller companies and start ups". Apply through the IWF's interest form ([IWF](https://www.iwf.org.uk/our-technology/image-intercept), [IFTAS](https://about.iftas.org/2025/07/29/iwf-offers-fediverse-a-way-to-block-csam)) | **Best fit.** Framed around the UK Online Safety Act; non-UK eligibility is *unconfirmed* |
+| **Project Arachnid Shield (C3P)** | Free API that matches media against C3P's fingerprints; account request form ([register](https://projectarachnid.ca/en/api/accounts/register/), [overview](https://casescan.com/blog/best-csam-detection-tools/)) | Good. Sends media to a Canadian organization; eligibility criteria not published |
+| **Cyacomb Safety** | SDK plus access key matching uploads against IWF lists; piloted with Blipfoto, a volunteer-run service; integration "well under £5,000" ([IWF pilot](https://www.iwf.org.uk/news-media/blogs/new-pilot-shows-way-for-smaller-platforms-to-play-big-part-in-online-safety/)) | Possible. Licence price not public |
+| **Microsoft PhotoDNA Cloud / Tech Coalition Pathways** | Free for qualified organizations | Possible. Vetting case by case |
+| **Google Content Safety API / CSAI Match** | Free for qualifying partners | Possible. Vetting |
+| Cloudflare CSAM Scanning | Free; no longer needs NCMEC credentials ([IFTAS](https://about.iftas.org/library/csam-detection/)) | **Not applicable**: it scans only images served from Cloudflare's cache; uploads and stored ciphertext are not |
+| Thorn Safer, CaseScan, Hive | Commercial; Safer by custom contract, CaseScan about $25k a year ([AWS listing](https://aws.amazon.com/marketplace/pp/prodview-dfwekn4bx4ake), [roundup](https://casescan.com/blog/best-csam-detection-tools/)) | Too costly at this scale |
+
+All of them match **images**. The upload stage extracts the images embedded
+in the PDF in memory and checks those.
+
+**Open:** R3-2. Until one service approves, are uploads processed unscanned or
+refused? Apply to IWF Image Intercept and Arachnid Shield first.

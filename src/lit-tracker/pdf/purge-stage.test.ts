@@ -91,7 +91,7 @@ describe('queueDeletedAccountPurges', () => {
     expect(send).toHaveBeenCalledWith(
       'lit-tracker.purge-account',
       { userId: GONE },
-      { singletonKey: GONE },
+      { singletonKey: GONE, startAfter: 24 * 60 * 60 },
     )
   })
 })
@@ -105,7 +105,20 @@ describe('queueAccountPurge', () => {
     expect(send).toHaveBeenCalledWith(
       'lit-tracker.purge-account',
       { userId: GONE },
-      { singletonKey: GONE },
+      expect.objectContaining({ singletonKey: GONE }),
+    )
+  })
+
+  it('starts a day later, so a backup taken meanwhile still has the files', async () => {
+    // The sweep queues through this too, so one assertion covers both senders.
+    const send = vi.fn(async () => 'job-id')
+
+    await queueAccountPurge({ send }, GONE)
+
+    expect(send).toHaveBeenCalledWith(
+      'lit-tracker.purge-account',
+      { userId: GONE },
+      expect.objectContaining({ startAfter: 24 * 60 * 60 }),
     )
   })
 })

@@ -474,7 +474,8 @@ describe('purging a deleted account', () => {
     expect(send).toHaveBeenCalledWith(
       'lit-tracker.purge-account',
       { userId: OWNER },
-      { singletonKey: OWNER },
+      // A day out, like every physical deletion (features/backups-you-can-relaunch-from).
+      { singletonKey: OWNER, startAfter: 24 * 60 * 60 },
     )
   })
 })

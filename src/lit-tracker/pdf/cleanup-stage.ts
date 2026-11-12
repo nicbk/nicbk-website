@@ -26,6 +26,11 @@ import { deleteArticlePdf } from '~/storage/pdf-storage'
  * connection), so the only way to reach that second state is for the cleanup to
  * exhaust its retries with the queue row committed — loudly, in pg-boss's
  * failed-job table, rather than silently.
+ *
+ * **Why it runs a day later, not at once.** The job is queued with the row's
+ * delete but starts `PHYSICAL_DELETION_DELAY_SECONDS` afterwards, so a backup
+ * checkpoint whose dump still holds the row also finds the object in its copy
+ * of the bucket (features/backups-you-can-relaunch-from, BK9).
  */
 
 /** What the cleanup reaches outside itself. One function, injected to be faked. */

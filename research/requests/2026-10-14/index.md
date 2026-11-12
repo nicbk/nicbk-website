@@ -80,13 +80,27 @@ depend on the answers:
 - **The payment processor** is needed before a user can move to "paid" from the
   profile.
 
+## Where things stand (2026-11-12)
+
+- **Research is complete.** Every decision is in [decisions.md](./decisions.md)
+  (rounds 1–8), and the user's own words are in
+  [answers-2026-11-12.md](./answers-2026-11-12.md).
+- **The features are agreed**, in this order:
+  [proposed-features.md](./proposed-features.md).
+- **Done along the way:** #30 the contents fold (complete), and #31 the two live
+  defects F1 and F2 (complete).
+- **#32 is spec'd:** [`backups-you-can-relaunch-from`](../../../features/backups-you-can-relaunch-from/description.md).
+  P32-1 and P32-2 decided. Next: the user's go-ahead
+  ([plan](../../../features/backups-you-can-relaunch-from/plan.md#decided-with-the-user-2026-11-12)),
+  then the issues and task 1.
+
 ## Progress
 
 | Request | Research | Plan | Implementation |
 |---|---|---|---|
-| Collapsible outline | not needed | [#30 `the-contents-fold`](../../../features/the-contents-fold/description.md) | merged (#260, #261); phone check pending |
+| Collapsible outline | not needed | [#30 `the-contents-fold`](../../../features/the-contents-fold/description.md) | complete (#260, #261) |
 | Privacy and hardening | researched; awaiting decisions: [user-data-encryption](../../security-privacy/user-data-encryption.md), [operator-liability-and-policies](../../security-privacy/operator-liability-and-policies.md), [production-hardening](../../security-privacy/production-hardening.md) | — | — |
-| Backups | researched; awaiting decisions: [backup-and-disaster-recovery, proposed revision](../../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user) | — | — |
+| Backups | decided (BK1–BK13; BK3 and BK11 in planning): [backup-and-disaster-recovery](../../devops-deployment/backup-and-disaster-recovery.md#revision-proposed-2026-10-14-awaiting-the-user) | [#32 `backups-you-can-relaunch-from`](../../../features/backups-you-can-relaunch-from/description.md) | — |
 | Roles and billing | researched; awaiting decisions: [roles-and-administrators](../../system-architecture/roles-and-administrators.md), [payment-processor](../../technologies/payment-processor.md) | — | — |
 | Quotas | researched; awaiting decisions: [quotas-and-usage-metering](../../system-architecture/quotas-and-usage-metering.md) | — | — |
 | Profile role and quota | researched; awaiting decisions: [roles-and-administrators](../../system-architecture/roles-and-administrators.md) (U1), [quotas-and-usage-metering](../../system-architecture/quotas-and-usage-metering.md) (U2, U3), [payment-processor](../../technologies/payment-processor.md) (U4) | — | — |

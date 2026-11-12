@@ -1,6 +1,10 @@
 # Operator Liability and Site Policies
 
-Researched: 2026-10-14. Decided: not yet — awaiting the user.
+Researched: 2026-10-14; round 2 researched 2026-11-12. Decided: L1–L4 and
+L6–L9 by the user on 2026-11-12 (see
+[decisions.md](../requests/2026-10-14/decisions.md)); L5 and the round-2
+questions are awaiting the user. The follow-up research is in
+[Round 2](#round-2-2026-11-12) below.
 
 > **This is research, not legal advice.** It summarises statutes, cases and
 > commentary found on the web on 2026-10-14 so the user can decide, and can
@@ -46,7 +50,7 @@ answers assume the operator is in the United States, which is unconfirmed
 
 | Option | Protection gained | Cost |
 |---|---|---|
-| **A. No sharing + legal hygiene** (DMCA agent, Terms, Privacy Policy, abuse contact, NCMEC registration, CSAM runbook, admins see aggregates only) | Most of what is available: out of UK OSA scope, nothing public to distribute, safe harbor in place, knowledge-triggered duties handled | Half a day of writing; $6 per 3 years; a P.O. box or agent if a home address must stay private |
+| **A. No sharing + legal hygiene** (DMCA agent, Terms, Privacy Policy, abuse contact, NCMEC registration, CSAM runbook, admins see aggregates only) | Most of what is available: out of UK OSA scope, nothing public to distribute, safe harbor in place, knowledge-triggered duties handled | Half a day of writing; $6 per 3 years; a P.O. box or agent if a home address must stay private (*corrected 2026-11-12:* a P.O. box covers only the agent's address; the provider's address must be a street address, see [The public address](./operator-liability-and-policies-round-2.md#the-public-address-l4-a-correction)) |
 | **B. A + end-to-end encryption** | Small legal increment (cannot be compelled to read; breach-notice relief); a real *user* privacy gain | Large (see [user-data-encryption.md](./user-data-encryption.md)); could become a liability argument under STOP CSAM |
 | **C. A + server-side scanning** (hash-matching) | Would detect known CSAM | Not required by US law; contradicts encryption; hash lists need vetting by NCMEC or Microsoft; creates knowledge and so duties; disproportionate for an academic-PDF locker |
 
@@ -58,8 +62,11 @@ has no actual or "red flag" knowledge and no duty to investigate (*Viacom*,
 benefit directly attributable to infringement it can control (*Ellison*: a
 benefit is "direct" if infringement is a **draw**; a flat $5 storage fee not
 marketed for piracy is unlikely to be one, *uncertain*, no flat-fee case found);
-**registers a designated agent** ($6 per designation, renewed every 3 years, a
-P.O. box needs a free waiver); and adopts and reasonably implements a
+**registers a designated agent** ($6 per designation, renewed every 3 years;
+~~a P.O. box needs a free waiver~~ *corrected 2026-11-12: the agent's address
+may be a P.O. box with no waiver; the service provider's own address must be a
+street address, and only that one can be waived, for a demonstrable safety
+threat; see [The public address](./operator-liability-and-policies-round-2.md#the-public-address-l4-a-correction)*); and adopts and reasonably implements a
 **repeat-infringer policy** (*Perfect 10 v. CCBill*). §512(m): no duty to
 monitor.
 
@@ -211,6 +218,47 @@ Numbered as in [decisions.md](../requests/2026-10-14/decisions.md).
 - **L7.** Adopt option A (the legal hygiene list) now?
 - **L8.** Which monitored mailbox handles abuse, DMCA and security reports?
 - **L9.** Require 13+ at sign-up, and 18+ (or parental consent) for paid?
+
+## Round 2 (2026-11-12)
+
+Follow-up research after the user's answers of 2026-11-12, in full in
+[operator-liability-and-policies-round-2.md](./operator-liability-and-policies-round-2.md). In short (research, not
+legal advice; questions R2-5 to R2-7 in
+[decisions.md](../requests/2026-10-14/decisions.md#round-2-questions-for-the-user-2026-11-12)):
+
+- **Scanning uploads (E3): do not scan at launch.** No US law requires it.
+  Register with NCMEC as an ESP; apply to the Tech Coalition's Pathways
+  programme (a free PhotoDNA sublicense; whether a one-person operator is
+  eligible is *uncertain*); design the upload stage so a scanning step can be
+  added without touching storage; turn scanning on if a sharing feature,
+  non-PDF images or video, a CSAM report, a STOP CSAM-style law or a real public
+  user base arrives. Cloudflare's tool cannot help: it sees only ciphertext.
+  [Details](./operator-liability-and-policies-round-2.md#screening-uploads-for-csam-and-dmca-e3).
+- **The Fourth Amendment split:** circuits disagree on whether police may open
+  a file a provider flagged by hash but never viewed (warrant needed: 9th, 2d,
+  4th; allowed: 5th, 6th, 11th). It decides whether evidence survives, not the
+  operator's liability; the operator's choice is never to view.
+  [Details](./operator-liability-and-policies-round-2.md#the-fourth-amendment-split-in-short).
+- **DMCA runbook:** check the notice, locate by identifiers the server can
+  resolve, **disable rather than hard-delete**, notify the user, and **restore
+  10–14 business days after a valid counter-notice** unless the claimant sues.
+  [Runbook](./operator-liability-and-policies-round-2.md#runbook-a-dmca-notice).
+- **CSAM runbook:** **never view**; report to the NCMEC CyberTipline; **preserve
+  for 1 year**; disable the account without deleting it; call a lawyer.
+  [Runbook](./operator-liability-and-policies-round-2.md#runbook-csam-discovered-or-reported).
+- **The address (L4), a correction:** the DMCA agent's address may be a P.O.
+  box with no waiver, but the service provider's own address must be a street
+  address (for a sole proprietor, the person), and both are published. A
+  virtual mailbox (CMRA) street address is recommended; whether the Copyright
+  Office accepts one is not addressed in the rule or FAQ *(uncertain)*.
+  [Details](./operator-liability-and-policies-round-2.md#the-public-address-l4-a-correction).
+- **An LLC (L5):** a few hours of paperwork; from about $50 once and $0 a year
+  (New Mexico) to $800 a year (California, $400 in the first year for 2027–2029);
+  the **state of residence** decides, because forming elsewhere usually means
+  paying both. It shields against the LLC's debts and contract claims, not
+  crimes or the operator's own acts. Recommended: no LLC now; form one when the
+  paid tier opens publicly if the home state costs roughly $100 a year or less.
+  [Details](./operator-liability-and-policies-round-2.md#should-the-operator-form-an-llc-l5).
 
 ## Sources
 

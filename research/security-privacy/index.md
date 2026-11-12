@@ -1,7 +1,9 @@
 # Research: Security & Privacy
 
-Status: 5/5 decided (2026-07-05); 3 more researched 2026-10-14, awaiting
-decision.
+Status: 5/5 decided (2026-07-05); 3 more researched 2026-10-14 and mostly
+answered by the user on 2026-11-12 (see
+[decisions.md](../requests/2026-10-14/decisions.md)); round-2 follow-ups
+researched 2026-11-12, awaiting the user.
 
 Auth/session handling, data protection for uploaded PDFs/annotations, the
 GPG signing/encryption capability mentioned on the about page, and
@@ -47,15 +49,30 @@ explicitly deferred by
   Shiki/`rehype-pretty-code` output uses data attributes, not inline
   styles.
 - [user-data-encryption.md](./user-data-encryption.md) — Researched
-  2026-10-14; awaiting decision. Client-side encryption across devices is
-  possible; recommends "zero-access" encryption (server processes uploads
-  transiently, stores everything encrypted to the user's public key), or
-  server-held keys if permanent data loss on lost keys is unacceptable.
+  2026-10-14; decided 2026-11-12: "zero-access" encryption, option (d)
+  (server processes uploads transiently, stores everything encrypted to the
+  user's public key). The round-1 options, key hierarchy and migration plan.
+- [user-data-encryption-round-2.md](./user-data-encryption-round-2.md) —
+  Researched 2026-11-12; awaiting the user's round-2 answers. What stays
+  plaintext under Zero (E4: ids, timestamps and statuses; all content
+  sealed, one column per write unit; citation linking moves to the browser),
+  and what re-processing with consent needs (E7).
+- [user-data-encryption-2fa-and-recovery.md](./user-data-encryption-2fa-and-recovery.md) —
+  Researched 2026-11-12; awaiting the user's round-2 answers (E6). The
+  recovery code stays mandatory even with 2FA; passkey-first optional 2FA,
+  where one gesture signs in and unlocks; TOTP deferred because Better
+  Auth's `twoFactor` does not cover Google sign-ins.
 - [operator-liability-and-policies.md](./operator-liability-and-policies.md) —
-  Researched 2026-10-14; awaiting decision. Research, not legal advice:
-  no-sharing plus legal hygiene (DMCA agent, Terms, Privacy Policy, abuse
-  contact, NCMEC registration) protects the operator; encryption adds little
-  legally.
+  Researched 2026-10-14; mostly decided 2026-11-12. Research, not legal
+  advice: no-sharing plus legal hygiene (DMCA agent, Terms, Privacy Policy,
+  abuse contact, NCMEC registration) protects the operator; encryption adds
+  little legally.
+- [operator-liability-and-policies-round-2.md](./operator-liability-and-policies-round-2.md) —
+  Researched 2026-11-12; awaiting the user's round-2 answers. Research, not
+  legal advice: no upload scanning at launch (NCMEC registration, a Pathways
+  application, a hook for later); the DMCA and CSAM runbooks; the public
+  address (corrects round 1: only the agent's address may be a P.O. box); and
+  whether an LLC makes sense (it depends on the state of residence).
 - [production-hardening.md](./production-hardening.md) — Researched
   2026-10-14; awaiting decision. Two live defects (shared rate-limit bucket
   behind the relay; account deletion leaves PDFs in Garage), plus a

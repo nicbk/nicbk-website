@@ -87,8 +87,23 @@ need them (see Phases 2–3).
 | 27 | A text box lets go (clicking away from a note ends its typing, so it can be moved) | [`a-text-box-lets-go`](./a-text-box-lets-go/description.md) | **Complete** (2026-10-14; its one task merged, #249; the user's phone check passed) | #9, #24 |
 | 28 | A passage gets a margin note (one action highlights a passage and opens a note beside it, tied to it) | [`a-passage-gets-a-margin-note`](./a-passage-gets-a-margin-note/description.md) | **Complete** (2026-10-14; both tasks merged, #250 + #251; the user's phone check passed) | #9, #15, #24, #27 |
 | 29 | A paper shows its contents (its sections, found automatically, a sidebar tab and a toolbar button away) | [`a-paper-shows-its-contents`](./a-paper-shows-its-contents/description.md) | **Complete** (2026-10-14; all 4 tasks merged, #252 + #253 + #254 + #255; the user's phone check passed) | #7, #9, #10, #22 |
-| 30 | The contents fold (an entry with sections folds; every entry starts folded; the folds are kept with the paper on the account) | [`the-contents-fold`](./the-contents-fold/description.md) | **Merged** (2026-10-14; both tasks merged, #260 + #261; the user's phone check pending) | #23, #29 |
-| 31 | What the research found (signing in stops sharing one rate limit across the site; a deleted account's PDFs leave the bucket) | [`what-the-research-found`](./what-the-research-found/description.md) | **In progress** (2026-10-18; task 1 merged, #265; task 2 in review) | #6, #7, #11 |
+| 30 | The contents fold (an entry with sections folds; every entry starts folded; the folds are kept with the paper on the account) | [`the-contents-fold`](./the-contents-fold/description.md) | **Complete** (2026-11-12; both tasks merged, #260 + #261; the user's phone check passed) | #23, #29 |
+| 31 | What the research found (signing in stops sharing one rate limit across the site; a deleted account's PDFs leave the bucket) | [`what-the-research-found`](./what-the-research-found/description.md) | **Complete** (2026-10-20; both tasks merged, #265 + #266) | #6, #7, #11 |
+| 32 | Backups you can relaunch from (a checked checkpoint every six hours to B2, one script to relaunch from it, drills, an off-node watcher, deletions wait a day) | [`backups-you-can-relaunch-from`](./backups-you-can-relaunch-from/description.md) | **In progress** (2026-11-12; parent #267; task 1 of 5) | #7, #11, #31 |
+| 33 | Hardening before growth (agreed, not yet spec'd) | — | **Proposed** | — |
+| 34 | Roles, site-wide (agreed, not yet spec'd) | — | **Proposed** | #6 |
+| 35 | Quotas and usage, site-wide with per-app limits (agreed, not yet spec'd) | — | **Proposed** | #34 |
+| 36 | Terms, privacy and consent (agreed, not yet spec'd) | — | **Proposed** | #6 |
+| 37 | Paid plan, site-wide billing with Polar first (agreed, not yet spec'd) | — | **Proposed** | #34, #35, #36 |
+| 38 | Admin dashboards (agreed, not yet spec'd) | — | **Proposed** | #34, #35, #37 |
+| 39+ | Zero-access encryption, several features (agreed, not yet spec'd) | — | **Proposed** | #34–#38 |
+| — | Dormant free accounts (agreed, after encryption; needs email) | — | **Proposed** | #36, email |
+
+The rows above come from
+[../research/requests/2026-10-14/proposed-features.md](../research/requests/2026-10-14/proposed-features.md),
+agreed by the user on 2026-11-12. Each gets its folder and number confirmed
+when it is spec'd.
+
 
 ## How this roadmap is spec'd out
 

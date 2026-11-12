@@ -1,6 +1,6 @@
 # Status: A Deleted Account Leaves Nothing
 
-**State:** In review ([#264](https://github.com/nicbk/nicbk-website/issues/264)).
+**State:** Merged ([#264](https://github.com/nicbk/nicbk-website/issues/264); PR [#266](https://github.com/nicbk/nicbk-website/pull/266)).
 
 ## What shipped
 
@@ -46,5 +46,6 @@
 
 ## Log
 
+- 2026-10-20: merged.
 - 2026-10-17: implemented and verified.
 - 2026-10-17: spec'd.

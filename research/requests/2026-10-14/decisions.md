@@ -50,6 +50,9 @@ BK10, BK12, BK13, H1, H2, H3, H7, H8.
 | H4 | No invite or allowlist mode: the app stays public. |
 | H5 | `system.autoUpgrade` is enabled on the node. |
 | H6 | A CDN is acceptable. |
+| RB3 | The operator accepts Polar's one-time seller identity check (ID and selfie through Stripe Identity). Users are never asked for ID. |
+| RB8 | No checkout for administrators: they already have full access. |
+| H5 | `system.autoUpgrade` is enabled **with `allowReboot = true`**. **The node's disk is not fully LUKS-encrypted**, contrary to what [pdf-and-annotation-data-protection.md](../../security-privacy/pdf-and-annotation-data-protection.md) assumed. Zero-access encryption covers stored content either way; account rows, secrets, backups' staging and logs on the node do not have that protection. To be weighed in planning. |
 
 **A new cross-cutting requirement (the user, 2026-11-12):** payments,
 dashboards, accounts and roles must be **modular**, so that they carry over to
@@ -68,9 +71,6 @@ archiving). Each is decided in planning, with the reason written down.
 | E6 | 2FA and a recovery code. Is the code still needed with 2FA? What is seamless with Google sign-in? |
 | E3 | Screening uploads for CSAM and DMCA while they are plaintext. |
 | L5 | What an LLC costs and involves, and whether it makes sense at this scale. |
-| RB3 | **A clarification is needed.** The question was about the operator's own identity check, which Polar requires before paying out; users are never asked for ID. |
-| RB8 | **A clarification is needed.** The question was whether an administrator can buy the paid plan; admins are unlimited anyway. The recommendation stands: no checkout for admins. |
-| H5 | Does `autoUpgrade` reboot the node unattended, and can its LUKS disk unlock remotely? |
 
 ## Fix regardless of decisions
 

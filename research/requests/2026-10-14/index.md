@@ -91,7 +91,7 @@ depend on the answers:
   defects F1 and F2 (complete).
 - **#32 is spec'd:** [`backups-you-can-relaunch-from`](../../../features/backups-you-can-relaunch-from/description.md).
   Next: the user's go-ahead and question P32-1
-  ([plan](../../../features/backups-you-can-relaunch-from/plan.md#question-for-the-user)),
+  ([plan](../../../features/backups-you-can-relaunch-from/plan.md#questions-for-the-user)),
   then the issues and task 1.
 
 ## Progress

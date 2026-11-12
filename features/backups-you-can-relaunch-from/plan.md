@@ -58,13 +58,15 @@ Implementation choices this plan makes, each explained where it is built:
   is wiped. The restored database is not trusted to describe a replication slot
   that no longer exists. Clients then re-sync, as Zero documents.
 
-## Question for the user
+## Questions for the user
 
 | # | Question | Recommendation |
 |---|---|---|
 | P32-1 | **How long a "deleted" backup file stays recoverable on B2.** BK8 was decided as "keep only the last version", which erases a hidden file after **1 day**. If the node were compromised and told to delete the backups, the history would be gone within a day. The relay watcher checks daily, so that window is racy. A **30-day** window costs the storage of one month of pruned data, a few cents. | **30 days** |
 
-Apart from that, the go-ahead to build.
+| P32-2 | **A size ceiling on the repository** (the user's comment, [as written](../../research/requests/2026-10-14/answers-2026-11-12.md#comments-on-the-32-spec-as-written)). Proposed rule, under discussion: <ul><li>the repository's stored size (`restic stats --mode raw-data`) stays at or below **10×** a reference checkpoint;</li><li>the reference is **the largest checkpoint of the last 30 days, not the latest**, so a bug or attack that empties the database cannot shrink the ceiling and delete the good history;</li><li>when over, the oldest checkpoints are forgotten one at a time and pruned until it fits;</li><li>nothing under 30 days old is ever thinned;</li><li>every time the ceiling binds, the operator is alerted;</li><li>a floor of a few GiB keeps it from thinning for savings of a fraction of a cent.</li></ul>restic has no size-based retention of its own ([forget](https://restic.readthedocs.io/en/stable/060_forget.html)), so this is a step in `prune.sh` after the time-based policy. Also open: whether history may go past 12 months when space allows (BK10: deleted accounts' data). | Ceiling as proposed; keep the 12-month limit until encryption (#39+) |
+
+Apart from those, the go-ahead to build.
 
 ## Risks
 

@@ -1,7 +1,7 @@
 # Status: Backups You Can Relaunch From
 
 **Feature state:** **Spec'd** (2026-11-12). Awaiting the user's go-ahead and
-question P32-1 ([plan.md](./plan.md#question-for-the-user)).
+questions P32-1 and P32-2 ([plan.md](./plan.md#questions-for-the-user)).
 
 Spec written against `main` plus the docs-only research commits on
 `claude/modest-shannon-jew14d` (at `315a836`). See [research.md](./research.md).
